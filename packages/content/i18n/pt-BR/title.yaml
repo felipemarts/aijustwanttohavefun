@@ -1,0 +1,32 @@
+mayor: { name: Prefeito }
+wanted: { name: Procurado }
+oathbreaker: { name: Perjuro }
+former_mayor: { name: Ex-prefeito }
+first_mayor: { name: Primeiro Prefeito }
+exterminator: { name: o Exterminador }
+deep_delver: { name: o Explorador das Profundezas }
+regent_slayer: { name: Algoz do Regente }
+colossus_breaker: { name: Quebra-Colosso }
+phoenix: { name: a Fênix }
+duelist: { name: Duelista }
+legend: { name: a Lenda }
+first_legend: { name: a Primeira Lenda }
+pacifist: { name: Pacifista }
+citizen: { name: Cidadão }
+explorer: { name: o Explorador }
+fashionista: { name: Fashionista }
+artisan: { name: Artesão }
+honest_merchant: { name: Mercador Honesto }
+moneybags: { name: Ricaço }
+social_butterfly: { name: Borboleta Social }
+founder: { name: Fundador }
+mentor: { name: Mentor }
+lifesaver: { name: Salva-Vidas }
+chronicler: { name: Cronista }
+builder: { name: Construtor }
+kingmaker: { name: Fazedor de Reis }
+bounty_hunter: { name: Caçador de Recompensas }
+gullible: { name: o Crédulo }
+swindler: { name: Trambiqueiro }
+pickpocket: { name: Punguista }
+usurper: { name: Usurpador }

@@ -1,0 +1,80 @@
+wave:
+  name: Acenar
+  solo: "{actor} acena."
+  at: "{actor} acena para {target}."
+bow:
+  name: Reverência
+  solo: "{actor} faz uma reverência educada."
+  at: "{actor} faz uma reverência para {target}."
+laugh:
+  name: Rir
+  solo: "{actor} cai na gargalhada."
+  at: "{actor} ri de {target}."
+cheer:
+  name: Torcer
+  solo: "{actor} comemora."
+  at: "{actor} torce por {target}."
+dance:
+  name: Dançar
+  solo: "{actor} dança uma quadrilha animada."
+  at: "{actor} dança com {target}."
+cry:
+  name: Chorar
+  solo: "{actor} desata a chorar."
+  at: "{actor} chora no ombro de {target}."
+shrug:
+  name: Dar de ombros
+  solo: "{actor} dá de ombros."
+  at: "{actor} dá de ombros para {target}."
+salute:
+  name: Saudar
+  solo: "{actor} faz continência."
+  at: "{actor} faz continência para {target}."
+point:
+  name: Apontar
+  solo: "{actor} aponta para o horizonte."
+  at: "{actor} aponta para {target}."
+facepalm:
+  name: Facepalm
+  solo: "{actor} bate a mão na testa."
+  at: "{actor} bate a mão na testa por causa de {target}."
+clap:
+  name: Aplaudir
+  solo: "{actor} bate palmas."
+  at: "{actor} aplaude {target}."
+hug:
+  name: Abraçar
+  solo: "{actor} oferece um abraço a quem precisar."
+  at: "{actor} abraça {target}."
+flex:
+  name: Flexionar
+  solo: "{actor} exibe os músculos."
+  at: "{actor} exibe os músculos para {target}."
+yawn:
+  name: Bocejar
+  solo: "{actor} boceja."
+  at: "{actor} boceja para {target}."
+think:
+  name: Pensar
+  solo: "{actor} pensa no assunto."
+  at: "{actor} lança um olhar pensativo para {target}."
+toast:
+  name: Brindar
+  solo: "{actor} ergue uma caneca."
+  at: "{actor} ergue uma caneca para {target}."
+kneel:
+  name: Ajoelhar
+  solo: "{actor} se ajoelha."
+  at: "{actor} se ajoelha diante de {target}."
+glare:
+  name: Encarar
+  solo: "{actor} fuzila o nada com o olhar."
+  at: "{actor} fuzila {target} com o olhar."
+whistle:
+  name: Assobiar
+  solo: "{actor} assobia uma melodia."
+  at: "{actor} assobia para {target}."
+nod:
+  name: Assentir
+  solo: "{actor} assente com a cabeça."
+  at: "{actor} assente com a cabeça para {target}."

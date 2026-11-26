@@ -1,0 +1,24 @@
+bridge:
+  name: Ponte do Rio
+  desc: "Uma ponte robusta na margem do rio. Abre um atalho para todos, da vila direto ao portão inferior das minas."
+watchtower:
+  name: Torre de Vigia
+  desc: "Uma torre alta no terreno nordeste. Dá a todos um aviso antecipado antes de um chefe mundial aparecer."
+inn_expansion:
+  name: Ampliação da Taverna
+  desc: "Mais quartos e uma lareira maior para a taverna. Reforça o bônus de XP de Camaradagem que todos ganham lá."
+library:
+  name: Biblioteca
+  desc: "Uma biblioteca de verdade no terreno noroeste. Libera uma habilidade extra de Mago e missões de pesquisa. Exige a torre de vigia primeiro."
+covered_market:
+  name: Mercado Coberto
+  desc: "Um telhado sobre as barracas do mercado. Dá a todos mais espaços para ordens de venda. Exige a ampliação da taverna primeiro."
+arena:
+  name: Arena
+  desc: "Um ringue de combate no terreno sudoeste. Libera torneios de duelo. Exige a ponte primeiro."
+wall:
+  name: Muralha da Vila
+  desc: "Uma muralha de pedra em volta de Mistvale, erguida no portão sul. Defende a vila quando vierem os cercos. Exige a arena e a torre de vigia primeiro."
+statue:
+  name: Estátua do Benfeitor
+  desc: "Uma estátua na praça em homenagem ao maior contribuinte da vila. Exige a ponte, a torre de vigia e a ampliação da taverna primeiro."

@@ -1,0 +1,7 @@
+village: { name: Vila de Mistvale }
+forest: { name: Floresta dos Sussurros }
+hills: { name: Colinas do Lombo Cinzento }
+mines: { name: Minas do Lombo Cinzento }
+swamp: { name: Pântano do Lodaçal }
+ruins: { name: Ruínas da Velha Cael }
+dungeon: { name: Catacumbas do Regente Oco }

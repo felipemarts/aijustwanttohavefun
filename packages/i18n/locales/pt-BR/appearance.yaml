@@ -1,0 +1,160 @@
+appearance:
+  desc: '{subject}, com {hair}, vestindo {items}'
+  subject: 'um {species} {build}'
+  hair: 'cabelo {color} {style}'
+  hair_bald: 'uma careca reluzente'
+  item: '{item} {color}'
+  plain_item: '{item}'
+  build:
+    human: robusto
+    elf: esguio
+    dwarf: atarracado
+    orc: troncudo
+    gnome: miúdo
+    goblin: magricela
+  species:
+    human: humano
+    elf: elfo
+    dwarf: anão
+    orc: orc
+    gnome: gnomo
+    goblin: goblin
+  skin:
+    s0: muito clara
+    s1: clara
+    s2: bronzeada
+    s3: oliva
+    s4: morena
+    s5: escura
+  hair_style:
+    short: curto
+    long: longo
+    mohawk: em estilo moicano
+    bald: careca
+    braids: trançado
+    ponytail: preso em rabo de cavalo
+    bun: preso em coque
+    curly: cacheado
+    spiky: espetado
+    bob: em corte chanel
+    side: com risca de lado
+    afro: volumoso
+    topknot: preso em coque alto
+    pigtails: em marias-chiquinhas
+    shaggy: desgrenhado
+  hair_color:
+    c0: preto-azeviche
+    c1: castanho
+    c2: prateado
+    c3: dourado
+    c4: acobreado
+    c5: ruivo
+    c6: branco-neve
+    c7: verde-musgo
+    c8: azul-safira
+    c9: rosa
+    c10: violeta
+    c11: azul-petróleo
+  hat:
+    none: sem chapéu
+    hood: capuz
+    wizard_hat: chapéu de mago
+    helm: elmo
+    beret: boina
+    flower_crown: coroa de flores
+    cap: gorro
+    bandana: bandana
+    horned_helm: elmo com chifres
+    tricorn: tricórnio
+    crown: coroa
+    straw_hat: chapéu de palha
+    top_hat: cartola
+    feathered_hat: chapéu com pena
+    headband: faixa de cabeça
+    witch_hat: chapéu de bruxa
+    turban: turbante
+    cowl: cógula
+    circlet: diadema
+    chef_hat: chapéu de cozinheiro
+    starry_wizard_hat: chapéu de mago estrelado
+  top:
+    tunic: túnica
+    jerkin: jaqueta
+    robe: veste
+    shirt: camisa
+    vest: colete
+    doublet: gibão
+    apron: avental
+    chainmail: cota de malha
+    poncho: poncho
+    sweater: suéter
+    coat: casaco
+    tabard: tabardo
+    corset: corpete
+    hoodie: túnica com capuz
+    kimono: quimono
+    leather_vest: colete de couro
+    sash_shirt: camisa com faixa
+    blouse: blusa
+    scale_shirt: cota de escamas
+    patched_jerkin: jaqueta remendada
+    royal_doublet: gibão real
+    silk_robe: veste de seda
+  bottom:
+    trousers: calças
+    skirt: saia
+    shorts: bermuda
+    kilt: kilt
+    leggings: calça justa
+    long_skirt: saia longa
+    breeches: culotes
+    baggy_pants: calças largas
+    sarong: canga
+    robe_skirt: saia-manto
+  cloak:
+    none: sem capa
+    cape: capa
+    long_cloak: capa longa
+    short_cape: capa curta
+    tattered_cloak: capa esfarrapada
+    fur_mantle: manto de peles
+    hooded_cloak: capa com capuz
+    royal_cape: capa real
+    leaf_cloak: capa de folhas
+    feather_cloak: manto de penas
+    shawl: xale
+  accessory:
+    none: nada mais
+    round_glasses: óculos redondos
+    pipe: um cachimbo
+    eyepatch: um tapa-olho
+    earring: um brinco
+    scar: uma cicatriz
+    monocle: um monóculo
+    freckles: sardas
+    beard: uma barba
+    mustache: um bigode
+    goggles: óculos de proteção
+    necklace: um colar
+    flower: uma flor atrás da orelha
+    nose_ring: um piercing no nariz
+    war_paint: pintura de guerra
+    bandage: uma bandagem na cabeça
+  dye:
+    d0: carmesim
+    d1: azul-royal
+    d2: verde-floresta
+    d3: ameixa
+    d4: âmbar
+    d5: carvão
+    d6: marfim
+    d7: terra
+    d8: azul-petróleo
+    d9: rosa
+    d10: oliva
+    d11: azul-meia-noite
+    d12: bordô
+    d13: mostarda
+    d14: ardósia
+    d15: coral
+    d16: pérola

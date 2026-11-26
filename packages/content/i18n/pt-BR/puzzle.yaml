@@ -1,0 +1,18 @@
+dungeon_levers:
+  name: Alavancas do Sol e da Lua
+  desc: "Dois agentes diferentes precisam usar \"pull_lever\" na alavanca do sol e na alavanca da lua com no máximo 60 segundos de diferença. O caminho ao sul então fica aberto por 3 minutos."
+dungeon_chest:
+  name: Baú Velho
+  desc: "Um baú trancado que só um Ladino consegue abrir, com a ação \"pick_lock\". Guarda poções, relíquias e minério de prata."
+dungeon_trap:
+  name: Armadilha de Lâminas
+  desc: "Só um Ladino consegue parar as lâminas oscilantes, com a ação \"disarm\". Falhar machuca. Depois de desarmada, o caminho ao sul fica aberto por 10 minutos."
+dungeon_seal:
+  name: Selo Rúnico
+  desc: "Só um Mago consegue ler as runas, com a ação \"read_runes\". Quando o selo se rompe, o caminho a oeste fica aberto por 10 minutos."
+dungeon_gate:
+  name: Portão de Grade Pesado
+  desc: "Um Guerreiro precisa usar \"hold_gate\" para segurar o portão aberto enquanto os outros passam. Alguém então puxa o guincho do outro lado para deixar o Guerreiro passar. Exige pelo menos 2 agentes."
+vault_coffer:
+  name: Baú do Regente
+  desc: "O baú pessoal do Regente Oco. Só um Ladino consegue abri-lo, com a ação \"pick_lock\". Guarda minério de mithril, ferro estelar e outros tesouros."

@@ -1,0 +1,57 @@
+# Ferreiro
+smelt_iron: { name: Fundir ferro }
+blow_flasks: { name: Soprar frascos }
+forge_buckles: { name: Forjar fivelas }
+forge_pot: { name: Forjar panela }
+forge_iron_sword: { name: Forjar espada de ferro }
+forge_iron_dagger: { name: Forjar adaga de ferro }
+forge_iron_mace: { name: Forjar maça de ferro }
+forge_chainmail: { name: Forjar cota de malha }
+forge_greatsword: { name: Forjar montante de aço }
+forge_plate: { name: Forjar armadura de placas }
+forge_mithril_blade: { name: Forjar lâmina de mithril }
+forge_mithril_kris: { name: Forjar kris de mithril }
+forge_mithril_mail: { name: Forjar cota de mithril }
+forge_shadow_dagger: { name: Forjar adaga sombria }
+forge_holy_mace: { name: Forjar maça sagrada }
+forge_sunlit_scepter: { name: Forjar cetro solar }
+
+# Alquimista
+brew_minor_potion: { name: Preparar poção de vida menor }
+brew_health_potion: { name: Preparar poção de vida }
+brew_greater_potion: { name: Preparar poção de vida maior }
+brew_mana_potion: { name: Preparar poção de mana }
+brew_greater_mana: { name: Preparar poção de mana maior }
+press_oil: { name: Prensar óleo }
+brew_fury: { name: Preparar elixir da fúria }
+mix_red_dye: { name: Misturar corante vermelho }
+mix_blue_dye: { name: Misturar corante azul }
+mix_green_dye: { name: Misturar corante verde }
+mix_gold_dye: { name: Misturar corante dourado }
+mix_pearl_dye: { name: Misturar corante perolado }
+attune_crystal_staff: { name: Sintonizar cajado de cristal }
+attune_starfall_staff: { name: Sintonizar cajado da estrela cadente }
+
+# Alfaiate
+sew_padded_armor: { name: Costurar armadura acolchoada }
+sew_leather_armor: { name: Costurar armadura de couro }
+sew_small_bag: { name: Costurar bolsa pequena }
+sew_large_bag: { name: Costurar bolsa grande }
+sew_chef_hat: { name: Costurar chapéu de cozinheiro }
+weave_flower_crown: { name: Tecer coroa de flores }
+sew_fur_mantle: { name: Costurar manto de peles }
+sew_leaf_cloak: { name: Costurar capa de folhas }
+sew_witch_hat: { name: Costurar chapéu de bruxa }
+sew_starry_hat: { name: Costurar chapéu de mago estrelado }
+sew_silk_robe: { name: Costurar veste de seda }
+sew_royal_cape: { name: Costurar capa real }
+grind_monocle: { name: Polir monóculo }
+
+# Cozinheiro
+char_coal: { name: Carbonizar carvão }
+bake_bread: { name: Assar pão }
+pack_ration: { name: Embalar rações de viajante }
+cook_hearty_stew: { name: Cozinhar ensopado farto }
+roast_a_boar: { name: Assar javali }
+bake_mushroom_pie: { name: Assar torta de cogumelos }
+bake_honey_cake: { name: Assar bolo de mel }

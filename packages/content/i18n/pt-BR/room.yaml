@@ -1,0 +1,191 @@
+# Vila de Mistvale
+village.square:
+  name: Praça de Mistvale
+  desc: "O coração de paralelepípedos de Mistvale, com um quadro de avisos e o armazém da Olga. Taverna ao norte, prefeitura ao sul, mercado a leste, templo a oeste."
+village.tavern:
+  name: Taverna do Grifo Sonolento
+  desc: "O salão quentinho e barulhento da Berta. Tem o quadro de avisos, uma cozinha para Cozinheiros e camas para quem precisa descansar."
+village.guild_hall:
+  name: Salão da Guilda
+  desc: "Um salão de estandartes e papelada onde a Registrador Vey registra novas guildas mediante uma taxa."
+village.plot_nw:
+  name: Terreno Noroeste
+  desc: "Um lote vazio com uma estaca esperançosa fincada no chão. A biblioteca da vila está planejada aqui."
+village.plot_ne:
+  name: Terreno Nordeste
+  desc: "Um lote gramado com uma bela vista de coisa nenhuma em particular. A torre de vigia está planejada aqui."
+village.plot_far:
+  name: Terreno do Extremo Leste
+  desc: "Um lote vazio na beira da vila, esperando por alguém com ouro e ambição."
+village.temple:
+  name: Templo de Mistvale
+  desc: "Um templo tranquilo cuidado pela Irmã Ilse. Quem desaba acorda aqui, com a bolsa um pouco mais leve."
+village.west_gate:
+  name: Portão Oeste
+  desc: "Um portão de madeira voltado para as árvores. A Floresta dos Sussurros fica a oeste e o alquimista ao sul."
+village.alchemist:
+  name: Loja de Alquimia
+  desc: "A loja da Mirela cheira a ervas e perigo moderado. Uma bancada de alquimia borbulha no canto, para Alquimistas."
+village.tailor:
+  name: Alfaiataria
+  desc: "Rolos de tecido, um tear rangente para Alfaiates e o Tomas, que está julgando seu visual em silêncio."
+village.town_hall:
+  name: Prefeitura
+  desc: "O Escrivão Aldo guarda aqui o livro de projetos e a urna de votos. Venha contribuir com os projetos da vila, votar ou se candidatar a prefeito."
+village.smithy:
+  name: Ferraria
+  desc: "A forja do Gunnar ruge dia e noite. Ferreiros fabricam aqui, e a loja vende artigos de metal."
+village.market:
+  name: Mercado
+  desc: "Fileiras de barracas onde os agentes anunciam ordens de venda, taxadas pelo prefeito. O Mercador Bram se preocupa ao lado da sua carroça."
+village.east_gate:
+  name: Portão Leste
+  desc: "Um portão vigiado na estrada velha. A leste ficam as Ruínas da Velha Cael, onde a lei não segue você."
+village.plot_se:
+  name: Terreno Sudeste
+  desc: "Um lote vazio e sossegado atrás da ferraria, aquecido pela forja e cheio de potencial."
+village.plot_sw:
+  name: Terreno Sudoeste
+  desc: "Um lote amplo e plano de grama pisoteada. A arena está planejada aqui."
+village.training_yard:
+  name: Pátio de Treinamento
+  desc: "Bonecos de palha e conselhos gritados. O Sargento Holt treina recrutas aqui, e duelos amistosos são permitidos."
+village.south_gate:
+  name: Portão Sul
+  desc: "Um portão vigiado acima dos brejos. O Pântano do Lodaçal, sem lei, fica ao sul. A muralha da vila está planejada aqui."
+village.plot_s:
+  name: Terreno Sul
+  desc: "Um lote vazio entre a ferraria e o portão sul. Solo bom, nenhuma construção ainda."
+village.north_road:
+  name: Estrada do Norte
+  desc: "Uma estrada esburacada para fora da vila. A margem do rio fica a leste e a trilha para as Colinas do Lombo Cinzento, a oeste."
+village.river_bank:
+  name: Margem do Rio
+  desc: "Um rio veloz com madeira à deriva para coletar. As minas ficam logo do outro lado, ao norte, assim que a vila construir a ponte."
+
+# Floresta dos Sussurros
+forest.edge:
+  name: Orla da Floresta
+  desc: "Árvores ensolaradas onde o Guarda-florestal Fen faz a vigia. Slimes balançam por aí, e madeira e ervas verdes são fáceis de coletar."
+forest.path:
+  name: Trilha da Floresta
+  desc: "Uma trilha sinuosa sob folhas sussurrantes. Slimes e lobos rondam por aqui, e há madeira de sobra."
+forest.glade:
+  name: Clareira Enluarada
+  desc: "Uma clareira rica em ervas verdes, com um pouco de erva lunar. Lobos caçam aqui, e um lobo sombrio se junta a eles à noite."
+forest.thicket:
+  name: Matagal das Aranhas
+  desc: "Espinheiros densos cheios de teias. Aranhas gigantes espreitam entre árvores boas para madeira."
+forest.old_oak:
+  name: O Velho Carvalho
+  desc: "Um carvalho enorme e antigo onde quatro trilhas se encontram. Javalis fuçam em volta do tronco, e os galhos caídos rendem boa madeira."
+forest.hollow:
+  name: Grota Profunda
+  desc: "Um beco sem saída sombrio onde brotos de ent rangem e a erva lunar cresce farta. Lobos sombrios rondam à noite."
+forest.creek:
+  name: Riacho Murmurante
+  desc: "Um riacho frio com ervas verdes nas margens e pedra solta no leito. Slimes e um ou outro javali vêm beber água."
+forest.mushroom_ring:
+  name: Círculo de Cogumelos
+  desc: "Um anel de cogumelos pálidos que zumbe de leve. Aranhas gigantes e um broto de ent guardam a erva lunar."
+
+# Colinas do Lombo Cinzento e as Minas
+hills.trail:
+  name: Trilha da Colina
+  desc: "Uma trilha pedregosa que sobe para fora da vila. Javalis pastam entre os rochedos, e pedra é fácil de coletar."
+hills.switchback:
+  name: Ziguezague
+  desc: "Um caminho em zigue-zague morro acima. Morcegos das cavernas e um lobo perdido incomodam os escaladores. Pedra e um pouco de minério de cobre aparecem na rocha."
+hills.pass:
+  name: Passo do Lombo Cinzento
+  desc: "Um passo ventoso dominado por kobolds. A entrada da mina fica a leste."
+mines.entrance:
+  name: Entrada da Mina
+  desc: "A boca escorada de madeira das minas, onde o Capataz Brakka grita por cima dos morcegos das cavernas. Minério de cobre e pedra ao alcance da mão."
+mines.tunnel:
+  name: Túnel Principal
+  desc: "Um túnel comprido de trilhos velhos e kobolds. Minério de ferro e de cobre cobre as paredes. O portão inferior fica ao sul."
+mines.lower_gate:
+  name: Portão Inferior
+  desc: "A porta dos fundos das minas, dominada por kobolds, com um pouco de minério de ferro. Abre para o sul, rumo ao rio, assim que a ponte for construída."
+mines.deep_shaft:
+  name: Poço Profundo
+  desc: "Um poço vertiginoso onde golems de pedra rangem de um lado para o outro. Rico em minério de ferro, com algumas veias de prata."
+mines.flooded_gallery:
+  name: Galeria Alagada
+  desc: "Água negra até os joelhos e ecos de gotejamento. Morcegos das cavernas e um golem de pedra guardam o minério de ferro."
+mines.crystal_cavern:
+  name: Caverna de Cristal
+  desc: "Uma caverna cintilante de cristal e minério de prata. Os besouros de cristal acham que tudo isso é deles."
+mines.forge_ruin:
+  name: Forja em Ruínas
+  desc: "Uma forja antiga, fria há muito tempo e inútil para fabricar. O capataz kobold e sua turma mandam aqui agora. Há minério de ferro entre os escombros."
+
+# Pântano do Lodaçal
+swamp.marsh_edge:
+  name: Beira do Brejo
+  desc: "A estrada afunda na lama e a lei termina aqui. Sapos do lodaçal coaxam entre os lírios do brejo."
+swamp.reeds:
+  name: Juncos Sussurrantes
+  desc: "Juncos altos escondem espreitadores do brejo e um sapo do lodaçal. Lírios do brejo e ervas verdes crescem nas águas rasas."
+swamp.bog:
+  name: Brejo Negro
+  desc: "Lama que suga e mau cheiro. Espreitadores do brejo esperam lá embaixo, fogos-fátuos flutuam à noite e cogumelos-sombra crescem entre os lírios."
+swamp.witch_hut:
+  name: Cabana da Eremita
+  desc: "Uma cabana torta com uma bancada de alquimia, lar da herbalista Morwen. A irmã malvada dela, a bruxa do pântano, fica de tocaia lá fora entre os cogumelos-sombra."
+swamp.sunken_road:
+  name: Estrada Afundada
+  desc: "Uma velha estrada pavimentada meio engolida pelo lodaçal. Espreitadores do brejo e um esqueleto errante a assombram. As ruínas ficam a leste."
+swamp.drowned_shrine:
+  name: Santuário Submerso
+  desc: "Um santuário afundado iluminado por fogos-fátuos, com um espectro à noite. Cogumelo-sombra e um pouco de cristal podem ser encontrados nas pedras."
+
+# Ruínas da Velha Cael
+ruins.road:
+  name: Estrada da Velha Cael
+  desc: "Uma estrada rachada a leste da vila, patrulhada por esqueletos e sem lei a partir daqui. A Erudita Ines acampa entre as pedras soltas."
+ruins.outskirts:
+  name: Arredores em Ruínas
+  desc: "Casas desmoronadas vasculhadas por esqueletos e bandidos. Relíquias antigas às vezes aparecem entre os escombros."
+ruins.collapsed_tower:
+  name: Torre Desabada
+  desc: "Uma torre caída assombrada por espectros. Minério de mithril reluz nos destroços, junto com relíquias antigas."
+ruins.plaza:
+  name: Praça Destruída
+  desc: "A antiga praça da cidade, agora uma encruzilhada de bandidos. O esconderijo deles fica a leste e a escadaria das catacumbas, ao sul."
+ruins.overgrown_street:
+  name: Rua Tomada pelo Mato
+  desc: "Trepadeiras e raízes retomaram a rua. Esqueletos arrastam os pés ao lado de veios de minério de prata."
+ruins.drowned_gate:
+  name: Portão Submerso
+  desc: "O portão oeste da cidade antiga, afundado até as dobradiças na água do pântano. Esqueletos e um espreitador do brejo dividem o lugar a contragosto."
+ruins.bandit_hideout:
+  name: Covil dos Bandidos
+  desc: "A toca do capitão dos bandidos, cheia de butim e más maneiras. Há ferro estelar escondido aqui. Não venha sozinho."
+ruins.catacomb_stairs:
+  name: Escadaria das Catacumbas
+  desc: "Degraus gastos vigiados por esqueletos, que descem para as catacumbas. Só um grupo pode descer."
+
+# Catacumbas do Regente Oco
+dungeon.antechamber:
+  name: Antecâmara
+  desc: "Um salão frio com uma alavanca do sol e uma alavanca da lua. Dois agentes diferentes devem puxá-las em até um minuto para abrir o caminho ao sul."
+dungeon.lever_hall:
+  name: Salão das Alavancas
+  desc: "O salão atrás da porta das alavancas, vigiado por guardas da cripta. Um baú velho e trancado espera por um Ladino."
+dungeon.trapped_corridor:
+  name: Corredor Armadilhado
+  desc: "Cães de ossos andam por um corredor de lâminas oscilantes. Um Ladino precisa desarmar a armadilha para abrir o caminho ao sul."
+dungeon.rune_door:
+  name: Porta Rúnica
+  desc: "Uma porta selada que brilha com runas, com um guarda da cripta e um cão de ossos de plantão. Só um Mago consegue ler o selo e abrir o caminho a oeste."
+dungeon.gate_hall:
+  name: Salão do Portão
+  desc: "Guardas da cripta ladeiam um enorme portão de grade. Um Guerreiro precisa segurá-lo aberto enquanto os outros passam para o oeste."
+dungeon.boss_lair:
+  name: Trono do Regente Oco
+  desc: "O Regente Oco reina aqui num trono de poeira. Um guincho junto ao portão deixa seu Guerreiro entrar. O cofre abre ao norte assim que o Regente cair."
+dungeon.vault:
+  name: Cofre do Regente
+  desc: "O tesouro particular do Regente Oco, enfim em silêncio. O baú tem uma fechadura que só um Ladino consegue abrir."

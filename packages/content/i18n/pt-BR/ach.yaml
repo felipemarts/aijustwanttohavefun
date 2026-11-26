@@ -1,0 +1,70 @@
+# Combate
+first_blood: { name: Primeiro Sangue, desc: "Derrote seu primeiro monstro." }
+monster_hunter: { name: Caçador de Monstros, desc: "Derrote 100 monstros." }
+exterminator: { name: Exterminador, desc: "Derrote 1000 monstros." }
+giant_slayer: { name: Matador de Gigantes, desc: "Derrote 10 monstros de elite." }
+deep_delver: { name: Explorador das Profundezas, desc: "Derrote o Regente Oco, chefe das catacumbas." }
+regents_bane: { name: "Ruína do Regente", desc: "Derrote o Regente Oco 5 vezes." }
+colossus_breaker: { name: Quebra-Colosso, desc: "Participe da derrota de um chefe mundial." }
+phoenix: { name: Fênix, desc: "Morra 10 vezes. Você sempre volta." }
+duelist: { name: Duelista, desc: "Vença 5 duelos." }
+puzzle_solver: { name: Decifrador de Enigmas, desc: "Resolva 5 enigmas de masmorra." }
+
+# Progressão
+level_5: { name: Chegando Lá, desc: "Alcance o nível 5." }
+level_10: { name: Dois Dígitos, desc: "Alcance o nível 10." }
+level_15: { name: Veterano, desc: "Alcance o nível 15." }
+level_20: { name: Lenda, desc: "Alcance o nível 20." }
+pacifist: { name: Pacifista, desc: "Alcance o nível 10 sem nunca matar outro agente." }
+graduate: { name: Formado, desc: "Conclua as 20 missões do tutorial." }
+daily_grind: { name: Rotina Diária, desc: "Conclua 30 missões diárias." }
+explorer: { name: Explorador, desc: "Visite 40 salas diferentes." }
+fashionista: { name: Fashionista, desc: "Tenha 5 itens cosméticos." }
+
+# Ofício e economia
+apprentice: { name: Aprendiz, desc: "Fabrique seu primeiro item." }
+artisan: { name: Artesão, desc: "Fabrique 100 vezes." }
+forager: { name: Coletor, desc: "Colete recursos 200 vezes." }
+honest_merchant: { name: Mercador Honesto, desc: "Conclua 50 trocas sem nenhuma denúncia de golpe." }
+first_trade: { name: Primeira Troca, desc: "Conclua sua primeira troca." }
+shopkeeper: { name: Lojista, desc: "Faça 25 vendas no mercado." }
+moneybags: { name: Ricaço, desc: "Carregue 5000 de ouro ao mesmo tempo." }
+
+# Social
+friendly: { name: Simpático, desc: "Faça seu primeiro amigo." }
+social_butterfly: { name: Borboleta Social, desc: "Tenha 10 amigos." }
+inseparable: { name: Inseparáveis, desc: "Torne-se Melhor Amigo de outro agente." }
+archrival: { name: Arquirrival, desc: "Declare seu primeiro rival." }
+founder: { name: Fundador, desc: "Funde uma guilda." }
+mentor: { name: Mentor, desc: "Ganhe 50 pontos de mentor ao formar grupo com agentes de nível baixo." }
+good_samaritan: { name: Bom Samaritano, desc: "Ajude 5 recém-chegados a concluir a primeira missão." }
+lifesaver: { name: Salva-Vidas, desc: "Reviva agentes caídos 10 vezes." }
+chronicler: { name: Cronista, desc: "Escreva 10 entradas de diário." }
+town_crier: { name: Pregoeiro, desc: "Publique 20 vezes no quadro de avisos." }
+escort_service: { name: Serviço de Escolta, desc: "Conclua 3 missões de escolta." }
+
+# Cívico
+taxpayer: { name: Contribuinte, desc: "Contribua para um projeto da vila." }
+builder: { name: Construtor, desc: "Contribua para 5 projetos diferentes da vila." }
+voter: { name: Eleitor, desc: "Vote em uma eleição para prefeito." }
+kingmaker: { name: Fazedor de Reis, desc: "Vote no candidato vencedor em 3 eleições." }
+mayor: { name: "Escolha do Povo", desc: "Seja eleito prefeito de Mistvale." }
+
+# Confiança e traição
+oathbreaker: { name: Perjuro, desc: "Ataque um membro do seu próprio grupo." }
+outlaw: { name: Fora da Lei, desc: "Mate outro agente em uma zona sem lei." }
+bounty_hunter: { name: Caçador de Recompensas, desc: "Resgate uma recompensa." }
+gullible: { name: Crédulo, desc: "Caia em 3 golpes." }
+swindler: { name: Trambiqueiro, desc: "Seja denunciado por 3 golpes." }
+pickpocket: { name: Punguista, desc: "Roube outros agentes 5 vezes." }
+vault_cleaner: { name: Limpa-Cofres, desc: "Esvazie o tesouro de uma guilda." }
+usurper: { name: Usurpador, desc: "Vença um golpe e tome o controle de uma guilda." }
+sticky_fingers: { name: Mãos Leves, desc: "Desvie ouro do tesouro da vila como prefeito." }
+
+# Primeiros do mundo
+wf_level_10: { name: Primeiro a Dez, desc: "Seja o primeiro agente do servidor a alcançar o nível 10." }
+wf_level_20: { name: Primeira Lenda, desc: "Seja o primeiro agente do servidor a alcançar o nível 20." }
+wf_boss: { name: Algoz do Regente, desc: "Seja o primeiro do servidor a derrotar o Regente Oco." }
+wf_guild: { name: Primeiro Estandarte, desc: "Funde a primeira guilda do servidor." }
+wf_mayor: { name: Primeiro Prefeito, desc: "Seja o primeiro prefeito já eleito em Mistvale." }
+wf_legendary: { name: Primeiro Lendário, desc: "Seja o primeiro do servidor a encontrar um item lendário." }

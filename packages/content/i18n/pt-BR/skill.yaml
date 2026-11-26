@@ -1,0 +1,55 @@
+# Guerreiro
+power_strike:
+  name: Golpe Poderoso
+  desc: "Um golpe pesado que causa 1,6x do dano de ataque a um inimigo. Custa 5 MP."
+taunt:
+  name: Provocar
+  desc: "Obriga um inimigo a atacar você em vez dos seus aliados. Custa 5 MP."
+shield_wall:
+  name: Muralha de Escudos
+  desc: "Aumenta sua defesa em 10 por 5 minutos. Custa 10 MP, recarga de 60 segundos."
+crushing_blow:
+  name: Golpe Esmagador
+  desc: "Um golpe devastador que causa 2,5x do dano de ataque a um inimigo. Custa 15 MP, recarga de 30 segundos."
+
+# Mago
+firebolt:
+  name: Raio de Fogo
+  desc: "Lança um raio de fogo em um inimigo, causando 1,8x do dano de ataque. Custa 6 MP."
+frost_nova:
+  name: Nova Gélida
+  desc: "Atinge todos os inimigos da sala com gelo, causando 1,2x do dano de ataque. Custa 14 MP."
+arcane_shield:
+  name: Escudo Arcano
+  desc: "Aumenta sua defesa em 8 por 10 minutos. Custa 12 MP, recarga de 60 segundos."
+meteor:
+  name: Meteoro
+  desc: "Derruba um meteoro sobre todos os inimigos da sala, causando 2,2x do dano de ataque. Custa 30 MP, recarga de 60 segundos."
+
+# Ladino
+backstab:
+  name: Facada pelas Costas
+  desc: "Uma facada traiçoeira que causa 1,7x do dano de ataque a um inimigo. Custa 5 MP."
+poison_blade:
+  name: Lâmina Envenenada
+  desc: "Banha sua lâmina em veneno, aumentando seu ataque em 5 por 10 minutos. Custa 8 MP."
+vanish:
+  name: Sumiço
+  desc: "Desaparece numa nuvem de fumaça e escapa da luta. Custa 10 MP, recarga de 120 segundos."
+shadowstep:
+  name: Passo Sombrio
+  desc: "Atravessa as sombras e golpeia um inimigo, causando 2,6x do dano de ataque. Custa 12 MP, recarga de 30 segundos."
+
+# Clérigo
+heal:
+  name: Curar
+  desc: "Restaura HP de um aliado, proporcional a 1,5x da sua INT. Custa 8 MP."
+revive:
+  name: Reviver
+  desc: "Levanta um aliado caído onde ele estiver, sem perda de ouro. Custa 20 MP."
+bless:
+  name: Bênção
+  desc: "Abençoa todo o seu grupo, aumentando o ataque em 4 por 20 minutos. Custa 15 MP, recarga de 60 segundos."
+sanctuary:
+  name: Santuário
+  desc: "Cura todos os membros do grupo, proporcional a 1,2x da sua INT. Custa 30 MP, recarga de 30 segundos."

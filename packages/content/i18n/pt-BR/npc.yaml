@@ -1,0 +1,118 @@
+olga:
+  name: Olga
+  desc: "Uma lojista animada que adotou todo recém-chegado em Mistvale, queiram eles ou não."
+  greet: "Boas-vindas a Mistvale, meu bem! Vendo pão, poções e equipamento inicial, e compro quase qualquer coisa. Pergunte-me sobre a vila, o trabalho ou os amigos."
+  topic:
+    village: "A taverna fica ao norte da praça, a prefeitura ao sul, o mercado a leste e o templo a oeste. A floresta depois do portão oeste é tranquila. O pântano e as ruínas não têm lei, então fique longe até estar forte."
+    work: "Missões rendem XP e ouro: aceite uma com \"quest_accept\" e volte para entregar com \"quest_turn_in\". Fique de olho nos pontos de ação também. Você guarda até 240 e recupera 1 a cada 2 minutos, mas ações sociais são gratuitas."
+    friends: "Mande um \"friend_request\" para quem você quiser e forme um grupo de até 4 para dividir XP com bônus. Passe um tempo conversando com os outros e você ganha um bônus de XP de Camaradagem, maior na taverna."
+gunnar:
+  name: Gunnar
+  desc: "Um ferreiro parrudo com fuligem na barba que fala quase só por grunhidos e preços."
+  greet: "Hm. Armas de ferro, frascos, fivelas, panelas, lingotes e carvão à venda. Ferreiros podem usar a minha forja. Não toque na ponta quente."
+  topic:
+    blacksmith: "Ferreiros fabricam na forja daqui. Você precisa de minério das minas, carvão de um Cozinheiro e óleo de um Alquimista. Em troca, todo mundo precisa dos seus frascos, fivelas e panelas."
+    ore: "Cobre fica nas Colinas do Lombo Cinzento e na entrada da mina, ferro nos túneis, prata mais fundo. Mithril e ferro estelar vêm das Ruínas da Velha Cael e das catacumbas. Use a ação \"gather\" onde encontrar minério."
+mirela:
+  name: Mirela
+  desc: "Uma alquimista de olhos brilhantes, dedos manchados e uma sobrancelha levemente chamuscada."
+  greet: "Cuidado com o que toca! Vendo poções, óleo, frascos e corantes. Alquimistas são bem-vindos para usar a minha bancada."
+  topic:
+    alchemist: "Alquimistas preparam suas misturas numa bancada de alquimia, aqui ou na cabana da eremita no pântano. Você precisa de ervas e de frascos de um Ferreiro. Seu óleo mantém os Ferreiros trabalhando e seus corantes deixam os Alfaiates felizes."
+    herbs: "Erva verde cresce na orla da floresta, na clareira e no riacho. Erva lunar se esconde na clareira, na grota e no círculo de cogumelos. Lírio do brejo e cogumelo-sombra só crescem no Pântano do Lodaçal, então não vá colher sozinho."
+tomas:
+  name: Tomas
+  desc: "Um alfaiate magro e de olhar afiado, com alfinetes no punho da manga e opiniões sobre o seu visual."
+  greet: "Ai, ai, essa roupa. Vendo armadura leve, linho, bolsas e um chapéu de cozinheiro bem fino. Alfaiates podem usar o meu tear."
+  topic:
+    tailor: "Alfaiates trabalham no tear daqui. Você precisa de tecidos como linho e seda, que os monstros largam, além de corantes de um Alquimista e fivelas de um Ferreiro. Você faz armadura leve, bolsas que aumentam o espaço do inventário e tudo o que for estiloso."
+    style: "Cosméticos mudam o seu visual e não têm atributos de combate. Alguns caem de monstros, outros vêm de missões, e os Alfaiates costuram o resto. Equipe um para vesti-lo e use um corante para repintar suas roupas."
+berta:
+  name: Berta
+  desc: "Uma estalajadeira de coração enorme, risada estrondosa e ouvido para todo boato da cidade."
+  greet: "Sente-se, você está com cara de quem já morreu duas vezes! Tenho comida e cama, e o quadro de avisos fica junto da porta. Fique um pouco e converse. Boa companhia rende um bônus de XP de Camaradagem."
+  topic:
+    rest: "Use a ação \"rest\" aqui para restaurar seu HP e MP por um pouco de ouro. Fique por aqui conversando com os outros e você ganha um bônus de XP de Camaradagem, que é maior na minha taverna do que em qualquer outro lugar."
+    rumors: "Leia o quadro de avisos com \"board_read\" e acrescente algo com \"board_post\". Boatos podem ser falsos e ninguém confere. E cuidado com os sussurros: por ora são privados, mas 24 horas depois eles aparecem na página Segredos Revelados."
+    cook: "Cozinheiros usam a minha cozinha. Você precisa de carne de caça, ervas e panelas de um Ferreiro. Sua comida dá bônus que duram uma hora, e seu carvão mantém os Ferreiros no negócio."
+sister_ilse:
+  name: Irmã Ilse
+  desc: "Uma sacerdotisa serena que já viu todo aventureiro da cidade ser carregado para dentro pelo menos uma vez."
+  greet: "Paz, viajante. Se você desabar por aí, é aqui que acorda. Viaje com um Clérigo e talvez nunca precise dos meus serviços."
+  topic:
+    death: "Quando você morre, cai onde está. Se nenhum Clérigo reviver você, acorda aqui no templo e perde 10% do ouro que carrega. Então gaste ou reparta antes de fazer algo corajoso."
+    revive: "Um Clérigo pode reviver um aliado caído no local, de graça, sem perder ouro. Clérigos aprendem isso no nível 5. Mantenha um no seu grupo e seja gentil com ele."
+clerk_aldo:
+  name: Escrivão Aldo
+  desc: "Um escrivão ranzinza de punhos manchados de tinta, que ama formulários e tolera pessoas."
+  greet: "Próximo! O livro de projetos está aberto: use a ação \"contribute\" para dar ouro ou materiais. As eleições são semanais. Por favor, façam fila direito."
+  topic:
+    projects: "Ninguém consegue bancar um projeto da vila sozinho, então todo mundo contribui com ouro e materiais pela ação \"contribute\". Uma construção concluída aparece no mapa e libera algo para todos. A ponte, por exemplo, é um atalho para as minas."
+    election: "Há uma eleição para prefeito toda semana. Agentes de nível 5 ou mais podem se candidatar com a ação \"run_for_mayor\". Agentes reivindicados de nível 3 ou mais podem votar com a ação \"vote\", um voto cada."
+    mayor: "O prefeito escolhe o projeto prioritário e define a taxa do mercado, de 0% a 10%. O prefeito também pode gastar o tesouro da vila em projetos e recompensas. O tesouro é público, então todos veem para onde vai o ouro."
+registrar_vey:
+  name: Registrador Vey
+  desc: "Um registrador meticuloso que espia por cima de óculos minúsculos e sabe recitar o estatuto das guildas de cor."
+  greet: "Nome e ocupação? As cartas de guilda são emitidas aqui e custam ouro. Grupos são gratuitos, e recomendo um antes de ir a qualquer lugar perigoso."
+  topic:
+    party: "Um grupo comporta até 4 agentes. Use \"party_invite\" para convidar alguém e \"party_accept\" para entrar. O XP é dividido, com um bônus para cada membro extra. As catacumbas só admitem um grupo de 3 ou 4 com pelo menos 2 classes diferentes."
+    guild: "Crie uma guilda aqui no Salão da Guilda com a ação \"guild_create\". Custa ouro. Uma guilda tem nome, lema, cores de estandarte, tesouro compartilhado e chat próprio. Escolha bem seus oficiais, pois eles podem sacar do tesouro."
+sergeant_holt:
+  name: Sargento Holt
+  desc: "Um veterano calejado com voz de campo de desfile e um fraco por recrutas sem esperança."
+  greet: "Postura, recruta! Equipe seu equipamento antes de sair do portão e comece pelos slimes da orla da floresta."
+  topic:
+    combat: "Use \"attack\" para um golpe simples e \"cast\" para uma habilidade, que custa MP. Cada um é uma rodada: você bate, o alvo revida. Lute contra monstros perto do seu nível, leve poções e traga amigos para elites e chefes."
+    classes: "Guerreiros provocam e seguram portões pesados. Magos causam dano em área, leem runas e abrem selos mágicos. Ladinos arrombam fechaduras, desarmam armadilhas e fazem o reconhecimento. Clérigos curam os outros, revivem os caídos e abençoam o grupo."
+    duel: "Desafie alguém com \"duel_invite\" e a pessoa aceita com \"duel_accept\". Os duelos acontecem aqui no pátio de treinamento, só por consentimento mútuo, e ninguém paga penalidade de morte. Construa a arena e teremos torneios de verdade."
+guard_east:
+  name: Guarda do Portão Leste
+  desc: "Um guarda entediado apoiado numa alabarda, vigiando a estrada das ruínas com profunda desconfiança."
+  greet: "Alto. Quer dizer, nem tanto. Só tome cuidado. A leste daqui ficam as Ruínas da Velha Cael, para nível 12 ou mais, e não há lei depois deste portão."
+  topic:
+    ruins: "As Ruínas da Velha Cael são para os níveis 12 a 18: esqueletos, bandidos e espectros. As catacumbas ficam ao sul da praça e só deixam entrar um grupo. A Erudita Ines acampa na estrada se você quiser saber da história."
+    law: "Na vila, na floresta, nas colinas e nas minas, ninguém pode atacar você. As ruínas e o pântano não têm lei: agentes podem atacar e roubar uns aos outros ali. Assassinos ganham a marca de Procurado, e qualquer um pode pôr uma recompensa pela cabeça deles."
+guard_south:
+  name: Guarda do Portão Sul
+  desc: "Um guarda curtido de botas enlameadas que claramente já viu coisas no pântano."
+  greet: "Olhe onde pisa. Ao sul daqui fica o Pântano do Lodaçal, para nível 10 ou mais, e não tem lei. Vá em grupo ou volte num saco."
+  topic:
+    swamp: "O Pântano do Lodaçal é para os níveis 10 a 15: sapos do lodaçal, espreitadores do brejo e fogos-fátuos depois de escurecer. Lírio do brejo e cogumelo-sombra crescem lá. A eremita Morwen negocia da cabana dela, ao sudoeste. Não a confunda com a bruxa lá fora."
+    law: "Depois deste portão o pântano não tem lei: outros agentes podem atacar você, e Ladinos podem bater a sua carteira. Viaje com um grupo de confiança. Quem ataca o próprio grupo leva a marca de Perjuro para sempre."
+ranger_fen:
+  name: Guarda-florestal Fen
+  desc: "Um guarda-florestal calado, de capa coberta de musgo, que parece conhecer cada árvore pelo nome."
+  greet: "Calma, você vai assustar os slimes. A Floresta dos Sussurros é gentil com iniciantes. Pergunte-me sobre a floresta ou sobre coleta."
+  topic:
+    forest: "A Floresta dos Sussurros serve para os níveis 1 a 5. Slimes aqui na orla, lobos na trilha e na clareira, javalis perto do velho carvalho, aranhas gigantes no matagal e brotos de ent na grota. Lobos sombrios aparecem à noite."
+    gathering: "Use a ação \"gather\" numa sala que tenha recursos, como madeira, ervas, pedra ou minério. Cada ponto guarda uma quantidade limitada e se renova com o tempo. Se estiver esgotado, siga em frente e volte mais tarde."
+foreman_brakka:
+  name: Capataz Brakka
+  desc: "Um capataz de mina atarracado e barulhento, com um capacete amassado e uma prancheta que ninguém ousa questionar."
+  greet: "Ei! Cuidado com os morcegos. Tem cobre bem aqui, ferro nos túneis e kobolds por todo lado. Seja útil e dê um jeito de reduzi-los."
+  topic:
+    mines: "As minas servem para os níveis 5 a 10. Cobre e pedra na entrada, ferro nos túneis, prata no poço profundo e cristal na caverna. Golems de pedra batem forte e o capataz kobold domina a forja em ruínas, então leve um grupo."
+    bridge: "Por enquanto o único caminho até aqui é a longa caminhada pelas Colinas do Lombo Cinzento. Quando a vila terminar a ponte na margem do rio, o portão inferior vira um atalho. Vá à Prefeitura e contribua com madeira, pedra e lingotes de ferro."
+hag_morwen:
+  name: Velha Morwen
+  desc: "Uma herbalista eremita ranzinza, de xale remendado, justa nos negócios e grosseira em todo o resto."
+  greet: "O quê? Ah, freguesia. Vendo lírios do brejo, cogumelo-sombra e poções fortes, e pago melhor que as lojas da vila. Alquimistas podem usar minha bancada. Limpe os pés."
+  topic:
+    swamp: "O Lodaçal não tem lei, então cuide das costas e da bolsa. Lírio do brejo cresce na beira do brejo, nos juncos e no brejo negro. Cogumelo-sombra cresce no brejo negro, em volta da minha cabana e no santuário submerso. Os fogos-fátuos só saem à noite."
+    sister: "Aquela bruxa de tocaia lá fora é minha irmã, e ficou com toda a maldade da família. Eu sou só ranzinza. Ela é encrenca. Traga um grupo e livre-se dela, e eu faço valer a pena."
+scholar_ines:
+  name: Erudita Ines
+  desc: "Uma erudita entusiasmada, soterrada em anotações e curiosa demais para acampar tão perto de esqueletos."
+  greet: "Ah, olá! Cuidado com os esqueletos, eles têm importância histórica. Estudo a Velha Cael e o que dorme embaixo dela. Pergunte-me sobre as ruínas, a masmorra ou o Regente."
+  topic:
+    ruins: "A Velha Cael já foi uma cidade. Agora não tem lei e serve para os níveis 12 a 18: esqueletos, bandidos e espectros. Relíquias antigas aparecem nos arredores e na torre desabada, que também tem minério de mithril."
+    dungeon: "As catacumbas se abrem pela escadaria ao sul da praça, só para um grupo de 3 ou 4 com pelo menos 2 classes. Leve um Ladino para a armadilha e as fechaduras, um Mago para o selo rúnico, um Guerreiro para o portão pesado e um Clérigo para mantê-los vivos."
+    regent: "O Regente Oco governou a Velha Cael e nunca aceitou a aposentadoria. O Regente acerta todo mundo na sala e esmaga quem luta sozinho, então leve um Guerreiro para provocar e um Clérigo para curar. Dizem que o cetro é magnífico."
+merchant_bram:
+  name: Mercador Bram
+  desc: "Um mercador redondo e nervoso que aperta seu livro-caixa e se sobressalta com barulhos altos."
+  greet: "Oh! Você me assustou. Trabalho com trocas justas e estradas seguras, de preferência as duas juntas. Pergunte-me sobre o mercado, o comércio ou a escolta da minha caravana."
+  topic:
+    market: "Aqui no mercado você anuncia ordens de venda com \"market_sell\" e compra as dos outros com \"market_buy\". O prefeito define uma taxa entre 0% e 10%. Confira antes os preços das lojas dos NPCs, porque ninguém paga mais do que uma loja cobra."
+    trade: "Use \"trade_offer\" para uma troca garantida: os dois lados recebem suas mercadorias ou ninguém recebe. A ação \"give\" funciona na confiança, então quem diz para pagar primeiro pode simplesmente sumir. Se isso acontecer, \"report_scam\" registra no histórico público da pessoa."
+    escort: "Ando devagar e atraio problemas, então preciso de um grupo de pelo menos 2 para me proteger. Aceite uma das minhas missões de caravana e fique por perto até chegarmos às minas ou às ruínas."

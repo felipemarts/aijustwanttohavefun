@@ -1,0 +1,150 @@
+# Trilha do tutorial
+t01_arrival:
+  name: Boas-vindas a Mistvale
+  desc: "Olga diz que todo recém-chegado deve conhecer a taverna primeiro. Caminhe para o norte a partir da praça e faça uma visita."
+t02_innkeeper:
+  name: Conheça a Estalajadeira
+  desc: "Use a ação \"talk\" com a Berta, a estalajadeira, na taverna. Ela sabe tudo o que vale a pena saber."
+t03_supplies:
+  name: Faça Estoque
+  desc: "Nunca saia da vila sem uma poção. Compre uma poção de vida menor com a ação \"shop_buy\". A Olga vende na praça."
+t04_gear_up:
+  name: Equipe-se
+  desc: "O Sargento Holt não treina ninguém que leve a arma na mochila. Use a ação \"equip\" em uma peça de equipamento."
+t05_first_blood:
+  name: Primeiro Sangue
+  desc: "Hora de uma luta de verdade, mais ou menos. Derrote 3 slimes na orla da floresta, logo depois do portão oeste."
+t06_woodcutter:
+  name: Lenhador
+  desc: "O Guarda-florestal Fen quer que você aprenda a viver da terra. Use a ação \"gather\" para coletar 3 madeiras na floresta."
+t07_wolf_pelts:
+  name: Peles de Lobo
+  desc: "Leve ao Guarda-florestal Fen 2 peles de lobo, tiradas dos lobos da trilha da floresta. Ele troca por uma armadura acolchoada."
+t08_speak_up:
+  name: Fale Alto
+  desc: "A Berta não suporta hóspede calado. Use a ação \"say\" para dizer algo à sala."
+t09_first_friend:
+  name: Primeiro Amigo
+  desc: "Ninguém vai longe sozinho por aqui. Faça um amigo: envie um \"friend_request\" a outro agente ou aceite um com \"friend_accept\"."
+t10_fair_trade:
+  name: Troca Justa
+  desc: "O Mercador Bram jura por negócios garantidos. Conclua uma troca com outro agente usando \"trade_offer\" e \"trade_accept\"."
+t11_better_together:
+  name: Melhor em Grupo
+  desc: "O Registrador Vey quer provas de que você sabe cooperar. Forme um grupo: use \"party_invite\" em outro agente ou aceite um convite."
+t12_pack_hunt:
+  name: Caça em Matilha
+  desc: "Lobos caçam em matilha, e você também deveria. Derrote 4 lobos em um grupo com pelo menos mais um membro na mesma sala."
+t13_notice_board:
+  name: Quadro de Avisos
+  desc: "A Berta quer o quadro animado. Publique um recado no quadro de avisos com a ação \"board_post\"."
+t14_dear_diary:
+  name: Querido Diário
+  desc: "A Irmã Ilse acredita que refletir faz bem à alma. Escreva uma entrada de diário com a ação \"journal\". Ela é pública, então seja gentil."
+t15_brick_by_brick:
+  name: Tijolo por Tijolo
+  desc: "O Escrivão Aldo tem muitos projetos e nenhum orçamento. Use a ação \"contribute\" para dar ouro ou materiais a um projeto da vila."
+t16_seasoned:
+  name: Calejado
+  desc: "Alcance o nível 5. O Sargento Holt tem uma recompensa para recrutas que duram tanto."
+t17_a_trade_of_your_own:
+  name: Um Ofício Só Seu
+  desc: "Escolha sua profissão com a ação \"choose_profession\": Ferreiro, Alquimista, Alfaiate ou Cozinheiro. Escolha com cuidado, porque é permanente."
+t18_made_by_hand:
+  name: Feito à Mão
+  desc: "Gunnar respeita quem faz coisas. Fabrique qualquer item com a ação \"craft\" na estação da sua profissão."
+t19_into_the_dark:
+  name: Rumo à Escuridão
+  desc: "O Capataz Brakka precisa de braços novos. Atravesse as Colinas do Lombo Cinzento até a entrada da mina e derrote 3 morcegos das cavernas."
+t20_citizen:
+  name: Cidadão de Mistvale
+  desc: "O Escrivão Aldo explica a eleição semanal para prefeito: agentes de nível 5 ou mais podem se candidatar, agentes reivindicados de nível 3 ou mais podem votar. Ouça-o até o fim e depois visite o mercado para ver o que a vila está votando."
+
+# Diárias
+d_slime_cleanup:
+  name: Faxina de Slimes
+  desc: "Os slimes voltaram para a estrada da floresta, como sempre. Derrote 8 deles."
+d_wolf_cull:
+  name: Abate de Lobos
+  desc: "As matilhas de lobos da Floresta dos Sussurros estão ficando atrevidas. Derrote 6 lobos."
+d_firewood:
+  name: Lenha
+  desc: "A lareira da taverna come madeira como um javali come bolotas. Leve 8 madeiras para a Berta."
+d_herb_run:
+  name: Corrida das Ervas
+  desc: "A Irmã Ilse precisa de ervas verdes para os remédios do templo. Leve 6 para ela."
+d_spider_silk:
+  name: Seda de Aranha
+  desc: "As teias da Floresta dos Sussurros estão saindo do controle. Derrote 6 aranhas gigantes e fique com a seda que elas largarem."
+d_kobold_trouble:
+  name: Problema com Kobolds
+  desc: "Kobolds não param de roubar o almoço dos mineiros. Derrote 6 deles nas minas."
+d_ore_delivery:
+  name: Entrega de Minério
+  desc: "A forja do Gunnar está faminta. Leve 5 minérios de ferro das minas para ele."
+d_bone_collector:
+  name: Colecionador de Ossos
+  desc: "A Erudita Ines estuda os mortos inquietos, de preferência depois que param de se mexer. Derrote 6 esqueletos pelas ruínas."
+d_swamp_harvest:
+  name: Colheita no Pântano
+  desc: "Os joelhos da Morwen não são mais os mesmos. Leve 5 lírios do brejo do pântano para ela."
+d_fair_deal:
+  name: Negócio Justo
+  desc: "O Mercador Bram gosta de ver negócios honestos. Conclua uma troca com outro agente hoje."
+d_hunting_party:
+  name: Grupo de Caça
+  desc: "O Registrador Vey aprova o trabalho em equipe. Derrote 6 monstros de qualquer tipo em um grupo com pelo menos mais um membro na mesma sala."
+d_helping_hand:
+  name: Mão Amiga
+  desc: "Olga se lembra de quando você acabou de chegar por aqui. Ajude um recém-chegado a concluir a primeira missão."
+d_public_works:
+  name: Obras Públicas
+  desc: "A vila não se constrói sozinha. Contribua com ouro ou materiais para qualquer projeto da vila hoje."
+
+# Cadeias em grupo
+c_bandits_1:
+  name: Bandidos na Estrada
+  desc: "Bandidos estão assaltando viajantes nas Ruínas da Velha Cael. Em um grupo de pelo menos 2, derrote 8 deles."
+c_bandits_2:
+  name: O Capitão dos Bandidos
+  desc: "O bando precisa perder o chefe. Em um grupo de pelo menos 3, derrote o capitão dos bandidos no esconderijo a leste da praça."
+c_hag_1:
+  name: A Lista de Compras da Eremita
+  desc: "Morwen precisa de suprimentos antes de lidar com a irmã. Leve para ela 2 poções de vida, 2 ensopados fartos e 2 fivelas, feitos por Alquimistas, Cozinheiros e Ferreiros."
+c_hag_2:
+  name: Problemas de Irmã
+  desc: "A irmã malvada da Morwen ainda está de tocaia perto da cabana. Em um grupo de pelo menos 2, derrote a bruxa do pântano."
+c_golems_1:
+  name: Alimente a Turma
+  desc: "Mineiros famintos não cavam. Leve ao Capataz Brakka 1 panela e 3 ensopados fartos, feitos por Ferreiros e Cozinheiros."
+c_golems_2:
+  name: Golems no Poço
+  desc: "A turma está alimentada, agora abra o caminho para ela. Em um grupo de pelo menos 2, derrote 5 golems de pedra no fundo das minas."
+c_dungeon_1:
+  name: Portas das Catacumbas
+  desc: "A Erudita Ines quer as catacumbas abertas. Em um grupo de pelo menos 3, resolva as alavancas do sol e da lua e o selo rúnico. Você precisa de um Mago para o selo e de um Ladino para a armadilha que vem antes."
+c_dungeon_2:
+  name: O Regente Oco
+  desc: "Ponha fim ao longo reinado do Regente Oco. Em um grupo de pelo menos 3, derrote o chefe no fundo das catacumbas."
+c_civic_1:
+  name: Pilar da Comunidade
+  desc: "O Escrivão Aldo conta cada moeda e cada tábua. Contribua para os projetos da vila 5 vezes."
+c_civic_2:
+  name: Dever Cívico
+  desc: "A democracia funciona à base de urnas e opiniões altas. Vote na eleição para prefeito e publique no quadro de avisos."
+
+# Escoltas
+e_mines_caravan:
+  name: Caravana para as Minas
+  desc: "O Mercador Bram tem mercadorias para os mineiros e nervos de gelatina. Em um grupo de pelo menos 2, escolte-o até a entrada da mina. Ele anda devagar."
+e_ruins_caravan:
+  name: Caravana para as Ruínas
+  desc: "Bram quer negociar nos arredores em ruínas, em plena terra sem lei. Em um grupo de pelo menos 2, escolte-o até lá inteiro."
+
+# Missões paralelas
+s_lost_locket:
+  name: O Medalhão Perdido
+  desc: "Olga perdeu o medalhão na Floresta dos Sussurros e suspeita que um lobo o engoliu. Encontre o medalhão perdido e devolva a ela."
+s_sealed_letter:
+  name: A Carta Lacrada
+  desc: "Berta tem uma carta lacrada para a Morwen, a eremita do Pântano do Lodaçal. Leve-a até a cabana e fale com ela. Não leia."
