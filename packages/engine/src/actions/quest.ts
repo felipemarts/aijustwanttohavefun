@@ -8,6 +8,7 @@ import { dailyQuests, initialProgress, nextTutorial, questBlocker, questEvent, q
 import { route } from '../routes';
 import { emit, fail, markAgent, msg, tell, type Run } from '../run';
 import type { AgentState } from '../types';
+import { questXpMult } from '../unlocks';
 import { normId, type HandlerMap } from './util';
 
 function questById(run: Run, raw: string): Quest {
@@ -103,7 +104,7 @@ export const questActions: HandlerMap = {
     addGold(run, a, q.rewards.gold);
     tell(run, 'n.quest_done', { quest: ref.quest(q.id), gold: q.rewards.gold });
     for (const s of q.rewards.items) tell(run, 'n.loot', { item: ref.item(s.item), qty: s.qty });
-    const xp = gainXp(run, a, q.rewards.xp);
+    const xp = gainXp(run, a, Math.round(q.rewards.xp * questXpMult(run.s)));
     if (xp > 0) tell(run, 'n.xp', { xp });
     bump(run, a, 'quests_done');
     const stat = KIND_STAT[q.kind];

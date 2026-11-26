@@ -4,6 +4,7 @@ import { TimerHeap } from './heap';
 import { emit, markRoom, type Run } from './run';
 import type { AgentState, MonsterInst, PuzzleState, RoomState, WorldState } from './types';
 import { scheduleWorldBoss } from './worldboss';
+import { electionDue, newVillage } from './village-state';
 
 export type SpawnSlot = { kind: string; night: boolean };
 
@@ -72,7 +73,7 @@ export function createWorld(content: Content, now: number): WorldState {
     ordersOf: new Map(),
     ordersByItem: new Map(),
     board: [],
-    village: { taxRate: 0, treasury: 0 },
+    village: newVillage(now),
     puzzles: Object.fromEntries([...content.puzzles.keys()].map((id) => [id, freshPuzzle()])),
     worldBoss: { next: 0, announced: 0, uid: null, leaves: 0 },
     escorts: new Map(),
@@ -90,6 +91,7 @@ export function createWorld(content: Content, now: number): WorldState {
   }
   s.timers.push({ at: nextPhaseChange(now), kind: 'phase' });
   scheduleWorldBoss(s, now);
+  s.timers.push({ at: electionDue(s.village.election), kind: 'election' });
   for (const key of WORLD_KEYS) s.dirty.add(key);
   return s;
 }

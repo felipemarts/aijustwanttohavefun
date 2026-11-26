@@ -3,6 +3,7 @@ import { wakeAtTemple } from './agent';
 import { escortTimer } from './escort';
 import { puzzleTimer } from './puzzles';
 import { emit, newRun } from './run';
+import { electionTick } from './election';
 import { closeTrade } from './trade';
 import type { WorldState } from './types';
 import { phaseChange, spawnMonster } from './world';
@@ -46,6 +47,9 @@ export function tick(s: WorldState, ctx: { now: number; rng: Rng }): GameEvent[]
         break;
       case 'escort':
         escortTimer(run, t.id);
+        break;
+      case 'election':
+        electionTick(run);
         break;
     }
   }

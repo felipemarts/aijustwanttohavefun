@@ -3,6 +3,7 @@ import { addGold, addItem, bump, canFit, count, removeItem } from '../agent';
 import { BALANCE } from '../balance';
 import { addOrder, ordersOf, recordTrade, removeOrder } from '../market';
 import { questEvent } from '../quests';
+import { marketSlots } from '../unlocks';
 import { emit, fail, markAgent, msg, tell, type Run } from '../run';
 import type { AgentState, Order } from '../types';
 import { carried } from './items';
@@ -24,7 +25,7 @@ export const marketActions: HandlerMap = {
     const item = carried(run, a, p.item);
     if (item.type === 'quest') fail('NOT_ALLOWED', 'quest_item_bound', { item: ref.item(item.id) });
     if (count(a, item.id) < p.qty) fail('MISSING_ITEMS', 'not_enough_items', { item: ref.item(item.id), have: count(a, item.id), need: p.qty });
-    const max = BALANCE.market.maxOrders;
+    const max = marketSlots(run.s);
     if (ordersOf(run.s, a.id) >= max) fail('CONFLICT', 'market_orders_full', { max });
     // The items leave the bag now and wait in the market until someone buys them or the seller cancels.
     removeItem(a, item.id, p.qty);

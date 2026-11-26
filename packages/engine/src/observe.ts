@@ -14,6 +14,8 @@ import { nextTutorial, questReady } from './quests';
 import { inboxSince, newRun, type Run } from './run';
 import { tradesOf } from './trade';
 import type { AgentState, WorldState } from './types';
+import { unlockedAt } from './unlocks';
+import { civicSeen, type CivicSeen } from './village-view';
 import { refreshMonster, refreshResource } from './world';
 import { worldBossInfo } from './worldboss';
 import type { Rng } from '@ajwf/shared';
@@ -86,6 +88,10 @@ export type Observation = {
     puzzles?: PuzzleView[];
     /** Escorted NPCs standing here. */
     escorts?: EscortView[];
+    /** At a project site: its progress (0..1) or done. */
+    project?: CivicSeen['project'];
+    /** At the town hall: projects open to contributions. */
+    projects?: CivicSeen['projects'];
   };
   time: string;
   actions: ActionName[];
@@ -171,7 +177,7 @@ function pendingFor(s: WorldState, a: AgentState, now: number): Pending | undefi
 }
 
 /** Actions that make sense where the agent stands right now (PLANEJAMENTO §11.3). */
-function contextActions(run: Run, a: AgentState, o: Observation['room'], pending: Pending | undefined): ActionName[] {
+function contextActions(run: Run, a: AgentState, o: Observation['room'], pending: Pending | undefined, civic: ActionName[]): ActionName[] {
   if (a.fallen) return ['release', 'say', 'whisper'];
   const c = run.c;
   const out: ActionName[] = [];
@@ -190,7 +196,7 @@ function contextActions(run: Run, a: AgentState, o: Observation['room'], pending
     if (a.level >= 5 && !a.profession) out.push('choose_profession');
     if (o.items) out.push('take');
     if (flags.includes('market')) out.push('market_list', 'market_buy', 'market_sell');
-    if (o.agents.length && (flags.includes('training') || flags.includes('arena'))) out.push('duel_invite');
+    if (o.agents.length && (flags.includes('training') || flags.includes('arena') || unlockedAt(run.s, 'arena_duels', a.room))) out.push('duel_invite');
     if (flags.includes('guild_hall') && !a.guild) out.push('guild_create');
     for (const pz of o.puzzles ?? []) {
       const cls = PUZZLE_CLASS[c.puzzles.get(pz.id)!.type];
@@ -199,6 +205,7 @@ function contextActions(run: Run, a: AgentState, o: Observation['room'], pending
     }
     if (a.cls === 'rogue') out.push('scout');
     if (a.cls === 'mage' && (a.inv[BALANCE.enchant.item] ?? 0) > 0) out.push('enchant');
+    out.push(...civic);
   }
   if (o.agents.length) out.push('trade_offer', 'party_invite');
   if (flags.includes('board')) out.push('board_read', 'board_post');
@@ -266,6 +273,9 @@ export function observe(s: WorldState, agentId: string, ctx: { now: number; rng:
   if (puzzles.length) room.puzzles = puzzles;
   const escorts = escortsHere(s, a.room);
   if (escorts.length) room.escorts = escorts;
+  const civic = civicSeen(s, a);
+  if (civic.project) room.project = civic.project;
+  if (civic.projects) room.projects = civic.projects;
 
   const obs: Observation = {
     you: {
@@ -294,7 +304,7 @@ export function observe(s: WorldState, agentId: string, ctx: { now: number; rng:
   if (guild) obs.you.guild = guild.name;
   const pending = pendingFor(s, a, ctx.now);
   if (pending) obs.pending = pending;
-  obs.actions = contextActions(run, a, room, pending);
+  obs.actions = contextActions(run, a, room, pending, civic.actions);
 
   const next = nextTutorial(run, a);
   if (next) {

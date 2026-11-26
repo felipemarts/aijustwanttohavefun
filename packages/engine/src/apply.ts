@@ -3,6 +3,7 @@ import { touch } from './agent';
 import { apCost, BALANCE } from './balance';
 import { boardActions } from './actions/board';
 import { chatActions } from './actions/chat';
+import { civicActions } from './actions/civic';
 import { combatActions } from './actions/combat';
 import { duelActions } from './actions/duel';
 import { friendActions } from './actions/friends';
@@ -37,6 +38,7 @@ export const HANDLERS: HandlerMap = {
   ...boardActions,
   ...guildActions,
   ...utilityActions,
+  ...civicActions,
 };
 
 /** What a fallen agent can still do: call for help, give up and wait at the temple, read. */

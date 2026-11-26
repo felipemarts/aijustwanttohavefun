@@ -3,6 +3,7 @@ import { ref, type ErrorCode, type MsgParams } from '@ajwf/shared';
 import { bossGateBlock, partyGateBlock, puzzleGateBlock } from './gate-checks';
 import type { Run } from './run';
 import type { AgentState } from './types';
+import { isProjectDone } from './unlocks';
 
 export type Gate = Room['gates'][string];
 export type Block = { code: ErrorCode; slug: string; params?: MsgParams };
@@ -14,7 +15,7 @@ export type Block = { code: ErrorCode; slug: string; params?: MsgParams };
 export function gateBlocker(run: Run, a: AgentState, gate: Gate): Block | null {
   switch (gate.requires) {
     case 'project':
-      return { code: 'NOT_AVAILABLE_HERE', slug: 'gate_project', params: { proj: ref.proj(gate.id ?? '') } };
+      return isProjectDone(run.s, gate.id ?? '') ? null : { code: 'NOT_AVAILABLE_HERE', slug: 'gate_project', params: { proj: ref.proj(gate.id ?? '') } };
     case 'party':
       return partyGateBlock(run, a);
     case 'puzzle':

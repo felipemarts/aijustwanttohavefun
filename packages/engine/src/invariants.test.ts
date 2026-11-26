@@ -160,6 +160,8 @@ function plausible(k: Kit, rng: Rng, a: AgentState, anyActions: readonly string[
     case 'guild_deposit':
     case 'guild_withdraw':
       return { action, params: guildGoods() };
+    case 'contribute':
+      return { action, params: { project: maybe(pick([...(o.room.projects ?? []).map((x) => x.id), ...(o.room.project ? [o.room.project.id] : [])])), ...goods() } };
     case 'move':
       return { action, params: { dir: maybe(pick(Object.keys(o.room.exits))) } };
     case 'attack':
@@ -243,6 +245,9 @@ function goldFlow(events: GameEvent[], r?: ApplyResult): number {
     if (e.type === 'respawn') d -= e.payload.lost as number;
     if (e.type === 'guild_founded') d -= e.payload.cost as number;
     if (e.type === 'guild_disbanded') d -= (e.payload.lost as { gold: number }).gold;
+    // Civic sinks (see civic.fuzz.test.ts for the full civic fuzz).
+    if (e.type === 'project_contribution' || e.type === 'mayor_fund') d -= (e.payload.gold as number | undefined) ?? 0;
+    if (e.type === 'guild_hall_built') d -= (e.payload.cost as { gold: number }).gold;
   }
   if (r?.result.ok) {
     for (const m of r.result.narration) {
@@ -390,7 +395,7 @@ describe('fuzz', () => {
     const agents: AgentState[] = [];
     for (let i = 0; i < 18; i++) {
       const a = k.add(`Soc${i}`, CLASSES[i % 4]!, { claimed: i % 9 !== 8, room: rooms[i % rooms.length], level: i % 9 === 8 ? 2 : i % 3 === 0 ? 11 : 1 + (i % 5) });
-      a.gold = rng.int(200, 900);
+      a.gold = rng.int(600, 1500);
       Object.assign(a.inv, { iron_ore: 6, wood: 5, minor_potion: 3, wolf_pelt: 2, bread: 4 });
       agents.push(a);
     }

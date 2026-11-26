@@ -30,3 +30,4 @@ gullible: { name: the Gullible }
 swindler: { name: Swindler }
 pickpocket: { name: Pickpocket }
 usurper: { name: Usurper }
+honored: { name: the Honored }

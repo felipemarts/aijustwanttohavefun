@@ -2,8 +2,9 @@ import type { Appearance } from '@ajwf/appearance';
 import type { Content } from '@ajwf/content';
 import type { ActionName, AgentStatus, BoardTag, ClassId, ErrorCode, GameEvent, LootMode, Msg, ProfessionId, Rng } from '@ajwf/shared';
 import type { TimerHeap } from './heap';
+import type { Village } from './village-state';
 
-export type Buff = { id: string; stat: 'atk' | 'def' | 'xp' | 'regen'; value: number; until: number };
+export type Buff = { id: string; stat: 'atk' | 'def' | 'xp' | 'regen' | 'max_mp'; value: number; until: number };
 
 /** Progress of an accepted quest: one counter per step. */
 export type QuestProgress = { steps: number[]; at: number };
@@ -163,8 +164,8 @@ export type Market = { orders: Record<string, Order>; history: MarketTrade[] };
 export type BoardReply = { by: string; text: string; at: number };
 export type BoardPost = { id: string; by: string; tag: BoardTag; text: string; at: number; replies: BoardReply[] };
 
-/** The village as a civic entity. The civic systems (mayor, projects) extend it. */
-export type Village = { taxRate: number; treasury: number };
+/** The village as a civic entity: see village-state.ts. */
+export type { Village };
 
 
 /** Live state of one dungeon puzzle (its rules are in puzzles.yaml). */
@@ -221,7 +222,8 @@ export type Timer =
   /** The world boss schedule: announce, appear, leave. */
   | { at: number; kind: 'wboss'; step: 'announce' | 'spawn' | 'leave' }
   /** A stalled escort may expire. */
-  | { at: number; kind: 'escort'; id: string };
+  | { at: number; kind: 'escort'; id: string }
+  | { at: number; kind: 'election' };
 
 export type Inbox = { buf: (GameEvent | undefined)[]; head: number; size: number };
 

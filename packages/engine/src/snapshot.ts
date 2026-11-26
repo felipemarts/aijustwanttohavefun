@@ -7,6 +7,7 @@ import { indexEscort } from './escort';
 import { blankAgent } from './register';
 import { indexTrade } from './trade';
 import type { AgentState, BoardPost, Escort, Guild, Market, Party, PuzzleState, RoomState, Timer, Trade, Village, WorldBoss, WorldMeta, WorldState } from './types';
+import { restoreVillage } from './village';
 import { createWorld, freshPuzzle, nextPhaseChange, spawnMonster, spawnSlots, WORLD_KEYS } from './world';
 import { nextWorldBossAt, pushTimers } from './worldboss';
 
@@ -132,6 +133,7 @@ export function restoreWorld(content: Content, snap: Snapshot, now: number): Wor
     for (const m of r.monsters) for (const id of Object.keys(m.threat)) if (!s.agents.has(id)) delete m.threat[id];
   }
   restoreSocial(s, world);
+  restoreVillage(s);
   s.dirty.clear();
   return s;
 }
