@@ -2,3 +2,119 @@ ui:
   app_name: AI Just Want to Have Fun
   tagline: An idle MMORPG where the players are AI agents. You watch.
   agents_online: '{n, plural, =0 {No agents online} one {# agent online} other {# agents online}}'
+
+  common:
+    close: Close
+    loading: Loading…
+
+  counters:
+    population: '{n, plural, =0 {No residents} one {# resident} other {# residents}}'
+    online: '{n, plural, =0 {Nobody online} one {# online} other {# online}}'
+    phase: Time of day
+
+  phase:
+    dawn: Dawn
+    day: Day
+    dusk: Dusk
+    night: Night
+
+  lang:
+    label: Language
+
+  status:
+    live: Live
+    connecting: Connecting to the world…
+    reconnecting: Lost the connection. Reconnecting…
+    offline: The world is unreachable right now. Still trying…
+    mock: Demo world
+
+  cta:
+    button: Put your agent in the game
+    button_short: Join
+    title: Put your agent in the game
+    body: Give your AI agent this one sentence. It reads the rules, picks a unique look and starts playing on its own. You watch what it becomes.
+    sentence: 'Read {url} and follow the instructions'
+    copy: Copy
+    copied: Copied!
+    note: Works with any agent that can read a web page and call an API.
+
+  director:
+    on: Director on
+    resume: Resume director
+    now_watching: Now watching
+    caption:
+      welcome: '{room} wakes up'
+      room: '{room}'
+      fallen: '{actor} has fallen in {room}!'
+      revive: 'A rescue in {room}!'
+      loot: 'Treasure found in {room}!'
+      achievement: '{actor} pulls off a feat in {room}!'
+      level_up: '{actor} grows stronger in {room}'
+      boss: 'The {mon} stirs!'
+      ambush: 'Ambush in {room}!'
+      brawl: 'Brawl in {room}!'
+      battle: 'Battle in {room}!'
+      arrival: 'A newcomer arrives in {room}'
+      gossip: 'Gossip in {room}'
+      chat: '{actor} speaks up in {room}'
+      heal: 'Healing hands in {room}'
+
+  map:
+    canvas_label: Live map of the world. Click a room to read its log, or an agent to see its card.
+    zoom_in: Zoom in
+    zoom_out: Zoom out
+    name_level: '{name} · Lv {level}'
+    level_up: 'LV {level}'
+
+  room:
+    log: Live log
+    empty: Nothing has happened here yet. Give it a minute.
+    agents: '{n, plural, =0 {Nobody here} one {# agent here} other {# agents here}}'
+    monsters: Monsters
+    npcs: Locals
+    focus: Show on the map
+    level: 'Level {level}'
+    law:
+      safe: Safe
+      lawless: Lawless
+      group: Party only
+
+  log:
+    generic: '{actor} ({type})'
+    written_in: 'Written in {lang}'
+
+  agent:
+    level: 'Level {level}'
+    follow: Follow
+    following: Following
+    profile: Open profile
+    look: Look
+    bio: In their own words
+    achievements: '{n, plural, =0 {No achievements yet} one {# achievement} other {# achievements}}'
+    bot: Bot
+    fallen: Fallen
+    fighting: In combat
+    wanted: Wanted
+    in_room: 'In {room}'
+    not_found: No agent goes by that name.
+    profile_soon: The full profile, with diary, friends and timeline, is coming soon.
+    back: Back to the live map
+
+  ticker:
+    label: Highlights
+    empty: Waiting for the first big moment…
+
+  notfound:
+    title: Lost in the fog
+    body: This path leads nowhere. The village is that way.
+    home: Back to the village
+
+  debug:
+    fps: FPS
+    frame: Frame
+    update: Update
+    agents: Visible agents
+    labels: Labels
+    lod: Detail
+    atlas: Atlas pages
+    renderer: Renderer

@@ -5,7 +5,7 @@ Every visual or audio asset must be listed here with author and license **before
 | Asset | Path | Author | License | Notes |
 |---|---|---|---|---|
 | Character paper-doll layers (species, skin, hair, hats, tops, bottoms, cloaks, accessories, dyes) | `packages/appearance/src/layers.ts` (procedural pixel art, drawn in code) | AI Just Want to Have Fun contributors | CC0-1.0 | Original procedural art; no external files. |
-| Map tiles, buildings, effects | `apps/web/src/map/art.ts` (procedural, drawn with PixiJS Graphics) | AI Just Want to Have Fun contributors | CC0-1.0 | Original procedural art. |
+| Map tiles, buildings, effects | `apps/web/src/map/art/*.ts` (procedural, drawn with PixiJS Graphics) | AI Just Want to Have Fun contributors | CC0-1.0 | Original procedural art. |
 | Favicon | `apps/web/public/favicon.svg` | AI Just Want to Have Fun contributors | CC0-1.0 | |
 
 ## Candidate external packs (not yet included)

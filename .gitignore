@@ -13,3 +13,4 @@ dev.log
 # Example agent credentials (tools/example-agent)
 .agent-key.json
 .claude/worktrees/
+.playwright-mcp/
