@@ -109,16 +109,30 @@ export function questEvent(run: Run, a: AgentState, type: StepType, target?: str
   }
 }
 
-/** Steps that are already true when the quest is accepted start as done. */
+/** Something beyond the class's starter weapon is equipped. */
+function equippedBeyondStarter(run: Run, a: AgentState): boolean {
+  const starter = run.c.classes.get(a.cls)?.starter.map((st) => st.item) ?? [];
+  return Object.entries(a.equip).some(([slot, id]) => id !== null && !(slot === 'weapon' && starter.includes(id)));
+}
+
+/** Steps that are already true when the quest is accepted start as done (as far as their quantity allows). */
 export function initialProgress(run: Run, a: AgentState, q: Quest): number[] {
   return q.steps.map((st) => {
+    const done = (n: number) => Math.min(st.qty, n);
     switch (st.type) {
       case 'visit':
-        return st.target === a.room ? 1 : 0;
+        return done(st.target === a.room ? 1 : 0);
       case 'profession':
-        return a.profession ? 1 : 0;
+        return done(a.profession ? 1 : 0);
       case 'party':
-        return partyHere(run, a).length > 1 ? 1 : 0;
+        return done(partyHere(run, a).length > 1 ? 1 : 0);
+      case 'guild':
+        return done(a.guild ? 1 : 0);
+      case 'friend':
+        return done(a.friends.length);
+      case 'equip':
+        if (st.target) return done(Object.values(a.equip).includes(st.target) ? 1 : 0);
+        return done(equippedBeyondStarter(run, a) ? 1 : 0);
       default:
         return 0;
     }

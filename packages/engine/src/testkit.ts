@@ -173,3 +173,21 @@ export function worldWealth(s: WorldState): { gold: number; items: Record<string
   }
   return { gold, items };
 }
+
+/** Puts the agents in `room` and parties them up through the actions (the first one leads). */
+export function partyUp(k: Kit, room: string, ...members: AgentState[]): AgentState[] {
+  const [leader, ...rest] = members;
+  for (const m of members) k.place(m, room);
+  for (const m of rest) {
+    k.ok(leader!, 'party_invite', { agent: m.name });
+    k.ok(m, 'party_accept', { agent: leader!.name });
+  }
+  return members;
+}
+
+/** The error message key and hint key of a refused action, for checking both at once. */
+export function errKeys(r: ApplyResult): { code: string; msg: string; hint?: string; p?: Record<string, string | number> } | null {
+  if (r.result.ok) return null;
+  const e = r.result.error;
+  return { code: e.code, msg: e.msg.k, ...(e.hint ? { hint: e.hint.k } : {}), ...(e.msg.p ? { p: e.msg.p } : {}) };
+}

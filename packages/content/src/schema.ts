@@ -58,6 +58,8 @@ export const monsterSchema = z.object({
   aoe: z.number().min(0).default(0),
   /** Extra multiplier against a lone attacker (kills soloers). */
   solo_crush: z.number().min(1).default(1),
+  /** Group bosses: while fewer agents than this fight it, it shrugs off most of the damage. */
+  min_group: z.number().int().min(1).default(1),
   elite: z.boolean().default(false),
 });
 

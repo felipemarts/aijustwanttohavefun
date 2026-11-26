@@ -167,12 +167,61 @@ export type BoardPost = { id: string; by: string; tag: BoardTag; text: string; a
 export type Village = { taxRate: number; treasury: number };
 
 
+/** Live state of one dungeon puzzle (its rules are in puzzles.yaml). */
+export type PuzzleState = {
+  /** The way it guards is open until this time (0: closed). */
+  open: number;
+  /** levers: lever -> who pulled it and when, during the current window. */
+  pulls: Record<string, { by: string; at: number }>;
+  /** gate: the Warrior holding it up, and since when. */
+  hold: { by: string; at: number } | null;
+  /** gate: raised from the far side by the winch until this time. */
+  winch: number;
+  /** lock: the loot is back at this time (0: ready now). */
+  ready: number;
+};
+
+/** The daily world boss: its next appearance and the instance currently in the world. */
+export type WorldBoss = {
+  /** When it next appears. */
+  next: number;
+  /** The `next` value that was already announced (each appearance is announced once). */
+  announced: number;
+  /** Monster uid while it is in the world, and when it leaves. */
+  uid: string | null;
+  leaves: number;
+};
+
+/** A slow NPC that a party walks to a destination (escort quests). */
+export type Escort = {
+  id: string;
+  quest: string;
+  npc: string;
+  /** Destination room. */
+  to: string;
+  party: string;
+  /** Where the NPC stands now. */
+  room: string;
+  hp: number;
+  max: number;
+  /** Agents who accepted the quest: they lose it when the escort fails. */
+  guards: string[];
+  /** Last time the NPC moved (or started): a stalled escort expires. */
+  at: number;
+};
+
 /** Things that happen later. Kept in a heap; plain JSON so the heap can be snapshotted. */
 export type Timer =
   | { at: number; kind: 'respawn'; room: string; slot: number }
   | { at: number; kind: 'fallen'; agent: string }
   | { at: number; kind: 'phase' }
-  | { at: number; kind: 'trade'; id: string };
+  | { at: number; kind: 'trade'; id: string }
+  /** A puzzle may close (it checks its own state: a later opening keeps it open). */
+  | { at: number; kind: 'puzzle'; id: string }
+  /** The world boss schedule: announce, appear, leave. */
+  | { at: number; kind: 'wboss'; step: 'announce' | 'spawn' | 'leave' }
+  /** A stalled escort may expire. */
+  | { at: number; kind: 'escort'; id: string };
 
 export type Inbox = { buf: (GameEvent | undefined)[]; head: number; size: number };
 
@@ -187,6 +236,7 @@ export type WorldMeta = {
   tradeSeq: number;
   orderSeq: number;
   postSeq: number;
+  escortSeq: number;
   createdAt: number;
 };
 
@@ -220,9 +270,19 @@ export type WorldState = {
   /** Latest posts, oldest first. */
   board: BoardPost[];
   village: Village;
+  /** puzzle id -> live state, one per puzzle of the content. */
+  puzzles: Record<string, PuzzleState>;
+  worldBoss: WorldBoss;
+  escorts: Map<string, Escort>;
+  /** party id -> id of the escort it runs. Derived. */
+  escortOfParty: Map<string, string>;
+  /** room id -> ids of the escorts whose NPC stands there. Derived. */
+  escortsIn: Map<string, Set<string>>;
+  /** room id -> slot -> when its pending respawn is due. Derived from the timers. */
+  respawns: Map<string, Map<number, number>>;
   /**
    * Keys of entities changed since the last snapshot: `agent:<id>`, `room:<id>`, `party:<id>`, `guild:<id>`, `meta`,
-   * `timers`, `trades`, `market`, `board`, `village`.
+   * `timers`, `trades`, `market`, `board`, `village`, `puzzles`, `wboss`, `escorts`.
    */
   dirty: Set<string>;
 };

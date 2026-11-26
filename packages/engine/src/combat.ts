@@ -1,12 +1,13 @@
 import { ref } from '@ajwf/shared';
 import { addGold, bump, derive, fall, gainXp, giveOrDrop, touch } from './agent';
-import { BALANCE, levelGapXpMod } from './balance';
+import { BALANCE, levelGapXpMod, respawnDelayMs } from './balance';
 import { raiseBond } from './bond';
 import { bestFriendAtSide, markParty, partyOf } from './party';
 import { questEvent } from './quests';
 import { emit, fail, markAgent, markRoom, msg, tell, type Run } from './run';
 import type { AgentState, MonsterInst, Party } from './types';
-import { refreshMonster, roomState } from './world';
+import { agentsIn, refreshMonster, roomState, scheduleRespawn, spawnSlots } from './world';
+import { worldBossKilled } from './worldboss';
 
 /** max(1, atk * mult * rand(0.85..1.15) - def / 2), with a chance to crit. */
 export function rollDamage(run: Run, atk: number, mult: number, def: number, critChance = 0): { dmg: number; crit: boolean } {
@@ -33,13 +34,27 @@ export function findMonster(run: Run, a: AgentState, target: string | undefined)
   const byUid = room.monsters.find((m) => m.uid === id);
   if (byUid) return byUid;
   const same = room.monsters.filter((m) => m.kind === id);
-  if (!same.length) fail('TARGET_NOT_FOUND', 'monster_not_here', { target });
+  if (!same.length) {
+    const back = respawnIn(run, a.room, id);
+    if (back !== null) fail('TARGET_NOT_FOUND', 'monster_respawning', { target, seconds: back });
+    fail('TARGET_NOT_FOUND', 'monster_not_here', { target });
+  }
   return (
     same.find((m) => m.uid === a.combat?.mon) ??
     same.find((m) => m.threat[a.id] !== undefined) ??
     same.find((m) => Object.keys(m.threat).length > 0) ??
     same[0]!
   );
+}
+
+/** Seconds until the next monster of this kind comes back to the room, or null. Looks only at the room's pending respawns. */
+export function respawnIn(run: Run, roomId: string, kind: string): number | null {
+  const pending = run.s.respawns.get(roomId);
+  if (!pending?.size) return null;
+  const slots = spawnSlots(run.c, roomId);
+  let next = Infinity;
+  for (const [slot, at] of pending) if (slots[slot]?.kind === kind && at < next) next = at;
+  return next === Infinity ? null : Math.max(1, Math.ceil((next - run.now) / 1000));
 }
 
 /** Agents in the monster's threat table who are still standing in its room. */
@@ -57,7 +72,17 @@ export function strike(run: Run, a: AgentState, m: MonsterInst, mult: number, ve
   const kind = run.c.monsters.get(m.kind)!;
   const d = derive(run.c, a, run.now);
   const withFriend = bestFriendAtSide(run, a) ? 1 + BALANCE.bond.bestFriendDamage : 1;
-  const { dmg, crit } = rollDamage(run, d.atk, mult * withFriend, kind.def, d.crit);
+  const roll = rollDamage(run, d.atk, mult * withFriend, kind.def, d.crit);
+  const { crit } = roll;
+  let dmg = roll.dmg;
+  if (kind.min_group > 1) {
+    // A group boss shrugs off most blows until enough agents fight it together.
+    const n = fightersOf(run, a.room, m).filter((b) => b !== a).length + 1;
+    if (n < kind.min_group) {
+      dmg = Math.max(1, Math.round(dmg * BALANCE.group.underGroupDamage));
+      tell(run, 'n.group_boss_weak', { mon: ref.mon(m.kind), n, need: kind.min_group });
+    }
+  }
   const dealt = Math.min(dmg, m.hp);
   m.hp -= dealt;
   m.threat[a.id] = (m.threat[a.id] ?? 0) + dealt;
@@ -199,10 +224,8 @@ export function killMonster(run: Run, roomId: string, m: MonsterInst): void {
   const kind = c.monsters.get(m.kind)!;
   const room = roomState(s, roomId);
   room.monsters = room.monsters.filter((x) => x !== m);
-  if (m.slot >= 0) {
-    s.timers.push({ at: now + kind.respawn_sec * 1000, kind: 'respawn', room: roomId, slot: m.slot });
-    s.dirty.add('timers');
-  }
+  if (m.slot >= 0) scheduleRespawn(s, roomId, m.slot, now + respawnDelayMs(kind.respawn_sec * 1000, agentsIn(s, roomId).size, kind.boss));
+  if (kind.world_boss) worldBossKilled(s, m);
   markRoom(s, roomId);
 
   const sides = killSides(run, roomId, m);
@@ -235,7 +258,7 @@ export function killMonster(run: Run, roomId: string, m: MonsterInst): void {
     const n = side.members.length;
     // A party's XP grows with its size, then is split evenly: being there is what counts, not the damage.
     const xpEach = side.party ? (kind.xp * share * (1 + BALANCE.party.xpPerExtraMember * (n - 1))) / n : kind.xp * share;
-    const credit = share >= BALANCE.combat.creditShare;
+    const credit = share >= (kind.world_boss ? BALANCE.worldBoss.creditShare : BALANCE.combat.creditShare);
     for (const b of side.members) {
       if (b !== run.actor) touch(run, b);
       if (b.combat?.mon === m.uid) b.combat = null;
@@ -262,6 +285,11 @@ export function killMonster(run: Run, roomId: string, m: MonsterInst): void {
   const pairs = credited.slice(0, BALANCE.bond.killPairsMax);
   for (let i = 0; i < pairs.length; i++) for (let j = i + 1; j < pairs.length; j++) raiseBond(run, pairs[i]!, pairs[j]!, BALANCE.bond.kill);
 
+  // A world boss: everyone with kill credit rolls the whole drop table for themselves.
+  if (kind.world_boss) {
+    for (const b of credited) for (const drop of kind.drops) if (rng.chance(drop.chance)) awardLoot(run, b, drop.item, drop.qty, m.kind);
+    return;
+  }
   for (const drop of kind.drops) {
     if (!rng.chance(drop.chance)) continue;
     let pick = rng.next() * total;

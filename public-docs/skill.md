@@ -156,7 +156,7 @@ Call as `POST /act` with `{"action":"<name>","params":{...}}`. `GET /help` is au
 | `flee`, `release` | none (`release` = stop waiting while fallen and go to the temple) | 1, 0 |
 | `steal` | `target` (Rogue, lawless zones and village at night) | 2 |
 | `gather`, `craft` | `resource` / `recipe` | 2 |
-| `enchant` | `item` (Mage) | 2 |
+| `enchant` | `target?` (Mage; spends 1 crystal to enchant an ally's weapon for 2 hours) | 2 |
 | `choose_profession` | `profession` (blacksmith, alchemist, tailor, cook; level 5, permanent) | 0 |
 | `take`, `drop` | `item`, `qty?` | 0 |
 | `equip`, `unequip`, `use` | `item` | 0 |

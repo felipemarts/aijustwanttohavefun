@@ -5,7 +5,7 @@ import { applyAction } from './apply';
 import { checkInvariants } from './invariants';
 import { observe } from './observe';
 import { newRun } from './run';
-import { HOUR, makeKit, SEC, worldWealth, type Kit } from './testkit';
+import { HOUR, makeKit, SEC, T0, worldWealth, type Kit } from './testkit';
 import { tick } from './tick';
 import type { AgentState, ApplyResult } from './types';
 
@@ -57,6 +57,9 @@ const SOCIAL_ACTION = [
   'board_post', 'board_reply', 'board_read', 'journal', 'guild_create', 'guild_invite', 'guild_join', 'guild_leave', 'guild_promote',
   'guild_deposit', 'guild_withdraw', 'guild_say',
 ];
+
+/** Class roles and the dungeon puzzles. */
+const PUZZLE_ACTIONS = ['scout', 'enchant', 'pull_lever', 'hold_gate', 'read_runes', 'disarm', 'pick_lock'];
 
 /** Actions that only move gold and items between holders: the world's total wealth must not change. */
 const TRANSFERS = new Set(['trade_accept', 'market_sell', 'market_buy', 'market_cancel', 'guild_deposit', 'guild_withdraw', 'party_give_loot']);
@@ -214,6 +217,18 @@ function plausible(k: Kit, rng: Rng, a: AgentState, anyActions: readonly string[
     case 'taunt':
     case 'revive':
       return { action, params: { target: maybe(pick(action === 'revive' ? others : o.room.monsters.map((m) => m.id))) } };
+    case 'scout':
+      return { action, params: { target: maybe(pick(Object.keys(o.room.exits))) } };
+    case 'enchant':
+      return { action, params: rng.chance(0.4) ? {} : { target: someone() } };
+    case 'pull_lever':
+    case 'hold_gate':
+    case 'read_runes':
+    case 'disarm':
+    case 'pick_lock': {
+      const mine = (o.room.puzzles ?? []).filter((x) => x.do === action || rng.chance(0.2));
+      return { action, params: { target: maybe(pick(mine.flatMap((x) => (rng.chance(0.1) ? [x.id] : x.targets)))) } };
+    }
     default:
       return { action, params: {} };
   }
@@ -298,6 +313,9 @@ function fuzz(k: Kit, rng: Rng, agents: AgentState[], steps: number, anyActions:
   return stats;
 }
 
+/** The fuzz runs are long by design; under a loaded machine they need more than the default minute. */
+const FUZZ_TIMEOUT = 240_000;
+
 describe('fuzz', () => {
   it('20,000 plausible and implausible actions by 30 agents keep every invariant and conserve gold', () => {
     const k = makeKit(2026);
@@ -329,7 +347,41 @@ describe('fuzz', () => {
     expect(kills).toBeGreaterThan(50);
     expect(deaths).toBeGreaterThan(0);
     expect(f.unchanged).toBeGreaterThan(1000);
-  });
+  }, FUZZ_TIMEOUT);
+
+  it('8,000 actions by parties in the dungeon and around the world boss keep every invariant and conserve gold', () => {
+    // Starts shortly before the world boss is announced, and runs for about a day of game time.
+    const k = makeKit(515, T0 + 19 * HOUR + 20 * 60 * SEC);
+    const rng = createRng(31);
+    const rooms = ['ruins.catacomb_stairs', 'dungeon.antechamber', 'dungeon.lever_hall', 'dungeon.trapped_corridor', 'dungeon.rune_door', 'dungeon.gate_hall', 'dungeon.boss_lair', 'hills.pass'];
+    const agents: AgentState[] = [];
+    for (let i = 0; i < rooms.length * 4; i++) {
+      const a = k.add(`Delver${i}`, CLASSES[i % 4]!, { room: rooms[Math.floor(i / 4)], level: 15 + (i % 6) });
+      a.gold = rng.int(50, 400);
+      Object.assign(a.inv, { crystal: 3, greater_potion: 2, minor_potion: 2 });
+      agents.push(a);
+    }
+    // Parties of four, one class each, formed through the actions.
+    for (let p = 0; p < rooms.length; p++) {
+      const [lead, ...rest] = agents.slice(p * 4, p * 4 + 4);
+      for (const m of rest) {
+        expect(k.act(lead!, 'party_invite', { agent: m.name }).result.ok).toBe(true);
+        expect(k.act(m, 'party_accept', { agent: lead!.name }).result.ok).toBe(true);
+      }
+    }
+    const actions = [...ANY_ACTION, ...PUZZLE_ACTIONS, 'party_leave', 'party_invite', 'party_accept'];
+    const f = fuzz(k, rng, agents, 8_000, actions, new Map(agents.map((a) => [a, a.room])));
+    console.log('dungeon fuzz ok actions', f.ok);
+    console.log('dungeon fuzz errors', f.errors);
+    const solved = agents.reduce((n, a) => n + (a.stats.puzzles_solved ?? 0), 0);
+    const colossusKills = agents.reduce((n, a) => n + (a.stats.world_boss_kills ?? 0), 0);
+    console.log(`dungeon fuzz: puzzles solved ${solved}, world boss kill credits ${colossusKills}, unchanged-on-error checks ${f.unchanged}`);
+    for (const action of PUZZLE_ACTIONS) expect(f.ok[action] ?? 0, action).toBeGreaterThan(0);
+    expect(solved).toBeGreaterThan(10);
+    // The world boss came and went (killed or not) and the next one is scheduled.
+    expect(k.s.worldBoss.next).toBeGreaterThan(T0 + 30 * HOUR);
+    expect(f.unchanged).toBeGreaterThan(300);
+  }, FUZZ_TIMEOUT);
 
   it('12,000 social and trading actions in the village keep every invariant and conserve gold and items', () => {
     const k = makeKit(4242);
@@ -346,7 +398,7 @@ describe('fuzz', () => {
     const f = fuzz(k, rng, agents, 12_000, SOCIAL_ACTION, new Map(agents.map((a) => [a, a.room])));
     console.log('social fuzz ok actions', f.ok);
     console.log('social fuzz errors', f.errors);
-    console.log(`social fuzz: transfers checked ${f.transfers}, unchanged-on-error checks ${f.unchanged}`);
+    console.log(`social fuzz: transfers checked ${f.transfers}, unchanged-on-error checks ${f.unchanged}, escorts started ${k.s.meta.escortSeq}`);
     for (const action of [
       'friend_request', 'friend_accept', 'declare_rival', 'party_invite', 'party_accept', 'party_leave', 'party_say', 'trade_offer', 'trade_accept',
       'trade_cancel', 'market_sell', 'market_buy', 'market_list', 'duel_invite', 'duel_accept', 'board_post', 'board_read', 'journal', 'guild_create',
@@ -356,5 +408,5 @@ describe('fuzz', () => {
     }
     expect(f.transfers).toBeGreaterThan(100);
     expect(f.unchanged).toBeGreaterThan(500);
-  });
+  }, FUZZ_TIMEOUT);
 });

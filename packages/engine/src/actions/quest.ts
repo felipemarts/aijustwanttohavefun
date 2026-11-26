@@ -2,8 +2,10 @@ import type { Quest } from '@ajwf/content';
 import { ref } from '@ajwf/shared';
 import { addGold, addItem, bump, canFit, count, gainXp, hasAll, removeItem } from '../agent';
 import { BALANCE } from '../balance';
+import { escortCheck, escortJoin } from '../escort';
 import { partyHere } from '../party';
 import { dailyQuests, initialProgress, nextTutorial, questBlocker, questEvent, questReady, questView } from '../quests';
+import { route } from '../routes';
 import { emit, fail, markAgent, msg, tell, type Run } from '../run';
 import type { AgentState } from '../types';
 import { normId, type HandlerMap } from './util';
@@ -16,7 +18,11 @@ function questById(run: Run, raw: string): Quest {
 
 function needGiverHere(run: Run, a: AgentState, q: Quest): void {
   const npc = run.c.npcs.get(q.giver)!;
-  if (npc.room !== a.room) fail('NOT_AVAILABLE_HERE', 'quest_giver_elsewhere', { npc: ref.npc(npc.id), room: ref.room(npc.room), room_id: npc.room });
+  if (npc.room === a.room) return;
+  const path = route(run.c, a.room, npc.room);
+  const max = BALANCE.routes.hintMax;
+  const dirs = path ? path.slice(0, max).join(', ') + (path.length > max ? ', ...' : '') : npc.room;
+  fail('NOT_AVAILABLE_HERE', 'quest_giver_elsewhere', { npc: ref.npc(npc.id), room: ref.room(npc.room), room_id: npc.room, path: dirs });
 }
 
 /** A newcomer finished a quest with veterans of its party at its side: they get credit for helping. */
@@ -65,11 +71,13 @@ export const questActions: HandlerMap = {
     needGiverHere(run, a, q);
     if (Object.keys(a.quests).length >= BALANCE.inventory.maxActiveQuests) fail('CONFLICT', 'quest_too_many', { max: BALANCE.inventory.maxActiveQuests });
     if (!canFit(run.c, a, q.grants)) fail('INVENTORY_FULL', 'inventory_full');
+    escortCheck(run, a, q);
     for (const g of q.grants) addItem(a, g.item, g.qty);
     a.quests[q.id] = { steps: initialProgress(run, a, q), at: run.now };
     tell(run, 'n.quest_accept', { quest: ref.quest(q.id) });
     tell(run, `content.quest.${q.id}.desc`);
     run.data.quest = questView(a, q);
+    escortJoin(run, a, q);
     if (questReady(a, q)) tell(run, 'n.quest_ready', { quest: ref.quest(q.id), npc: ref.npc(q.giver) });
   },
 

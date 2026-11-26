@@ -104,6 +104,7 @@ export const BALANCE = {
     partyMax: 12,
     /** Damage bonus when a Best Friend in your party fights in the same room. */
     bestFriendDamage: 0.05,
+    enchant: 2,
   },
 
   party: {
@@ -133,6 +134,41 @@ export const BALANCE = {
   journal: { perDay: 3 },
 
   guild: { cost: 500, maxMembers: 50, inviteMs: 24 * HOUR, maxInvites: 10, nameMin: 3, nameMax: 24, mottoMax: 120 },
+
+  /** Monsters come back faster in crowded rooms: base / (1 + crowdK * (agents - 1)), never under `crowdFloorMs`. Bosses keep their time. */
+  respawn: { crowdK: 0.15, crowdFloorMs: 10_000 },
+
+  /** Group bosses (`min_group`): the share of damage they take while too few agents fight them. */
+  group: { underGroupDamage: 0.1 },
+
+  /** Dungeon puzzles. Rogue chances: base + AGI * perAgi, clamped to [min, max] (never certain, never hopeless). */
+  puzzle: {
+    trapBase: 0.25,
+    trapPerAgi: 0.015,
+    lockBase: 0.3,
+    lockPerAgi: 0.015,
+    chanceMin: 0.1,
+    chanceMax: 0.95,
+    /** A failed lock pick: wait this long before trying again. */
+    lockFailCooldownMs: 30_000,
+    /** The winch on the far side raises a gate for this long. */
+    winchMs: 20_000,
+    /** Party gates: members needed (counting both sides of the gate) and distinct classes among them. */
+    partyMin: 3,
+    partyClasses: 2,
+  },
+
+  /** Mage `enchant`: 1 crystal for +ATK on a weapon. */
+  enchant: { item: 'crystal', atk: 5, durationMs: 2 * HOUR },
+
+  /** The daily world boss (§6.3): same time every real day, announced ahead, gone after `stayMs` if not beaten. */
+  worldBoss: { monster: 'ancient_colossus', room: 'hills.pass', hourUtc: 20, leadMs: 30 * MIN, stayMs: HOUR, creditShare: 0.01 },
+
+  /** Escort quests: the NPC's health, the bite of each monster in a room it enters, and how long it waits. */
+  escort: { hp: 100, dmgPerMonster: 6, warriorFactor: 0.5, guards: 2, stallMs: 20 * MIN },
+
+  /** Directions shown in route hints (quest_hint.path, quest_giver_elsewhere). */
+  routes: { hintMax: 8 },
 } as const;
 
 /** AP cost per action (PLANEJAMENTO §11.4). Everything social is free. */
@@ -157,6 +193,20 @@ export const AP_COST: Partial<Record<ActionName, number>> = {
 
 export function apCost(action: ActionName): number {
   return AP_COST[action] ?? 0;
+}
+
+/** Respawn delay of a monster in a room with `agents` present: crowds bring them back sooner (bosses excepted). */
+export function respawnDelayMs(baseMs: number, agents: number, boss: boolean): number {
+  if (boss || agents <= 1) return baseMs;
+  const R = BALANCE.respawn;
+  return Math.max(Math.min(baseMs, R.crowdFloorMs), Math.round(baseMs / (1 + R.crowdK * (agents - 1))));
+}
+
+/** A Rogue's chance at a trap or a lock, from its AGI. */
+export function rogueChance(kind: 'trap' | 'lock', agi: number): number {
+  const P = BALANCE.puzzle;
+  const raw = kind === 'trap' ? P.trapBase + agi * P.trapPerAgi : P.lockBase + agi * P.lockPerAgi;
+  return Math.min(P.chanceMax, Math.max(P.chanceMin, raw));
 }
 
 export function xpToNext(level: number): number {

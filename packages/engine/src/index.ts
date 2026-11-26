@@ -14,3 +14,7 @@ export { dailyQuests, nextTutorial, questView, questReady } from './quests';
 export { msg, inboxSince, GameError } from './run';
 export { shopBuyPrice, restCost } from './actions/npc';
 export { checkInvariants } from './invariants';
+export { worldBossInfo, nextWorldBossAt, worldBossLeadMs, type WorldBossInfo } from './worldboss';
+export { route, routeHint } from './routes';
+export { puzzleViews, type PuzzleView } from './puzzles';
+export { escortsHere, type EscortView } from './escort';

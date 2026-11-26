@@ -2,9 +2,13 @@ import type { Content, Room } from '@ajwf/content';
 import { isNight, nextDayFraction, BALANCE } from './balance';
 import { TimerHeap } from './heap';
 import { emit, markRoom, type Run } from './run';
-import type { AgentState, MonsterInst, RoomState, WorldState } from './types';
+import type { AgentState, MonsterInst, PuzzleState, RoomState, WorldState } from './types';
+import { scheduleWorldBoss } from './worldboss';
 
 export type SpawnSlot = { kind: string; night: boolean };
+
+/** World entries that are not per room, party or guild (see snapshot.ts). */
+export const WORLD_KEYS = ['meta', 'timers', 'trades', 'market', 'board', 'village', 'puzzles', 'wboss', 'escorts'] as const;
 
 const spawnCache = new WeakMap<Content, Map<string, SpawnSlot[]>>();
 
@@ -32,11 +36,24 @@ function emptyRoom(room: Room, now: number): RoomState {
   return { id: room.id, monsters: [], resources, ground: {}, said: [] };
 }
 
+export function freshPuzzle(): PuzzleState {
+  return { open: 0, pulls: {}, hold: null, winch: 0, ready: 0 };
+}
+
+/** Schedules a monster slot to come back, and remembers when (for "it returns in N seconds" answers). */
+export function scheduleRespawn(s: WorldState, roomId: string, slot: number, at: number): void {
+  s.timers.push({ at, kind: 'respawn', room: roomId, slot });
+  let pending = s.respawns.get(roomId);
+  if (!pending) s.respawns.set(roomId, (pending = new Map()));
+  pending.set(slot, at);
+  s.dirty.add('timers');
+}
+
 /** A brand new world: every room populated, nobody in it. */
 export function createWorld(content: Content, now: number): WorldState {
   const s: WorldState = {
     content,
-    meta: { eventSeq: 0, agentSeq: 0, monsterSeq: 0, worldFirsts: {}, partySeq: 0, guildSeq: 0, tradeSeq: 0, orderSeq: 0, postSeq: 0, createdAt: now },
+    meta: { eventSeq: 0, agentSeq: 0, monsterSeq: 0, worldFirsts: {}, partySeq: 0, guildSeq: 0, tradeSeq: 0, orderSeq: 0, postSeq: 0, escortSeq: 0, createdAt: now },
     agents: new Map(),
     byName: new Map(),
     bySkeleton: new Map(),
@@ -56,6 +73,12 @@ export function createWorld(content: Content, now: number): WorldState {
     ordersByItem: new Map(),
     board: [],
     village: { taxRate: 0, treasury: 0 },
+    puzzles: Object.fromEntries([...content.puzzles.keys()].map((id) => [id, freshPuzzle()])),
+    worldBoss: { next: 0, announced: 0, uid: null, leaves: 0 },
+    escorts: new Map(),
+    escortOfParty: new Map(),
+    escortsIn: new Map(),
+    respawns: new Map(),
     dirty: new Set(),
   };
   for (const room of content.rooms.values()) {
@@ -66,7 +89,8 @@ export function createWorld(content: Content, now: number): WorldState {
     s.dirty.add(`room:${room.id}`);
   }
   s.timers.push({ at: nextPhaseChange(now), kind: 'phase' });
-  for (const key of ['meta', 'timers', 'trades', 'market', 'board', 'village']) s.dirty.add(key);
+  scheduleWorldBoss(s, now);
+  for (const key of WORLD_KEYS) s.dirty.add(key);
   return s;
 }
 
@@ -85,8 +109,7 @@ export function spawnMonster(s: WorldState, roomId: string, slot: number, now: n
   if (!def || !room) return null;
   if (room.monsters.some((m) => m.slot === slot)) return null;
   if (def.night && !isNight(now)) {
-    s.timers.push({ at: nextDayFraction(now, BALANCE.day.night), kind: 'respawn', room: roomId, slot });
-    s.dirty.add('timers');
+    scheduleRespawn(s, roomId, slot, nextDayFraction(now, BALANCE.day.night));
     return null;
   }
   const kind = s.content.monsters.get(def.kind)!;
@@ -100,6 +123,7 @@ export function spawnMonster(s: WorldState, roomId: string, slot: number, now: n
     lastHit: 0,
   };
   room.monsters.push(inst);
+  s.respawns.get(roomId)?.delete(slot);
   markRoom(s, roomId);
   return inst;
 }
@@ -167,7 +191,7 @@ export function phaseChange(run: Run): void {
       const leaving = st.monsters.filter((m) => slots[m.slot]?.night && Object.keys(m.threat).length === 0);
       if (!leaving.length) continue;
       st.monsters = st.monsters.filter((m) => !leaving.includes(m));
-      for (const m of leaving) s.timers.push({ at: nextDayFraction(now, BALANCE.day.night), kind: 'respawn', room: room.id, slot: m.slot });
+      for (const m of leaving) scheduleRespawn(s, room.id, m.slot, nextDayFraction(now, BALANCE.day.night));
       if (st.monsters.length !== before) markRoom(s, room.id);
     }
   }

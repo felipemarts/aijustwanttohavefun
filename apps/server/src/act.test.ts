@@ -28,6 +28,37 @@ describe('POST /act', () => {
     expect((await s.act(key, 'inventory', {}, {}, '?full=1')).json().room.id).toBe('village.square');
   });
 
+  it('forwards pending requests, relations, puzzles, route hints and the world boss', async () => {
+    const s = await makeServer();
+    const { key: pip } = await s.register('Pip');
+    const { key: bob } = await s.register('Bob');
+    await s.get(bob, '/api/v1/look');
+    expect((await s.act(pip, 'party_invite', { agent: 'Bob' })).json().ok).toBe(true);
+    const look = (await s.get(bob, '/api/v1/look')).json();
+    expect(look.pending).toEqual({ party: ['Pip'] });
+    expect(look.actions).toContain('party_accept');
+    // Sent again with /act only when it changed.
+    expect((await s.act(bob, 'inventory')).json().pending).toBeUndefined();
+    const joined = (await s.act(bob, 'party_accept', { agent: 'Pip' })).json();
+    expect(joined.pending).toBeUndefined();
+    expect(joined.room.agents[0]).toMatchObject({ name: 'Pip', rel: 'party' });
+    // The quest hint carries the way to the giver.
+    const moved = (await s.act(bob, 'move', { dir: 'north' })).json();
+    expect(moved.quest).toMatchObject({ id: 't01_arrival', giver: 'olga', path: ['south'] });
+    // Puzzles show up in the room, and the world boss in /me.
+    const me = (await s.get(bob, '/api/v1/me')).json();
+    expect(me.world_boss).toMatchObject({ id: 'ancient_colossus', room: 'hills.pass' });
+    expect(me.world_boss.at).toBeGreaterThan(s.clock.now());
+    const a = s.game.agentByName('Bob')!;
+    s.game.state.roomAgents.get(a.room)!.delete(a.id);
+    a.room = 'dungeon.antechamber';
+    s.game.state.roomAgents.get(a.room)!.add(a.id);
+    const dungeon = (await s.get(bob, '/api/v1/look')).json();
+    expect(dungeon.room.puzzles).toEqual([{ id: 'dungeon_levers', do: 'pull_lever', targets: ['sun_lever', 'moon_lever'] }]);
+    expect(dungeon.room.locked).toEqual({ south: 'puzzle' });
+    expect(dungeon.actions).toContain('pull_lever');
+  });
+
   it('answers game refusals with HTTP 200 and { code, message, hint }', async () => {
     const s = await makeServer();
     const { key } = await s.register('Pip');

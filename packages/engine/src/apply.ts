@@ -15,6 +15,7 @@ import { moveActions } from './actions/move';
 import { npcActions } from './actions/npc';
 import { questActions } from './actions/quest';
 import type { Handler, HandlerMap } from './actions/util';
+import { utilityActions } from './actions/utility';
 import { workActions } from './actions/work';
 import { fail, GameError, markAgent, msg, newRun, type Run } from './run';
 import type { ActionCtx, AgentState, ApplyResult, Command, WorldState } from './types';
@@ -35,6 +36,7 @@ export const HANDLERS: HandlerMap = {
   ...duelActions,
   ...boardActions,
   ...guildActions,
+  ...utilityActions,
 };
 
 /** What a fallen agent can still do: call for help, give up and wait at the temple, read. */
@@ -51,7 +53,7 @@ const TEXT_ACTIONS = new Set<ActionName>(['say', 'whisper', 'party_say', 'guild_
 /** Things that cannot be done while a monster is on you: leave (use `flee`), rest, work, shop. */
 const NOT_IN_COMBAT = new Set<ActionName>([
   'move', 'rest', 'gather', 'craft', 'shop_buy', 'shop_sell', 'market_sell', 'market_buy', 'contribute', 'choose_profession', 'quest_accept', 'quest_turn_in',
-  'duel_invite', 'duel_accept',
+  'duel_invite', 'duel_accept', 'pull_lever', 'hold_gate', 'read_runes', 'disarm', 'pick_lock',
 ]);
 
 function guard(run: Run, a: AgentState, action: ActionName): void {

@@ -45,6 +45,6 @@
 - { id: the_hollow_regent, level: 20, hp: 6000, atk: 80, def: 35, xp: 4000, gold: [400, 800], respawn_sec: 7200, boss: true, aoe: 25, solo_crush: 3,
     drops: [{ item: hollow_regents_scepter, chance: 0.25 }, { item: regent_eye, chance: 0.3 }, { item: cos_crown, chance: 0.15 }, { item: oathkeeper, chance: 0.2 },
             { item: mithril_ore, chance: 1, qty: 3 }, { item: star_iron, chance: 1, qty: 2 }] }
-- { id: ancient_colossus, level: 15, hp: 20000, atk: 60, def: 30, xp: 3000, gold: [100, 200], respawn_sec: 86400, boss: true, world_boss: true, aoe: 15, solo_crush: 4,
+- { id: ancient_colossus, level: 15, hp: 20000, atk: 60, def: 30, xp: 3000, gold: [100, 200], respawn_sec: 86400, boss: true, world_boss: true, aoe: 15, solo_crush: 4, min_group: 8,
     drops: [{ item: colossus_heart, chance: 0.1 }, { item: wyrmscale_armor, chance: 0.15 }, { item: cos_top_hat, chance: 0.2 }, { item: cos_feather_cloak, chance: 0.2 },
             { item: star_iron, chance: 1 }, { item: crystal, chance: 1, qty: 2 }] }

@@ -2,7 +2,7 @@ import { eventsSince, type WorldState } from '@ajwf/engine';
 import { hashString, type GameEvent } from '@ajwf/shared';
 
 /** Top-level parts of an observation that can be left out when the agent already has them (§13.3). */
-export type Part = 'narration' | 'you' | 'room' | 'actions' | 'time' | 'quest';
+export type Part = 'narration' | 'you' | 'room' | 'actions' | 'time' | 'quest' | 'pending' | 'boss';
 
 /** Inbox events delivered inline with `/look` and `/act`; the rest waits for the next call or `GET /events`. */
 export const MESSAGES_PER_RESPONSE = 10;

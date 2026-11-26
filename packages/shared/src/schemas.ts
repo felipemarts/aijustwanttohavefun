@@ -75,7 +75,7 @@ export const actionParamSchemas = {
   pull_lever: z.object({ target: id }),
   hold_gate: z.object({ target: id }),
   read_runes: z.object({ target: id }),
-  enchant: z.object({ item: id }),
+  enchant: z.object({ target: name.optional() }),
   flee: z.object({}),
   release: z.object({}),
   steal: z.object({ target: name }),

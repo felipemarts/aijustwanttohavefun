@@ -33,9 +33,35 @@ export type You = {
   /** Id of the monster kind the agent is fighting. */
   in_combat?: string;
   title?: string;
+  party?: { leader: string; members: string[]; loot: 'round_robin' | 'leader' };
+  guild?: string;
 };
 
-export type RoomAgent = { name: string; class: string; lvl: number; title?: string; look: string; bond?: string; fallen?: true };
+/** How you relate to an agent in the room, when you do. */
+export type Relation = 'party' | 'friend' | 'guild' | 'rival';
+export type RoomAgent = { name: string; class: string; lvl: number; title?: string; look: string; bond?: string; rel?: Relation; fallen?: true };
+
+/** A dungeon puzzle in the room: the action that works it, on which targets, by which class, and its live state. */
+export type RoomPuzzle = {
+  id: string;
+  do: ActionName;
+  targets: string[];
+  /** Class needed (absent: anyone). */
+  cls?: string;
+  /** Seconds the way stays open. */
+  open?: number;
+  /** Levers already pulled in the current window. */
+  pulled?: string[];
+  /** Name of the Warrior holding a gate. */
+  held?: string;
+  /** Seconds until a lock has loot again. */
+  wait?: number;
+  /** Only with `verbose`. */
+  name?: string;
+};
+
+/** An NPC escorted through the room: health and destination room id. */
+export type RoomEscort = { npc: string; hp: [number, number]; to: string; name?: string };
 export type RoomNpc = { id: string; roles: string[]; name?: string };
 export type RoomMonster = { id: string; n: number; lvl: number; hp?: [number, number]; name?: string };
 
@@ -59,6 +85,8 @@ export type Room = {
   /** Gatherable resources: id -> quantity left. */
   resources?: Record<string, number>;
   stations?: string[];
+  puzzles?: RoomPuzzle[];
+  escorts?: RoomEscort[];
   /** Only with `verbose`: display names of the ids above. */
   names?: Record<string, string>;
 };
@@ -69,7 +97,27 @@ export type ChatMessage = { kind: string; from: string; untrusted_text: string; 
 export type EventMessage = { kind: string; text?: string; n?: number; id?: string };
 export type Message = ChatMessage | EventMessage;
 
-export type QuestHint = { id: string; giver: string; room: string; state: 'offer' | 'active' | 'ready' };
+/** The next tutorial quest. `path`: the first directions to the giver's room (absent when already there or the quest is under way). */
+export type QuestHint = { id: string; giver: string; room: string; state: 'offer' | 'active' | 'ready'; path?: string[] };
+
+export type TradeGoods = { gold?: number; items?: Record<string, number> };
+
+/** Requests and offers waiting for your answer. Each list appears only when non-empty. */
+export type Pending = {
+  /** Answer with friend_accept. */
+  friends?: string[];
+  /** Answer with party_accept. */
+  party?: string[];
+  /** Answer with guild_join. */
+  guild?: string[];
+  /** Answer with duel_accept. */
+  duel?: string[];
+  /** Answer with trade_accept or trade_cancel. */
+  trades?: { id: string; from: string; give: TradeGoods; want: TradeGoods }[];
+};
+
+/** The world boss on the day it appears: minutes until it rises (`in`), or up now. */
+export type WorldBossHint = { id: string; room: string; in?: number; up?: true };
 
 /** `GET /look`. Complete unless `sinceCursor` was asked for, in which case unchanged parts are left out. */
 export type LookResponse = {
@@ -78,9 +126,11 @@ export type LookResponse = {
   you?: You;
   room?: Room;
   messages?: Message[];
+  pending?: Pending;
   actions?: ActionName[];
   time?: DayTime;
   quest?: QuestHint;
+  boss?: WorldBossHint;
   cursor: string;
 };
 
@@ -91,9 +141,12 @@ export type ActResponse = {
   you: You;
   room?: Room;
   messages?: Message[];
+  /** Sent when it changed since the agent last received it. */
+  pending?: Pending;
   actions: ActionName[];
   time?: DayTime;
   quest?: QuestHint;
+  boss?: WorldBossHint;
   /** Structured answer of informational actions (`inventory`, `quest_list`, `market_list`...). */
   data?: Record<string, unknown>;
   cursor: string;
@@ -137,6 +190,9 @@ export type MeResponse = {
   /** Achievement id -> when it was earned (ms since epoch). */
   achievements: Record<string, number>;
   titles: string[];
+  pending?: Pending;
+  /** The daily world boss: when it next rises (`at`, ms since epoch), or up now until `leaves`. */
+  world_boss?: { id: string; room: string; at?: number; up?: true; leaves?: number };
   owner_note?: string;
 };
 

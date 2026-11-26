@@ -1,6 +1,6 @@
 import { capacity, derive, levelCap, slotsUsed } from './agent';
 import { BALANCE, xpToNext } from './balance';
-import type { Goods, WorldState } from './types';
+import type { Goods, Timer, WorldState } from './types';
 import { spawnSlots } from './world';
 
 const isNatural = (n: unknown): boolean => typeof n === 'number' && Number.isInteger(n) && n >= 0;
@@ -112,7 +112,80 @@ export function checkInvariants(s: WorldState, now: number): string[] {
   }
   checkSocial(s, out);
   checkEconomy(s, out);
+  checkEvents(s, now, out);
   return out;
+}
+
+/** Puzzles, the world boss, escorts and the respawn index, against the timers that drive them. */
+function checkEvents(s: WorldState, now: number, out: string[]): void {
+  const c = s.content;
+  const timers = s.timers.toJSON();
+  const due = new Map<string, number>();
+  const key = (t: Timer) => (t.kind === 'puzzle' ? `puzzle:${t.id}` : t.kind === 'escort' ? `escort:${t.id}` : t.kind === 'wboss' ? `wboss:${t.step}` : '');
+  for (const t of timers) {
+    if (!Number.isFinite(t.at)) out.push(`timer ${t.kind} at ${t.at}`);
+    const k = key(t);
+    if (k) due.set(k, Math.max(due.get(k) ?? -Infinity, t.at));
+  }
+
+  for (const id of c.puzzles.keys()) if (!s.puzzles[id]) out.push(`puzzle ${id}: no state`);
+  for (const [id, st] of Object.entries(s.puzzles)) {
+    const pz = c.puzzles.get(id);
+    const what = `puzzle ${id}`;
+    if (!pz) {
+      out.push(`${what}: state for unknown puzzle`);
+      continue;
+    }
+    for (const n of [st.open, st.winch, st.ready]) if (!isNatural(n)) out.push(`${what}: bad timestamp ${n}`);
+    // Something open must have a timer that closes it.
+    const closesAt = Math.max(st.open, st.winch, st.ready);
+    if (closesAt > now && (due.get(`puzzle:${id}`) ?? -Infinity) < closesAt) out.push(`${what}: open until ${closesAt} without a timer to close it`);
+    for (const [t, pull] of Object.entries(st.pulls)) {
+      if (pz.type !== 'levers' || !pz.targets.includes(t)) out.push(`${what}: pull on unknown lever ${t}`);
+      if (!s.agents.has(pull.by)) out.push(`${what}: pulled by unknown agent ${pull.by}`);
+    }
+    if (st.hold && (pz.type !== 'gate' || !s.agents.has(st.hold.by))) out.push(`${what}: bad hold ${JSON.stringify(st.hold)}`);
+    if (pz.type !== 'lock' && st.ready) out.push(`${what}: ready time on a ${pz.type}`);
+    if (pz.type !== 'gate' && st.winch) out.push(`${what}: winch on a ${pz.type}`);
+  }
+
+  const W = BALANCE.worldBoss;
+  const wb = s.worldBoss;
+  if (c.monsters.has(W.monster) && c.rooms.has(W.room)) {
+    if (!(wb.next > 0) || (due.get('wboss:spawn') ?? -Infinity) < wb.next) out.push(`world boss: next appearance ${wb.next} has no spawn timer`);
+    if (wb.uid) {
+      if (!s.rooms.get(W.room)?.monsters.some((m) => m.uid === wb.uid && m.kind === W.monster && m.slot < 0)) out.push(`world boss: ${wb.uid} is not in ${W.room}`);
+      if ((due.get('wboss:leave') ?? -Infinity) < wb.leaves) out.push(`world boss: no timer to leave at ${wb.leaves}`);
+    }
+  }
+  for (const [roomId, st] of s.rooms) {
+    for (const m of st.monsters) if (m.slot < 0 && m.uid !== wb.uid) out.push(`room ${roomId}: event monster ${m.uid} that no schedule owns`);
+  }
+
+  const respawnAt = new Set(timers.filter((t) => t.kind === 'respawn').map((t) => `${t.room}|${t.slot}|${t.at}`));
+  for (const [roomId, pending] of s.respawns) {
+    for (const [slot, at] of pending) {
+      if (!respawnAt.has(`${roomId}|${slot}|${at}`)) out.push(`respawn index: ${roomId} slot ${slot} at ${at} has no timer`);
+      if (s.rooms.get(roomId)?.monsters.some((m) => m.slot === slot)) out.push(`respawn index: ${roomId} slot ${slot} pending but alive`);
+    }
+  }
+
+  let inRooms = 0;
+  for (const [roomId, ids] of s.escortsIn) {
+    inRooms += ids.size;
+    for (const id of ids) if (s.escorts.get(id)?.room !== roomId) out.push(`escort index: ${id} listed in ${roomId}`);
+  }
+  if (inRooms !== s.escorts.size) out.push(`escort index holds ${inRooms} entries for ${s.escorts.size} escorts`);
+  if (s.escortOfParty.size !== s.escorts.size) out.push(`escort party index holds ${s.escortOfParty.size} entries for ${s.escorts.size} escorts`);
+  for (const e of s.escorts.values()) {
+    const what = `escort ${e.id}`;
+    const q = c.quests.get(e.quest);
+    if (q?.kind !== 'escort' || q.escort?.npc !== e.npc || q.escort.to !== e.to) out.push(`${what}: does not match quest ${e.quest}`);
+    if (!c.rooms.has(e.room)) out.push(`${what}: in unknown room ${e.room}`);
+    if (!Number.isInteger(e.hp) || e.hp <= 0 || e.hp > e.max) out.push(`${what}: HP ${e.hp} of ${e.max}`);
+    if (s.escortOfParty.get(e.party) !== e.id) out.push(`${what}: party index points elsewhere`);
+    if ((due.get(`escort:${e.id}`) ?? -Infinity) < e.at + BALANCE.escort.stallMs) out.push(`${what}: no stall timer`);
+  }
 }
 
 /** Friends, rivals, bonds, parties and guilds: every link holds from both ends. */

@@ -139,6 +139,7 @@ export class Renderer {
         ...(a.title ? { title: this.name(lang, 'title', a.title) } : {}),
         look: this.look(a.appearance, a.lookHash, lang, verbose),
         ...(a.bond ? { bond: a.bond } : {}),
+        ...(a.rel ? { rel: a.rel } : {}),
         ...(a.fallen ? { fallen: true } : {}),
       }));
     }
@@ -148,6 +149,8 @@ export class Renderer {
     if (o.items) r.items = o.items;
     if (o.resources) r.resources = o.resources;
     if (o.stations) r.stations = o.stations;
+    if (o.puzzles) r.puzzles = verbose ? o.puzzles.map((p) => ({ ...p, name: this.name(lang, 'puzzle', p.id) })) : o.puzzles;
+    if (o.escorts) r.escorts = verbose ? o.escorts.map((e) => ({ ...e, name: this.name(lang, 'npc', e.npc) })) : o.escorts;
     if (verbose) {
       const names: Record<string, string> = {};
       for (const to of Object.values(o.exits)) names[to] = this.name(lang, 'room', to);

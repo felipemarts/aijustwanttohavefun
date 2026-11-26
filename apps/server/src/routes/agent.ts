@@ -1,4 +1,4 @@
-import { derive, eventsSince, questView, type ActionResult, type AgentState, type Observation } from '@ajwf/engine';
+import { derive, eventsSince, questView, worldBossInfo, type ActionResult, type AgentState, type Observation } from '@ajwf/engine';
 import { actRequestSchema } from '@ajwf/shared';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
@@ -31,7 +31,16 @@ export function agentRoutes(app: FastifyInstance, ctx: AppContext): void {
   /** The parts that both `/look` and `/act` can send, in the agent's language. */
   function parts(a: AgentState, o: Observation, verbose: boolean) {
     const lang = render.lang(a.lang);
-    return { lang, you: render.you(o.you, verbose), room: render.room(o.room, lang, verbose), actions: o.actions, time: o.time, quest: o.quest_hint };
+    return {
+      lang,
+      you: render.you(o.you, verbose),
+      room: render.room(o.room, lang, verbose),
+      actions: o.actions,
+      time: o.time,
+      quest: o.quest_hint,
+      pending: o.pending,
+      boss: o.world_boss,
+    };
   }
 
   app.get('/me', async (req) => {
@@ -41,6 +50,7 @@ export function agentRoutes(app: FastifyInstance, ctx: AppContext): void {
     const c = game.content;
     const d = derive(c, a, game.now());
     const equipment = Object.fromEntries(Object.entries(a.equip).filter(([, id]) => id));
+    const boss = worldBossInfo(game.state);
     return {
       ok: true,
       agent: {
@@ -70,6 +80,8 @@ export function agentRoutes(app: FastifyInstance, ctx: AppContext): void {
       }),
       achievements: a.achievements,
       titles: a.titles,
+      ...(o.pending ? { pending: o.pending } : {}),
+      ...(boss ? { world_boss: { id: boss.monster, room: boss.room, ...(boss.up ? { up: true, leaves: boss.leaves } : { at: boss.at }) } } : {}),
       ...(a.ownerNote ? { owner_note: a.ownerNote } : {}),
     };
   });
@@ -85,9 +97,11 @@ export function agentRoutes(app: FastifyInstance, ctx: AppContext): void {
       ['room', p.room],
     ];
     const tail: [Part, unknown][] = [
+      ['pending', p.pending],
       ['actions', p.actions],
       ['time', p.time],
       ['quest', p.quest],
+      ['boss', p.boss],
     ];
     const body: Record<string, unknown> = { ok: true };
     // `?since_cursor=1` leaves out the parts this agent already has; a plain /look is always complete.
@@ -116,6 +130,11 @@ export function agentRoutes(app: FastifyInstance, ctx: AppContext): void {
     views.changed(a.id, 'actions', p.actions);
     if (views.changed(a.id, 'time', p.time) || full) body.time = p.time;
     if (p.quest !== undefined && (views.changed(a.id, 'quest', p.quest) || full)) body.quest = p.quest;
+    // Requests waiting for an answer and the world boss come when they changed (an empty `pending` is left out).
+    if (views.changed(a.id, 'pending', p.pending ?? null) || full) {
+      if (p.pending) body.pending = p.pending;
+    }
+    if (p.boss !== undefined && (views.changed(a.id, 'boss', p.boss) || full)) body.boss = p.boss;
     if (result.data) body.data = result.data;
     body.cursor = box.cursor;
     return body;

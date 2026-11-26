@@ -3,14 +3,16 @@ import { BALANCE } from './balance';
 import { TimerHeap } from './heap';
 import { indexGuild } from './guild';
 import { indexOrder } from './market';
+import { indexEscort } from './escort';
 import { blankAgent } from './register';
 import { indexTrade } from './trade';
-import type { AgentState, BoardPost, Guild, Market, Party, RoomState, Timer, Trade, Village, WorldMeta, WorldState } from './types';
-import { createWorld, nextPhaseChange, spawnMonster, spawnSlots } from './world';
+import type { AgentState, BoardPost, Escort, Guild, Market, Party, PuzzleState, RoomState, Timer, Trade, Village, WorldBoss, WorldMeta, WorldState } from './types';
+import { createWorld, freshPuzzle, nextPhaseChange, spawnMonster, spawnSlots, WORLD_KEYS } from './world';
+import { nextWorldBossAt, pushTimers } from './worldboss';
 
 /**
  * What the server persists: agents one by one, the rest of the world by key (`meta`, `timers`, `room:<id>`,
- * `party:<id>`, `guild:<id>`, `trades`, `market`, `board`, `village`). A world entry whose `data` is null was
+ * `party:<id>`, `guild:<id>`, `trades`, `market`, `board`, `village`, `puzzles`, `wboss`, `escorts`). A world entry whose `data` is null was
  * deleted (a dissolved party or guild): the store should drop the key.
  *
  * Both exports hand out the live objects of the world, not copies, so that saving costs nothing extra. Consumers
@@ -25,6 +27,9 @@ function worldEntry(s: WorldState, key: string): unknown {
   if (key === 'market') return s.market;
   if (key === 'board') return s.board;
   if (key === 'village') return s.village;
+  if (key === 'puzzles') return s.puzzles;
+  if (key === 'wboss') return s.worldBoss;
+  if (key === 'escorts') return [...s.escorts.values()];
   if (key.startsWith('room:')) return s.rooms.get(key.slice(5));
   if (key.startsWith('party:')) return s.parties.get(key.slice(6)) ?? null;
   if (key.startsWith('guild:')) return s.guilds.get(key.slice(6)) ?? null;
@@ -50,7 +55,7 @@ export function exportDirty(s: WorldState): Snapshot {
 /** Everything, regardless of the dirty set (graceful shutdown, tests). Serialize the result at once. */
 export function exportAll(s: WorldState): Snapshot {
   const snap: Snapshot = { agents: [...s.agents.values()], world: [] };
-  for (const key of ['meta', 'timers', 'trades', 'market', 'board', 'village']) snap.world.push({ key, data: worldEntry(s, key) });
+  for (const key of WORLD_KEYS) snap.world.push({ key, data: worldEntry(s, key) });
   for (const r of s.rooms.values()) snap.world.push({ key: `room:${r.id}`, data: r });
   for (const p of s.parties.values()) snap.world.push({ key: `party:${p.id}`, data: p });
   for (const g of s.guilds.values()) snap.world.push({ key: `guild:${g.id}`, data: g });
@@ -70,11 +75,13 @@ export function restoreWorld(content: Content, snap: Snapshot, now: number): Wor
   const meta = world.get('meta') as WorldMeta | undefined;
   if (meta) s.meta = { ...s.meta, ...meta };
 
-  const timers = ((world.get('timers') as Timer[] | undefined) ?? []).filter((t) => {
+  // World boss timers are rebuilt from its schedule below, so a changed schedule never leaves stale ones behind.
+  const timers = ((world.get('timers') as Timer[] | undefined) ?? s.timers.toJSON()).filter((t) => {
     if (t.kind === 'respawn') return content.rooms.has(t.room) && t.slot < spawnSlots(content, t.room).length;
-    return true;
+    if (t.kind === 'puzzle') return content.puzzles.has(t.id);
+    return t.kind !== 'wboss';
   });
-  if (world.has('timers')) s.timers = new TimerHeap(timers);
+  s.timers = new TimerHeap(timers);
 
   for (const room of content.rooms.values()) {
     const saved = world.get(`room:${room.id}`) as Partial<RoomState> | undefined;
@@ -100,6 +107,7 @@ export function restoreWorld(content: Content, snap: Snapshot, now: number): Wor
     }
   }
   if (!s.timers.toJSON().some((t) => t.kind === 'phase')) s.timers.push({ at: nextPhaseChange(now), kind: 'phase' });
+  restoreEvents(s, world, now);
 
   for (const raw of snap.agents) {
     const a: AgentState = { ...blankAgent(now), ...structuredClone(raw) };
@@ -126,6 +134,28 @@ export function restoreWorld(content: Content, snap: Snapshot, now: number): Wor
   restoreSocial(s, world);
   s.dirty.clear();
   return s;
+}
+
+/** Puzzles, the world boss schedule and the respawn index (timers are already in place). */
+function restoreEvents(s: WorldState, world: Map<string, unknown>, now: number): void {
+  const saved = (world.get('puzzles') as Record<string, Partial<PuzzleState>> | undefined) ?? {};
+  for (const id of s.content.puzzles.keys()) s.puzzles[id] = { ...freshPuzzle(), ...saved[id] };
+
+  const wb = world.get('wboss') as Partial<WorldBoss> | undefined;
+  if (wb) s.worldBoss = { ...s.worldBoss, ...wb };
+  const W = BALANCE.worldBoss;
+  // A server that was down through a whole appearance does not bring back a stale boss: it waits for the next one.
+  if (!s.worldBoss.next || s.worldBoss.next + W.stayMs <= now) s.worldBoss.next = nextWorldBossAt(now);
+  if (s.worldBoss.uid && !s.rooms.get(W.room)?.monsters.some((m) => m.uid === s.worldBoss.uid)) s.worldBoss.uid = null;
+  if (s.content.monsters.has(W.monster) && s.content.rooms.has(W.room)) pushTimers(s, now);
+
+  s.respawns.clear();
+  for (const t of s.timers.toJSON()) {
+    if (t.kind !== 'respawn') continue;
+    let pending = s.respawns.get(t.room);
+    if (!pending) s.respawns.set(t.room, (pending = new Map()));
+    pending.set(t.slot, Math.min(t.at, pending.get(t.slot) ?? Infinity));
+  }
 }
 
 /** Parties, guilds, trades, the market, the board and the village, with the indexes derived from them. */
@@ -173,4 +203,14 @@ function restoreSocial(s: WorldState, world: Map<string, unknown>): void {
 
   s.board = (world.get('board') as BoardPost[] | undefined) ?? [];
   s.village = { ...s.village, ...(world.get('village') as Partial<Village> | undefined) };
+
+  for (const e of (world.get('escorts') as Escort[] | undefined) ?? []) {
+    const q = c.quests.get(e.quest);
+    if (!q || q.kind !== 'escort' || !c.rooms.has(e.room) || !c.rooms.has(e.to) || s.escortOfParty.has(e.party)) continue;
+    e.guards = e.guards.filter((id) => s.agents.has(id));
+    s.escorts.set(e.id, e);
+    indexEscort(s, e);
+    // The stall timer may predate the snapshot's timers: one more check is harmless.
+    s.timers.push({ at: e.at + BALANCE.escort.stallMs, kind: 'escort', id: e.id });
+  }
 }

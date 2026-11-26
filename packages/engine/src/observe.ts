@@ -1,16 +1,21 @@
 import type { Appearance } from '@ajwf/appearance';
 import type { ActionName, GameEvent, LootMode } from '@ajwf/shared';
 import { capacity, derive, shownHp, slotsUsed, touch } from './agent';
-import { BALANCE, dayPhase, xpToNext } from './balance';
+import { BALANCE, dayPhase, realDay, xpToNext } from './balance';
 import { bondLevel, bondScore, type BondLevel } from './bond';
+import { escortsHere, type EscortView } from './escort';
+import { gateBlocker } from './gates';
 import { goodsView } from './goods';
 import { canManage, guildOf } from './guild';
 import { partyOf } from './party';
+import { PUZZLE_CLASS, puzzleViews, type PuzzleView } from './puzzles';
+import { routeHint } from './routes';
 import { nextTutorial, questReady } from './quests';
 import { inboxSince, newRun, type Run } from './run';
 import { tradesOf } from './trade';
 import type { AgentState, WorldState } from './types';
 import { refreshMonster, refreshResource } from './world';
+import { worldBossInfo } from './worldboss';
 import type { Rng } from '@ajwf/shared';
 
 /** How many other agents are listed by name before the rest is summarized as a count. */
@@ -77,12 +82,18 @@ export type Observation = {
     items?: Record<string, number>;
     resources?: Record<string, number>;
     stations?: string[];
+    /** Dungeon puzzles here: the action that works each one and its live state. */
+    puzzles?: PuzzleView[];
+    /** Escorted NPCs standing here. */
+    escorts?: EscortView[];
   };
   time: string;
   actions: ActionName[];
   pending?: Pending;
-  /** A nudge for agents with nothing to do: the next tutorial quest. */
-  quest_hint?: { id: string; giver: string; room: string; state: 'offer' | 'active' | 'ready' };
+  /** A nudge for agents with nothing to do: the next tutorial quest, and the first moves to its giver. */
+  quest_hint?: { id: string; giver: string; room: string; state: 'offer' | 'active' | 'ready'; path?: string[] };
+  /** The world boss, within the game day (2 h) before it rises: minutes until it rises, or that it is up now. */
+  world_boss?: { id: string; room: string; in?: number; up?: true };
 };
 
 const RANK: Record<Relation, number> = { party: 0, friend: 1, guild: 2, rival: 3 };
@@ -181,6 +192,13 @@ function contextActions(run: Run, a: AgentState, o: Observation['room'], pending
     if (flags.includes('market')) out.push('market_list', 'market_buy', 'market_sell');
     if (o.agents.length && (flags.includes('training') || flags.includes('arena'))) out.push('duel_invite');
     if (flags.includes('guild_hall') && !a.guild) out.push('guild_create');
+    for (const pz of o.puzzles ?? []) {
+      const cls = PUZZLE_CLASS[c.puzzles.get(pz.id)!.type];
+      const mine = pz.do === 'pull_lever' || !cls || cls === a.cls;
+      if (mine && !out.includes(pz.do)) out.push(pz.do);
+    }
+    if (a.cls === 'rogue') out.push('scout');
+    if (a.cls === 'mage' && (a.inv[BALANCE.enchant.item] ?? 0) > 0) out.push('enchant');
   }
   if (o.agents.length) out.push('trade_offer', 'party_invite');
   if (flags.includes('board')) out.push('board_read', 'board_post');
@@ -241,8 +259,13 @@ export function observe(s: WorldState, agentId: string, ctx: { now: number; rng:
     ...(def.resources.length ? { resources } : {}),
     ...(def.stations.length ? { stations: def.stations } : {}),
   };
-  const locked = Object.entries(def.gates).map(([dir, g]) => [dir, g.requires] as const);
-  if (locked.length) room.locked = Object.fromEntries(locked);
+  // Only exits that are closed right now, for this agent.
+  const locked = Object.entries(def.gates).filter(([, g]) => gateBlocker(run, a, g));
+  if (locked.length) room.locked = Object.fromEntries(locked.map(([dir, g]) => [dir, g.requires]));
+  const puzzles = puzzleViews(s, a.room, ctx.now);
+  if (puzzles.length) room.puzzles = puzzles;
+  const escorts = escortsHere(s, a.room);
+  if (escorts.length) room.escorts = escorts;
 
   const obs: Observation = {
     you: {
@@ -276,13 +299,15 @@ export function observe(s: WorldState, agentId: string, ctx: { now: number; rng:
   const next = nextTutorial(run, a);
   if (next) {
     const active = a.quests[next.id];
-    obs.quest_hint = {
-      id: next.id,
-      giver: next.giver,
-      room: c.npcs.get(next.giver)!.room,
-      state: active ? (questReady(a, next) ? 'ready' : 'active') : 'offer',
-    };
+    const giverRoom = c.npcs.get(next.giver)!.room;
+    const state = active ? (questReady(a, next) ? 'ready' : 'active') : 'offer';
+    // The way to the giver, when there is something to do there (taking or handing in the quest).
+    const path = state === 'active' ? undefined : routeHint(c, a.room, giverRoom);
+    obs.quest_hint = { id: next.id, giver: next.giver, room: giverRoom, state, ...(path ? { path } : {}) };
   }
+  const wb = worldBossInfo(s);
+  if (wb?.up) obs.world_boss = { id: wb.monster, room: wb.room, up: true };
+  else if (wb && realDay(wb.at) === realDay(ctx.now) && wb.at - ctx.now <= BALANCE.day.lengthMs) obs.world_boss = { id: wb.monster, room: wb.room, in: Math.max(1, Math.ceil((wb.at - ctx.now) / 60_000)) };
   return obs;
 }
 
