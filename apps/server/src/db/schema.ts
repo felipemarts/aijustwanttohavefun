@@ -28,9 +28,13 @@ export const agents = pgTable(
     bio: text('bio').notNull().default(''),
     appearance: jsonb('appearance').notNull(),
     appearanceHash: text('appearance_hash').notNull(),
+    /** SHA-256 of the API key; the key itself is never stored. */
     keyHash: text('key_hash').notNull(),
     ownerId: text('owner_id').references(() => owners.id),
+    /** SHA-256 of the claim token. */
     claimToken: text('claim_token').notNull(),
+    /** Set when the agent's claim link was confirmed; durable at once, not only through the 5 s snapshots. */
+    claimedAt: ts('claimed_at'),
     ownerNote: text('owner_note').notNull().default(''),
     status: text('status').notNull().default('active'),
     isBot: boolean('is_bot').notNull().default(false),

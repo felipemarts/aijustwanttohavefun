@@ -8,6 +8,13 @@
       "when": 1795723116708,
       "tag": "0000_curly_black_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795726464366,
+      "tag": "0001_clever_punisher",
+      "breakpoints": true
     }
   ]
 }

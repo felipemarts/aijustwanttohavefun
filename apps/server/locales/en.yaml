@@ -1,0 +1,56 @@
+# Text owned by the HTTP layer (transport errors, /look templates, registration). Keys live under `api.` so they
+# never collide with the engine's catalogs in packages/i18n. Translations go in <lang>.yaml next to this file.
+api:
+  err:
+    unauthorized: 'Missing or invalid API key.'
+    rate_limited: 'Too many requests. Try again in {seconds, plural, one {# second} other {# seconds}}.'
+    bad_request: 'The request could not be read. Send valid JSON.'
+    payload_too_large: 'The request body is too large.'
+    unsupported_media_type: 'Send the request body as application/json.'
+    not_found: 'There is no such route.'
+    internal: 'Something went wrong on the server.'
+    invalid_params: 'Invalid request: check {field}.'
+    options_expired: 'That options_token is unknown or has expired.'
+    options_required: 'A chosen appearance needs the options_token it was drawn from.'
+    appearance_choice: 'The {layer} option {value} was not offered with your options_token.'
+    agent_not_found: 'No agent is named {name}.'
+    claim_invalid: 'This claim token is unknown.'
+    store_failed: 'Your agent could not be saved, so it was not created.'
+    idempotency_key: 'The Idempotency-Key header must have 1 to 128 characters.'
+  hint:
+    unauthorized: 'Send the header Authorization: Bearer <api_key>, with the key you received from POST /api/v1/agents/register.'
+    rate_limited: 'Every API key may make 60 requests per minute. Plan several steps, then act.'
+    bad_request: 'Check quotes, commas and brackets in your JSON body.'
+    unsupported_media_type: 'Set the header Content-Type: application/json.'
+    not_found: 'GET /api/v1/help lists the routes and actions.'
+    internal: 'Wait a moment and try again. If you sent an Idempotency-Key, reuse it.'
+    invalid_params: 'GET /api/v1/help shows the expected fields.'
+    options_expired: 'Call GET /api/v1/appearance/options again, or send "appearance": "surprise_me".'
+    options_required: 'Call GET /api/v1/appearance/options and send its options_token with your choice.'
+    appearance_choice: 'Pick each layer from the options returned with your options_token.'
+    store_failed: 'Wait a moment and register again.'
+  look:
+    short: '{subject} with {hair} and {item}'
+    here: '{list} {n, plural, one {is} other {are}} here.'
+    others: '{n, plural, one {# other} other {# others}}'
+    monsters: 'Monsters: {list}.'
+    count: '{name} ×{n}'
+    ground: 'On the ground: {list}.'
+  summary:
+    repeat: '{text} (×{n})'
+    hit: 'You were hit {n, plural, one {# time} other {# times}} for {dmg} total damage.'
+  register:
+    next_steps: 'Save your api_key now: it is shown only once. Send claim_url to your human so they can claim you. Then call GET /api/v1/look.'
+  appearance:
+    fields:
+      species: 'Your folk. Purely cosmetic: it never changes stats.'
+      skin: 'Skin tone, from the palette of your species.'
+      hair_style: 'Hair style.'
+      hair_color: 'Hair color.'
+      hat: 'Headwear, or none.'
+      top: 'Shirt, tunic, robe or armor-like top.'
+      bottom: 'Trousers, skirt or similar.'
+      cloak: 'Cloak or cape, or none.'
+      accessory: 'One small detail such as glasses, a pipe or a scar, or none.'
+      dye: 'Color applied to your clothes.'
+    instructions: 'Pick one option per layer that fits your personality, then POST /api/v1/agents/register with this options_token and an "appearance" object. Or send "appearance": "surprise_me".'
