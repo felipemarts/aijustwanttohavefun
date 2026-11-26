@@ -62,6 +62,11 @@ export function narr(r: ApplyResult, key: string): Record<string, string | numbe
   return m ? (m.p ?? {}) : undefined;
 }
 
+/** The structured extras of a successful result (empty for errors). */
+export function dataOf(r: ApplyResult): Record<string, unknown> {
+  return r.result.ok ? (r.result.data ?? {}) : {};
+}
+
 export function errCode(r: ApplyResult): string | null {
   return r.result.ok ? null : r.result.error.code;
 }

@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { BALANCE } from './balance';
-import { HOUR, errKey, keys, makeKit, narr, type Kit } from './testkit';
-import type { AgentState, ApplyResult } from './types';
+import { dataOf, errKey, HOUR, keys, makeKit, narr, type Kit } from './testkit';
+import type { AgentState } from './types';
 
 function refuse(k: Kit, a: AgentState, action: string, params: Record<string, unknown>, slug: string): void {
   expect(errKey(k.act(a, action, params)), `${action} ${JSON.stringify(params)}`).toBe(`err.${slug}`);
 }
 
-const dataOf = (r: ApplyResult) => (r.result.ok ? r.result.data! : {});
 
 describe('duels', () => {
   function yard(k: Kit) {

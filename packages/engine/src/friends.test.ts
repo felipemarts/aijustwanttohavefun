@@ -264,7 +264,7 @@ describe('observation of others', () => {
     const k = makeKit();
     const me = k.add('Pip', 'warrior');
     const strangers = Array.from({ length: 10 }, (_, i) => k.add(`Stranger${i}`, 'mage'));
-    const rival = k.add('Rival', 'rogue');
+    k.add('Rival', 'rogue');
     const friend = k.add('Friend', 'cleric');
     k.ok(me, 'declare_rival', { agent: 'Rival' });
     k.ok(me, 'friend_request', { agent: 'Friend' });

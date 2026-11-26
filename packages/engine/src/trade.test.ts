@@ -4,8 +4,8 @@ import { BALANCE } from './balance';
 import { bondScore } from './bond';
 import { checkInvariants } from './invariants';
 import { observe } from './observe';
-import { errKey, keys, makeKit, MIN, narr, worldWealth, type Kit } from './testkit';
-import type { AgentState } from './types';
+import { dataOf, errKey, keys, makeKit, MIN, narr, worldWealth, type Kit } from './testkit';
+import type { AgentState, ApplyResult } from './types';
 
 function refuse(k: Kit, a: AgentState, action: string, params: Record<string, unknown>, slug: string): void {
   expect(errKey(k.act(a, action, params)), `${action} ${JSON.stringify(params)}`).toBe(`err.${slug}`);
@@ -27,7 +27,7 @@ describe('guaranteed trade', () => {
     const { a, b } = pair(k);
     for (const x of [a, b]) x.quests.t10_fair_trade = { steps: [0], at: k.now };
     const r = k.ok(a, 'trade_offer', { to: 'Bob', give: { gold: 30, items: { iron_ore: 2 } }, want: { items: [{ item: 'wolf_pelt', qty: 2 }] } });
-    const id = r.result.ok ? (r.result.data!.trade as string) : '';
+    const id = String(dataOf(r).trade);
     expect(narr(r, 'n.trade_offer')).toEqual({ name: 'Bob', trade: id, minutes: 10 });
     expect(r.events[0]!.payload).toMatchObject({ trade: id, give: { gold: 30, items: { iron_ore: 2 } }, want: { items: { wolf_pelt: 2 } } });
     // Nothing moves until the answer.
@@ -72,9 +72,9 @@ describe('guaranteed trade', () => {
   it('accept re-checks both sides and fails without touching anything', () => {
     const k = makeKit();
     const { a, b } = pair(k);
-    const t = (give: object, want: object) => k.ok(a, 'trade_offer', { to: 'Bob', give, want }).result as { data: { trade: string } };
+    const t = (give: object, want: object) => String(dataOf(k.ok(a, 'trade_offer', { to: 'Bob', give, want })).trade);
     refuse(k, b, 'trade_accept', { trade: 'tzz' }, 'trade_unknown');
-    const t1 = t({ gold: 10 }, { items: { wolf_pelt: 1 } }).data.trade;
+    const t1 = t({ gold: 10 }, { items: { wolf_pelt: 1 } });
     refuse(k, a, 'trade_accept', { trade: t1 }, 'trade_not_yours');
     a.gold = 5;
     refuse(k, b, 'trade_accept', { trade: t1 }, 'trade_they_lack');
@@ -86,7 +86,7 @@ describe('guaranteed trade', () => {
     refuse(k, b, 'trade_accept', { trade: t1 }, 'trade_partner_gone');
     k.place(a, 'village.square');
     b.inv.cos_chef_hat = 30; // cosmetics do not stack: a full bag
-    const t2 = t({ items: { iron_ore: 1 } }, {}).data.trade;
+    const t2 = t({ items: { iron_ore: 1 } }, {});
     const goods = () => JSON.stringify([a.gold, a.inv, b.gold, b.inv, [...k.s.trades.keys()]]);
     const before = goods();
     refuse(k, b, 'trade_accept', { trade: t2 }, 'inventory_full');
@@ -103,7 +103,7 @@ describe('guaranteed trade', () => {
   it('expires after 10 minutes: refused at once, cleared by the timer', () => {
     const k = makeKit();
     const { a, b } = pair(k);
-    const id = (k.ok(a, 'trade_offer', { to: 'Bob', give: { gold: 1 }, want: {} }).result as { data: { trade: string } }).data.trade;
+    const id = String(dataOf(k.ok(a, 'trade_offer', { to: 'Bob', give: { gold: 1 }, want: {} })).trade);
     // Right at expiry, before any tick ran: the lazy check refuses it.
     k.now += BALANCE.trade.ttlMs;
     const late = applyAction(k.s, { agentId: b.id, action: 'trade_accept', params: { trade: id } }, k.ctx());
@@ -120,7 +120,7 @@ describe('guaranteed trade', () => {
     const k = makeKit();
     const { a, b } = pair(k);
     const c = k.add('Cid', 'rogue');
-    const open = () => (k.ok(a, 'trade_offer', { to: 'Bob', give: { gold: 1 }, want: {} }).result as { data: { trade: string } }).data.trade;
+    const open = () => String(dataOf(k.ok(a, 'trade_offer', { to: 'Bob', give: { gold: 1 }, want: {} })).trade);
     const t1 = open();
     refuse(k, c, 'trade_cancel', { trade: t1 }, 'trade_not_yours');
     const r = k.ok(a, 'trade_cancel', { trade: t1 });
@@ -143,7 +143,7 @@ describe('market', () => {
     b.inv = {};
     return { s, b };
   }
-  const orderOf = (r: ReturnType<Kit['ok']>) => (r.result as { data: { order: string } }).data.order;
+  const orderOf = (r: ApplyResult) => String(dataOf(r).order);
 
   it('sell puts the items in escrow; buy pays the seller (even away) and records a public trade', () => {
     const k = makeKit();
@@ -191,9 +191,9 @@ describe('market', () => {
     const o2 = orderOf(k.ok(b, 'market_sell', { item: 'iron_ore', qty: 1, price: 6 }));
     k.ok(b, 'market_sell', { item: 'wolf_pelt', qty: 4, price: 3 });
     const one = k.ok(s, 'market_list', { item: 'Iron Ore' });
-    expect(one.result.ok && one.result.data!.market).toEqual({ item: 'iron_ore', orders: [[o2, 1, 6, 'Buyer'], [o1, 2, 9, 'Seller']] });
+    expect(dataOf(one).market).toEqual({ item: 'iron_ore', orders: [[o2, 1, 6, 'Buyer'], [o1, 2, 9, 'Seller']] });
     const all = k.ok(s, 'market_list', {});
-    expect(all.result.ok && all.result.data!.market).toEqual({ items: [['wolf_pelt', 3, 4], ['iron_ore', 6, 3]] });
+    expect(dataOf(all).market).toEqual({ items: [['wolf_pelt', 3, 4], ['iron_ore', 6, 3]] });
     expect(narr(all, 'n.market_list')).toEqual({ n: 2 });
   });
 
