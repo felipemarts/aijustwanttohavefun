@@ -1,9 +1,14 @@
 import type { Appearance } from '@ajwf/appearance';
-import type { ActionName, GameEvent } from '@ajwf/shared';
+import type { ActionName, GameEvent, LootMode } from '@ajwf/shared';
 import { capacity, derive, shownHp, slotsUsed, touch } from './agent';
 import { BALANCE, dayPhase, xpToNext } from './balance';
+import { bondLevel, bondScore, type BondLevel } from './bond';
+import { goodsView } from './goods';
+import { canManage, guildOf } from './guild';
+import { partyOf } from './party';
 import { nextTutorial, questReady } from './quests';
 import { inboxSince, newRun, type Run } from './run';
+import { tradesOf } from './trade';
 import type { AgentState, WorldState } from './types';
 import { refreshMonster, refreshResource } from './world';
 import type { Rng } from '@ajwf/shared';
@@ -20,7 +25,26 @@ export type SeenAgent = {
   appearance: Appearance;
   lookHash: string;
   fallen?: true;
-  bond?: string;
+  /** Shown from Acquaintance up. */
+  bond?: BondLevel;
+  /** How the observer relates to this agent, when it does: party, friend, guild, rival. */
+  rel?: Relation;
+};
+
+type Relation = 'party' | 'friend' | 'guild' | 'rival';
+
+/** Things addressed to the agent that wait for an answer. Each list only appears when non-empty. */
+export type Pending = {
+  /** Names of agents asking for friendship (friend_accept). */
+  friends?: string[];
+  /** Names of inviters (party_accept). */
+  party?: string[];
+  /** Guild names (guild_join). */
+  guild?: string[];
+  /** Names of challengers (duel_accept). */
+  duel?: string[];
+  /** Trade offers to answer with trade_accept or trade_cancel. */
+  trades?: { id: string; from: string; give: ReturnType<typeof goodsView>; want: ReturnType<typeof goodsView> }[];
 };
 
 export type Observation = {
@@ -36,6 +60,8 @@ export type Observation = {
     in_combat?: string;
     title?: string;
     bag: [number, number];
+    party?: { leader: string; members: string[]; loot: LootMode };
+    guild?: string;
   };
   room: {
     id: string;
@@ -54,22 +80,44 @@ export type Observation = {
   };
   time: string;
   actions: ActionName[];
+  pending?: Pending;
   /** A nudge for agents with nothing to do: the next tutorial quest. */
   quest_hint?: { id: string; giver: string; room: string; state: 'offer' | 'active' | 'ready' };
 };
 
-/** Other agents in the room, most relevant first. Relationship ordering is added with the social systems. */
+const RANK: Record<Relation, number> = { party: 0, friend: 1, guild: 2, rival: 3 };
+
+/** Other agents in the room, most relevant first: party, friends, guild mates, rivals, then everyone else. */
 function seenAgents(s: WorldState, a: AgentState): { list: SeenAgent[]; others: number } {
   const ids = s.roomAgents.get(a.room);
-  const list: SeenAgent[] = [];
+  const friends = new Set(a.friends);
+  const rivals = new Set(a.rivals);
+  const relOf = (b: AgentState): Relation | undefined => {
+    if (a.party && b.party === a.party) return 'party';
+    if (friends.has(b.id)) return 'friend';
+    if (a.guild && b.guild === a.guild) return 'guild';
+    if (rivals.has(b.id)) return 'rival';
+    return undefined;
+  };
+  // Buckets by relevance, filled in one pass; strangers stop being collected once the list is full.
+  const buckets: AgentState[][] = [[], [], [], [], []];
   let total = 0;
-  if (ids) {
-    for (const id of ids) {
-      if (id === a.id) continue;
-      total++;
-      if (list.length >= MAX_AGENTS_LISTED) continue;
-      const b = s.agents.get(id)!;
-      list.push({
+  let strangers = 0;
+  for (const id of ids ?? []) {
+    if (id === a.id) continue;
+    total++;
+    const b = s.agents.get(id)!;
+    const rel = relOf(b);
+    if (rel) buckets[RANK[rel]]!.push(b);
+    else if (strangers++ < MAX_AGENTS_LISTED) buckets[4]!.push(b);
+  }
+  const list = buckets
+    .flat()
+    .slice(0, MAX_AGENTS_LISTED)
+    .map((b): SeenAgent => {
+      const rel = relOf(b);
+      const bond = bondLevel(bondScore(a, b));
+      return {
         name: b.name,
         class: b.cls,
         lvl: b.level,
@@ -77,18 +125,47 @@ function seenAgents(s: WorldState, a: AgentState): { list: SeenAgent[]; others: 
         appearance: b.appearance,
         lookHash: b.lookHash,
         ...(b.fallen ? { fallen: true as const } : {}),
-      });
-    }
-  }
+        ...(bond ? { bond } : {}),
+        ...(rel ? { rel } : {}),
+      };
+    });
   return { list, others: total - list.length };
 }
 
+/** Requests and offers waiting for this agent's answer; undefined when there are none. */
+function pendingFor(s: WorldState, a: AgentState, now: number): Pending | undefined {
+  // Requests from agents who retired or were banned since cannot be answered any more: leave them out.
+  const name = (id: string) => {
+    const b = s.agents.get(id);
+    return b?.status === 'active' ? b.name : undefined;
+  };
+  const live = (inv: Record<string, number>) => Object.keys(inv).filter((id) => inv[id]! > now);
+  const names = (ids: string[]) => ids.map(name).filter((n): n is string => !!n);
+  const out: Pending = {};
+  const friends = names(Object.keys(a.friendReqs));
+  if (friends.length) out.friends = friends;
+  const party = names(live(a.partyInvites));
+  if (party.length) out.party = party;
+  const guild = live(a.guildInvites)
+    .map((id) => s.guilds.get(id)?.name)
+    .filter((n): n is string => !!n);
+  if (guild.length) out.guild = guild;
+  const duel = names(live(a.duelInvites));
+  if (duel.length) out.duel = duel;
+  const trades = tradesOf(s, a.id, now)
+    .filter((t) => t.to === a.id)
+    .map((t) => ({ id: t.id, from: name(t.from) ?? '?', give: goodsView(t.give), want: goodsView(t.want) }));
+  if (trades.length) out.trades = trades;
+  return Object.keys(out).length ? out : undefined;
+}
+
 /** Actions that make sense where the agent stands right now (PLANEJAMENTO §11.3). */
-function contextActions(run: Run, a: AgentState, o: Observation['room']): ActionName[] {
+function contextActions(run: Run, a: AgentState, o: Observation['room'], pending: Pending | undefined): ActionName[] {
   if (a.fallen) return ['release', 'say', 'whisper'];
   const c = run.c;
   const out: ActionName[] = [];
   const room = c.rooms.get(a.room)!;
+  const flags = room.flags;
   if (a.combat) out.push('attack', 'cast', 'flee', 'use');
   else {
     out.push('move');
@@ -97,10 +174,26 @@ function contextActions(run: Run, a: AgentState, o: Observation['room']): Action
     if (o.npcs.length) out.push('talk');
     if (o.npcs.some((n) => n.roles.includes('shop'))) out.push('shop_buy', 'shop_sell');
     if (o.npcs.some((n) => n.roles.includes('quest'))) out.push('quest_accept', 'quest_turn_in');
-    if (room.flags.includes('tavern')) out.push('rest');
+    if (flags.includes('tavern')) out.push('rest');
     if (room.stations.length && a.profession) out.push('craft');
     if (a.level >= 5 && !a.profession) out.push('choose_profession');
     if (o.items) out.push('take');
+    if (flags.includes('market')) out.push('market_list', 'market_buy', 'market_sell');
+    if (o.agents.length && (flags.includes('training') || flags.includes('arena'))) out.push('duel_invite');
+    if (flags.includes('guild_hall') && !a.guild) out.push('guild_create');
+  }
+  if (o.agents.length) out.push('trade_offer', 'party_invite');
+  if (flags.includes('board')) out.push('board_read', 'board_post');
+  if (pending?.friends) out.push('friend_accept');
+  if (pending?.party) out.push('party_accept');
+  if (pending?.guild) out.push('guild_join');
+  if (pending?.duel && !a.combat) out.push('duel_accept');
+  if (pending?.trades) out.push('trade_accept');
+  if (a.party) out.push('party_say');
+  if (a.guild) {
+    const g = run.s.guilds.get(a.guild);
+    if (g && o.agents.length && canManage(g, a)) out.push('guild_invite');
+    out.push('guild_say');
   }
   out.push('say', 'emote', 'whisper', 'inventory', 'quest_list');
   return out;
@@ -169,7 +262,16 @@ export function observe(s: WorldState, agentId: string, ctx: { now: number; rng:
     time: dayPhase(ctx.now),
     actions: [],
   };
-  obs.actions = contextActions(run, a, room);
+  const party = partyOf(s, a);
+  if (party) {
+    const name = (id: string) => s.agents.get(id)?.name ?? '?';
+    obs.you.party = { leader: name(party.leader), members: party.members.filter((id) => id !== a.id).map(name), loot: party.loot };
+  }
+  const guild = guildOf(s, a);
+  if (guild) obs.you.guild = guild.name;
+  const pending = pendingFor(s, a, ctx.now);
+  if (pending) obs.pending = pending;
+  obs.actions = contextActions(run, a, room, pending);
 
   const next = nextTutorial(run, a);
   if (next) {

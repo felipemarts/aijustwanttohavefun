@@ -62,6 +62,11 @@ export function narr(r: ApplyResult, key: string): Record<string, string | numbe
   return m ? (m.p ?? {}) : undefined;
 }
 
+/** The structured extras of a successful result (empty for errors). */
+export function dataOf(r: ApplyResult): Record<string, unknown> {
+  return r.result.ok ? (r.result.data ?? {}) : {};
+}
+
 export function errCode(r: ApplyResult): string | null {
   return r.result.ok ? null : r.result.error.code;
 }
@@ -122,7 +127,7 @@ export function makeKit(seed = 1, start = T0): Kit {
       return r.result.error.code;
     },
     place(a, room) {
-      relocate(s, a, room);
+      relocate(s, a, room, kit.now);
     },
     setLevel(a, level) {
       a.level = level;
@@ -145,4 +150,26 @@ export function totalGold(s: WorldState): number {
   let g = 0;
   for (const a of s.agents.values()) g += a.gold;
   return g;
+}
+
+/**
+ * All gold and items in the world, wherever they sit: bags, equipment, the ground, market escrow, guild treasuries
+ * and vaults, the village treasury. Transfers between holders must leave it unchanged.
+ */
+export function worldWealth(s: WorldState): { gold: number; items: Record<string, number> } {
+  const items: Record<string, number> = {};
+  const add = (id: string, qty: number) => (items[id] = (items[id] ?? 0) + qty);
+  let gold = s.village.treasury;
+  for (const a of s.agents.values()) {
+    gold += a.gold;
+    for (const [id, qty] of Object.entries(a.inv)) add(id, qty);
+    for (const id of Object.values(a.equip)) if (id) add(id, 1);
+  }
+  for (const r of s.rooms.values()) for (const [id, qty] of Object.entries(r.ground)) add(id, qty);
+  for (const o of Object.values(s.market.orders)) add(o.item, o.qty);
+  for (const g of s.guilds.values()) {
+    gold += g.treasury;
+    for (const [id, qty] of Object.entries(g.vault)) add(id, qty);
+  }
+  return { gold, items };
 }

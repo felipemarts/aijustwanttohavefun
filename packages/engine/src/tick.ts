@@ -1,11 +1,13 @@
 import type { GameEvent, Rng } from '@ajwf/shared';
 import { wakeAtTemple } from './agent';
 import { emit, newRun } from './run';
+import { closeTrade } from './trade';
 import type { WorldState } from './types';
 import { phaseChange, spawnMonster } from './world';
 
 /**
- * Advances the world clock: runs every timer that is due (respawns, agents waking at the temple, nightfall).
+ * Advances the world clock: runs every timer that is due (respawns, agents waking at the temple, nightfall, stale
+ * trade offers).
  * Cost is proportional to the number of due timers, never to the size of the world.
  */
 export function tick(s: WorldState, ctx: { now: number; rng: Rng }): GameEvent[] {
@@ -24,6 +26,10 @@ export function tick(s: WorldState, ctx: { now: number; rng: Rng }): GameEvent[]
         if (a?.fallen && a.fallen.until <= ctx.now) wakeAtTemple(run, a);
         break;
       }
+      case 'trade':
+        // Expired offers are already refused on access; this only clears them out of the state.
+        if ((s.trades.get(t.id)?.expires ?? Infinity) <= ctx.now) closeTrade(s, t.id);
+        break;
       case 'phase':
         phaseChange(run);
         break;

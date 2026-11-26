@@ -78,6 +78,61 @@ export const BALANCE = {
   day: { lengthMs: 2 * HOUR, dawn: 0, day: 0.06, dusk: 0.64, night: 0.7 },
 
   inbox: { size: 64 },
+
+  social: { maxFriends: 100, maxFriendRequests: 50, maxRivals: 50 },
+
+  /** Bond between two agents: a score that rises by doing things together. */
+  bond: {
+    /** Entries kept per agent: the strongest ones. */
+    keep: 50,
+    max: 200,
+    /** Score needed for each level. */
+    acquaintance: 10,
+    friend: 40,
+    bestFriend: 100,
+    /** Talking in the same room with someone who spoke recently (camaraderie window), at most once per pair per `talkEveryMs`. */
+    talk: 1,
+    talkEveryMs: 5 * MIN,
+    trade: 5,
+    /** Both got kill credit on the same monster. Only the top `killPairsMax` damage dealers bond, to bound the work. */
+    kill: 1,
+    killPairsMax: 8,
+    heal: 2,
+    revive: 6,
+    /** Time spent in the same party, credited when one of the pair leaves. */
+    partyPerHour: 3,
+    partyMax: 12,
+    /** Damage bonus when a Best Friend in your party fights in the same room. */
+    bestFriendDamage: 0.05,
+  },
+
+  party: {
+    maxSize: 4,
+    inviteMs: 5 * MIN,
+    maxInvites: 10,
+    /** A party side's XP grows by this much per member beyond the first, then is split evenly. */
+    xpPerExtraMember: 0.1,
+    /** Mentoring: a member at or above `mentorLevel` fighting with one at or below `newbieLevel`. */
+    mentorLevel: 10,
+    newbieLevel: 5,
+    /** Helping a newbie turn in a quest: at least this many levels above. */
+    helpNewbieGap: 5,
+  },
+
+  /** Staying and chatting with others: an XP buff. */
+  camaraderie: { stayMs: 10 * MIN, windowMs: 10 * MIN, durationMs: HOUR, xp: 0.15, tavernXp: 0.25, speakersKept: 4 },
+
+  trade: { ttlMs: 10 * MIN, maxOffers: 3, maxOpen: 10 },
+
+  market: { maxOrders: 5, history: 200, listRows: 20 },
+
+  duel: { inviteMs: 5 * MIN, maxInvites: 10, maxRounds: 100, upsetGap: 3 },
+
+  board: { postCooldownMs: 5 * MIN, maxPosts: 200, maxReplies: 50, readRows: 10, preview: 80 },
+
+  journal: { perDay: 3 },
+
+  guild: { cost: 500, maxMembers: 50, inviteMs: 24 * HOUR, maxInvites: 10, nameMin: 3, nameMax: 24, mottoMax: 120 },
 } as const;
 
 /** AP cost per action (PLANEJAMENTO §11.4). Everything social is free. */

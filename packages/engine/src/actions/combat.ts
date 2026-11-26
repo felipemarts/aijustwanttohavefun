@@ -2,9 +2,10 @@ import type { Skill } from '@ajwf/content';
 import { ref } from '@ajwf/shared';
 import { addBuff, bump, derive, standUp, touch, wakeAtTemple } from '../agent';
 import { BALANCE } from '../balance';
+import { raiseBond } from '../bond';
 import { findMonster, retaliate, strike } from '../combat';
 import { emit, fail, markAgent, markRoom, msg, tell, type Run } from '../run';
-import { partyHere } from '../social';
+import { partyHere } from '../party';
 import type { AgentState, MonsterInst } from '../types';
 import { refreshMonster, roomState } from '../world';
 import { agentHere, normId, type HandlerMap } from './util';
@@ -87,6 +88,7 @@ function castSkill(run: Run, a: AgentState, rawSkill: string, target: string | u
         bump(run, a, 'heals');
         tell(run, 'n.heal_other', { skill: sref, name: b.name, hp: Math.round(amount) });
         emit(run, 'heal', { room: a.room, actor: a.id, target: b.id, to: 'room', drama: 1, m: msg('ev.heal', { actor: a.name, name: b.name, hp: Math.round(amount) }), data: { hp: Math.round(amount) } });
+        raiseBond(run, a, b, BALANCE.bond.heal);
       }
       return;
     }
@@ -95,13 +97,16 @@ function castSkill(run: Run, a: AgentState, rawSkill: string, target: string | u
       pay(run, a, skill);
       const base = derive(run.c, a, run.now).int * skill.power + a.level * 2;
       let total = 0;
+      const healed: AgentState[] = [];
       for (const b of members) {
         if (b !== a) touch(run, b);
         const amount = Math.max(0, Math.min(derive(run.c, b, run.now).maxHp - b.hp, Math.round(base * run.rng.range(0.9, 1.1))));
         b.hp += amount;
         total += amount;
+        if (amount > 0 && b !== a) healed.push(b);
         markAgent(run.s, b);
       }
+      for (const b of healed) raiseBond(run, a, b, BALANCE.bond.heal);
       if (members.length > 1) bump(run, a, 'heals');
       tell(run, 'n.heal_party', { skill: sref, hp: Math.round(total), n: members.length });
       emit(run, 'heal', { room: a.room, actor: a.id, to: 'room', drama: 1, m: msg('ev.heal_party', { actor: a.name, skill: sref }), data: { hp: Math.round(total) } });
@@ -116,6 +121,7 @@ function castSkill(run: Run, a: AgentState, rawSkill: string, target: string | u
       bump(run, a, 'revives');
       tell(run, 'n.revive', { name: b.name });
       emit(run, 'revive', { room: a.room, actor: a.id, target: b.id, to: 'room', drama: 4, m: msg('ev.revive', { actor: a.name, name: b.name }) });
+      raiseBond(run, a, b, BALANCE.bond.revive);
       return;
     }
     case 'buff':

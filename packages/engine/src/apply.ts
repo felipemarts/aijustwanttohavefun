@@ -1,8 +1,15 @@
 import { actionParamSchemas, isActionName, type ActionName } from '@ajwf/shared';
 import { touch } from './agent';
 import { apCost, BALANCE } from './balance';
+import { boardActions } from './actions/board';
 import { chatActions } from './actions/chat';
 import { combatActions } from './actions/combat';
+import { duelActions } from './actions/duel';
+import { friendActions } from './actions/friends';
+import { guildActions } from './actions/guild';
+import { marketActions } from './actions/market';
+import { partyActions } from './actions/party';
+import { tradeActions } from './actions/trade';
 import { itemActions } from './actions/items';
 import { moveActions } from './actions/move';
 import { npcActions } from './actions/npc';
@@ -21,6 +28,13 @@ export const HANDLERS: HandlerMap = {
   ...workActions,
   ...questActions,
   ...chatActions,
+  ...friendActions,
+  ...partyActions,
+  ...tradeActions,
+  ...marketActions,
+  ...duelActions,
+  ...boardActions,
+  ...guildActions,
 };
 
 /** What a fallen agent can still do: call for help, give up and wait at the temple, read. */
@@ -37,6 +51,7 @@ const TEXT_ACTIONS = new Set<ActionName>(['say', 'whisper', 'party_say', 'guild_
 /** Things that cannot be done while a monster is on you: leave (use `flee`), rest, work, shop. */
 const NOT_IN_COMBAT = new Set<ActionName>([
   'move', 'rest', 'gather', 'craft', 'shop_buy', 'shop_sell', 'market_sell', 'market_buy', 'contribute', 'choose_profession', 'quest_accept', 'quest_turn_in',
+  'duel_invite', 'duel_accept',
 ]);
 
 function guard(run: Run, a: AgentState, action: ActionName): void {

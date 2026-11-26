@@ -1,9 +1,11 @@
 import { ref } from '@ajwf/shared';
 import { addGold, bump, derive, fall, gainXp, giveOrDrop, touch } from './agent';
 import { BALANCE, levelGapXpMod } from './balance';
+import { raiseBond } from './bond';
+import { bestFriendAtSide, markParty, partyOf } from './party';
 import { questEvent } from './quests';
 import { emit, fail, markAgent, markRoom, msg, tell, type Run } from './run';
-import type { AgentState, MonsterInst } from './types';
+import type { AgentState, MonsterInst, Party } from './types';
 import { refreshMonster, roomState } from './world';
 
 /** max(1, atk * mult * rand(0.85..1.15) - def / 2), with a chance to crit. */
@@ -54,7 +56,8 @@ export function fightersOf(run: Run, roomId: string, m: MonsterInst): AgentState
 export function strike(run: Run, a: AgentState, m: MonsterInst, mult: number, verb: 'attack' | 'skill' = 'attack', skill?: string): boolean {
   const kind = run.c.monsters.get(m.kind)!;
   const d = derive(run.c, a, run.now);
-  const { dmg, crit } = rollDamage(run, d.atk, mult, kind.def, d.crit);
+  const withFriend = bestFriendAtSide(run, a) ? 1 + BALANCE.bond.bestFriendDamage : 1;
+  const { dmg, crit } = rollDamage(run, d.atk, mult * withFriend, kind.def, d.crit);
   const dealt = Math.min(dmg, m.hp);
   m.hp -= dealt;
   m.threat[a.id] = (m.threat[a.id] ?? 0) + dealt;
@@ -118,6 +121,78 @@ export function retaliate(run: Run, a: AgentState, m: MonsterInst): void {
   }
 }
 
+/**
+ * Who shares a kill. Each agent outside a party is its own side; the members of a party who are in the room and
+ * standing form one side, with the damage of all of them, so a tank or a healer who dealt nothing still shares.
+ */
+type Side = { members: AgentState[]; dmg: number; party: Party | undefined };
+
+function killSides(run: Run, roomId: string, m: MonsterInst): Side[] {
+  const s = run.s;
+  const byKey = new Map<string, Side & { dealers: AgentState[] }>();
+  for (const id in m.threat) {
+    const b = s.agents.get(id);
+    const dmg = m.threat[id]!;
+    if (!b || b.room !== roomId || dmg <= 0) continue;
+    const party = partyOf(s, b);
+    const key = party?.id ?? b.id;
+    let side = byKey.get(key);
+    if (!side) byKey.set(key, (side = { members: [], dmg: 0, party, dealers: [] }));
+    side.dmg += dmg;
+    side.dealers.push(b);
+  }
+  const sides = [...byKey.values()].map(({ dealers, ...side }) => {
+    if (side.party) {
+      const standing = side.party.members.map((id) => s.agents.get(id)!).filter((b) => b.room === roomId && !b.fallen);
+      // Everyone who fought is down: they still split the gold (and, fallen, get no XP, like anyone fallen).
+      side.members = standing.length ? standing : dealers;
+    } else side.members = dealers;
+    return side;
+  });
+  return sides.sort((x, y) => y.dmg - x.dmg);
+}
+
+/** Splits `amount` by weight; the last part takes the rounding remainder so nothing is created or lost. */
+function splitByWeight(amount: number, weights: number[], total: number): number[] {
+  let left = amount;
+  return weights.map((w, i) => {
+    const part = i === weights.length - 1 ? left : Math.min(left, Math.round((amount * w) / total));
+    left -= part;
+    return part;
+  });
+}
+
+/** Even split; the remainder goes to the party leader (or the first member when the leader is not there). */
+function splitEvenly(amount: number, side: Side): Map<AgentState, number> {
+  const n = side.members.length;
+  const out = new Map(side.members.map((b) => [b, Math.floor(amount / n)] as const));
+  const head = side.members.find((b) => b.id === side.party?.leader) ?? side.members[0]!;
+  out.set(head, out.get(head)! + (amount % n));
+  return out;
+}
+
+/** Who in a side receives a drop: the party's rotation, its leader, or the lone fighter. */
+function dropReceiver(run: Run, side: Side): AgentState {
+  const p = side.party;
+  if (!p || side.members.length === 1) return side.members[0]!;
+  if (p.loot === 'leader') return side.members.find((b) => b.id === p.leader) ?? side.members[0]!;
+  const b = side.members[p.rr % side.members.length]!;
+  p.rr++;
+  markParty(run.s, p);
+  return b;
+}
+
+/** A veteran who fights alongside a newcomer in its party earns mentor points. */
+function mentoring(run: Run, members: AgentState[]): void {
+  const P = BALANCE.party;
+  if (!members.some((b) => b.level <= P.newbieLevel)) return;
+  for (const b of members) {
+    if (b.level < P.mentorLevel) continue;
+    bump(run, b, 'mentor_points');
+    questEvent(run, b, 'mentor');
+  }
+}
+
 /** Removes the monster, schedules its respawn and shares XP, gold and drops among those who fought it. */
 export function killMonster(run: Run, roomId: string, m: MonsterInst): void {
   const { s, c, now, rng } = run;
@@ -130,27 +205,18 @@ export function killMonster(run: Run, roomId: string, m: MonsterInst): void {
   }
   markRoom(s, roomId);
 
-  const shares: { agent: AgentState; dmg: number }[] = [];
-  let total = 0;
-  for (const id in m.threat) {
-    const b = s.agents.get(id);
-    const dmg = m.threat[id]!;
-    if (!b || b.room !== roomId || dmg <= 0) continue;
-    shares.push({ agent: b, dmg });
-    total += dmg;
-  }
-  if (!shares.length || total <= 0) return;
-  shares.sort((x, y) => y.dmg - x.dmg);
+  const sides = killSides(run, roomId, m);
+  const total = sides.reduce((n, x) => n + x.dmg, 0);
+  if (!sides.length || total <= 0) return;
 
   const gold = rng.int(kind.gold[0], kind.gold[1]);
-  // Gold is split by damage dealt; the last share takes the rounding remainder so nothing is created or lost.
-  let goldLeft = gold;
-  const parts = shares.map((sh, i) => {
-    const part = i === shares.length - 1 ? goldLeft : Math.min(goldLeft, Math.round((gold * sh.dmg) / total));
-    goldLeft -= part;
-    return part;
+  const sideGold = splitByWeight(gold, sides.map((x) => x.dmg), total);
+  const goldOf = new Map<AgentState, number>();
+  sides.forEach((side, i) => {
+    for (const [b, g] of splitEvenly(sideGold[i]!, side)) goldOf.set(b, g);
   });
-  const killer = run.actor && shares.some((x) => x.agent === run.actor) ? run.actor : shares[0]!.agent;
+  const everyone = sides.flatMap((x) => x.members);
+  const killer = run.actor && everyone.includes(run.actor) ? run.actor : everyone[0]!;
 
   emit(run, 'kill', {
     room: roomId,
@@ -160,42 +226,54 @@ export function killMonster(run: Run, roomId: string, m: MonsterInst): void {
     drama: kind.world_boss ? 12 : kind.boss ? 10 : kind.elite ? 3 : 1,
     vis: kind.boss ? 'public' : 'room',
     m: msg('ev.kill', { actor: killer.name, target: ref.mon(m.kind) }),
-    data: { mon: m.kind, boss: kind.boss, by: shares.map((x) => x.agent.name), gold: Object.fromEntries(shares.map((x, i) => [x.agent.id, parts[i]!])) },
+    data: { mon: m.kind, boss: kind.boss, by: everyone.map((b) => b.name), gold: Object.fromEntries(everyone.map((b) => [b.id, goldOf.get(b)!])) },
   });
 
-  shares.forEach((sh, i) => {
-    const b = sh.agent;
-    const share = sh.dmg / total;
-    if (b !== run.actor) touch(run, b);
-    if (b.combat?.mon === m.uid) b.combat = null;
-    const part = parts[i]!;
-    addGold(run, b, part);
-    const xp = b.fallen ? 0 : gainXpFromKill(run, b, kind.xp * share, kind.level);
-    if (b === run.actor) tell(run, 'n.kill', { target: ref.mon(m.kind), xp, gold: part });
-    else emit(run, 'kill_share', { room: roomId, actor: b.id, vis: 'private', to: [b.id], m: msg('ev.kill_share', { target: ref.mon(m.kind), xp, gold: part }) });
-    if (share >= BALANCE.combat.creditShare) {
-      bump(run, b, 'kills');
-      if (kind.elite) bump(run, b, 'kills_elite');
-      if (kind.world_boss) bump(run, b, 'world_boss_kills');
-      else if (kind.boss) bump(run, b, 'boss_kills');
-      questEvent(run, b, 'kill', m.kind);
-      if (kind.boss) questEvent(run, b, 'boss', m.kind);
+  const credited: AgentState[] = [];
+  for (const side of sides) {
+    const share = side.dmg / total;
+    const n = side.members.length;
+    // A party's XP grows with its size, then is split evenly: being there is what counts, not the damage.
+    const xpEach = side.party ? (kind.xp * share * (1 + BALANCE.party.xpPerExtraMember * (n - 1))) / n : kind.xp * share;
+    const credit = share >= BALANCE.combat.creditShare;
+    for (const b of side.members) {
+      if (b !== run.actor) touch(run, b);
+      if (b.combat?.mon === m.uid) b.combat = null;
+      const part = goldOf.get(b)!;
+      addGold(run, b, part);
+      const xp = b.fallen ? 0 : gainXpFromKill(run, b, xpEach, kind.level);
+      if (b === run.actor) tell(run, 'n.kill', { target: ref.mon(m.kind), xp, gold: part });
+      else emit(run, 'kill_share', { room: roomId, actor: b.id, vis: 'private', to: [b.id], m: msg('ev.kill_share', { target: ref.mon(m.kind), xp, gold: part }) });
+      if (credit) {
+        credited.push(b);
+        bump(run, b, 'kills');
+        if (kind.elite) bump(run, b, 'kills_elite');
+        if (kind.world_boss) bump(run, b, 'world_boss_kills');
+        else if (kind.boss) bump(run, b, 'boss_kills');
+        questEvent(run, b, 'kill', m.kind);
+        if (kind.boss) questEvent(run, b, 'boss', m.kind);
+      }
+      markAgent(s, b);
     }
-    markAgent(s, b);
-  });
+    if (credit && side.party) mentoring(run, side.members);
+  }
+
+  // Fighting side by side builds bonds. Only the top damage dealers pair up, so a crowd at a world boss stays cheap.
+  const pairs = credited.slice(0, BALANCE.bond.killPairsMax);
+  for (let i = 0; i < pairs.length; i++) for (let j = i + 1; j < pairs.length; j++) raiseBond(run, pairs[i]!, pairs[j]!, BALANCE.bond.kill);
 
   for (const drop of kind.drops) {
     if (!rng.chance(drop.chance)) continue;
     let pick = rng.next() * total;
-    let winner = shares[0]!.agent;
-    for (const sh of shares) {
-      pick -= sh.dmg;
+    let winner = sides[0]!;
+    for (const side of sides) {
+      pick -= side.dmg;
       if (pick <= 0) {
-        winner = sh.agent;
+        winner = side;
         break;
       }
     }
-    awardLoot(run, winner, drop.item, drop.qty, m.kind);
+    awardLoot(run, dropReceiver(run, winner), drop.item, drop.qty, m.kind);
   }
 }
 
