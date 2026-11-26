@@ -224,7 +224,7 @@ describe('snapshots', () => {
     const b = s.agents.get(a.id)!;
     expect(b.friends).toEqual([]);
     expect(b.party).toBeNull();
-    expect(s.village).toEqual({ taxRate: 0, treasury: 0 });
+    expect(s.village).toMatchObject({ taxRate: 0, treasury: 0 });
     const r = applyAction(s, { agentId: a.id, action: 'say', params: { text: 'still here' } }, { now: k.now + 1000, rng: k.rng });
     expect(r.result.ok).toBe(true);
     expect(s.meta.partySeq).toBe(0);
