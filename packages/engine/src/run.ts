@@ -112,6 +112,21 @@ export function inboxPush(s: WorldState, agentId: string, ev: GameEvent): void {
   }
 }
 
+/** Drops the events matching `drop` from an agent's inbox, keeping the order of the rest. */
+export function inboxRemove(s: WorldState, agentId: string, drop: (ev: GameEvent) => boolean): void {
+  const box = s.inboxes.get(agentId);
+  if (!box) return;
+  const cap = BALANCE.inbox.size;
+  const kept: GameEvent[] = [];
+  for (let i = 0; i < box.size; i++) {
+    const ev = box.buf[(box.head + i) % cap];
+    if (ev && !drop(ev)) kept.push(ev);
+  }
+  box.buf = kept;
+  box.head = 0;
+  box.size = kept.length;
+}
+
 /** Events in the inbox with id greater than `cursor`, oldest first. */
 export function inboxSince(s: WorldState, agentId: string, cursor: number, limit = 50): GameEvent[] {
   const box: Inbox | undefined = s.inboxes.get(agentId);

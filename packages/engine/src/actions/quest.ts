@@ -2,8 +2,9 @@ import type { Quest } from '@ajwf/content';
 import { ref } from '@ajwf/shared';
 import { addGold, addItem, bump, canFit, count, gainXp, hasAll, removeItem } from '../agent';
 import { BALANCE } from '../balance';
-import { dailyQuests, initialProgress, nextTutorial, questBlocker, questReady, questView } from '../quests';
-import { emit, fail, msg, tell, type Run } from '../run';
+import { partyHere } from '../party';
+import { dailyQuests, initialProgress, nextTutorial, questBlocker, questEvent, questReady, questView } from '../quests';
+import { emit, fail, markAgent, msg, tell, type Run } from '../run';
 import type { AgentState } from '../types';
 import { normId, type HandlerMap } from './util';
 
@@ -16,6 +17,18 @@ function questById(run: Run, raw: string): Quest {
 function needGiverHere(run: Run, a: AgentState, q: Quest): void {
   const npc = run.c.npcs.get(q.giver)!;
   if (npc.room !== a.room) fail('NOT_AVAILABLE_HERE', 'quest_giver_elsewhere', { npc: ref.npc(npc.id), room: ref.room(npc.room), room_id: npc.room });
+}
+
+/** A newcomer finished a quest with veterans of its party at its side: they get credit for helping. */
+function helpedNewbie(run: Run, a: AgentState): void {
+  const P = BALANCE.party;
+  if (a.level > P.newbieLevel || !a.party) return;
+  for (const b of partyHere(run, a)) {
+    if (b.level < a.level + P.helpNewbieGap) continue;
+    bump(run, b, 'newbies_helped');
+    questEvent(run, b, 'help_newbie');
+    markAgent(run.s, b);
+  }
 }
 
 const KIND_STAT: Record<Quest['kind'], string | null> = { tutorial: 'tutorial_done', daily: 'dailies_done', chain: 'chains_done', escort: 'escorts_done', side: null };
@@ -77,6 +90,8 @@ export const questActions: HandlerMap = {
     for (const s of q.rewards.items) addItem(a, s.item, s.qty);
     delete a.quests[q.id];
     a.questsDone[q.id] = run.now;
+    // Before the reward XP, which may lift the newcomer out of the newbie levels.
+    helpedNewbie(run, a);
     addGold(run, a, q.rewards.gold);
     tell(run, 'n.quest_done', { quest: ref.quest(q.id), gold: q.rewards.gold });
     for (const s of q.rewards.items) tell(run, 'n.loot', { item: ref.item(s.item), qty: s.qty });

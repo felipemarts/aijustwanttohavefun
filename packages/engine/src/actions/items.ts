@@ -9,7 +9,7 @@ import { roomState } from '../world';
 import { normId, type HandlerMap } from './util';
 
 /** An item the agent carries (inventory only), by loose id. */
-function carried(run: Run, a: AgentState, raw: string): Item {
+export function carried(run: Run, a: AgentState, raw: string): Item {
   const id = normId(raw);
   const item = run.c.items.get(id);
   if (!item || count(a, id) <= 0) fail('TARGET_NOT_FOUND', 'item_not_carried', { item: raw });

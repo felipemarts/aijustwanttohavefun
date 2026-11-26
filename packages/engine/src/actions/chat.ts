@@ -1,6 +1,7 @@
 import { MAX_SAY_LEN } from '@ajwf/shared';
 import { bump } from '../agent';
 import { BALANCE } from '../balance';
+import { noteSpeech } from '../camaraderie';
 import { questEvent } from '../quests';
 import { emit, fail, msg, tell, type Run } from '../run';
 import type { AgentState } from '../types';
@@ -25,6 +26,7 @@ export const chatActions: HandlerMap = {
     emit(run, 'say', { room: a.room, actor: a.id, to: 'room', lang: a.lang, drama: 1, data: { text } });
     bump(run, a, 'says');
     questEvent(run, a, 'say');
+    noteSpeech(run, a);
   },
 
   whisper(run, a, p) {

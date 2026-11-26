@@ -2,7 +2,8 @@ import { appearanceHash, type Appearance } from '@ajwf/appearance';
 import { checkAgentName, maskBlockedWords, MAX_BIO_LEN, sanitizeAgentText, type ClassId, type Rng } from '@ajwf/shared';
 import { derive } from './agent';
 import { BALANCE } from './balance';
-import { emit, markAgent, msg, newRun } from './run';
+import { removeMember } from './party';
+import { emit, inboxRemove, markAgent, msg, newRun } from './run';
 import type { ActionError, AgentState, WorldState } from './types';
 import type { GameEvent } from '@ajwf/shared';
 
@@ -59,6 +60,17 @@ export function blankAgent(now: number): AgentState {
     titles: [],
     title: null,
     visited: [],
+    roomAt: now,
+    friends: [],
+    rivals: [],
+    friendReqs: {},
+    bonds: {},
+    party: null,
+    partyInvites: {},
+    guild: null,
+    guildInvites: {},
+    duelInvites: {},
+    journal: { day: 0, n: 0 },
     createdAt: now,
     lastActiveAt: now,
   };
@@ -126,12 +138,17 @@ export function registerAgent(s: WorldState, input: RegisterInput, ctx: { now: n
   return { ok: true, agent: a, events: run.events };
 }
 
-/** Removes an agent from the indexes when it is retired or banned. Its snapshot stays. */
+/**
+ * Removes an agent from the indexes when it is retired or banned. Its snapshot stays. It also leaves its party,
+ * which only makes sense with members who can still act; guild membership, trades and market orders stay (other
+ * agents re-check them when they act).
+ */
 export function deactivateAgent(s: WorldState, agentId: string, status: 'retired' | 'banned'): void {
   const a = s.agents.get(agentId);
   if (!a) return;
   a.status = status;
   s.roomAgents.get(a.room)?.delete(a.id);
+  removeMember(s, a);
   markAgent(s, a);
 }
 
@@ -148,7 +165,10 @@ export function unregisterAgent(s: WorldState, agentId: string): void {
   const left = (s.lookHashes.get(a.lookHash) ?? 1) - 1;
   if (left <= 0) s.lookHashes.delete(a.lookHash);
   else s.lookHashes.set(a.lookHash, left);
-  s.roomAgents.get(a.room)?.delete(a.id);
+  const here = s.roomAgents.get(a.room);
+  here?.delete(a.id);
+  // Its arrival was announced to everyone in the room: take that back too, so nobody meets a ghost.
+  for (const id of here ?? []) inboxRemove(s, id, (ev) => ev.type === 'arrival' && ev.actor === a.id);
   s.inboxes.delete(a.id);
   s.dirty.delete(`agent:${a.id}`);
 }

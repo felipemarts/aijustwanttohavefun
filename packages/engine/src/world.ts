@@ -29,14 +29,14 @@ export function spawnSlots(c: Content, roomId: string): SpawnSlot[] {
 function emptyRoom(room: Room, now: number): RoomState {
   const resources: RoomState['resources'] = {};
   for (const r of room.resources) resources[r.id] = { qty: r.max, at: now };
-  return { id: room.id, monsters: [], resources, ground: {} };
+  return { id: room.id, monsters: [], resources, ground: {}, said: [] };
 }
 
 /** A brand new world: every room populated, nobody in it. */
 export function createWorld(content: Content, now: number): WorldState {
   const s: WorldState = {
     content,
-    meta: { eventSeq: 0, agentSeq: 0, monsterSeq: 0, worldFirsts: {}, createdAt: now },
+    meta: { eventSeq: 0, agentSeq: 0, monsterSeq: 0, worldFirsts: {}, partySeq: 0, guildSeq: 0, tradeSeq: 0, orderSeq: 0, postSeq: 0, createdAt: now },
     agents: new Map(),
     byName: new Map(),
     bySkeleton: new Map(),
@@ -45,6 +45,17 @@ export function createWorld(content: Content, now: number): WorldState {
     roomAgents: new Map(),
     timers: new TimerHeap(),
     inboxes: new Map(),
+    parties: new Map(),
+    guilds: new Map(),
+    guildNames: new Map(),
+    guildSkeletons: new Map(),
+    trades: new Map(),
+    tradesOf: new Map(),
+    market: { orders: {}, history: [] },
+    ordersOf: new Map(),
+    ordersByItem: new Map(),
+    board: [],
+    village: { taxRate: 0, treasury: 0 },
     dirty: new Set(),
   };
   for (const room of content.rooms.values()) {
@@ -55,8 +66,7 @@ export function createWorld(content: Content, now: number): WorldState {
     s.dirty.add(`room:${room.id}`);
   }
   s.timers.push({ at: nextPhaseChange(now), kind: 'phase' });
-  s.dirty.add('meta');
-  s.dirty.add('timers');
+  for (const key of ['meta', 'timers', 'trades', 'market', 'board', 'village']) s.dirty.add(key);
   return s;
 }
 
@@ -110,9 +120,10 @@ export function agentsIn(s: WorldState, roomId: string): Set<string> {
 }
 
 /** Moves an agent between the room indexes. Does not emit events. */
-export function relocate(s: WorldState, a: AgentState, to: string): void {
+export function relocate(s: WorldState, a: AgentState, to: string, now: number): void {
   s.roomAgents.get(a.room)?.delete(a.id);
   a.room = to;
+  a.roomAt = now;
   agentsIn(s, to).add(a.id);
 }
 

@@ -11,7 +11,7 @@ describe('applyAction envelope', () => {
     expect(errCode(applyAction(k.s, { agentId: 'nobody', action: 'move', params: { dir: 'north' } }, k.ctx()))).toBe('UNAUTHORIZED');
     expect(errCode(k.act(a, 'fly', {}))).toBe('INVALID_ACTION');
     // Known to the protocol but not implemented by the engine yet.
-    expect(errCode(k.act(a, 'party_invite', { agent: 'x' }))).toBe('INVALID_ACTION');
+    expect(errCode(k.act(a, 'guild_vote_coup', {}))).toBe('INVALID_ACTION');
     expect(errCode(k.act(a, 'move', {}))).toBe('INVALID_PARAMS');
     expect(errCode(k.act(a, 'move', { dir: 42 }))).toBe('INVALID_PARAMS');
     expect(a.room).toBe(BALANCE.startRoom);

@@ -3,7 +3,7 @@ import { createRng, hashString, ref } from '@ajwf/shared';
 import { count } from './agent';
 import { realDay } from './balance';
 import { emit, markAgent, msg, tell, type Run } from './run';
-import { partyHere } from './social';
+import { partyHere } from './party';
 import type { AgentState, WorldState } from './types';
 
 export type StepType = QuestStep['type'];

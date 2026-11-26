@@ -2,7 +2,7 @@ import type { Content, Item } from '@ajwf/content';
 import { ref } from '@ajwf/shared';
 import { BALANCE, xpToNext } from './balance';
 import { emit, markAgent, msg, tell, type Run } from './run';
-import type { AgentState, Buff, EquipSlot } from './types';
+import type { AgentState, Buff, EquipSlot, Stack } from './types';
 import { relocate } from './world';
 
 export type Derived = {
@@ -136,8 +136,6 @@ export function capacity(c: Content, a: AgentState): number {
   const bag = a.equip.bag ? c.items.get(a.equip.bag) : undefined;
   return BALANCE.inventory.slots + (bag?.bag_slots ?? 0);
 }
-
-export type Stack = { item: string; qty: number };
 
 /** Would the inventory still fit after removing `out` and adding `add`? */
 export function canFit(c: Content, a: AgentState, add: readonly Stack[], out: readonly Stack[] = []): boolean {
@@ -312,7 +310,7 @@ export function wakeAtTemple(run: Run, a: AgentState): void {
   a.fallen = null;
   a.combat = null;
   const from = a.room;
-  relocate(run.s, a, BALANCE.templeRoom);
+  relocate(run.s, a, BALANCE.templeRoom, run.now);
   const d = derive(run.c, a, run.now);
   a.hp = d.maxHp;
   a.mp = d.maxMp;

@@ -12,7 +12,7 @@ const DIR_ALIASES: Record<string, string> = { n: 'north', s: 'south', e: 'east',
 /** Puts the agent in a room, with the bookkeeping every arrival needs. */
 export function enterRoom(run: Run, a: AgentState, to: string, dir?: string): void {
   const from = a.room;
-  relocate(run.s, a, to);
+  relocate(run.s, a, to, run.now);
   if (!a.visited.includes(to)) {
     a.visited.push(to);
     statMax(run, a, 'rooms_visited', a.visited.length);

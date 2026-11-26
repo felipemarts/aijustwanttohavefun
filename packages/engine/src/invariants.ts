@@ -1,6 +1,6 @@
 import { capacity, derive, levelCap, slotsUsed } from './agent';
 import { BALANCE, xpToNext } from './balance';
-import type { WorldState } from './types';
+import type { Goods, WorldState } from './types';
 import { spawnSlots } from './world';
 
 const isNatural = (n: unknown): boolean => typeof n === 'number' && Number.isInteger(n) && n >= 0;
@@ -110,5 +110,98 @@ export function checkInvariants(s: WorldState, now: number): string[] {
       if (!c.items.has(id)) out.push(`room ${roomId}: unknown item ${id} on the ground`);
     }
   }
+  checkSocial(s, out);
+  checkEconomy(s, out);
   return out;
+}
+
+/** Friends, rivals, bonds, parties and guilds: every link holds from both ends. */
+function checkSocial(s: WorldState, out: string[]): void {
+  const B = BALANCE;
+  for (const a of s.agents.values()) {
+    const who = `agent ${a.id} (${a.name})`;
+    if (a.friends.length > B.social.maxFriends) out.push(`${who}: ${a.friends.length} friends`);
+    if (Object.keys(a.friendReqs).length > B.social.maxFriendRequests) out.push(`${who}: too many friend requests`);
+    if (a.rivals.length > B.social.maxRivals) out.push(`${who}: ${a.rivals.length} rivals`);
+    if (new Set(a.friends).size !== a.friends.length || a.friends.includes(a.id)) out.push(`${who}: duplicate or self friend`);
+    for (const id of a.friends) if (!s.agents.get(id)?.friends.includes(a.id)) out.push(`${who}: friendship with ${id} is one-sided`);
+    const bonds = Object.entries(a.bonds);
+    if (bonds.length > B.bond.keep) out.push(`${who}: ${bonds.length} bonds kept`);
+    for (const [id, bond] of bonds) {
+      if (id === a.id) out.push(`${who}: bond with itself`);
+      if (!(bond.v >= 0 && bond.v <= B.bond.max)) out.push(`${who}: bond ${bond.v} with ${id}`);
+      const other = s.agents.get(id)?.bonds[a.id];
+      if (other && other.v !== bond.v) out.push(`${who}: bond with ${id} is ${bond.v} here and ${other.v} there`);
+    }
+    if (a.party && !s.parties.get(a.party)?.members.includes(a.id)) out.push(`${who}: in party ${a.party}, which does not list it`);
+    if (a.guild && !s.guilds.get(a.guild)?.members.includes(a.id)) out.push(`${who}: in guild ${a.guild}, which does not list it`);
+  }
+
+  for (const p of s.parties.values()) {
+    const what = `party ${p.id}`;
+    if (p.members.length < 1 || p.members.length > B.party.maxSize) out.push(`${what}: ${p.members.length} members`);
+    if (new Set(p.members).size !== p.members.length) out.push(`${what}: duplicate member`);
+    if (!p.members.includes(p.leader)) out.push(`${what}: leader ${p.leader} is not a member`);
+    for (const id of p.members) {
+      const a = s.agents.get(id);
+      if (a?.party !== p.id) out.push(`${what}: member ${id} points to party ${a?.party}`);
+      else if (a.status !== 'active') out.push(`${what}: inactive member ${id}`);
+    }
+  }
+
+  for (const g of s.guilds.values()) {
+    const what = `guild ${g.id} (${g.name})`;
+    if (!g.members.length || g.members.length > B.guild.maxMembers) out.push(`${what}: ${g.members.length} members`);
+    if (new Set(g.members).size !== g.members.length) out.push(`${what}: duplicate member`);
+    if (!g.members.includes(g.leader)) out.push(`${what}: leader ${g.leader} is not a member`);
+    if (g.officers.includes(g.leader)) out.push(`${what}: leader listed as officer`);
+    for (const id of g.officers) if (!g.members.includes(id)) out.push(`${what}: officer ${id} is not a member`);
+    for (const id of g.members) if (s.agents.get(id)?.guild !== g.id) out.push(`${what}: member ${id} points elsewhere`);
+    if (!isNatural(g.treasury)) out.push(`${what}: treasury ${g.treasury}`);
+    for (const [id, qty] of Object.entries(g.vault)) {
+      if (!Number.isInteger(qty) || qty <= 0) out.push(`${what}: ${qty} x ${id} in the vault`);
+      if (!s.content.items.has(id)) out.push(`${what}: unknown item ${id} in the vault`);
+    }
+    if (s.guildNames.get(g.norm) !== g.id || s.guildSkeletons.get(g.skeleton) !== g.id) out.push(`${what}: name index out of sync`);
+  }
+  for (const [norm, id] of s.guildNames) if (s.guilds.get(id)?.norm !== norm) out.push(`guild name index: ${norm} -> ${id} does not match`);
+}
+
+/** Trades, the market and the village treasury, with their derived indexes. */
+function checkEconomy(s: WorldState, out: string[]): void {
+  const c = s.content;
+  const goodsOk = (g: Goods) => isNatural(g.gold) && g.items.every((x) => c.items.has(x.item) && Number.isInteger(x.qty) && x.qty > 0);
+  let indexed = 0;
+  for (const set of s.tradesOf.values()) indexed += set.size;
+  if (indexed !== s.trades.size * 2) out.push(`trade index holds ${indexed} entries for ${s.trades.size} trades`);
+  for (const t of s.trades.values()) {
+    if (!s.tradesOf.get(t.from)?.has(t.id) || !s.tradesOf.get(t.to)?.has(t.id)) out.push(`trade ${t.id}: missing from the index`);
+    if (t.from === t.to) out.push(`trade ${t.id}: with itself`);
+    if (!goodsOk(t.give) || !goodsOk(t.want)) out.push(`trade ${t.id}: malformed goods`);
+  }
+
+  let books = 0;
+  for (const [item, book] of s.ordersByItem) {
+    books += book.length;
+    for (let i = 0; i < book.length; i++) {
+      const o = book[i]!;
+      if (o.item !== item || s.market.orders[o.id] !== o) out.push(`market book ${item}: stray order ${o.id}`);
+      if (i > 0 && book[i - 1]!.price > o.price) out.push(`market book ${item}: not sorted by price`);
+    }
+  }
+  const orders = Object.values(s.market.orders);
+  if (books !== orders.length) out.push(`market: ${orders.length} orders but ${books} in the books`);
+  const perSeller = new Map<string, number>();
+  for (const o of orders) {
+    const what = `order ${o.id}`;
+    if (!c.items.has(o.item)) out.push(`${what}: unknown item ${o.item}`);
+    if (!Number.isInteger(o.qty) || o.qty <= 0 || !Number.isInteger(o.price) || o.price <= 0) out.push(`${what}: qty ${o.qty} price ${o.price}`);
+    if (!s.agents.has(o.seller)) out.push(`${what}: unknown seller ${o.seller}`);
+    if (!s.ordersOf.get(o.seller)?.has(o.id)) out.push(`${what}: missing from the seller index`);
+    perSeller.set(o.seller, (perSeller.get(o.seller) ?? 0) + 1);
+  }
+  for (const [seller, n] of perSeller) if (n > BALANCE.market.maxOrders) out.push(`seller ${seller}: ${n} open orders`);
+  if (s.market.history.length > BALANCE.market.history) out.push(`market history holds ${s.market.history.length} trades`);
+  if (s.board.length > BALANCE.board.maxPosts) out.push(`board holds ${s.board.length} posts`);
+  if (!isNatural(s.village.treasury)) out.push(`village treasury ${s.village.treasury}`);
 }
