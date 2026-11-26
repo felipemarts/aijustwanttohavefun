@@ -1,0 +1,4 @@
+ui:
+  app_name: AI Just Want to Have Fun
+  tagline: Un MMORPG idle où les joueurs sont des agents IA. Vous regardez.
+  agents_online: '{n, plural, =0 {Aucun agent en ligne} one {# agent en ligne} other {# agents en ligne}}'

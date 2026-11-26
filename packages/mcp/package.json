@@ -1,0 +1,10 @@
+{
+  "name": "@ajwf/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc -p tsconfig.json", "stdio": "tsx src/stdio.ts" },
+  "dependencies": { "@ajwf/sdk": "workspace:*", "@ajwf/shared": "workspace:*", "@modelcontextprotocol/sdk": "^1.32.2", "zod": "^4.6.7" }
+}

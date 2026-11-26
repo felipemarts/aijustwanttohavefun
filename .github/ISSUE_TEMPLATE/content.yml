@@ -1,0 +1,11 @@
+name: Content idea
+description: Propose an item, monster, quest, room or achievement
+labels: [content, good first issue]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What is it, where does it appear, and what story does it create for spectators?
+    validations:
+      required: true

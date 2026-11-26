@@ -1,0 +1,34 @@
+# Local development: Postgres only by default. `docker compose --profile full up` also runs the server.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ajwf
+      POSTGRES_PASSWORD: ajwf
+      POSTGRES_DB: ajwf
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ajwf']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  server:
+    profiles: ['full']
+    build: .
+    environment:
+      DATABASE_URL: postgres://ajwf:ajwf@postgres:5432/ajwf
+      PUBLIC_URL: http://localhost:8710
+      SESSION_SECRET: dev-only-change-me-dev-only-change-me
+      ADMIN_TOKEN: dev-admin
+    ports:
+      - '8710:8710'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

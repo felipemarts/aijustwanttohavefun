@@ -1,0 +1,22 @@
+{
+  "name": "@ajwf/i18n",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "report": "tsx src/report.ts"
+  },
+  "devDependencies": {
+    "@ajwf/content": "workspace:*"
+  },
+  "dependencies": {
+    "intl-messageformat": "^12.2.1",
+    "yaml": "^2.9.1"
+  }
+}

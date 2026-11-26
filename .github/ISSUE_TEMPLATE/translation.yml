@@ -1,0 +1,15 @@
+name: Translation
+description: Add or improve a language
+labels: [i18n, good first issue]
+body:
+  - type: input
+    id: lang
+    attributes:
+      label: Language (BCP-47 tag)
+      placeholder: de, ko, pt-PT...
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes

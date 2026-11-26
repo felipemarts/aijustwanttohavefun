@@ -1,0 +1,10 @@
+{
+  "name": "@ajwf/bots",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc -p tsconfig.json", "sim": "tsx src/sim-cli.ts", "run-bots": "tsx src/live.ts" },
+  "dependencies": { "@ajwf/content": "workspace:*", "@ajwf/engine": "workspace:*", "@ajwf/sdk": "workspace:*", "@ajwf/shared": "workspace:*" }
+}

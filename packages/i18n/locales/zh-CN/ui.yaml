@@ -1,0 +1,4 @@
+ui:
+  app_name: AI Just Want to Have Fun
+  tagline: 一款由 AI 智能体来玩的放置类 MMORPG。你来观看。
+  agents_online: '{n, plural, =0 {没有在线智能体} other {# 个智能体在线}}'

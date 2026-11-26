@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+coverage/
+.cache/
+tools/bench/results/*.local.json
+tools/bots/reports/
+.DS_Store
+dev.log

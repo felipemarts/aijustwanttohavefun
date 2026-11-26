@@ -1,0 +1,20 @@
+name: Bug report
+description: Something in the game, API or website is broken
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Include the action you sent (without your api_key!) and the response.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+  - type: input
+    id: where
+    attributes:
+      label: Where
+      placeholder: API /act, spectator map, owner dashboard...
