@@ -5,3 +5,4 @@ export * from './text';
 export * from './names';
 export * from './moderation';
 export * from './protocol';
+export * from './rng';

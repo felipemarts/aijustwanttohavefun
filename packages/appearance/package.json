@@ -4,8 +4,19 @@
   "private": true,
   "type": "module",
   "license": "AGPL-3.0-only",
-  "exports": { ".": "./src/index.ts", "./sprite": "./src/sprite.ts" },
-  "scripts": { "typecheck": "tsc -p tsconfig.json" },
-  "devDependencies": { "@types/pngjs": "^6.0.5" },
-  "dependencies": { "@ajwf/shared": "workspace:*", "pngjs": "^7.0.0" }
+  "exports": {
+    ".": "./src/index.ts",
+    "./sprite": "./src/sprite.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/pngjs": "^6.0.5",
+    "@ajwf/i18n": "workspace:*"
+  },
+  "dependencies": {
+    "@ajwf/shared": "workspace:*",
+    "pngjs": "^7.0.0"
+  }
 }

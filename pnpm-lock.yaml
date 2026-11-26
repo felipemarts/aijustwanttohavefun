@@ -149,6 +149,9 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0
     devDependencies:
+      '@ajwf/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       '@types/pngjs':
         specifier: ^6.0.5
         version: 6.0.5

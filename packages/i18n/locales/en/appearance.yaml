@@ -1,0 +1,160 @@
+appearance:
+  desc: '{subject} with {hair}, wearing {items}'
+  subject: 'a {build} {species}'
+  hair: '{color} {style} hair'
+  hair_bald: 'a shiny bald head'
+  item: 'a {color} {item}'
+  plain_item: '{item}'
+  build:
+    human: sturdy
+    elf: slender
+    dwarf: stout
+    orc: burly
+    gnome: tiny
+    goblin: wiry
+  species:
+    human: human
+    elf: elf
+    dwarf: dwarf
+    orc: orc
+    gnome: gnome
+    goblin: goblin
+  skin:
+    s0: fair
+    s1: light
+    s2: tan
+    s3: olive
+    s4: brown
+    s5: dark
+  hair_style:
+    short: short
+    long: long
+    mohawk: mohawk
+    bald: bald
+    braids: braided
+    ponytail: ponytailed
+    bun: bunned
+    curly: curly
+    spiky: spiky
+    bob: bobbed
+    side: side-parted
+    afro: voluminous
+    topknot: topknotted
+    pigtails: pigtailed
+    shaggy: shaggy
+  hair_color:
+    c0: jet-black
+    c1: chestnut
+    c2: silver
+    c3: golden
+    c4: copper
+    c5: auburn
+    c6: snow-white
+    c7: moss-green
+    c8: sapphire
+    c9: rose-pink
+    c10: violet
+    c11: teal
+  hat:
+    none: no hat
+    hood: hood
+    wizard_hat: wizard hat
+    helm: helm
+    beret: beret
+    flower_crown: flower crown
+    cap: cap
+    bandana: bandana
+    horned_helm: horned helm
+    tricorn: tricorn hat
+    crown: crown
+    straw_hat: straw hat
+    top_hat: top hat
+    feathered_hat: feathered hat
+    headband: headband
+    witch_hat: witch hat
+    turban: turban
+    cowl: cowl
+    circlet: circlet
+    chef_hat: chef hat
+    starry_wizard_hat: starry wizard hat
+  top:
+    tunic: tunic
+    jerkin: jerkin
+    robe: robe
+    shirt: shirt
+    vest: vest
+    doublet: doublet
+    apron: apron
+    chainmail: chainmail shirt
+    poncho: poncho
+    sweater: sweater
+    coat: coat
+    tabard: tabard
+    corset: corset
+    hoodie: hooded tunic
+    kimono: kimono
+    leather_vest: leather vest
+    sash_shirt: sashed shirt
+    blouse: blouse
+    scale_shirt: scale shirt
+    patched_jerkin: patched jerkin
+    royal_doublet: royal doublet
+    silk_robe: silk robe
+  bottom:
+    trousers: trousers
+    skirt: skirt
+    shorts: shorts
+    kilt: kilt
+    leggings: leggings
+    long_skirt: long skirt
+    breeches: breeches
+    baggy_pants: baggy pants
+    sarong: sarong
+    robe_skirt: robe skirt
+  cloak:
+    none: no cloak
+    cape: cape
+    long_cloak: long cloak
+    short_cape: short cape
+    tattered_cloak: tattered cloak
+    fur_mantle: fur mantle
+    hooded_cloak: hooded cloak
+    royal_cape: royal cape
+    leaf_cloak: cloak of leaves
+    feather_cloak: feathered cloak
+    shawl: shawl
+  accessory:
+    none: nothing else
+    round_glasses: round glasses
+    pipe: a pipe
+    eyepatch: an eyepatch
+    earring: an earring
+    scar: a scar
+    monocle: a monocle
+    freckles: freckles
+    beard: a beard
+    mustache: a mustache
+    goggles: goggles
+    necklace: a necklace
+    flower: a flower behind the ear
+    nose_ring: a nose ring
+    war_paint: war paint
+    bandage: a head bandage
+  dye:
+    d0: crimson
+    d1: royal-blue
+    d2: forest-green
+    d3: plum
+    d4: amber
+    d5: charcoal
+    d6: ivory
+    d7: earthen
+    d8: teal
+    d9: rose
+    d10: olive
+    d11: midnight
+    d12: oxblood
+    d13: mustard
+    d14: slate
+    d15: coral
+    d16: pearl
