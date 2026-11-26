@@ -1,0 +1,106 @@
+import { actionParamSchemas, isActionName, type ActionName } from '@ajwf/shared';
+import { touch } from './agent';
+import { apCost, BALANCE } from './balance';
+import { chatActions } from './actions/chat';
+import { combatActions } from './actions/combat';
+import { itemActions } from './actions/items';
+import { moveActions } from './actions/move';
+import { npcActions } from './actions/npc';
+import { questActions } from './actions/quest';
+import type { Handler, HandlerMap } from './actions/util';
+import { workActions } from './actions/work';
+import { fail, GameError, markAgent, msg, newRun, type Run } from './run';
+import type { ActionCtx, AgentState, ApplyResult, Command, WorldState } from './types';
+
+/** Every action the engine currently implements. Later milestones add their modules here. */
+export const HANDLERS: HandlerMap = {
+  ...moveActions,
+  ...combatActions,
+  ...itemActions,
+  ...npcActions,
+  ...workActions,
+  ...questActions,
+  ...chatActions,
+};
+
+/** What a fallen agent can still do: call for help, give up and wait at the temple, read. */
+const WHILE_FALLEN = new Set<ActionName>(['release', 'say', 'whisper', 'party_say', 'guild_say', 'inventory', 'quest_list', 'board_read', 'set_language']);
+
+/** Agents without a confirmed owner cannot write free text, give things away or take part in politics (§15.1). */
+const NEEDS_OWNER = new Set<ActionName>([
+  'say', 'whisper', 'party_say', 'guild_say', 'board_post', 'board_reply', 'journal', 'give', 'vote', 'run_for_mayor', 'guild_create',
+]);
+
+/** Free-text channels a muted agent loses. */
+const TEXT_ACTIONS = new Set<ActionName>(['say', 'whisper', 'party_say', 'guild_say', 'board_post', 'board_reply', 'journal', 'run_for_mayor']);
+
+/** Things that cannot be done while a monster is on you: leave (use `flee`), rest, work, shop. */
+const NOT_IN_COMBAT = new Set<ActionName>([
+  'move', 'rest', 'gather', 'craft', 'shop_buy', 'shop_sell', 'market_sell', 'market_buy', 'contribute', 'choose_profession', 'quest_accept', 'quest_turn_in',
+]);
+
+function guard(run: Run, a: AgentState, action: ActionName): void {
+  if (a.fallen && !WHILE_FALLEN.has(action)) {
+    fail('DEAD', 'fallen', { seconds: Math.max(1, Math.ceil((a.fallen.until - run.now) / 1000)) });
+  }
+  if (!a.claimed && NEEDS_OWNER.has(action)) fail('UNCLAIMED_LIMIT', 'unclaimed', { action });
+  if (a.mutedUntil > run.now && TEXT_ACTIONS.has(action)) fail('MUTED', 'muted', { minutes: Math.ceil((a.mutedUntil - run.now) / 60_000) });
+  if (a.combat && NOT_IN_COMBAT.has(action)) fail('IN_COMBAT', 'in_combat', { action });
+  const cost = apCost(action);
+  if (a.ap < cost) {
+    const wait = Math.ceil((BALANCE.ap.regenMs - (run.now - a.apAt)) / 60_000);
+    fail('NOT_ENOUGH_AP', 'no_ap', { need: cost, have: a.ap, minutes: Math.max(1, wait) });
+  }
+}
+
+/**
+ * The heart of the game: applies one command to the world. Pure apart from mutating `state`: the clock and the
+ * randomness come from `ctx`, so the same inputs always give the same result (PLANEJAMENTO §3.2).
+ */
+export function applyAction(s: WorldState, cmd: Command, ctx: ActionCtx): ApplyResult {
+  const a = s.agents.get(cmd.agentId);
+  if (!a || a.status !== 'active') {
+    return { result: { ok: false, action: cmd.action, error: { code: 'UNAUTHORIZED', msg: msg('err.unknown_agent') } }, events: [] };
+  }
+  if (!isActionName(cmd.action) || !HANDLERS[cmd.action]) {
+    return {
+      result: { ok: false, action: cmd.action, error: { code: 'INVALID_ACTION', msg: msg('err.invalid_action', { action: cmd.action }), hint: msg('hint.invalid_action') } },
+      events: [],
+    };
+  }
+  const action: ActionName = cmd.action;
+  const parsed = actionParamSchemas[action].safeParse(cmd.params ?? {});
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    const field = issue?.path.join('.') || '?';
+    return {
+      result: { ok: false, action, error: { code: 'INVALID_PARAMS', msg: msg('err.invalid_params', { action, field }), hint: msg('hint.invalid_params', { action }) } },
+      events: [],
+    };
+  }
+
+  const run = newRun(s, ctx.now, ctx.rng, a);
+  try {
+    touch(run, a);
+    guard(run, a, action);
+    (HANDLERS[action] as Handler<ActionName>)(run, a, parsed.data as never);
+    a.ap -= apCost(action);
+    a.lastActiveAt = ctx.now;
+    markAgent(s, a);
+    const hasData = Object.keys(run.data).length > 0;
+    return { result: { ok: true, action, narration: run.narr, ...(hasData ? { data: run.data } : {}) }, events: run.events };
+  } catch (e) {
+    if (!(e instanceof GameError)) throw e;
+    markAgent(s, a);
+    const hasData = Object.keys(run.data).length > 0;
+    return {
+      result: {
+        ok: false,
+        action,
+        error: { code: e.code, msg: msg(`err.${e.slug}`, e.params), hint: msg(`hint.${e.slug}`, e.params), ...(hasData ? { data: run.data } : {}) },
+      },
+      // `touch` may have produced events (waking at the temple) before the action was refused.
+      events: run.events,
+    };
+  }
+}
