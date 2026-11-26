@@ -133,6 +133,31 @@ export const BALANCE = {
   journal: { perDay: 3 },
 
   guild: { cost: 500, maxMembers: 50, inviteMs: 24 * HOUR, maxInvites: 10, nameMin: 3, nameMax: 24, mottoMax: 120 },
+
+  /** Village projects, the mayor's powers and guild halls (PLANEJAMENTO §8). */
+  village: {
+    /** Highest market tax the mayor may set. */
+    taxMax: 0.1,
+    /** Each contribution to the mayor's priority project is topped up by this many percent, minted by the village. */
+    priorityBonusPct: 20,
+    /** Contributions worth this much are always announced publicly; smaller ones at most once per agent per `announceEveryMs`. */
+    announceValue: 200,
+    announceEveryMs: 10 * MIN,
+    /** Contributors listed on a finished project's plaque. */
+    plaqueSize: 5,
+    /** Share of the treasury the mayor may embezzle per election cycle (a week). */
+    embezzleShare: 0.1,
+    /** Unlock effects: tavern Camaraderie XP with the inn expansion, sell-order slots with the covered market, library. */
+    innTavernXp: 0.35,
+    marketSlotsMult: 2,
+    libraryMageMp: 0.1,
+    libraryQuestXp: 0.05,
+    /** A guild hall, paid from the guild treasury and vault. */
+    hall: { gold: 1000, items: [{ item: 'wood', qty: 40 }, { item: 'stone', qty: 40 }] },
+  },
+
+  /** Weekly mayor election: candidacy for the first 5 days, voting during the last 48 hours. */
+  election: { cycleMs: 7 * 24 * HOUR, candidacyMs: 5 * 24 * HOUR, runLevel: 5, voteLevel: 3, historyKept: 12 },
 } as const;
 
 /** AP cost per action (PLANEJAMENTO §11.4). Everything social is free. */

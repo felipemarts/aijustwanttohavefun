@@ -3,6 +3,7 @@ import { isNight, nextDayFraction, BALANCE } from './balance';
 import { TimerHeap } from './heap';
 import { emit, markRoom, type Run } from './run';
 import type { AgentState, MonsterInst, RoomState, WorldState } from './types';
+import { electionDue, newVillage } from './village-state';
 
 export type SpawnSlot = { kind: string; night: boolean };
 
@@ -55,7 +56,7 @@ export function createWorld(content: Content, now: number): WorldState {
     ordersOf: new Map(),
     ordersByItem: new Map(),
     board: [],
-    village: { taxRate: 0, treasury: 0 },
+    village: newVillage(now),
     dirty: new Set(),
   };
   for (const room of content.rooms.values()) {
@@ -66,6 +67,7 @@ export function createWorld(content: Content, now: number): WorldState {
     s.dirty.add(`room:${room.id}`);
   }
   s.timers.push({ at: nextPhaseChange(now), kind: 'phase' });
+  s.timers.push({ at: electionDue(s.village.election), kind: 'election' });
   for (const key of ['meta', 'timers', 'trades', 'market', 'board', 'village']) s.dirty.add(key);
   return s;
 }

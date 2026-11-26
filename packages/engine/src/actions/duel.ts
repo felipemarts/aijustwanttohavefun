@@ -4,11 +4,12 @@ import { fightDuel } from '../duel';
 import { questEvent } from '../quests';
 import { emit, fail, markAgent, msg, tell, type Run } from '../run';
 import type { AgentState } from '../types';
+import { unlockedAt } from '../unlocks';
 import { agentHere, hasFlag, type HandlerMap } from './util';
 
 /** Duels happen only where fighting is a sport, between two agents who are standing and not busy with a monster. */
 function duelOpponent(run: Run, a: AgentState, name: string): AgentState {
-  if (!hasFlag(run, a, 'training') && !hasFlag(run, a, 'arena')) fail('NOT_AVAILABLE_HERE', 'duel_place');
+  if (!hasFlag(run, a, 'training') && !hasFlag(run, a, 'arena') && !unlockedAt(run.s, 'arena_duels', a.room)) fail('NOT_AVAILABLE_HERE', 'duel_place');
   const b = agentHere(run, a, name);
   if (b === a) fail('INVALID_PARAMS', 'not_yourself_social');
   if (b.fallen) fail('NOT_ALLOWED', 'duel_fallen', { name: b.name });

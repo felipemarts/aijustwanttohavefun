@@ -3,6 +3,7 @@ import { ref } from '@ajwf/shared';
 import { BALANCE, xpToNext } from './balance';
 import { emit, markAgent, msg, tell, type Run } from './run';
 import type { AgentState, Buff, EquipSlot, Stack } from './types';
+import { applyLibrary } from './unlocks';
 import { relocate } from './world';
 
 export type Derived = {
@@ -26,6 +27,7 @@ export function derive(c: Content, a: AgentState, now: number): Derived {
   for (const k of STAT_KEYS) out[k] = cls.base[k] + cls.per_level[k] * (a.level - 1);
   let atk = 0;
   let def = 0;
+  let mpMult = 1;
   for (const slot of ['weapon', 'armor', 'trinket'] as const) {
     const id = a.equip[slot];
     const st = id ? c.items.get(id)?.stats : undefined;
@@ -39,6 +41,7 @@ export function derive(c: Content, a: AgentState, now: number): Derived {
     if (b.until <= now) continue;
     if (b.stat === 'atk') atk += b.value;
     else if (b.stat === 'def') def += b.value;
+    else if (b.stat === 'max_mp') mpMult += b.value;
   }
   const B = BALANCE;
   return {
@@ -46,7 +49,7 @@ export function derive(c: Content, a: AgentState, now: number): Derived {
     atk: atk + out[cls.primary],
     def: def + out.vit * B.combat.vitDef,
     maxHp: Math.floor(B.hp.base + out.vit * B.hp.perVit + a.level * B.hp.perLevel),
-    maxMp: Math.floor(B.mp.base + out.int * B.mp.perInt),
+    maxMp: Math.floor((B.mp.base + out.int * B.mp.perInt) * mpMult),
     crit: Math.min(B.combat.critMax, B.combat.critBase + out.agi * B.combat.critPerAgi),
   };
 }
@@ -82,6 +85,7 @@ export function touch(run: Run, a: AgentState, wake = true): void {
   }
 
   if (a.buffs.length && a.buffs.some((b) => b.until <= now)) a.buffs = a.buffs.filter((b) => b.until > now);
+  applyLibrary(run.s, a);
   // Regeneration only counts from the moment the fight ended, not from the last update.
   let regenFrom = a.regenAt;
   if (a.combat) {

@@ -6,6 +6,7 @@ import { indexOrder } from './market';
 import { blankAgent } from './register';
 import { indexTrade } from './trade';
 import type { AgentState, BoardPost, Guild, Market, Party, RoomState, Timer, Trade, Village, WorldMeta, WorldState } from './types';
+import { restoreVillage } from './village';
 import { createWorld, nextPhaseChange, spawnMonster, spawnSlots } from './world';
 
 /**
@@ -124,6 +125,7 @@ export function restoreWorld(content: Content, snap: Snapshot, now: number): Wor
     for (const m of r.monsters) for (const id of Object.keys(m.threat)) if (!s.agents.has(id)) delete m.threat[id];
   }
   restoreSocial(s, world);
+  restoreVillage(s);
   s.dirty.clear();
   return s;
 }

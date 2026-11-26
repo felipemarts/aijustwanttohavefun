@@ -3,6 +3,7 @@ import { BALANCE } from './balance';
 import { talkBond } from './bond';
 import { markRoom, tell, type Run } from './run';
 import type { AgentState } from './types';
+import { tavernCamaraderieXp } from './unlocks';
 import { roomState } from './world';
 
 const BUFF_ID = 'camaraderie';
@@ -24,7 +25,7 @@ export function noteSpeech(run: Run, a: AgentState): void {
   markRoom(run.s, a.room);
 
   if (!recent.length || run.now - a.roomAt < C.stayMs) return;
-  const value = run.c.rooms.get(a.room)!.flags.includes('tavern') ? C.tavernXp : C.xp;
+  const value = run.c.rooms.get(a.room)!.flags.includes('tavern') ? tavernCamaraderieXp(run.s) : C.xp;
   const had = a.buffs.find((b) => b.id === BUFF_ID && b.until > run.now);
   addBuff(a, { id: BUFF_ID, stat: 'xp', value, until: run.now + C.durationMs });
   // Only news is narrated: a fresh buff or a stronger one. Refreshing the timer is silent.

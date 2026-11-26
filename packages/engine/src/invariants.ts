@@ -1,6 +1,8 @@
 import { capacity, derive, levelCap, slotsUsed } from './agent';
 import { BALANCE, xpToNext } from './balance';
 import type { Goods, WorldState } from './types';
+import { checkVillage } from './village-invariants';
+import { marketSlots } from './unlocks';
 import { spawnSlots } from './world';
 
 const isNatural = (n: unknown): boolean => typeof n === 'number' && Number.isInteger(n) && n >= 0;
@@ -200,8 +202,9 @@ function checkEconomy(s: WorldState, out: string[]): void {
     if (!s.ordersOf.get(o.seller)?.has(o.id)) out.push(`${what}: missing from the seller index`);
     perSeller.set(o.seller, (perSeller.get(o.seller) ?? 0) + 1);
   }
-  for (const [seller, n] of perSeller) if (n > BALANCE.market.maxOrders) out.push(`seller ${seller}: ${n} open orders`);
+  for (const [seller, n] of perSeller) if (n > marketSlots(s)) out.push(`seller ${seller}: ${n} open orders`);
   if (s.market.history.length > BALANCE.market.history) out.push(`market history holds ${s.market.history.length} trades`);
   if (s.board.length > BALANCE.board.maxPosts) out.push(`board holds ${s.board.length} posts`);
   if (!isNatural(s.village.treasury)) out.push(`village treasury ${s.village.treasury}`);
+  checkVillage(s, out);
 }

@@ -8,8 +8,11 @@ import { canManage, guildOf } from './guild';
 import { partyOf } from './party';
 import { nextTutorial, questReady } from './quests';
 import { inboxSince, newRun, type Run } from './run';
+import { gateBlocker } from './gates';
 import { tradesOf } from './trade';
 import type { AgentState, WorldState } from './types';
+import { unlockedAt } from './unlocks';
+import { civicSeen, type CivicSeen } from './village-view';
 import { refreshMonster, refreshResource } from './world';
 import type { Rng } from '@ajwf/shared';
 
@@ -77,6 +80,10 @@ export type Observation = {
     items?: Record<string, number>;
     resources?: Record<string, number>;
     stations?: string[];
+    /** At a project site: its progress (0..1) or done. */
+    project?: CivicSeen['project'];
+    /** At the town hall: projects open to contributions. */
+    projects?: CivicSeen['projects'];
   };
   time: string;
   actions: ActionName[];
@@ -160,7 +167,7 @@ function pendingFor(s: WorldState, a: AgentState, now: number): Pending | undefi
 }
 
 /** Actions that make sense where the agent stands right now (PLANEJAMENTO §11.3). */
-function contextActions(run: Run, a: AgentState, o: Observation['room'], pending: Pending | undefined): ActionName[] {
+function contextActions(run: Run, a: AgentState, o: Observation['room'], pending: Pending | undefined, civic: ActionName[]): ActionName[] {
   if (a.fallen) return ['release', 'say', 'whisper'];
   const c = run.c;
   const out: ActionName[] = [];
@@ -179,8 +186,9 @@ function contextActions(run: Run, a: AgentState, o: Observation['room'], pending
     if (a.level >= 5 && !a.profession) out.push('choose_profession');
     if (o.items) out.push('take');
     if (flags.includes('market')) out.push('market_list', 'market_buy', 'market_sell');
-    if (o.agents.length && (flags.includes('training') || flags.includes('arena'))) out.push('duel_invite');
+    if (o.agents.length && (flags.includes('training') || flags.includes('arena') || unlockedAt(run.s, 'arena_duels', a.room))) out.push('duel_invite');
     if (flags.includes('guild_hall') && !a.guild) out.push('guild_create');
+    out.push(...civic);
   }
   if (o.agents.length) out.push('trade_offer', 'party_invite');
   if (flags.includes('board')) out.push('board_read', 'board_post');
@@ -241,8 +249,13 @@ export function observe(s: WorldState, agentId: string, ctx: { now: number; rng:
     ...(def.resources.length ? { resources } : {}),
     ...(def.stations.length ? { stations: def.stations } : {}),
   };
-  const locked = Object.entries(def.gates).map(([dir, g]) => [dir, g.requires] as const);
+  const locked = Object.entries(def.gates)
+    .filter(([, g]) => gateBlocker(run, a, g))
+    .map(([dir, g]) => [dir, g.requires] as const);
   if (locked.length) room.locked = Object.fromEntries(locked);
+  const civic = civicSeen(s, a);
+  if (civic.project) room.project = civic.project;
+  if (civic.projects) room.projects = civic.projects;
 
   const obs: Observation = {
     you: {
@@ -271,7 +284,7 @@ export function observe(s: WorldState, agentId: string, ctx: { now: number; rng:
   if (guild) obs.you.guild = guild.name;
   const pending = pendingFor(s, a, ctx.now);
   if (pending) obs.pending = pending;
-  obs.actions = contextActions(run, a, room, pending);
+  obs.actions = contextActions(run, a, room, pending, civic.actions);
 
   const next = nextTutorial(run, a);
   if (next) {

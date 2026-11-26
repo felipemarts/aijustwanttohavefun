@@ -1,6 +1,7 @@
 # Titles are shown with the agent name on the map ("Mayor Pip", "Oathbreaker Brasa").
 # prefix: true puts the title before the name; false puts it after ("Pip the Explorer").
 # `mayor` and `wanted` are granted and removed by the engine while the condition holds.
+# `honored` is granted by the engine to the top contributor when the statue is completed.
 - { id: mayor }
 - { id: wanted }
 - { id: oathbreaker }
@@ -33,3 +34,4 @@
 - { id: swindler }
 - { id: pickpocket }
 - { id: usurper }
+- { id: honored, prefix: false }

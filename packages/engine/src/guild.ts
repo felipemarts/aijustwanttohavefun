@@ -1,5 +1,6 @@
 import { checkAgentName, containsBlockedWord, nameSkeleton, normalizeName } from '@ajwf/shared';
 import { BALANCE } from './balance';
+import { freeHall } from './village';
 import type { AgentState, Guild, WorldState } from './types';
 
 /** Letters of any alphabet, digits, `_` and `-`, in words separated by single spaces. */
@@ -69,6 +70,7 @@ export function removeGuildMember(s: WorldState, g: Guild, a: AgentState): { lea
     s.guilds.delete(g.id);
     s.guildNames.delete(g.norm);
     s.guildSkeletons.delete(g.skeleton);
+    freeHall(s, g.id);
     return { leader: null, dissolved: true };
   }
   if (g.leader !== a.id) return { leader: null, dissolved: false };

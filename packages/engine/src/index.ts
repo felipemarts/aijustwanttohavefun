@@ -14,3 +14,8 @@ export { dailyQuests, nextTutorial, questView, questReady } from './quests';
 export { msg, inboxSince, GameError } from './run';
 export { shopBuyPrice, restCost } from './actions/npc';
 export { checkInvariants } from './invariants';
+export * from './village-state';
+export { villageView, projectViews, type VillageView, type ProjectView, type BuildingView, type CandidateView, type CivicSeen } from './village-view';
+export { isProjectDone, isUnlocked, unlockedAt, marketSlots, tavernCamaraderieXp, worldBossWarning, questXpMult } from './unlocks';
+export { projectStatus, progressOf, missingFor, projectAt, STATUE_TITLE, type ProjectStatus } from './village';
+export { isMayor, MAYOR_TITLE } from './election';

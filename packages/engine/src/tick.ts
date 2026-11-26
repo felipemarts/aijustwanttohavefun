@@ -1,6 +1,7 @@
 import type { GameEvent, Rng } from '@ajwf/shared';
 import { wakeAtTemple } from './agent';
 import { emit, newRun } from './run';
+import { electionTick } from './election';
 import { closeTrade } from './trade';
 import type { WorldState } from './types';
 import { phaseChange, spawnMonster } from './world';
@@ -32,6 +33,9 @@ export function tick(s: WorldState, ctx: { now: number; rng: Rng }): GameEvent[]
         break;
       case 'phase':
         phaseChange(run);
+        break;
+      case 'election':
+        electionTick(run);
         break;
     }
   }
