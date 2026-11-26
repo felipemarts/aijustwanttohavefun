@@ -11,19 +11,25 @@ import Fastify, {
   type RawServerDefault,
 } from 'fastify';
 import type { Logger } from 'pino';
-import { bearerKeyHash } from './auth';
+import { bearerKeyHash, isAdminToken } from './auth';
+import type { Census } from './census';
 import type { Config } from './config';
 import type { Game } from './game';
 import { buildHelp } from './help';
 import { classifyHttpError, errorBody, sendRateLimited } from './http-errors';
 import { IdempotencyCache } from './idempotency';
+import type { Metrics } from './metrics';
 import { createLimiters, type Limiters } from './rate-limit';
 import { Renderer } from './render';
 import { agentRoutes } from './routes/agent';
 import { devRoutes } from './routes/dev';
 import { fileRoutes } from './routes/files';
+import { metricsRoutes } from './routes/metrics';
 import { publicRoutes } from './routes/public';
 import { registerRoutes } from './routes/register';
+import { spectatorRoutes } from './routes/spectator';
+import type { Broadcaster } from './spectate/broadcaster';
+import { attachSpectatorSocket } from './spectate/socket';
 import { SpriteService } from './sprites';
 import { AgentViews } from './views';
 
@@ -40,7 +46,22 @@ declare module 'fastify' {
 
 export const BODY_LIMIT = 16 * 1024;
 
-export type AppDeps = { game: Game; config: Config; i18n: I18n; logger: Logger; spritesDir: string; docsDir: string };
+export type AppDeps = {
+  game: Game;
+  config: Config;
+  i18n: I18n;
+  logger: Logger;
+  spritesDir: string;
+  docsDir: string;
+  spectators: Broadcaster;
+  metrics: Metrics;
+  census: Census;
+};
+
+const ACT_ROUTE = '/api/v1/act';
+const REGISTER_ROUTE = '/api/v1/agents/register';
+/** Every API error body starts like this, so error codes can be counted without parsing the JSON. */
+const ERROR_PREFIX = '{"ok":false,"error":{"code":"';
 
 /** Shared services handed to every route module. */
 export type AppContext = {
@@ -52,8 +73,10 @@ export type AppContext = {
   views: AgentViews;
   sprites: SpriteService;
   options: OptionsTokenStore;
-  /** agent id -> last authenticated request, for the online count. */
-  presence: Map<string, number>;
+  /** Population, presence and online counts. */
+  census: Census;
+  spectators: Broadcaster;
+  metrics: Metrics;
   help: Record<string, unknown>;
   docsDir: string;
   /** Language of the error texts for this request: the agent's when known, English otherwise. */
@@ -85,7 +108,9 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     views: new AgentViews(game.state),
     sprites,
     options: new OptionsTokenStore(config.worldSeed ^ 0x5eed),
-    presence: new Map(),
+    census: deps.census,
+    spectators: deps.spectators,
+    metrics: deps.metrics,
     help: buildHelp(),
     docsDir: deps.docsDir,
     lang: (req) => render.lang(req.agent?.lang),
@@ -101,10 +126,20 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   // Only JSON bodies are accepted; any other content type is answered with 415.
   app.removeContentTypeParser('text/plain');
 
-  app.addHook('onSend', async (req, reply) => {
+  app.addHook('onSend', async (req, reply, payload) => {
     reply.header('x-content-type-options', 'nosniff');
     if (!reply.hasHeader('cache-control')) reply.header('cache-control', 'no-store');
     if (req.routeOptions.config.cors && req.method === 'GET') reply.header('access-control-allow-origin', '*');
+    if (typeof payload === 'string' && payload.startsWith(ERROR_PREFIX)) {
+      const end = payload.indexOf('"', ERROR_PREFIX.length);
+      if (end > 0 && end - ERROR_PREFIX.length <= 40) deps.metrics.error(payload.slice(ERROR_PREFIX.length, end));
+    }
+  });
+
+  app.addHook('onResponse', async (req, reply) => {
+    if (req.routeOptions.url !== ACT_ROUTE || req.method !== 'POST') return;
+    deps.metrics.actions.add(game.now());
+    deps.metrics.actLatency.observe(reply.elapsedTime / 1000);
   });
 
   app.setErrorHandler((err: { statusCode?: number }, req, reply) => {
@@ -116,6 +151,10 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   app.setNotFoundHandler((req, reply) => reply.code(404).send(errorBody(render.apiError('en', 'NOT_FOUND', 'not_found'))));
 
   const anonymous = async (req: FastifyRequest, reply: FastifyReply) => {
+    // Bulk registration of test bots: a valid admin token (constant-time check) skips the per-IP limit on this one
+    // route. A wrong or missing token gets no exemption.
+    const adminRegister = req.method === 'POST' && req.routeOptions.url === REGISTER_ROUTE && isAdminToken(req.headers['x-admin-token'], config.adminToken);
+    if (adminRegister) return;
     if (!ctx.limitAnonymous(req, reply)) return reply;
   };
 
@@ -135,7 +174,8 @@ export function buildApp(deps: AppDeps): FastifyInstance {
           }
           req.agent = a;
           const now = game.now();
-          ctx.presence.set(a.id, now);
+          ctx.census.seen(a.id, now);
+          ctx.spectators.markActive(a.id, now);
           const t = limiters.agent.take(a.id, now);
           if (!t.ok) return sendRateLimited(reply, render, ctx.lang(req), t.retryAfterSec);
         });
@@ -153,6 +193,14 @@ export function buildApp(deps: AppDeps): FastifyInstance {
       { prefix: '/api/dev' },
     );
   }
+  app.register(
+    async (pub) => {
+      spectatorRoutes(pub, ctx);
+    },
+    { prefix: '/api/public' },
+  );
+  app.register(async (ops) => metricsRoutes(ops, ctx));
+  attachSpectatorSocket(app.server, { broadcaster: deps.spectators, config, metrics: deps.metrics, log: deps.logger });
   app.register(async (files) => {
     files.addHook('onRequest', async (req, reply) => {
       const t = limiters.files.take(req.ip, game.now());

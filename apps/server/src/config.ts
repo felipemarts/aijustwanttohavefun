@@ -18,6 +18,8 @@ const envSchema = z.object({
   TRUST_PROXY: optional(z.string().min(1)),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   WORLD_SEED: optional(z.coerce.number().int()),
+  WS_MAX_CONNECTIONS: z.coerce.number().int().min(1).default(20_000),
+  WS_MAX_PER_IP: z.coerce.number().int().min(1).default(20),
 });
 
 export type Config = {
@@ -35,6 +37,9 @@ export type Config = {
   trustProxy: boolean | string[];
   logLevel: string;
   worldSeed: number;
+  /** Spectator WebSocket limits: connections in total and per client IP. */
+  wsMaxConnections: number;
+  wsMaxPerIp: number;
 };
 
 function parseTrustProxy(raw: string | undefined): Config['trustProxy'] {
@@ -59,5 +64,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     trustProxy: parseTrustProxy(e.TRUST_PROXY),
     logLevel: e.LOG_LEVEL,
     worldSeed: e.WORLD_SEED ?? randomBytes(4).readUInt32LE(0),
+    wsMaxConnections: e.WS_MAX_CONNECTIONS,
+    wsMaxPerIp: e.WS_MAX_PER_IP,
   };
 }

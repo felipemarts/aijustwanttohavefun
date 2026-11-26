@@ -1,17 +1,31 @@
 import { randomBytes } from 'node:crypto';
 import { LAYERS, OPTIONS_TTL_MS } from '@ajwf/appearance';
-import { dayPhase } from '@ajwf/engine';
+import { dayPhase, type AgentState } from '@ajwf/engine';
 import { languageTagSchema } from '@ajwf/shared';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AppContext } from '../app';
 import { errorBody, invalidParams, sendRateLimited } from '../http-errors';
-
-const ONLINE_WINDOW_MS = 15 * 60_000;
-const POPULATION_CACHE_MS = 10_000;
+import type { Renderer } from '../render';
 
 const langQuery = z.object({ lang: languageTagSchema.optional().catch(undefined) });
 const nameParams = z.object({ name: z.string().min(1).max(80) });
+
+/** What anyone may know about an agent, rendered in `lang`. Nothing private (gold, inventory, owner note). */
+export function publicProfile(render: Renderer, a: AgentState, lang: string) {
+  return {
+    name: a.name,
+    class: a.cls,
+    lvl: a.level,
+    ...(a.title ? { title: render.name(lang, 'title', a.title) } : {}),
+    look: render.look(a.appearance, a.lookHash, lang),
+    sprite: `/sprites/${a.lookHash}.png`,
+    ...(a.bio ? { bio: { untrusted_text: a.bio } } : {}),
+    claimed: a.claimed,
+    bot: a.bot,
+    achievements: Object.keys(a.achievements),
+  };
+}
 
 /** Unauthenticated read-only routes (CORS open, no credentials). */
 export function publicRoutes(app: FastifyInstance, ctx: AppContext): void {
@@ -35,21 +49,10 @@ export function publicRoutes(app: FastifyInstance, ctx: AppContext): void {
     return { ok: true, options_token: issued.token, expires_in: Math.round(OPTIONS_TTL_MS / 1000), options, fields, how: render.t(lang, 'api.appearance.instructions') };
   });
 
-  let population = { at: -Infinity, n: 0 };
   app.get('/village', cors, async () => {
     const now = game.now();
-    if (now - population.at > POPULATION_CACHE_MS) {
-      let n = 0;
-      for (const a of game.state.agents.values()) if (a.status === 'active') n++;
-      population = { at: now, n };
-    }
-    let online = 0;
-    for (const [id, at] of ctx.presence) {
-      if (now - at < ONLINE_WINDOW_MS) online++;
-      else ctx.presence.delete(id);
-    }
     // Projects, mayor, election, prices and the gazette join this view with the civilization milestone.
-    return { ok: true, time: dayPhase(now), population: population.n, online };
+    return { ok: true, time: dayPhase(now), population: ctx.census.counts(now).population, online: ctx.census.online(now) };
   });
 
   app.get('/agents/:name', cors, async (req) => {
@@ -59,20 +62,6 @@ export function publicRoutes(app: FastifyInstance, ctx: AppContext): void {
     const { name } = params.data;
     const a = game.agentByName(name);
     if (!a) return errorBody(render.apiError(lang, 'NOT_FOUND', 'agent_not_found', { name }));
-    return {
-      ok: true,
-      agent: {
-        name: a.name,
-        class: a.cls,
-        lvl: a.level,
-        ...(a.title ? { title: render.name(lang, 'title', a.title) } : {}),
-        look: render.look(a.appearance, a.lookHash, lang),
-        sprite: `/sprites/${a.lookHash}.png`,
-        ...(a.bio ? { bio: { untrusted_text: a.bio } } : {}),
-        claimed: a.claimed,
-        bot: a.bot,
-        achievements: Object.keys(a.achievements),
-      },
-    };
+    return { ok: true, agent: publicProfile(render, a, lang) };
   });
 }

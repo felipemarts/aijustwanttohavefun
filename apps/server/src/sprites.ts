@@ -1,14 +1,20 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { Appearance } from '@ajwf/appearance';
+import { appearanceHash, randomAppearance, type Appearance } from '@ajwf/appearance';
 import { renderSpritePng } from '@ajwf/appearance/sprite';
 import type { WorldState } from '@ajwf/engine';
-import type { GameEvent } from '@ajwf/shared';
+import { createRng, hashString, type GameEvent } from '@ajwf/shared';
 import type { Logger } from 'pino';
 import type { EventConsumer } from './game';
 import { Lru } from './lru';
 
 export const LOOK_HASH_RE = /^[0-9a-f]{14}$/;
+export const NPC_ID_RE = /^[a-z0-9_]{1,64}$/;
+
+/** NPCs have no art: each one wears a look drawn from a generator seeded with its id, the same on every server. */
+export function npcAppearance(npcId: string): Appearance {
+  return randomAppearance(createRng(parseInt(hashString(`npc:${npcId}`).slice(-8), 16)));
+}
 /** Events after which an agent wears a look that may not have been indexed yet. */
 const LOOK_EVENTS = new Set(['arrival', 'look_changed']);
 
@@ -36,6 +42,24 @@ export class SpriteService implements EventConsumer {
       const a = this.state.agents.get(ev.actor);
       if (a) this.looks.set(a.lookHash, { ...a.appearance });
     }
+  }
+
+  /** The sprite sheet of an NPC (deterministic from its id), or null for unknown NPCs. */
+  async npcPng(npcId: string): Promise<Buffer | null> {
+    if (!NPC_ID_RE.test(npcId) || !this.state.content.npcs.has(npcId)) return null;
+    const key = `npc:${npcId}`;
+    const hit = this.cache.get(key);
+    if (hit) return hit;
+    const look = npcAppearance(npcId);
+    // Named by look hash like agent sheets: the file always matches the appearance it was drawn from.
+    const file = join(this.dir, `${appearanceHash(look)}.png`);
+    let png: Buffer | null = await readFile(file).catch(() => null);
+    if (!png) {
+      png = renderSpritePng(look);
+      await this.writeDisk(file, png);
+    }
+    this.cache.set(key, png);
+    return png;
   }
 
   /** The PNG for a look hash, or null when no agent has ever worn it. */

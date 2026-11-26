@@ -21,9 +21,11 @@ if (config.databaseUrl) {
   store = new MemoryStore();
 }
 
-const { app, game, persistence } = await boot({ config, store, logger: log });
+const { app, game, persistence, spectators, metrics } = await boot({ config, store, logger: log });
 game.start();
 persistence.start();
+spectators.start();
+metrics.start();
 await app.listen({ port: config.port, host: '0.0.0.0' });
 
 let stopping = false;
@@ -32,6 +34,8 @@ async function shutdown(signal: string): Promise<void> {
   stopping = true;
   log.info({ signal }, 'shutting down');
   try {
+    spectators.stop();
+    metrics.stop();
     await app.close();
     game.stop();
     await persistence.stop();

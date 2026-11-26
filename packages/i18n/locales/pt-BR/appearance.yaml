@@ -1,10 +1,11 @@
 appearance:
-  desc: '{subject}, com {hair}, vestindo {items}'
+  desc: '{subject}, com {hair}, vestindo {garments}'
+  desc_accessory: '{subject}, com {hair}, vestindo {garments}, e com {accessory}'
   subject: 'um {species} {build}'
   hair: 'cabelo {color} {style}'
   hair_bald: 'uma careca reluzente'
-  item: '{item} {color}'
-  plain_item: '{item}'
+  item: '{item}'
+  dyed: '{n, plural, one {{items} em tom {color}} other {{items}, tudo em tom {color}}}'
   build:
     human: robusto
     elf: esguio

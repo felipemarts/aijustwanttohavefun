@@ -114,27 +114,50 @@ export class OptionsTokenStore {
 export type Translate = (key: string, params?: Record<string, string | number>) => string;
 
 /**
- * Text description shown to other agents in /look (they cannot see sprites).
- * Built from i18n templates; `lang` is used for list formatting.
+ * Lowercase first letter of a rendered word, passed to templates as `initial` so each language can pick its own
+ * article with an ICU `select` (English: "a helm", "an apron"). The code knows nothing about any language.
  */
-export function describeAppearance(a: Appearance, t: Translate, lang: string): string {
-  const name = (layer: Layer, id: string) => t(`appearance.${layer}.${id}`);
-  const subject = t('appearance.subject', { species: name('species', a.species), build: t(`appearance.build.${a.species}`) });
+export function initialOf(word: string): string {
+  return word.trim().charAt(0).toLocaleLowerCase();
+}
+
+/** One garment with its article (`appearance.item`), e.g. "an apron". */
+export function garmentText(t: Translate, layer: Layer, id: string): string {
+  const item = t(`appearance.${layer}.${id}`);
+  return t('appearance.item', { item, initial: initialOf(item) });
+}
+
+/** The parts every description is built from: subject ("a stout dwarf") and hair. */
+export function subjectAndHair(a: Appearance, t: Translate): { subject: string; hair: string } {
+  const build = t(`appearance.build.${a.species}`);
+  const subject = t('appearance.subject', { species: t(`appearance.species.${a.species}`), build, initial: initialOf(build) });
   const hair =
     a.hair_style === 'bald'
       ? t('appearance.hair_bald')
-      : t('appearance.hair', { color: name('hair_color', a.hair_color), style: name('hair_style', a.hair_style) });
-  const color = name('dye', a.dye);
-  const items: string[] = [];
-  if (a.hat !== 'none') items.push(t('appearance.item', { item: name('hat', a.hat), color }));
-  items.push(t('appearance.item', { item: name('top', a.top), color }));
-  if (a.cloak !== 'none') items.push(t('appearance.item', { item: name('cloak', a.cloak), color }));
-  if (a.accessory !== 'none') items.push(t('appearance.plain_item', { item: name('accessory', a.accessory) }));
-  let list: string;
+      : t('appearance.hair', { color: t(`appearance.hair_color.${a.hair_color}`), style: t(`appearance.hair_style.${a.hair_style}`) });
+  return { subject, hair };
+}
+
+function listFormat(lang: string, items: string[]): string {
   try {
-    list = new Intl.ListFormat(lang, { type: 'conjunction' }).format(items);
+    return new Intl.ListFormat(lang, { type: 'conjunction' }).format(items);
   } catch {
-    list = items.join(', ');
+    return items.join(', ');
   }
-  return t('appearance.desc', { subject, hair, items: list });
+}
+
+/**
+ * Text description shown to other agents in /look (they cannot see sprites).
+ * Built from i18n templates; `lang` is used for list formatting. The dye colors every garment, so it is named once
+ * for all of them ("wearing a feathered hat and a patched jerkin in crimson"); the accessory is not dyed.
+ */
+export function describeAppearance(a: Appearance, t: Translate, lang: string): string {
+  const { subject, hair } = subjectAndHair(a, t);
+  const garments: string[] = [];
+  if (a.hat !== 'none') garments.push(garmentText(t, 'hat', a.hat));
+  garments.push(garmentText(t, 'top', a.top));
+  if (a.cloak !== 'none') garments.push(garmentText(t, 'cloak', a.cloak));
+  const dressed = t('appearance.dyed', { items: listFormat(lang, garments), n: garments.length, color: t(`appearance.dye.${a.dye}`) });
+  if (a.accessory === 'none') return t('appearance.desc', { subject, hair, garments: dressed });
+  return t('appearance.desc_accessory', { subject, hair, garments: dressed, accessory: t(`appearance.accessory.${a.accessory}`) });
 }

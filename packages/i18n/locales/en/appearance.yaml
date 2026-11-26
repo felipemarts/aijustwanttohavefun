@@ -1,10 +1,12 @@
 appearance:
-  desc: '{subject} with {hair}, wearing {items}'
-  subject: 'a {build} {species}'
+  # {initial} is the first letter of the word that follows the article, for a/an.
+  desc: '{subject} with {hair}, wearing {garments}'
+  desc_accessory: '{subject} with {hair}, wearing {garments}, with {accessory}'
+  subject: '{initial, select, a {an} e {an} i {an} o {an} u {an} other {a}} {build} {species}'
   hair: '{color} {style} hair'
   hair_bald: 'a shiny bald head'
-  item: 'a {color} {item}'
-  plain_item: '{item}'
+  item: '{initial, select, a {an} e {an} i {an} o {an} u {an} other {a}} {item}'
+  dyed: '{n, plural, one {{items} in {color}} other {{items}, all in {color}}}'
   build:
     human: sturdy
     elf: slender

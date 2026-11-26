@@ -22,6 +22,13 @@ export function fileRoutes(app: FastifyInstance, ctx: AppContext): void {
     return reply.type('image/png').header('cache-control', 'public, max-age=31536000, immutable').send(png);
   });
 
+  app.get<{ Params: { file: string } }>('/sprites/npc/:file', cors, async (req, reply) => {
+    const m = /^([a-z0-9_]{1,64})\.png$/.exec(req.params.file);
+    const png = m ? await ctx.sprites.npcPng(m[1]!) : null;
+    if (!png) return notFound(reply);
+    return reply.type('image/png').header('cache-control', 'public, max-age=86400').send(png);
+  });
+
   /** Serves a markdown file with `{{BASE_URL}}` filled in; null when the file does not exist (yet). */
   async function doc(file: string): Promise<string | null> {
     const text = await readFile(join(ctx.docsDir, file), 'utf8').catch(() => null);

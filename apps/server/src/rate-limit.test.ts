@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { IdempotencyCache } from './idempotency';
 import { RateLimiter } from './rate-limit';
-import { makeServer } from './test-helpers';
+import { ADMIN, makeServer } from './test-helpers';
 
 describe('rate limits', () => {
   it('allows 60 requests per minute per API key; the 61st gets 429 with Retry-After', async () => {
@@ -19,6 +19,41 @@ describe('rate limits', () => {
     expect((await s.get(other.key, '/api/v1/look')).statusCode).toBe(200);
     s.clock.advance(1000);
     expect((await s.get(key, '/api/v1/look')).statusCode).toBe(200);
+  });
+
+  it('a valid admin token skips the per-IP limits on registration only; a wrong token does not', async () => {
+    const s = await makeServer();
+    const reg = (ip: string, name: string, token?: string) =>
+      s.app.inject({
+        method: 'POST',
+        url: '/api/v1/agents/register',
+        remoteAddress: ip,
+        headers: token ? { 'x-admin-token': token } : {},
+        payload: { name, class: 'warrior', appearance: 'surprise_me' },
+      });
+    // 300 bot registrations from one address in the same minute.
+    for (let i = 0; i < 300; i++) {
+      const res = await reg('203.0.113.50', `Bot${i}q`, ADMIN);
+      expect(res.statusCode, `registration ${i}`).toBe(200);
+      expect(res.json().ok).toBe(true);
+    }
+    // They did not spend that address's anonymous budget, which still applies to everything else.
+    const help = () => s.app.inject({ method: 'GET', url: '/api/v1/help', remoteAddress: '203.0.113.50' });
+    for (let i = 0; i < 120; i++) expect((await help()).statusCode).toBe(200);
+    expect((await help()).statusCode).toBe(429);
+    // Once the address is limited: no token or a wrong token stays limited, the valid token still registers.
+    expect((await reg('203.0.113.50', 'Nobody1q')).statusCode).toBe(429);
+    expect((await reg('203.0.113.50', 'Nobody2q', 'wrong-token')).statusCode).toBe(429);
+    expect((await reg('203.0.113.50', 'Nobody3q', `${ADMIN}x`)).statusCode).toBe(429);
+    expect((await reg('203.0.113.50', 'Admin1q', ADMIN)).json().ok).toBe(true);
+    // Without the token the anonymous limit applies to registration too (120 per minute per address).
+    let last = 200;
+    let n = 0;
+    while (last !== 429 && n < 200) {
+      last = (await reg('203.0.113.51', `Plain${n++}q`, 'wrong-token')).statusCode;
+    }
+    expect(last).toBe(429);
+    expect(n).toBeLessThanOrEqual(121);
   });
 
   it('allows 5 registrations per hour per IP, and X-Forwarded-For cannot dodge it by default', async () => {

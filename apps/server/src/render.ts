@@ -1,4 +1,4 @@
-import { describeAppearance, type Appearance } from '@ajwf/appearance';
+import { describeAppearance, garmentText, subjectAndHair, type Appearance } from '@ajwf/appearance';
 import type { ActionError, Observation, WorldState } from '@ajwf/engine';
 import type { I18n } from '@ajwf/i18n';
 import { TEXT_EVENT_TYPES, type GameEvent, type Msg, type MsgParams } from '@ajwf/shared';
@@ -109,11 +109,9 @@ export class Renderer {
 
   private shortLook(a: Appearance, lang: string): string {
     const t = (k: string, p?: MsgParams) => this.i18n.t(lang, k, p);
-    const option = (layer: keyof Appearance) => t(`appearance.${layer}.${a[layer]}`);
-    const subject = t('appearance.subject', { species: option('species'), build: t(`appearance.build.${a.species}`) });
-    const hair = a.hair_style === 'bald' ? t('appearance.hair_bald') : t('appearance.hair', { color: option('hair_color'), style: option('hair_style') });
+    const { subject, hair } = subjectAndHair(a, t);
     const garment = a.hat !== 'none' ? 'hat' : a.cloak !== 'none' ? 'cloak' : 'top';
-    const item = t('appearance.item', { item: option(garment), color: option('dye') });
+    const item = t('appearance.dyed', { items: garmentText(t, garment, a[garment]), n: 1, color: t(`appearance.dye.${a.dye}`) });
     return t('api.look.short', { subject, hair, item });
   }
 

@@ -25,7 +25,16 @@ export function estimateTokens(body: string): number {
 }
 
 export async function makeServer<S extends Store = MemoryStore>(
-  o: { store?: S; catalogs?: Catalogs; logStream?: DestinationStream; docsDir?: string; devLogin?: boolean } = {},
+  o: {
+    store?: S;
+    catalogs?: Catalogs;
+    logStream?: DestinationStream;
+    docsDir?: string;
+    devLogin?: boolean;
+    wsMaxConnections?: number;
+    wsMaxPerIp?: number;
+    config?: Partial<Config>;
+  } = {},
 ) {
   const clock = { t: T0, now: () => clock.t, advance: (ms: number) => (clock.t += ms) };
   const config: Config = {
@@ -39,6 +48,9 @@ export async function makeServer<S extends Store = MemoryStore>(
     trustProxy: false,
     logLevel: 'silent',
     worldSeed: 42,
+    wsMaxConnections: o.wsMaxConnections ?? 100,
+    wsMaxPerIp: o.wsMaxPerIp ?? 10,
+    ...o.config,
   };
   // Without an explicit store, S is its default (MemoryStore), so tests can inspect what was written.
   const store = o.store ?? (new MemoryStore() as Store as S);

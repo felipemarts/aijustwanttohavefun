@@ -88,10 +88,25 @@ describe('description', () => {
     accessory: 'pipe',
     dye: 'd0',
   };
-  it('describes in English', () => {
-    expect(describeAppearance(a, (k, p) => i18n.t('en', k, p), 'en')).toBe(
-      'a stout dwarf with copper braided hair, wearing a crimson feathered hat, a crimson patched jerkin, and a pipe',
-    );
+  const en = (x: Appearance) => describeAppearance(x, (k, p) => i18n.t('en', k, p), 'en');
+  const pt = (x: Appearance) => describeAppearance(x, (k, p) => i18n.t('pt-BR', k, p), 'pt-BR');
+  it('describes in English, naming the dye once', () => {
+    expect(en(a)).toBe('a stout dwarf with copper braided hair, wearing a feathered hat and a patched jerkin, all in crimson, with a pipe');
+  });
+  it('picks a or an in English', () => {
+    const b: Appearance = { ...a, hat: 'helm', top: 'apron', cloak: 'hooded_cloak', accessory: 'none', dye: 'd4' };
+    expect(en(b)).toBe('a stout dwarf with copper braided hair, wearing a helm, an apron, and a hooded cloak, all in amber');
+    expect(en(b)).not.toMatch(/\ba [aeiou]/);
+    expect(en({ ...b, hat: 'none', cloak: 'none' })).toBe('a stout dwarf with copper braided hair, wearing an apron in amber');
+  });
+  it('never repeats the dye color', () => {
+    for (const x of [a, { ...a, cloak: 'long_cloak' }]) {
+      for (const d of [en(x), pt(x)]) expect(d.split(i18n.t(d === en(x) ? 'en' : 'pt-BR', 'appearance.dye.d0')).length - 1).toBe(1);
+    }
+  });
+  it('reads naturally in Brazilian Portuguese', () => {
+    expect(pt(a)).toBe('um anão atarracado, com cabelo acobreado trançado, vestindo chapéu com pena e jaqueta remendada, tudo em tom carmesim, e com um cachimbo');
+    expect(pt({ ...a, hat: 'none', accessory: 'none', dye: 'd4' })).toBe('um anão atarracado, com cabelo acobreado trançado, vestindo jaqueta remendada em tom âmbar');
   });
   it('describes in every launch language without raw keys', () => {
     for (const lang of ['pt-BR', 'es', 'zh-CN', 'ja', 'fr']) {

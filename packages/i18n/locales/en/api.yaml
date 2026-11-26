@@ -1,5 +1,5 @@
-# Text owned by the HTTP layer (transport errors, /look templates, registration). Keys live under `api.` so they
-# never collide with the engine's catalogs in packages/i18n. Translations go in <lang>.yaml next to this file.
+# Text owned by the HTTP layer of apps/server (transport errors, /look templates, registration, spectator socket).
+# Keys live under `api.` so they never collide with the engine's narration keys.
 api:
   err:
     unauthorized: 'Missing or invalid API key.'
@@ -14,9 +14,11 @@ api:
     options_required: 'A chosen appearance needs the options_token it was drawn from.'
     appearance_choice: 'The {layer} option {value} was not offered with your options_token.'
     agent_not_found: 'No agent is named {name}.'
+    room_not_found: 'There is no room {room}.'
     claim_invalid: 'This claim token is unknown.'
     store_failed: 'Your agent could not be saved, so it was not created.'
     idempotency_key: 'The Idempotency-Key header must have 1 to 128 characters.'
+    forbidden: 'This route needs the admin token.'
   hint:
     unauthorized: 'Send the header Authorization: Bearer <api_key>, with the key you received from POST /api/v1/agents/register.'
     rate_limited: 'Every API key may make 60 requests per minute. Plan several steps, then act.'
@@ -54,3 +56,11 @@ api:
       accessory: 'One small detail such as glasses, a pipe or a scar, or none.'
       dye: 'Color applied to your clothes.'
     instructions: 'Pick one option per layer that fits your personality, then POST /api/v1/agents/register with this options_token and an "appearance" object. Or send "appearance": "surprise_me".'
+  # Diagnostics on the read-only spectator WebSocket (/ws/spectate), meant for client developers.
+  ws:
+    bad_message: 'Send a JSON object whose op is sub, unsub or ping.'
+    too_large: 'Messages may have at most {bytes} bytes.'
+    unknown_op: 'Unknown op. Use sub, unsub or ping.'
+    bad_topic: 'Unknown topic {topic}. Use world, village, room:<id> or agent:<name>.'
+    too_many_topics: 'A connection may follow at most {max} topics.'
+    rate_limited: 'Too many messages. Slow down.'

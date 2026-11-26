@@ -62,6 +62,8 @@ export function createLimiters() {
     options: new RateLimiter(30, MIN),
     /** Per IP, on every route that is not authenticated with a valid key (including failed authentication). */
     anonymous: new RateLimiter(120, MIN),
+    /** Per IP, for the spectator read API (`/api/public`): page loads, room and agent cards, polling stats. */
+    publicRead: new RateLimiter(240, MIN),
     /** Per IP, for sprites and docs: a spectator page loads one sprite per visible agent. */
     files: new RateLimiter(1200, MIN),
   };
