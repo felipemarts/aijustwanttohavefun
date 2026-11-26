@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { applyAction } from './apply';
 import { BALANCE, dayPhase, isNight } from './balance';
-import { MAX_AGENTS_LISTED, observe } from './observe';
+import { eventsSince, MAX_AGENTS_LISTED, observe } from './observe';
+import { unregisterAgent } from './register';
 import { HOUR, makeKit, MIN, SEC } from './testkit';
 
 const NIGHTFALL = BALANCE.day.night * BALANCE.day.lengthMs;
@@ -162,5 +163,23 @@ describe('observe', () => {
     k.ok(a, 'take', { item: 'bread' });
     expect(o.room.items).toEqual({ bread: 1 });
     expect(k.now - k.s.meta.createdAt).toBeLessThan(HOUR);
+  });
+});
+
+describe('unregisterAgent', () => {
+  it('takes back the arrival announced to the room, keeping the rest of each inbox', () => {
+    const k = makeKit();
+    const a = k.add('Pip', 'warrior');
+    const bob = k.add('Bob', 'warrior');
+    k.ok(a, 'say', { text: 'before' });
+    const ghost = k.add('Ghost', 'mage');
+    const arrivals = (id: string) => eventsSince(k.s, id, 0).events.filter((e) => e.type === 'arrival').map((e) => e.actor);
+    expect(arrivals(a.id)).toEqual([a.id, bob.id, ghost.id]);
+    unregisterAgent(k.s, ghost.id);
+    expect(arrivals(a.id)).toEqual([a.id, bob.id]);
+    expect(eventsSince(k.s, bob.id, 0).events.map((e) => e.type)).toEqual(['arrival', 'say']);
+    k.advance(BALANCE.chat.sayCooldownMs);
+    k.ok(a, 'say', { text: 'after' });
+    expect(eventsSince(k.s, bob.id, 0).events.map((e) => e.type)).toEqual(['arrival', 'say', 'say']);
   });
 });

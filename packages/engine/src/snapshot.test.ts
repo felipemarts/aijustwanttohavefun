@@ -42,6 +42,35 @@ function playedWorld(): Kit {
   return k;
 }
 
+/** A village where agents befriended, partied, founded a guild, posted, traded and listed goods. */
+function socialWorld(): Kit {
+  const k = makeKit(5);
+  const a = k.add('Pip', 'warrior', { room: 'village.guild_hall' });
+  const b = k.add('Bob', 'mage', { room: 'village.guild_hall' });
+  a.gold = 900;
+  a.inv.iron_ore = 5;
+  k.ok(a, 'friend_request', { agent: 'Bob' });
+  k.ok(b, 'friend_accept', { agent: 'Pip' });
+  k.ok(a, 'party_invite', { agent: 'Bob' });
+  k.ok(b, 'party_accept', { agent: 'Pip' });
+  k.ok(a, 'guild_create', { name: 'Iron Wolves', motto: 'Together' });
+  k.ok(a, 'guild_invite', { agent: 'Bob' });
+  k.ok(b, 'guild_join', { guild: 'Iron Wolves' });
+  k.ok(a, 'guild_deposit', { gold: 50, items: { iron_ore: 1 } });
+  k.ok(a, 'say', { text: 'hello' });
+  k.advance(BALANCE.chat.sayCooldownMs);
+  k.ok(b, 'say', { text: 'hi' });
+  k.ok(a, 'trade_offer', { to: 'Bob', give: { gold: 10 }, want: {} });
+  k.place(a, 'village.market');
+  k.ok(a, 'market_sell', { item: 'iron_ore', qty: 2, price: 9 });
+  k.s.village.treasury = 7;
+  k.place(a, 'village.tavern');
+  k.ok(a, 'board_post', { text: 'Wolves hiring', tag: 'lfg' });
+  k.ok(a, 'journal', { text: 'A fine day.' });
+  k.place(a, 'village.guild_hall');
+  return k;
+}
+
 describe('snapshots', () => {
   it('exportAll -> restoreWorld round-trips a played world', () => {
     const k = playedWorld();
@@ -142,6 +171,63 @@ describe('snapshots', () => {
     expect([...s.roomAgents.values()].some((set) => set.has(r.id))).toBe(false);
     expect(s.timers.toJSON().some((t) => t.kind === 'respawn' && (t.room === 'forest.atlantis' || t.slot === 99))).toBe(false);
     expect(checkInvariants(s, k.now)).toEqual([]);
+  });
+
+  it('round-trips parties, guilds, bonds, trades, market orders, the board and the village', () => {
+    const k = socialWorld();
+    const restored = restoreWorld(k.c, persist(k.s), k.now);
+    expect(comparable(restored)).toEqual(comparable(k.s));
+    expect(restored.guildNames).toEqual(k.s.guildNames);
+    expect(restored.guildSkeletons).toEqual(k.s.guildSkeletons);
+    expect(restored.tradesOf).toEqual(k.s.tradesOf);
+    expect(restored.ordersOf).toEqual(k.s.ordersOf);
+    expect(restored.ordersByItem).toEqual(k.s.ordersByItem);
+    expect(checkInvariants(restored, k.now)).toEqual([]);
+    // And it keeps working: the pending trade can still be accepted.
+    const bob = [...restored.agents.values()].find((a) => a.name === 'Bob')!;
+    const trade = [...restored.trades.keys()][0]!;
+    expect(applyAction(restored, { agentId: bob.id, action: 'trade_accept', params: { trade } }, { now: k.now + 1000, rng: k.rng }).result.ok).toBe(true);
+  });
+
+  it('exports a dissolved party or guild as null, and a restore ignores it', () => {
+    const k = socialWorld();
+    exportDirty(k.s);
+    const pip = [...k.s.agents.values()].find((a) => a.name === 'Pip')!;
+    const bob = [...k.s.agents.values()].find((a) => a.name === 'Bob')!;
+    const partyId = pip.party!;
+    const guildId = pip.guild!;
+    k.ok(pip, 'party_leave');
+    k.ok(bob, 'guild_leave');
+    k.ok(pip, 'guild_leave');
+    const snap = exportDirty(k.s);
+    expect(snap.world).toEqual(expect.arrayContaining([{ key: `party:${partyId}`, data: null }, { key: `guild:${guildId}`, data: null }]));
+    const all = persist(k.s);
+    all.world.push(...JSON.parse(JSON.stringify(snap.world)));
+    const restored = restoreWorld(k.c, all, k.now);
+    expect(restored.parties.size).toBe(0);
+    expect(restored.guilds.size).toBe(0);
+    expect(checkInvariants(restored, k.now)).toEqual([]);
+  });
+
+  it('loads snapshots written before the social systems existed', () => {
+    const k = makeKit();
+    const a = k.add('Pip', 'warrior');
+    const snap = persist(k.s);
+    const legacy = snap.agents.find((x) => x.id === a.id)! as unknown as Record<string, unknown>;
+    for (const field of ['roomAt', 'friends', 'rivals', 'friendReqs', 'bonds', 'party', 'partyInvites', 'guild', 'guildInvites', 'duelInvites', 'journal']) delete legacy[field];
+    snap.world = snap.world.filter((e) => !['trades', 'market', 'board', 'village'].includes(e.key));
+    for (const e of snap.world) if (e.key.startsWith('room:')) delete (e.data as Record<string, unknown>).said;
+    const meta = snap.world.find((e) => e.key === 'meta')!.data as Record<string, unknown>;
+    for (const f of ['partySeq', 'guildSeq', 'tradeSeq', 'orderSeq', 'postSeq']) delete meta[f];
+    const s = restoreWorld(k.c, snap, k.now);
+    expect(checkInvariants(s, k.now)).toEqual([]);
+    const b = s.agents.get(a.id)!;
+    expect(b.friends).toEqual([]);
+    expect(b.party).toBeNull();
+    expect(s.village).toEqual({ taxRate: 0, treasury: 0 });
+    const r = applyAction(s, { agentId: a.id, action: 'say', params: { text: 'still here' } }, { now: k.now + 1000, rng: k.rng });
+    expect(r.result.ok).toBe(true);
+    expect(s.meta.partySeq).toBe(0);
   });
 
   it('exportDirty returns only what changed and clears the set', () => {
