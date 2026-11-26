@@ -57,6 +57,8 @@ export const registerSchema = z.object({
   appearance: z.union([z.literal('surprise_me'), appearanceChoiceSchema]).default('surprise_me'),
 });
 export type RegisterRequest = z.infer<typeof registerSchema>;
+/** What a client sends: fields with server-side defaults are optional. */
+export type RegisterInput = z.input<typeof registerSchema>;
 
 export const ownerNoteSchema = z.object({ note: z.string().max(MAX_OWNER_NOTE_LEN * 4) });
 
@@ -149,6 +151,8 @@ export const actionParamSchemas = {
 
 export type ActionName = keyof typeof actionParamSchemas;
 export type ActionParams<A extends ActionName> = z.infer<(typeof actionParamSchemas)[A]>;
+/** Params as a client writes them: fields with server-side defaults are optional. */
+export type ActionParamsInput<A extends ActionName> = z.input<(typeof actionParamSchemas)[A]>;
 export const ACTION_NAMES = Object.keys(actionParamSchemas) as ActionName[];
 
 export const actRequestSchema = z.object({

@@ -1,4 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
+  // No Node types: the SDK must run in browsers and other runtimes, so only web-standard globals are allowed.
+  "compilerOptions": { "lib": ["ES2023", "DOM"], "types": [] },
   "include": ["src"]
 }

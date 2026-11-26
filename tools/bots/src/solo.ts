@@ -4,23 +4,21 @@
  *
  * The decision is a pure function of what an agent can know through the public API: its observation (`observe`,
  * the same as `GET /look`), its inventory (what the free `inventory` action returns) and the static content.
- * Social bot profiles will sit next to this one and reuse the helpers at the bottom.
+ * The view comes from the engine (simulations) or from the HTTP API (live bots); see `view.ts`. The personalities in
+ * `personality.ts` wrap this policy and reuse the helpers at the bottom.
  */
 import type { Content, Item } from '@ajwf/content';
-import { BALANCE, observe, type ActionCtx, type Observation, type WorldState } from '@ajwf/engine';
+import { BALANCE, type ActionCtx, type WorldState } from '@ajwf/engine';
 import type { ActionName } from '@ajwf/shared';
+import { viewFromWorld, type BotView, type InventoryView } from './view';
+
+export type { InventoryView } from './view';
 
 export type BotCommand = { action: ActionName; params: Record<string, unknown> };
 export type BotStep = BotCommand | { wait: number };
 
-/** The part of the `inventory` action's answer a bot uses. */
-export type InventoryView = {
-  items: Record<string, number>;
-  equipped: Record<'weapon' | 'armor' | 'trinket' | 'bag', string | null>;
-  skills: { id: string; mp: number; level: number; known: boolean }[];
-};
-
-export type SoloView = { obs: Observation; inv: InventoryView };
+/** What the solo policy reads; see `view.ts` for the engine and API adapters. */
+export type SoloView = BotView;
 
 /** Bot temperament. Not game balance: these only shape how cautious the bot is. */
 export const SOLO_TUNING = {
@@ -51,17 +49,7 @@ const cmd = (action: ActionName, params: Record<string, unknown> = {}): BotComma
 
 /** The world as the bot may see it: its observation plus the answer of the free `inventory` action. */
 export function soloView(s: WorldState, agentId: string, ctx: ActionCtx): SoloView {
-  const obs = observe(s, agentId, ctx);
-  const a = s.agents.get(agentId)!;
-  const cls = s.content.classes.get(a.cls)!;
-  return {
-    obs,
-    inv: {
-      items: { ...a.inv },
-      equipped: { ...a.equip },
-      skills: cls.skills.map((id) => s.content.skills.get(id)!).map((sk) => ({ id: sk.id, mp: sk.mp, level: sk.level, known: a.level >= sk.level })),
-    },
-  };
+  return viewFromWorld(s, agentId, ctx);
 }
 
 /** Next command for a solo bot, or how long to wait before asking again. */

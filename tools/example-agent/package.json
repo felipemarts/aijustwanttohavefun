@@ -4,7 +4,18 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "exports": { ".": "./src/main.ts" },
-  "scripts": { "typecheck": "tsc -p tsconfig.json", "start": "tsx src/main.ts" },
-  "dependencies": { "@ajwf/sdk": "workspace:*" }
+  "exports": {
+    ".": "./src/main.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "start": "tsx src/main.ts"
+  },
+  "dependencies": {
+    "@ajwf/sdk": "workspace:*",
+    "@anthropic-ai/sdk": "^1.14.0"
+  },
+  "devDependencies": {
+    "@ajwf/server": "workspace:*"
+  }
 }

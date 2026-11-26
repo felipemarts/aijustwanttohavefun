@@ -10,3 +10,5 @@ tools/bots/reports/
 .DS_Store
 dev.log
 .vitest/
+# Example agent credentials (tools/example-agent)
+.agent-key.json
