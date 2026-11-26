@@ -1,0 +1,120 @@
+# Items. value = base gold value (NPC shops pay a fraction). Stackable by default for materials,
+# consumables, food, dyes and quest items; equipment never stacks.
+
+# ── Weapons ───────────────────────────────────────────────────────────────────
+- { id: rusty_sword, type: weapon, value: 10, level: 1, classes: [warrior], stats: { atk: 4 } }
+- { id: iron_sword, type: weapon, rarity: uncommon, value: 90, level: 5, classes: [warrior], stats: { atk: 9 } }
+- { id: steel_greatsword, type: weapon, rarity: rare, value: 400, level: 10, classes: [warrior], stats: { atk: 15, str: 2 } }
+- { id: mithril_blade, type: weapon, rarity: epic, value: 1500, level: 15, classes: [warrior], stats: { atk: 22, str: 4 } }
+- { id: oathkeeper, type: weapon, rarity: epic, value: 2500, level: 18, classes: [warrior], stats: { atk: 27, vit: 4 } }
+- { id: apprentice_staff, type: weapon, value: 10, level: 1, classes: [mage], stats: { atk: 2, int: 3 } }
+- { id: oak_staff, type: weapon, rarity: uncommon, value: 90, level: 5, classes: [mage], stats: { atk: 4, int: 7 } }
+- { id: crystal_staff, type: weapon, rarity: rare, value: 400, level: 10, classes: [mage], stats: { atk: 6, int: 13 } }
+- { id: starfall_staff, type: weapon, rarity: epic, value: 1500, level: 15, classes: [mage], stats: { atk: 8, int: 19 } }
+- { id: worn_dagger, type: weapon, value: 10, level: 1, classes: [rogue], stats: { atk: 3, agi: 1 } }
+- { id: iron_dagger, type: weapon, rarity: uncommon, value: 90, level: 5, classes: [rogue], stats: { atk: 7, agi: 2 } }
+- { id: shadow_dagger, type: weapon, rarity: rare, value: 400, level: 10, classes: [rogue], stats: { atk: 12, agi: 4 } }
+- { id: mithril_kris, type: weapon, rarity: epic, value: 1500, level: 15, classes: [rogue], stats: { atk: 18, agi: 6 } }
+- { id: wooden_mace, type: weapon, value: 10, level: 1, classes: [cleric], stats: { atk: 3, int: 1 } }
+- { id: iron_mace, type: weapon, rarity: uncommon, value: 90, level: 5, classes: [cleric], stats: { atk: 7, int: 3 } }
+- { id: holy_mace, type: weapon, rarity: rare, value: 400, level: 10, classes: [cleric], stats: { atk: 11, int: 6 } }
+- { id: sunlit_scepter, type: weapon, rarity: epic, value: 1500, level: 15, classes: [cleric], stats: { atk: 16, int: 10 } }
+- { id: hollow_regents_scepter, type: weapon, rarity: legendary, value: 6000, level: 18, stats: { atk: 25, int: 12, vit: 4 } }
+
+# ── Armor ─────────────────────────────────────────────────────────────────────
+- { id: cloth_armor, type: armor, value: 8, level: 1, stats: { def: 2 } }
+- { id: padded_armor, type: armor, value: 40, level: 3, stats: { def: 4 } }
+- { id: leather_armor, type: armor, rarity: uncommon, value: 90, level: 5, stats: { def: 6, agi: 1 } }
+- { id: chainmail_armor, type: armor, rarity: uncommon, value: 220, level: 8, stats: { def: 9 } }
+- { id: plate_armor, type: armor, rarity: rare, value: 600, level: 12, stats: { def: 13, vit: 2 } }
+- { id: mithril_mail, type: armor, rarity: epic, value: 1800, level: 16, stats: { def: 18, vit: 3 } }
+- { id: wyrmscale_armor, type: armor, rarity: epic, value: 2600, level: 18, stats: { def: 22, vit: 4 } }
+
+# ── Trinkets ──────────────────────────────────────────────────────────────────
+- { id: lucky_pebble, type: trinket, rarity: uncommon, value: 40, level: 1, stats: { agi: 2 } }
+- { id: copper_ring, type: trinket, rarity: uncommon, value: 60, level: 3, stats: { str: 1, vit: 1 } }
+- { id: wolf_fang_charm, type: trinket, rarity: uncommon, value: 80, level: 4, stats: { atk: 2 } }
+- { id: moonstone_amulet, type: trinket, rarity: rare, value: 300, level: 8, stats: { int: 3, vit: 1 } }
+- { id: crystal_pendant, type: trinket, rarity: rare, value: 500, level: 12, stats: { int: 5, vit: 2 } }
+- { id: bandit_signet, type: trinket, rarity: rare, value: 450, level: 12, stats: { agi: 4, atk: 1 } }
+- { id: regent_eye, type: trinket, rarity: epic, value: 2500, level: 18, stats: { int: 8, vit: 5 } }
+- { id: colossus_heart, type: trinket, rarity: legendary, value: 5000, level: 12, stats: { vit: 10, def: 3 } }
+
+# ── Consumables ───────────────────────────────────────────────────────────────
+- { id: minor_potion, type: consumable, value: 12, effect: { heal: 40 } }
+- { id: health_potion, type: consumable, rarity: uncommon, value: 40, effect: { heal: 120 } }
+- { id: greater_potion, type: consumable, rarity: rare, value: 120, effect: { heal: 300 } }
+- { id: mana_potion, type: consumable, value: 20, effect: { mp: 40 } }
+- { id: greater_mana_potion, type: consumable, rarity: uncommon, value: 70, effect: { mp: 120 } }
+- { id: elixir_of_fury, type: consumable, rarity: rare, value: 150, effect: { buff: { id: fury, stat: atk, value: 6, minutes: 30 } } }
+
+# ── Food (long buffs) ─────────────────────────────────────────────────────────
+- { id: bread, type: food, value: 4, effect: { heal: 20 } }
+- { id: travelers_ration, type: food, value: 15, effect: { heal: 50, buff: { id: well_fed, stat: regen, value: 0.25, minutes: 60 } } }
+- { id: hearty_stew, type: food, rarity: uncommon, value: 35, effect: { heal: 60, buff: { id: hearty, stat: xp, value: 0.1, minutes: 60 } } }
+- { id: roast_boar, type: food, rarity: uncommon, value: 40, effect: { heal: 80, buff: { id: roasted, stat: atk, value: 3, minutes: 60 } } }
+- { id: mushroom_pie, type: food, rarity: uncommon, value: 45, effect: { heal: 80, buff: { id: pie, stat: def, value: 3, minutes: 60 } } }
+- { id: honey_cake, type: food, rarity: rare, value: 90, effect: { heal: 100, buff: { id: sweet, stat: xp, value: 0.2, minutes: 60 } } }
+
+# ── Materials ─────────────────────────────────────────────────────────────────
+- { id: wood, type: material, value: 2 }
+- { id: stone, type: material, value: 2 }
+- { id: copper_ore, type: material, value: 4 }
+- { id: iron_ore, type: material, value: 6 }
+- { id: silver_ore, type: material, rarity: uncommon, value: 20 }
+- { id: mithril_ore, type: material, rarity: rare, value: 60 }
+- { id: star_iron, type: material, rarity: epic, value: 150 }
+- { id: crystal, type: material, rarity: uncommon, value: 25 }
+- { id: coal, type: material, value: 5 }
+- { id: green_herb, type: material, value: 2 }
+- { id: moon_herb, type: material, rarity: uncommon, value: 8 }
+- { id: bog_lily, type: material, rarity: uncommon, value: 12 }
+- { id: shadowcap, type: material, rarity: rare, value: 25 }
+- { id: flask, type: material, value: 4 }
+- { id: oil, type: material, value: 10 }
+- { id: linen, type: material, value: 5 }
+- { id: silk, type: material, rarity: uncommon, value: 15 }
+- { id: leather, type: material, value: 6 }
+- { id: wolf_pelt, type: material, value: 5 }
+- { id: raw_meat, type: material, value: 3 }
+- { id: buckle, type: material, value: 6 }
+- { id: pot, type: material, value: 20 }
+- { id: iron_ingot, type: material, value: 18 }
+- { id: bone, type: material, value: 3 }
+- { id: slime_gel, type: material, value: 2 }
+- { id: bat_wing, type: material, value: 3 }
+- { id: ancient_relic, type: material, rarity: rare, value: 40 }
+- { id: ectoplasm, type: material, rarity: uncommon, value: 12 }
+
+# ── Bags ──────────────────────────────────────────────────────────────────────
+- { id: small_bag, type: bag, rarity: uncommon, value: 120, bag_slots: 6 }
+- { id: large_bag, type: bag, rarity: rare, value: 500, bag_slots: 12 }
+
+# ── Dyes (use to recolor your clothes) ────────────────────────────────────────
+- { id: red_dye, type: dye, value: 25, cosmetic: { layer: dye, option: d0 } }
+- { id: blue_dye, type: dye, value: 25, cosmetic: { layer: dye, option: d1 } }
+- { id: green_dye, type: dye, value: 25, cosmetic: { layer: dye, option: d2 } }
+- { id: gold_dye, type: dye, rarity: uncommon, value: 60, cosmetic: { layer: dye, option: d13 } }
+- { id: pearl_dye, type: dye, rarity: epic, value: 400, cosmetic: { layer: dye, option: d16 } }
+
+# ── Cosmetics (equip to change your look; no combat stats) ────────────────────
+- { id: cos_crown, type: cosmetic, rarity: legendary, value: 3000, cosmetic: { layer: hat, option: crown } }
+- { id: cos_top_hat, type: cosmetic, rarity: epic, value: 800, cosmetic: { layer: hat, option: top_hat } }
+- { id: cos_circlet, type: cosmetic, rarity: epic, value: 700, cosmetic: { layer: hat, option: circlet } }
+- { id: cos_starry_hat, type: cosmetic, rarity: rare, value: 300, cosmetic: { layer: hat, option: starry_wizard_hat } }
+- { id: cos_witch_hat, type: cosmetic, rarity: rare, value: 200, cosmetic: { layer: hat, option: witch_hat } }
+- { id: cos_flower_crown, type: cosmetic, rarity: uncommon, value: 60, cosmetic: { layer: hat, option: flower_crown } }
+- { id: cos_chef_hat, type: cosmetic, value: 30, cosmetic: { layer: hat, option: chef_hat } }
+- { id: cos_royal_doublet, type: cosmetic, rarity: epic, value: 900, cosmetic: { layer: top, option: royal_doublet } }
+- { id: cos_silk_robe, type: cosmetic, rarity: rare, value: 350, cosmetic: { layer: top, option: silk_robe } }
+- { id: cos_royal_cape, type: cosmetic, rarity: epic, value: 1000, cosmetic: { layer: cloak, option: royal_cape } }
+- { id: cos_feather_cloak, type: cosmetic, rarity: epic, value: 800, cosmetic: { layer: cloak, option: feather_cloak } }
+- { id: cos_fur_mantle, type: cosmetic, rarity: uncommon, value: 120, cosmetic: { layer: cloak, option: fur_mantle } }
+- { id: cos_leaf_cloak, type: cosmetic, rarity: uncommon, value: 120, cosmetic: { layer: cloak, option: leaf_cloak } }
+- { id: cos_monocle, type: cosmetic, rarity: rare, value: 250, cosmetic: { layer: accessory, option: monocle } }
+- { id: cos_goggles, type: cosmetic, rarity: uncommon, value: 90, cosmetic: { layer: accessory, option: goggles } }
+
+# ── Quest items ───────────────────────────────────────────────────────────────
+- { id: lost_locket, type: quest, value: 1 }
+- { id: sealed_letter, type: quest, value: 1 }
+- { id: regent_sigil, type: quest, rarity: rare, value: 1 }

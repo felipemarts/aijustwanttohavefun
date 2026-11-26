@@ -1,0 +1,432 @@
+# The world is a graph of rooms. `rect` is [x, y, w, h] in 16px tiles on the global map (rendering only).
+# Grid convention used here: a room in cell (cx, cy) has rect [cx*12, cy*10, 10, 8].
+# gates: exits that need a completed project, a solved puzzle, a party, or a dead boss.
+
+# ── Village of Mistvale (safe hub) ─────────────────────────────────────────────
+- id: village.square
+  zone: village
+  flags: [safe, board]
+  rect: [72, 40, 10, 8]
+  exits: { north: village.tavern, south: village.town_hall, east: village.market, west: village.temple }
+- id: village.tavern
+  zone: village
+  flags: [safe, tavern, board, station]
+  stations: [kitchen]
+  rect: [72, 30, 10, 8]
+  exits: { south: village.square, north: village.north_road, west: village.guild_hall, east: village.plot_ne }
+- id: village.guild_hall
+  zone: village
+  flags: [safe, guild_hall]
+  rect: [60, 30, 10, 8]
+  exits: { east: village.tavern, south: village.temple, west: village.plot_nw }
+- id: village.plot_nw
+  zone: village
+  flags: [safe, plot]
+  rect: [48, 30, 10, 8]
+  exits: { east: village.guild_hall, south: village.west_gate }
+- id: village.plot_ne
+  zone: village
+  flags: [safe, plot]
+  rect: [84, 30, 10, 8]
+  exits: { west: village.tavern, east: village.plot_far }
+- id: village.plot_far
+  zone: village
+  flags: [safe, plot]
+  rect: [96, 30, 10, 8]
+  exits: { west: village.plot_ne, south: village.east_gate }
+- id: village.temple
+  zone: village
+  flags: [safe, temple]
+  rect: [60, 40, 10, 8]
+  exits: { east: village.square, north: village.guild_hall, west: village.west_gate, south: village.tailor }
+- id: village.west_gate
+  zone: village
+  flags: [safe]
+  rect: [48, 40, 10, 8]
+  exits: { east: village.temple, west: forest.edge, north: village.plot_nw, south: village.alchemist }
+- id: village.alchemist
+  zone: village
+  flags: [safe, station]
+  stations: [alchemy]
+  rect: [48, 50, 10, 8]
+  exits: { north: village.west_gate, east: village.tailor, south: village.plot_sw }
+- id: village.tailor
+  zone: village
+  flags: [safe, station]
+  stations: [loom]
+  rect: [60, 50, 10, 8]
+  exits: { west: village.alchemist, north: village.temple, east: village.town_hall, south: village.training_yard }
+- id: village.town_hall
+  zone: village
+  flags: [safe, town_hall]
+  rect: [72, 50, 10, 8]
+  exits: { north: village.square, west: village.tailor, east: village.smithy, south: village.south_gate }
+- id: village.smithy
+  zone: village
+  flags: [safe, station]
+  stations: [forge]
+  rect: [84, 50, 10, 8]
+  exits: { west: village.town_hall, north: village.market, east: village.plot_se, south: village.plot_s }
+- id: village.market
+  zone: village
+  flags: [safe, market]
+  rect: [84, 40, 10, 8]
+  exits: { west: village.square, east: village.east_gate, south: village.smithy }
+- id: village.east_gate
+  zone: village
+  flags: [safe]
+  rect: [96, 40, 10, 8]
+  exits: { west: village.market, north: village.plot_far, east: ruins.road }
+- id: village.plot_se
+  zone: village
+  flags: [safe, plot]
+  rect: [96, 50, 10, 8]
+  exits: { west: village.smithy }
+- id: village.plot_sw
+  zone: village
+  flags: [safe, plot]
+  rect: [48, 60, 10, 8]
+  exits: { north: village.alchemist, east: village.training_yard }
+- id: village.training_yard
+  zone: village
+  flags: [safe, training]
+  rect: [60, 60, 10, 8]
+  exits: { west: village.plot_sw, north: village.tailor, east: village.south_gate }
+- id: village.south_gate
+  zone: village
+  flags: [safe]
+  rect: [72, 60, 10, 8]
+  exits: { north: village.town_hall, west: village.training_yard, east: village.plot_s, south: swamp.marsh_edge }
+- id: village.plot_s
+  zone: village
+  flags: [safe, plot]
+  rect: [84, 60, 10, 8]
+  exits: { west: village.south_gate, north: village.smithy }
+- id: village.north_road
+  zone: village
+  flags: [safe]
+  rect: [72, 20, 10, 8]
+  exits: { south: village.tavern, east: village.river_bank, west: hills.trail }
+- id: village.river_bank
+  zone: village
+  flags: [safe]
+  rect: [84, 20, 10, 8]
+  exits: { west: village.north_road, north: mines.lower_gate }
+  gates: { north: { requires: project, id: bridge } }
+  resources: [{ id: wood, max: 6, regen_per_hour: 3 }]
+
+# ── Whisperwood Forest (1-5) ───────────────────────────────────────────────────
+- id: forest.edge
+  zone: forest
+  level: 1
+  flags: [safe]
+  rect: [36, 40, 10, 8]
+  exits: { east: village.west_gate, west: forest.path }
+  monsters: [{ id: slime, count: 3 }]
+  resources: [{ id: wood, max: 8, regen_per_hour: 6 }, { id: green_herb, max: 6, regen_per_hour: 4 }]
+- id: forest.path
+  zone: forest
+  level: 2
+  flags: [safe]
+  rect: [24, 40, 10, 8]
+  exits: { east: forest.edge, west: forest.old_oak, north: forest.glade, south: forest.creek }
+  monsters: [{ id: slime, count: 2 }, { id: wolf, count: 2 }]
+  resources: [{ id: wood, max: 8, regen_per_hour: 6 }]
+- id: forest.glade
+  zone: forest
+  level: 2
+  flags: [safe]
+  rect: [24, 30, 10, 8]
+  exits: { south: forest.path, west: forest.thicket }
+  monsters: [{ id: wolf, count: 3 }, { id: shadow_wolf, count: 1, night: true }]
+  resources: [{ id: green_herb, max: 8, regen_per_hour: 6 }, { id: moon_herb, max: 3, regen_per_hour: 1.5 }]
+- id: forest.thicket
+  zone: forest
+  level: 4
+  flags: [safe]
+  rect: [12, 30, 10, 8]
+  exits: { east: forest.glade, south: forest.old_oak }
+  monsters: [{ id: giant_spider, count: 3 }]
+  resources: [{ id: wood, max: 10, regen_per_hour: 6 }]
+- id: forest.old_oak
+  zone: forest
+  level: 3
+  flags: [safe]
+  rect: [12, 40, 10, 8]
+  exits: { north: forest.thicket, east: forest.path, west: forest.hollow, south: forest.mushroom_ring }
+  monsters: [{ id: boar, count: 3 }]
+  resources: [{ id: wood, max: 12, regen_per_hour: 8 }]
+- id: forest.hollow
+  zone: forest
+  level: 5
+  flags: [safe]
+  rect: [0, 40, 10, 8]
+  exits: { east: forest.old_oak }
+  monsters: [{ id: treant_sapling, count: 2 }, { id: shadow_wolf, count: 2, night: true }]
+  resources: [{ id: moon_herb, max: 5, regen_per_hour: 2 }]
+- id: forest.creek
+  zone: forest
+  level: 2
+  flags: [safe]
+  rect: [24, 50, 10, 8]
+  exits: { north: forest.path, west: forest.mushroom_ring }
+  monsters: [{ id: slime, count: 2 }, { id: boar, count: 1 }]
+  resources: [{ id: green_herb, max: 6, regen_per_hour: 5 }, { id: stone, max: 6, regen_per_hour: 3 }]
+- id: forest.mushroom_ring
+  zone: forest
+  level: 4
+  flags: [safe]
+  rect: [12, 50, 10, 8]
+  exits: { north: forest.old_oak, east: forest.creek }
+  monsters: [{ id: giant_spider, count: 2 }, { id: treant_sapling, count: 1 }]
+  resources: [{ id: moon_herb, max: 4, regen_per_hour: 2 }]
+
+# ── Greyback Hills and the Mines (4-10) ───────────────────────────────────────
+- id: hills.trail
+  zone: hills
+  level: 4
+  flags: [safe]
+  rect: [60, 20, 10, 8]
+  exits: { east: village.north_road, north: hills.switchback }
+  monsters: [{ id: boar, count: 2 }]
+  resources: [{ id: stone, max: 10, regen_per_hour: 6 }]
+- id: hills.switchback
+  zone: hills
+  level: 5
+  flags: [safe]
+  rect: [60, 10, 10, 8]
+  exits: { south: hills.trail, north: hills.pass }
+  monsters: [{ id: cave_bat, count: 2 }, { id: wolf, count: 1 }]
+  resources: [{ id: stone, max: 10, regen_per_hour: 6 }, { id: copper_ore, max: 4, regen_per_hour: 2 }]
+- id: hills.pass
+  zone: hills
+  level: 6
+  flags: [safe]
+  rect: [60, 0, 10, 8]
+  exits: { south: hills.switchback, east: mines.entrance }
+  monsters: [{ id: kobold, count: 2 }]
+- id: mines.entrance
+  zone: mines
+  level: 5
+  flags: [safe]
+  rect: [72, 0, 10, 8]
+  exits: { west: hills.pass, east: mines.tunnel }
+  monsters: [{ id: cave_bat, count: 3 }]
+  resources: [{ id: copper_ore, max: 8, regen_per_hour: 5 }, { id: stone, max: 10, regen_per_hour: 6 }]
+- id: mines.tunnel
+  zone: mines
+  level: 6
+  flags: [safe]
+  rect: [84, 0, 10, 8]
+  exits: { west: mines.entrance, east: mines.deep_shaft, south: mines.lower_gate }
+  monsters: [{ id: kobold, count: 3 }]
+  resources: [{ id: iron_ore, max: 6, regen_per_hour: 3 }, { id: copper_ore, max: 6, regen_per_hour: 3 }]
+- id: mines.lower_gate
+  zone: mines
+  level: 6
+  flags: [safe]
+  rect: [84, 10, 10, 8]
+  exits: { north: mines.tunnel, south: village.river_bank }
+  gates: { south: { requires: project, id: bridge } }
+  monsters: [{ id: kobold, count: 2 }]
+  resources: [{ id: iron_ore, max: 4, regen_per_hour: 2 }]
+- id: mines.deep_shaft
+  zone: mines
+  level: 8
+  flags: [safe]
+  rect: [96, 0, 10, 8]
+  exits: { west: mines.tunnel, east: mines.crystal_cavern, south: mines.flooded_gallery }
+  monsters: [{ id: rock_golem, count: 2 }, { id: kobold, count: 1 }]
+  resources: [{ id: iron_ore, max: 8, regen_per_hour: 4 }, { id: silver_ore, max: 3, regen_per_hour: 1 }]
+- id: mines.flooded_gallery
+  zone: mines
+  level: 8
+  flags: [safe]
+  rect: [96, 10, 10, 8]
+  exits: { north: mines.deep_shaft, east: mines.forge_ruin }
+  monsters: [{ id: cave_bat, count: 2 }, { id: rock_golem, count: 1 }]
+  resources: [{ id: iron_ore, max: 6, regen_per_hour: 3 }]
+- id: mines.crystal_cavern
+  zone: mines
+  level: 9
+  flags: [safe]
+  rect: [108, 0, 10, 8]
+  exits: { west: mines.deep_shaft, south: mines.forge_ruin }
+  monsters: [{ id: crystal_beetle, count: 3 }]
+  resources: [{ id: crystal, max: 4, regen_per_hour: 1.5 }, { id: silver_ore, max: 3, regen_per_hour: 1 }]
+- id: mines.forge_ruin
+  zone: mines
+  level: 10
+  flags: [safe]
+  rect: [108, 10, 10, 8]
+  exits: { north: mines.crystal_cavern, west: mines.flooded_gallery }
+  monsters: [{ id: kobold_foreman, count: 1 }, { id: kobold, count: 2 }]
+  resources: [{ id: iron_ore, max: 5, regen_per_hour: 2 }]
+
+# ── Murkmire Swamp (10-15, lawless) ────────────────────────────────────────────
+- id: swamp.marsh_edge
+  zone: swamp
+  level: 10
+  flags: [lawless]
+  rect: [72, 70, 10, 8]
+  exits: { north: village.south_gate, south: swamp.bog, west: swamp.reeds, east: swamp.sunken_road }
+  monsters: [{ id: mire_toad, count: 3 }]
+  resources: [{ id: bog_lily, max: 4, regen_per_hour: 2 }]
+- id: swamp.reeds
+  zone: swamp
+  level: 11
+  flags: [lawless]
+  rect: [60, 70, 10, 8]
+  exits: { east: swamp.marsh_edge, south: swamp.witch_hut }
+  monsters: [{ id: bog_lurker, count: 2 }, { id: mire_toad, count: 1 }]
+  resources: [{ id: bog_lily, max: 6, regen_per_hour: 3 }, { id: green_herb, max: 6, regen_per_hour: 4 }]
+- id: swamp.bog
+  zone: swamp
+  level: 12
+  flags: [lawless]
+  rect: [72, 80, 10, 8]
+  exits: { north: swamp.marsh_edge, west: swamp.witch_hut, east: swamp.drowned_shrine }
+  monsters: [{ id: bog_lurker, count: 3 }, { id: will_o_wisp, count: 2, night: true }]
+  resources: [{ id: shadowcap, max: 3, regen_per_hour: 1 }, { id: bog_lily, max: 6, regen_per_hour: 3 }]
+- id: swamp.witch_hut
+  zone: swamp
+  level: 13
+  flags: [lawless, station]
+  stations: [alchemy]
+  rect: [60, 80, 10, 8]
+  exits: { north: swamp.reeds, east: swamp.bog }
+  monsters: [{ id: swamp_hag, count: 1 }]
+  resources: [{ id: shadowcap, max: 4, regen_per_hour: 1.5 }]
+- id: swamp.sunken_road
+  zone: swamp
+  level: 12
+  flags: [lawless]
+  rect: [84, 70, 10, 8]
+  exits: { west: swamp.marsh_edge, east: ruins.drowned_gate, south: swamp.drowned_shrine }
+  monsters: [{ id: bog_lurker, count: 2 }, { id: skeleton, count: 1 }]
+- id: swamp.drowned_shrine
+  zone: swamp
+  level: 14
+  flags: [lawless]
+  rect: [84, 80, 10, 8]
+  exits: { west: swamp.bog, north: swamp.sunken_road }
+  monsters: [{ id: will_o_wisp, count: 3 }, { id: wraith, count: 1, night: true }]
+  resources: [{ id: shadowcap, max: 5, regen_per_hour: 2 }, { id: crystal, max: 2, regen_per_hour: 0.5 }]
+
+# ── The Ruins of Old Cael (12-18, lawless) ─────────────────────────────────────
+- id: ruins.road
+  zone: ruins
+  level: 12
+  flags: [lawless]
+  rect: [108, 40, 10, 8]
+  exits: { west: village.east_gate, east: ruins.outskirts }
+  monsters: [{ id: skeleton, count: 2 }]
+  resources: [{ id: stone, max: 10, regen_per_hour: 6 }]
+- id: ruins.outskirts
+  zone: ruins
+  level: 13
+  flags: [lawless]
+  rect: [120, 40, 10, 8]
+  exits: { west: ruins.road, north: ruins.collapsed_tower, south: ruins.plaza }
+  monsters: [{ id: skeleton, count: 2 }, { id: bandit, count: 2 }]
+  resources: [{ id: ancient_relic, max: 2, regen_per_hour: 0.5 }]
+- id: ruins.collapsed_tower
+  zone: ruins
+  level: 15
+  flags: [lawless]
+  rect: [120, 30, 10, 8]
+  exits: { south: ruins.outskirts }
+  monsters: [{ id: wraith, count: 2 }]
+  resources: [{ id: mithril_ore, max: 4, regen_per_hour: 1 }, { id: ancient_relic, max: 3, regen_per_hour: 0.7 }]
+- id: ruins.plaza
+  zone: ruins
+  level: 14
+  flags: [lawless]
+  rect: [120, 50, 10, 8]
+  exits: { north: ruins.outskirts, east: ruins.bandit_hideout, south: ruins.catacomb_stairs, west: ruins.overgrown_street }
+  monsters: [{ id: bandit, count: 3 }]
+- id: ruins.overgrown_street
+  zone: ruins
+  level: 13
+  flags: [lawless]
+  rect: [108, 60, 10, 8]
+  exits: { east: ruins.plaza, south: ruins.drowned_gate }
+  monsters: [{ id: skeleton, count: 3 }]
+  resources: [{ id: silver_ore, max: 3, regen_per_hour: 1 }]
+- id: ruins.drowned_gate
+  zone: ruins
+  level: 13
+  flags: [lawless]
+  rect: [96, 70, 10, 8]
+  exits: { north: ruins.overgrown_street, west: swamp.sunken_road }
+  monsters: [{ id: skeleton, count: 2 }, { id: bog_lurker, count: 1 }]
+- id: ruins.bandit_hideout
+  zone: ruins
+  level: 17
+  flags: [lawless]
+  rect: [132, 50, 10, 8]
+  exits: { west: ruins.plaza }
+  monsters: [{ id: bandit_captain, count: 1 }, { id: bandit, count: 2 }]
+  resources: [{ id: star_iron, max: 2, regen_per_hour: 0.5 }]
+- id: ruins.catacomb_stairs
+  zone: ruins
+  level: 15
+  flags: [lawless]
+  rect: [120, 60, 10, 8]
+  exits: { north: ruins.plaza, down: dungeon.antechamber }
+  gates: { down: { requires: party } }
+  monsters: [{ id: skeleton, count: 2 }]
+
+# ── The Catacombs of the Hollow Regent (15-20, party only) ─────────────────────
+- id: dungeon.antechamber
+  zone: dungeon
+  level: 15
+  flags: [dungeon, safe]
+  rect: [120, 70, 10, 8]
+  exits: { up: ruins.catacomb_stairs, south: dungeon.lever_hall }
+  gates: { south: { requires: puzzle, id: dungeon_levers } }
+- id: dungeon.lever_hall
+  zone: dungeon
+  level: 16
+  flags: [dungeon, safe]
+  rect: [120, 80, 10, 8]
+  exits: { north: dungeon.antechamber, east: dungeon.trapped_corridor }
+  monsters: [{ id: crypt_guard, count: 2 }]
+- id: dungeon.trapped_corridor
+  zone: dungeon
+  level: 17
+  flags: [dungeon, safe]
+  rect: [132, 80, 10, 8]
+  exits: { west: dungeon.lever_hall, south: dungeon.rune_door }
+  gates: { south: { requires: puzzle, id: dungeon_trap } }
+  monsters: [{ id: bone_hound, count: 2 }]
+- id: dungeon.rune_door
+  zone: dungeon
+  level: 18
+  flags: [dungeon, safe]
+  rect: [132, 90, 10, 8]
+  exits: { north: dungeon.trapped_corridor, west: dungeon.gate_hall }
+  gates: { west: { requires: puzzle, id: dungeon_seal } }
+  monsters: [{ id: crypt_guard, count: 1 }, { id: bone_hound, count: 1 }]
+- id: dungeon.gate_hall
+  zone: dungeon
+  level: 19
+  flags: [dungeon, safe]
+  rect: [120, 90, 10, 8]
+  exits: { east: dungeon.rune_door, west: dungeon.boss_lair }
+  gates: { west: { requires: puzzle, id: dungeon_gate } }
+  monsters: [{ id: crypt_guard, count: 2 }]
+- id: dungeon.boss_lair
+  zone: dungeon
+  level: 20
+  flags: [dungeon, safe]
+  rect: [108, 90, 10, 8]
+  exits: { east: dungeon.gate_hall, north: dungeon.vault }
+  gates: { north: { requires: boss, id: the_hollow_regent } }
+  monsters: [{ id: the_hollow_regent, count: 1 }]
+- id: dungeon.vault
+  zone: dungeon
+  level: 20
+  flags: [dungeon, safe]
+  rect: [108, 80, 10, 8]
+  exits: { south: dungeon.boss_lair }

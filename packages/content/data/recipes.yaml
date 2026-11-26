@@ -1,0 +1,54 @@
+# Recipes. Every good recipe needs something another profession makes (see PLANEJAMENTO §6.2).
+# station: forge (Smithy), alchemy (Alchemist, Witch Hut), loom (Tailor), kitchen (Tavern).
+
+# ── Blacksmith ───────────────────────────────────────────────────────────────
+- { id: smelt_iron, profession: blacksmith, level: 5, station: forge, inputs: [{ item: iron_ore, qty: 2 }, { item: coal, qty: 1 }], output: { item: iron_ingot } }
+- { id: blow_flasks, profession: blacksmith, level: 5, station: forge, inputs: [{ item: copper_ore }, { item: stone }], output: { item: flask, qty: 3 } }
+- { id: forge_buckles, profession: blacksmith, level: 5, station: forge, inputs: [{ item: iron_ingot }], output: { item: buckle, qty: 3 } }
+- { id: forge_pot, profession: blacksmith, level: 5, station: forge, inputs: [{ item: iron_ingot, qty: 2 }], output: { item: pot } }
+- { id: forge_iron_sword, profession: blacksmith, level: 5, station: forge, inputs: [{ item: iron_ingot, qty: 3 }, { item: oil }, { item: wood }], output: { item: iron_sword } }
+- { id: forge_iron_dagger, profession: blacksmith, level: 5, station: forge, inputs: [{ item: iron_ingot, qty: 2 }, { item: oil }], output: { item: iron_dagger } }
+- { id: forge_iron_mace, profession: blacksmith, level: 5, station: forge, inputs: [{ item: iron_ingot, qty: 3 }, { item: oil }], output: { item: iron_mace } }
+- { id: forge_chainmail, profession: blacksmith, level: 8, station: forge, inputs: [{ item: iron_ingot, qty: 5 }, { item: oil, qty: 2 }, { item: leather, qty: 2 }], output: { item: chainmail_armor } }
+- { id: forge_greatsword, profession: blacksmith, level: 10, station: forge, inputs: [{ item: iron_ingot, qty: 5 }, { item: silver_ore, qty: 2 }, { item: oil, qty: 2 }, { item: coal, qty: 2 }], output: { item: steel_greatsword } }
+- { id: forge_plate, profession: blacksmith, level: 12, station: forge, inputs: [{ item: iron_ingot, qty: 8 }, { item: oil, qty: 3 }, { item: coal, qty: 2 }, { item: leather, qty: 2 }], output: { item: plate_armor } }
+- { id: forge_mithril_blade, profession: blacksmith, level: 15, station: forge, inputs: [{ item: mithril_ore, qty: 4 }, { item: star_iron, qty: 2 }, { item: oil, qty: 3 }, { item: coal, qty: 2 }], output: { item: mithril_blade } }
+- { id: forge_mithril_kris, profession: blacksmith, level: 15, station: forge, inputs: [{ item: mithril_ore, qty: 3 }, { item: star_iron }, { item: oil, qty: 3 }], output: { item: mithril_kris } }
+- { id: forge_mithril_mail, profession: blacksmith, level: 16, station: forge, inputs: [{ item: mithril_ore, qty: 6 }, { item: star_iron, qty: 2 }, { item: oil, qty: 3 }, { item: silk, qty: 2 }], output: { item: mithril_mail } }
+
+# ── Alchemist ────────────────────────────────────────────────────────────────
+- { id: brew_minor_potion, profession: alchemist, level: 5, station: alchemy, inputs: [{ item: green_herb, qty: 2 }, { item: flask }], output: { item: minor_potion, qty: 2 } }
+- { id: brew_health_potion, profession: alchemist, level: 7, station: alchemy, inputs: [{ item: moon_herb, qty: 2 }, { item: green_herb }, { item: flask }], output: { item: health_potion } }
+- { id: brew_greater_potion, profession: alchemist, level: 12, station: alchemy, inputs: [{ item: bog_lily, qty: 2 }, { item: shadowcap }, { item: flask }], output: { item: greater_potion } }
+- { id: brew_mana_potion, profession: alchemist, level: 5, station: alchemy, inputs: [{ item: moon_herb }, { item: bat_wing }, { item: flask }], output: { item: mana_potion, qty: 2 } }
+- { id: brew_greater_mana, profession: alchemist, level: 12, station: alchemy, inputs: [{ item: ectoplasm, qty: 2 }, { item: crystal }, { item: flask }], output: { item: greater_mana_potion } }
+- { id: press_oil, profession: alchemist, level: 5, station: alchemy, inputs: [{ item: slime_gel, qty: 2 }, { item: green_herb }, { item: flask }], output: { item: oil, qty: 2 } }
+- { id: brew_fury, profession: alchemist, level: 10, station: alchemy, inputs: [{ item: shadowcap }, { item: bone, qty: 2 }, { item: flask }], output: { item: elixir_of_fury } }
+- { id: mix_red_dye, profession: alchemist, level: 5, station: alchemy, inputs: [{ item: bog_lily }, { item: flask }], output: { item: red_dye, qty: 2 } }
+- { id: mix_blue_dye, profession: alchemist, level: 6, station: alchemy, inputs: [{ item: crystal }, { item: flask }], output: { item: blue_dye, qty: 2 } }
+- { id: mix_green_dye, profession: alchemist, level: 5, station: alchemy, inputs: [{ item: green_herb, qty: 3 }, { item: flask }], output: { item: green_dye, qty: 2 } }
+- { id: mix_gold_dye, profession: alchemist, level: 10, station: alchemy, inputs: [{ item: silver_ore }, { item: moon_herb }, { item: flask }], output: { item: gold_dye } }
+
+# ── Tailor ───────────────────────────────────────────────────────────────────
+- { id: sew_padded_armor, profession: tailor, level: 5, station: loom, inputs: [{ item: linen, qty: 4 }, { item: leather }], output: { item: padded_armor } }
+- { id: sew_leather_armor, profession: tailor, level: 6, station: loom, inputs: [{ item: leather, qty: 5 }, { item: buckle, qty: 2 }, { item: oil }], output: { item: leather_armor } }
+- { id: sew_small_bag, profession: tailor, level: 5, station: loom, inputs: [{ item: leather, qty: 3 }, { item: linen, qty: 2 }, { item: buckle }], output: { item: small_bag } }
+- { id: sew_large_bag, profession: tailor, level: 10, station: loom, inputs: [{ item: leather, qty: 4 }, { item: silk, qty: 3 }, { item: buckle, qty: 2 }, { item: red_dye }], output: { item: large_bag } }
+- { id: sew_chef_hat, profession: tailor, level: 5, station: loom, inputs: [{ item: linen, qty: 2 }], output: { item: cos_chef_hat } }
+- { id: weave_flower_crown, profession: tailor, level: 5, station: loom, inputs: [{ item: green_herb, qty: 3 }, { item: linen }, { item: red_dye }], output: { item: cos_flower_crown } }
+- { id: sew_fur_mantle, profession: tailor, level: 6, station: loom, inputs: [{ item: wolf_pelt, qty: 4 }, { item: buckle }], output: { item: cos_fur_mantle } }
+- { id: sew_leaf_cloak, profession: tailor, level: 6, station: loom, inputs: [{ item: linen, qty: 4 }, { item: green_dye }], output: { item: cos_leaf_cloak } }
+- { id: sew_witch_hat, profession: tailor, level: 8, station: loom, inputs: [{ item: linen, qty: 3 }, { item: blue_dye }, { item: buckle }], output: { item: cos_witch_hat } }
+- { id: sew_starry_hat, profession: tailor, level: 10, station: loom, inputs: [{ item: silk, qty: 2 }, { item: blue_dye }, { item: gold_dye }], output: { item: cos_starry_hat } }
+- { id: sew_silk_robe, profession: tailor, level: 12, station: loom, inputs: [{ item: silk, qty: 5 }, { item: blue_dye }], output: { item: cos_silk_robe } }
+- { id: sew_royal_cape, profession: tailor, level: 15, station: loom, inputs: [{ item: silk, qty: 4 }, { item: red_dye, qty: 2 }, { item: buckle, qty: 2 }, { item: gold_dye }], output: { item: cos_royal_cape } }
+- { id: grind_monocle, profession: tailor, level: 12, station: loom, inputs: [{ item: crystal }, { item: silver_ore }, { item: buckle }], output: { item: cos_monocle } }
+
+# ── Cook ─────────────────────────────────────────────────────────────────────
+- { id: char_coal, profession: cook, level: 5, station: kitchen, inputs: [{ item: wood, qty: 3 }], output: { item: coal, qty: 2 } }
+- { id: bake_bread, profession: cook, level: 5, station: kitchen, inputs: [{ item: green_herb, qty: 2 }, { item: wood }], output: { item: bread, qty: 3 } }
+- { id: pack_ration, profession: cook, level: 5, station: kitchen, inputs: [{ item: bread }, { item: raw_meat }], output: { item: travelers_ration, qty: 2 } }
+- { id: cook_hearty_stew, profession: cook, level: 6, station: kitchen, inputs: [{ item: raw_meat, qty: 2 }, { item: green_herb }, { item: pot }], output: { item: hearty_stew, qty: 4 } }
+- { id: roast_a_boar, profession: cook, level: 7, station: kitchen, inputs: [{ item: raw_meat, qty: 3 }, { item: coal }], output: { item: roast_boar, qty: 2 } }
+- { id: bake_mushroom_pie, profession: cook, level: 9, station: kitchen, inputs: [{ item: moon_herb }, { item: raw_meat }, { item: bread }], output: { item: mushroom_pie, qty: 2 } }
+- { id: bake_honey_cake, profession: cook, level: 12, station: kitchen, inputs: [{ item: bread, qty: 2 }, { item: bog_lily }, { item: pot }], output: { item: honey_cake, qty: 3 } }

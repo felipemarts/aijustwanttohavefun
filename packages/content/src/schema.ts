@@ -34,7 +34,7 @@ export const roomSchema = z.object({
     .record(
       z.string(),
       z.object({
-        requires: z.enum(['project', 'puzzle', 'party']),
+        requires: z.enum(['project', 'puzzle', 'party', 'boss']),
         id: id.optional(),
       }),
     )
@@ -184,6 +184,8 @@ export const puzzleSchema = z.object({
   reset_sec: z.number().int().min(1).default(900),
   damage: z.number().int().min(0).default(0),
   loot: z.array(stack).default([]),
+  /** Gate puzzles: a room on the far side where a winch (pull_lever) reopens the gate. */
+  winch_room: id.optional(),
 });
 
 export const professionSchema = z.object({ id: z.enum(PROFESSIONS), station: z.enum(['forge', 'alchemy', 'loom', 'kitchen']) });

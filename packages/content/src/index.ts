@@ -125,6 +125,7 @@ export function buildContent(raw: Partial<ContentFiles>): Content {
       if (!(dir in r.exits)) problems.push(`room ${r.id}: gate on missing exit "${dir}"`);
       if (g.requires === 'project') need(c.projects, g.id, `room ${r.id} gate`, 'project');
       if (g.requires === 'puzzle') need(c.puzzles, g.id, `room ${r.id} gate`, 'puzzle');
+      if (g.requires === 'boss') need(c.monsters, g.id, `room ${r.id} gate`, 'monster');
     }
   }
   for (const m of c.monsters.values()) for (const d of m.drops) need(c.items, d.item, `monster ${m.id} drop`, 'item');

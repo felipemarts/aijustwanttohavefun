@@ -1,0 +1,8 @@
+# Zones. law: safe (no PvP), lawless (PvP, theft), group (party-only content).
+- { id: village, law: safe, level: [0, 0] }
+- { id: forest, law: safe, level: [1, 5] }
+- { id: hills, law: safe, level: [4, 6] }
+- { id: mines, law: safe, level: [5, 10] }
+- { id: swamp, law: lawless, level: [10, 15] }
+- { id: ruins, law: lawless, level: [12, 18] }
+- { id: dungeon, law: group, level: [15, 20] }
