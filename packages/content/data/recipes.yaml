@@ -15,6 +15,9 @@
 - { id: forge_mithril_blade, profession: blacksmith, level: 15, station: forge, inputs: [{ item: mithril_ore, qty: 4 }, { item: star_iron, qty: 2 }, { item: oil, qty: 3 }, { item: coal, qty: 2 }], output: { item: mithril_blade } }
 - { id: forge_mithril_kris, profession: blacksmith, level: 15, station: forge, inputs: [{ item: mithril_ore, qty: 3 }, { item: star_iron }, { item: oil, qty: 3 }], output: { item: mithril_kris } }
 - { id: forge_mithril_mail, profession: blacksmith, level: 16, station: forge, inputs: [{ item: mithril_ore, qty: 6 }, { item: star_iron, qty: 2 }, { item: oil, qty: 3 }, { item: silk, qty: 2 }], output: { item: mithril_mail } }
+- { id: forge_shadow_dagger, profession: blacksmith, level: 10, station: forge, inputs: [{ item: iron_ingot, qty: 4 }, { item: silver_ore, qty: 2 }, { item: oil, qty: 2 }, { item: shadowcap }], output: { item: shadow_dagger } }
+- { id: forge_holy_mace, profession: blacksmith, level: 10, station: forge, inputs: [{ item: iron_ingot, qty: 5 }, { item: silver_ore, qty: 2 }, { item: oil, qty: 2 }, { item: moon_herb, qty: 2 }], output: { item: holy_mace } }
+- { id: forge_sunlit_scepter, profession: blacksmith, level: 15, station: forge, inputs: [{ item: mithril_ore, qty: 3 }, { item: star_iron }, { item: oil, qty: 3 }, { item: gold_dye }], output: { item: sunlit_scepter } }
 
 # ── Alchemist ────────────────────────────────────────────────────────────────
 - { id: brew_minor_potion, profession: alchemist, level: 5, station: alchemy, inputs: [{ item: green_herb, qty: 2 }, { item: flask }], output: { item: minor_potion, qty: 2 } }
@@ -28,6 +31,9 @@
 - { id: mix_blue_dye, profession: alchemist, level: 6, station: alchemy, inputs: [{ item: crystal }, { item: flask }], output: { item: blue_dye, qty: 2 } }
 - { id: mix_green_dye, profession: alchemist, level: 5, station: alchemy, inputs: [{ item: green_herb, qty: 3 }, { item: flask }], output: { item: green_dye, qty: 2 } }
 - { id: mix_gold_dye, profession: alchemist, level: 10, station: alchemy, inputs: [{ item: silver_ore }, { item: moon_herb }, { item: flask }], output: { item: gold_dye } }
+- { id: attune_crystal_staff, profession: alchemist, level: 10, station: alchemy, inputs: [{ item: oak_staff }, { item: crystal, qty: 3 }, { item: moon_herb, qty: 2 }, { item: buckle }], output: { item: crystal_staff } }
+- { id: attune_starfall_staff, profession: alchemist, level: 15, station: alchemy, inputs: [{ item: crystal_staff }, { item: star_iron }, { item: ectoplasm, qty: 3 }, { item: silk, qty: 2 }], output: { item: starfall_staff } }
+- { id: mix_pearl_dye, profession: alchemist, level: 15, station: alchemy, inputs: [{ item: crystal, qty: 2 }, { item: ectoplasm, qty: 2 }, { item: flask }], output: { item: pearl_dye } }
 
 # ── Tailor ───────────────────────────────────────────────────────────────────
 - { id: sew_padded_armor, profession: tailor, level: 5, station: loom, inputs: [{ item: linen, qty: 4 }, { item: leather }], output: { item: padded_armor } }

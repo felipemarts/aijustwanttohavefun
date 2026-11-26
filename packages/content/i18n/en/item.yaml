@@ -1,0 +1,117 @@
+# Weapons
+rusty_sword: { name: rusty sword }
+iron_sword: { name: iron sword }
+steel_greatsword: { name: steel greatsword }
+mithril_blade: { name: mithril blade }
+oathkeeper: { name: Oathkeeper }
+apprentice_staff: { name: apprentice staff }
+oak_staff: { name: oak staff }
+crystal_staff: { name: crystal staff }
+starfall_staff: { name: starfall staff }
+worn_dagger: { name: worn dagger }
+iron_dagger: { name: iron dagger }
+shadow_dagger: { name: shadow dagger }
+mithril_kris: { name: mithril kris }
+wooden_mace: { name: wooden mace }
+iron_mace: { name: iron mace }
+holy_mace: { name: holy mace }
+sunlit_scepter: { name: sunlit scepter }
+hollow_regents_scepter: { name: "Hollow Regent's scepter" }
+
+# Armor
+cloth_armor: { name: cloth armor }
+padded_armor: { name: padded armor }
+leather_armor: { name: leather armor }
+chainmail_armor: { name: chainmail armor }
+plate_armor: { name: plate armor }
+mithril_mail: { name: mithril mail }
+wyrmscale_armor: { name: wyrmscale armor }
+
+# Trinkets
+lucky_pebble: { name: lucky pebble }
+copper_ring: { name: copper ring }
+wolf_fang_charm: { name: wolf fang charm }
+moonstone_amulet: { name: moonstone amulet }
+crystal_pendant: { name: crystal pendant }
+bandit_signet: { name: bandit signet }
+regent_eye: { name: "Regent's eye" }
+colossus_heart: { name: colossus heart }
+
+# Consumables
+minor_potion: { name: minor health potion }
+health_potion: { name: health potion }
+greater_potion: { name: greater health potion }
+mana_potion: { name: mana potion }
+greater_mana_potion: { name: greater mana potion }
+elixir_of_fury: { name: elixir of fury }
+
+# Food
+bread: { name: bread }
+travelers_ration: { name: "traveler's ration" }
+hearty_stew: { name: hearty stew }
+roast_boar: { name: roast boar }
+mushroom_pie: { name: mushroom pie }
+honey_cake: { name: honey cake }
+
+# Materials
+wood: { name: wood }
+stone: { name: stone }
+copper_ore: { name: copper ore }
+iron_ore: { name: iron ore }
+silver_ore: { name: silver ore }
+mithril_ore: { name: mithril ore }
+star_iron: { name: star iron }
+crystal: { name: crystal }
+coal: { name: coal }
+green_herb: { name: green herb }
+moon_herb: { name: moon herb }
+bog_lily: { name: bog lily }
+shadowcap: { name: shadowcap }
+flask: { name: flask }
+oil: { name: oil }
+linen: { name: linen }
+silk: { name: silk }
+leather: { name: leather }
+wolf_pelt: { name: wolf pelt }
+raw_meat: { name: raw meat }
+buckle: { name: buckle }
+pot: { name: cooking pot }
+iron_ingot: { name: iron ingot }
+bone: { name: bone }
+slime_gel: { name: slime gel }
+bat_wing: { name: bat wing }
+ancient_relic: { name: ancient relic }
+ectoplasm: { name: ectoplasm }
+
+# Bags
+small_bag: { name: small bag }
+large_bag: { name: large bag }
+
+# Dyes
+red_dye: { name: red dye }
+blue_dye: { name: blue dye }
+green_dye: { name: green dye }
+gold_dye: { name: gold dye }
+pearl_dye: { name: pearl dye }
+
+# Cosmetics
+cos_crown: { name: crown }
+cos_top_hat: { name: top hat }
+cos_circlet: { name: circlet }
+cos_starry_hat: { name: starry wizard hat }
+cos_witch_hat: { name: witch hat }
+cos_flower_crown: { name: flower crown }
+cos_chef_hat: { name: chef hat }
+cos_royal_doublet: { name: royal doublet }
+cos_silk_robe: { name: silk robe }
+cos_royal_cape: { name: royal cape }
+cos_feather_cloak: { name: feathered cloak }
+cos_fur_mantle: { name: fur mantle }
+cos_leaf_cloak: { name: cloak of leaves }
+cos_monocle: { name: monocle }
+cos_goggles: { name: goggles }
+
+# Quest items
+lost_locket: { name: lost locket }
+sealed_letter: { name: sealed letter }
+regent_sigil: { name: "Regent's sigil" }

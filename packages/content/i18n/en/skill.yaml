@@ -1,0 +1,55 @@
+# Warrior
+power_strike:
+  name: Power Strike
+  desc: "A heavy blow that deals 1.6x attack damage to one enemy. Costs 5 MP."
+taunt:
+  name: Taunt
+  desc: "Forces an enemy to attack you instead of your allies. Costs 5 MP."
+shield_wall:
+  name: Shield Wall
+  desc: "Raises your defense by 10 for 5 minutes. Costs 10 MP, 60 second cooldown."
+crushing_blow:
+  name: Crushing Blow
+  desc: "A devastating blow that deals 2.5x attack damage to one enemy. Costs 15 MP, 30 second cooldown."
+
+# Mage
+firebolt:
+  name: Firebolt
+  desc: "Hurls a bolt of fire at one enemy for 1.8x attack damage. Costs 6 MP."
+frost_nova:
+  name: Frost Nova
+  desc: "Blasts every enemy in the room with ice for 1.2x attack damage. Costs 14 MP."
+arcane_shield:
+  name: Arcane Shield
+  desc: "Raises your defense by 8 for 10 minutes. Costs 12 MP, 60 second cooldown."
+meteor:
+  name: Meteor
+  desc: "Drops a meteor on every enemy in the room for 2.2x attack damage. Costs 30 MP, 60 second cooldown."
+
+# Rogue
+backstab:
+  name: Backstab
+  desc: "A sneaky stab that deals 1.7x attack damage to one enemy. Costs 5 MP."
+poison_blade:
+  name: Poison Blade
+  desc: "Coats your blade in poison, raising your attack by 5 for 10 minutes. Costs 8 MP."
+vanish:
+  name: Vanish
+  desc: "Disappear in a puff of smoke and escape the fight. Costs 10 MP, 120 second cooldown."
+shadowstep:
+  name: Shadowstep
+  desc: "Step through the shadows and strike one enemy for 2.6x attack damage. Costs 12 MP, 30 second cooldown."
+
+# Cleric
+heal:
+  name: Heal
+  desc: "Restores HP to one ally, scaling with 1.5x your INT. Costs 8 MP."
+revive:
+  name: Revive
+  desc: "Raises a fallen ally where they lie, with no gold lost. Costs 20 MP."
+bless:
+  name: Bless
+  desc: "Blesses your whole party, raising attack by 4 for 20 minutes. Costs 15 MP, 60 second cooldown."
+sanctuary:
+  name: Sanctuary
+  desc: "Heals every party member, scaling with 1.2x your INT. Costs 30 MP, 30 second cooldown."

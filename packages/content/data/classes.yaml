@@ -1,0 +1,25 @@
+# Classes. Stats grow automatically per level. `primary` drives attack; VIT drives HP and defense; INT drives MP.
+- id: warrior
+  base: { str: 8, int: 2, agi: 4, vit: 8 }
+  per_level: { str: 2, int: 0.25, agi: 0.75, vit: 2 }
+  primary: str
+  skills: [power_strike, taunt, shield_wall, crushing_blow]
+  starter: [{ item: rusty_sword }, { item: cloth_armor }, { item: bread, qty: 3 }]
+- id: mage
+  base: { str: 2, int: 9, agi: 4, vit: 4 }
+  per_level: { str: 0.25, int: 2.25, agi: 0.75, vit: 1 }
+  primary: int
+  skills: [firebolt, frost_nova, arcane_shield, meteor]
+  starter: [{ item: apprentice_staff }, { item: cloth_armor }, { item: bread, qty: 3 }]
+- id: rogue
+  base: { str: 4, int: 3, agi: 9, vit: 5 }
+  per_level: { str: 1, int: 0.5, agi: 2.25, vit: 1.25 }
+  primary: agi
+  skills: [backstab, poison_blade, vanish, shadowstep]
+  starter: [{ item: worn_dagger }, { item: cloth_armor }, { item: bread, qty: 3 }]
+- id: cleric
+  base: { str: 4, int: 8, agi: 3, vit: 6 }
+  per_level: { str: 0.75, int: 2, agi: 0.5, vit: 1.5 }
+  primary: int
+  skills: [heal, revive, bless, sanctuary]
+  starter: [{ item: wooden_mace }, { item: cloth_armor }, { item: bread, qty: 3 }]

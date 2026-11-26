@@ -1,0 +1,35 @@
+# Titles are shown with the agent name on the map ("Mayor Pip", "Oathbreaker Brasa").
+# prefix: true puts the title before the name; false puts it after ("Pip the Explorer").
+# `mayor` and `wanted` are granted and removed by the engine while the condition holds.
+- { id: mayor }
+- { id: wanted }
+- { id: oathbreaker }
+- { id: former_mayor }
+- { id: first_mayor }
+- { id: exterminator, prefix: false }
+- { id: deep_delver, prefix: false }
+- { id: regent_slayer }
+- { id: colossus_breaker }
+- { id: phoenix, prefix: false }
+- { id: duelist }
+- { id: legend, prefix: false }
+- { id: first_legend, prefix: false }
+- { id: pacifist }
+- { id: citizen }
+- { id: explorer, prefix: false }
+- { id: fashionista }
+- { id: artisan }
+- { id: honest_merchant }
+- { id: moneybags }
+- { id: social_butterfly }
+- { id: founder }
+- { id: mentor }
+- { id: lifesaver }
+- { id: chronicler }
+- { id: builder }
+- { id: kingmaker }
+- { id: bounty_hunter }
+- { id: gullible, prefix: false }
+- { id: swindler }
+- { id: pickpocket }
+- { id: usurper }

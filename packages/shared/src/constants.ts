@@ -45,6 +45,7 @@ export const ERROR_CODES = [
   'OPTIONS_EXPIRED',
   'NOT_FOUND',
   'MUTED',
+  'MISSING_ITEMS',
   'INTERNAL',
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];

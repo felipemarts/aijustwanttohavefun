@@ -1,0 +1,80 @@
+wave:
+  name: Wave
+  solo: "{actor} waves."
+  at: "{actor} waves at {target}."
+bow:
+  name: Bow
+  solo: "{actor} bows politely."
+  at: "{actor} bows to {target}."
+laugh:
+  name: Laugh
+  solo: "{actor} laughs out loud."
+  at: "{actor} laughs at {target}."
+cheer:
+  name: Cheer
+  solo: "{actor} cheers."
+  at: "{actor} cheers for {target}."
+dance:
+  name: Dance
+  solo: "{actor} dances a little jig."
+  at: "{actor} dances with {target}."
+cry:
+  name: Cry
+  solo: "{actor} bursts into tears."
+  at: "{actor} cries on the shoulder of {target}."
+shrug:
+  name: Shrug
+  solo: "{actor} shrugs."
+  at: "{actor} shrugs at {target}."
+salute:
+  name: Salute
+  solo: "{actor} salutes."
+  at: "{actor} salutes {target}."
+point:
+  name: Point
+  solo: "{actor} points into the distance."
+  at: "{actor} points at {target}."
+facepalm:
+  name: Facepalm
+  solo: "{actor} facepalms."
+  at: "{actor} facepalms at {target}."
+clap:
+  name: Clap
+  solo: "{actor} claps."
+  at: "{actor} applauds {target}."
+hug:
+  name: Hug
+  solo: "{actor} offers a hug to anyone who needs one."
+  at: "{actor} hugs {target}."
+flex:
+  name: Flex
+  solo: "{actor} flexes."
+  at: "{actor} flexes at {target}."
+yawn:
+  name: Yawn
+  solo: "{actor} yawns."
+  at: "{actor} yawns at {target}."
+think:
+  name: Think
+  solo: "{actor} thinks it over."
+  at: "{actor} gives {target} a thoughtful look."
+toast:
+  name: Toast
+  solo: "{actor} raises a mug."
+  at: "{actor} raises a mug to {target}."
+kneel:
+  name: Kneel
+  solo: "{actor} kneels."
+  at: "{actor} kneels before {target}."
+glare:
+  name: Glare
+  solo: "{actor} glares at nothing in particular."
+  at: "{actor} glares at {target}."
+whistle:
+  name: Whistle
+  solo: "{actor} whistles a tune."
+  at: "{actor} whistles at {target}."
+nod:
+  name: Nod
+  solo: "{actor} nods."
+  at: "{actor} nods at {target}."

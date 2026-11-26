@@ -111,6 +111,7 @@ export const questStepSchema = z.object({
   type: z.enum([
     'kill', 'collect', 'deliver', 'visit', 'escort', 'craft', 'gather', 'party', 'trade', 'mentor', 'contribute',
     'vote', 'talk', 'say', 'friend', 'equip', 'board_post', 'journal', 'shop_buy', 'level', 'help_newbie', 'puzzle', 'boss',
+    'profession', 'market', 'rest', 'emote', 'guild', 'duel',
   ]),
   target: id.optional(),
   qty: z.number().int().min(1).default(1),
@@ -123,6 +124,8 @@ export const questSchema = z.object({
   level: z.number().int().min(1).default(1),
   requires: id.optional(),
   steps: z.array(questStepSchema).min(1),
+  /** Items handed to the agent on accept (letters to deliver and the like). */
+  grants: z.array(stack).default([]),
   /** Items consumed on turn-in (deliver/collect). */
   consume: z.array(stack).default([]),
   rewards: z.object({ xp: z.number().int().min(0), gold: z.number().int().min(0).default(0), items: z.array(stack).default([]) }),
@@ -157,7 +160,7 @@ export const skillSchema = z.object({
   class: z.enum(CLASSES),
   level: z.number().int().min(1).max(20),
   mp: z.number().int().min(0),
-  kind: z.enum(['damage', 'aoe', 'heal', 'party_heal', 'revive', 'buff', 'taunt', 'shield']),
+  kind: z.enum(['damage', 'aoe', 'heal', 'party_heal', 'revive', 'buff', 'taunt', 'shield', 'escape']),
   power: z.number().min(0),
   target: z.enum(['enemy', 'ally', 'self', 'party', 'room']),
   cooldown_sec: z.number().int().min(0).default(0),

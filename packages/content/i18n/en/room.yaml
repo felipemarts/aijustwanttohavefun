@@ -1,0 +1,191 @@
+# Village of Mistvale
+village.square:
+  name: Mistvale Square
+  desc: "The cobbled heart of Mistvale, with a notice board and Olga's general store. Tavern north, town hall south, market east, temple west."
+village.tavern:
+  name: Sleepy Griffin Tavern
+  desc: "Berta's warm, noisy taproom. It has the notice board, a kitchen for Cooks and beds for anyone who needs to rest."
+village.guild_hall:
+  name: Guild Hall
+  desc: "A hall of banners and paperwork where Registrar Vey charters new guilds for a fee."
+village.plot_nw:
+  name: Northwest Plot
+  desc: "An empty lot with a hopeful stake in the ground. The village library is planned here."
+village.plot_ne:
+  name: Northeast Plot
+  desc: "A grassy lot with a fine view of nothing in particular. The watchtower is planned here."
+village.plot_far:
+  name: Far East Plot
+  desc: "An empty lot at the edge of the village, waiting for someone with gold and ambition."
+village.temple:
+  name: Mistvale Temple
+  desc: "A quiet temple tended by Sister Ilse. The fallen wake up here, a little lighter in the purse."
+village.west_gate:
+  name: West Gate
+  desc: "A timber gate facing the trees. Whisperwood Forest lies west and the alchemist is south."
+village.alchemist:
+  name: Alchemy Shop
+  desc: "Mirela's shop smells of herbs and mild danger. An alchemy bench bubbles in the corner for Alchemists."
+village.tailor:
+  name: Tailor Shop
+  desc: "Bolts of cloth, a creaking loom for Tailors, and Tomas, who is quietly judging your outfit."
+village.town_hall:
+  name: Town Hall
+  desc: "Clerk Aldo keeps the project ledger and the ballot box here. Come to contribute to village projects, vote or run for mayor."
+village.smithy:
+  name: Smithy
+  desc: "Gunnar's forge roars day and night. Blacksmiths craft here, and the shop sells metal goods."
+village.market:
+  name: Market
+  desc: "Rows of stalls where agents post sell orders, taxed by the mayor. Merchant Bram frets beside his cart."
+village.east_gate:
+  name: East Gate
+  desc: "A guarded gate on the old road. East lie the Ruins of Old Cael, where the law does not follow you."
+village.plot_se:
+  name: Southeast Plot
+  desc: "A quiet empty lot behind the smithy, warm from the forge and full of potential."
+village.plot_sw:
+  name: Southwest Plot
+  desc: "A wide, flat lot of trampled grass. The arena is planned here."
+village.training_yard:
+  name: Training Yard
+  desc: "Straw dummies and shouted advice. Sergeant Holt drills recruits here, and friendly duels are allowed."
+village.south_gate:
+  name: South Gate
+  desc: "A guarded gate above the marshes. Lawless Murkmire Swamp lies south. The village wall is planned here."
+village.plot_s:
+  name: South Plot
+  desc: "An empty lot between the smithy and the south gate. Good soil, no building yet."
+village.north_road:
+  name: North Road
+  desc: "A rutted road out of the village. The river bank is east and the trail into the Greyback Hills is west."
+village.river_bank:
+  name: River Bank
+  desc: "A fast river with driftwood to gather. The mines are just across to the north, once the village builds the bridge."
+
+# Whisperwood Forest
+forest.edge:
+  name: Forest Edge
+  desc: "Sunny trees where Ranger Fen keeps watch. Slimes wobble about, and wood and green herbs are easy to gather."
+forest.path:
+  name: Forest Path
+  desc: "A winding path under whispering leaves. Slimes and wolves roam it, and there is plenty of wood."
+forest.glade:
+  name: Moonlit Glade
+  desc: "A clearing rich in green herbs, with a little moon herb. Wolves hunt here, and a shadow wolf joins them at night."
+forest.thicket:
+  name: Spider Thicket
+  desc: "Dense brambles strung with webs. Giant spiders lurk among trees that are good for wood."
+forest.old_oak:
+  name: The Old Oak
+  desc: "A huge ancient oak where four trails meet. Boars root around its trunk, and fallen branches make good wood."
+forest.hollow:
+  name: Deep Hollow
+  desc: "A shadowed dead end where treant saplings creak and moon herb grows thick. Shadow wolves prowl at night."
+forest.creek:
+  name: Babbling Creek
+  desc: "A cold creek with green herbs on the banks and loose stone in the bed. Slimes and the odd boar come to drink."
+forest.mushroom_ring:
+  name: Mushroom Ring
+  desc: "A ring of pale mushrooms that hums faintly. Giant spiders and a treant sapling guard the moon herb."
+
+# Greyback Hills and the Mines
+hills.trail:
+  name: Hill Trail
+  desc: "A stony trail climbing out of the village. Boars graze between the boulders, and stone is easy to gather."
+hills.switchback:
+  name: Switchback
+  desc: "A zigzag path up the hills. Cave bats and a stray wolf bother climbers. Stone and a little copper ore show in the rock."
+hills.pass:
+  name: Greyback Pass
+  desc: "A windy pass held by kobolds. The mine entrance is east."
+mines.entrance:
+  name: Mine Entrance
+  desc: "The timbered mouth of the mines, where Foreman Brakka shouts over the cave bats. Copper ore and stone are close at hand."
+mines.tunnel:
+  name: Main Tunnel
+  desc: "A long tunnel of old rails and kobolds. Iron and copper ore line the walls. The lower gate is south."
+mines.lower_gate:
+  name: Lower Gate
+  desc: "The back door of the mines, held by kobolds, with a little iron ore. It opens south onto the river once the bridge is built."
+mines.deep_shaft:
+  name: Deep Shaft
+  desc: "A dizzying shaft where rock golems grind about. Rich in iron ore, with a few veins of silver."
+mines.flooded_gallery:
+  name: Flooded Gallery
+  desc: "Knee-deep black water and dripping echoes. Cave bats and a rock golem guard the iron ore."
+mines.crystal_cavern:
+  name: Crystal Cavern
+  desc: "A glittering cave of crystal and silver ore. The crystal beetles consider all of it theirs."
+mines.forge_ruin:
+  name: Ruined Forge
+  desc: "An ancient forge, long cold and useless for crafting. The kobold foreman and his crew run it now. Iron ore lies in the rubble."
+
+# Murkmire Swamp
+swamp.marsh_edge:
+  name: Marsh Edge
+  desc: "The road sinks into mud and the law stops here. Mire toads croak among the bog lilies."
+swamp.reeds:
+  name: Whispering Reeds
+  desc: "Tall reeds hide bog lurkers and a mire toad. Bog lilies and green herbs grow in the shallows."
+swamp.bog:
+  name: Black Bog
+  desc: "Sucking mud and bad smells. Bog lurkers wait below, will-o'-wisps drift in at night, and shadowcap grows among the lilies."
+swamp.witch_hut:
+  name: Hermit's Hut
+  desc: "A crooked hut with an alchemy bench, home of the herbalist Morwen. Her wicked sister, the swamp hag, squats outside among the shadowcaps."
+swamp.sunken_road:
+  name: Sunken Road
+  desc: "An old paved road half swallowed by the mire. Bog lurkers and a wandering skeleton haunt it. The ruins lie east."
+swamp.drowned_shrine:
+  name: Drowned Shrine
+  desc: "A sunken shrine lit by will-o'-wisps, with a wraith at night. Shadowcap and a little crystal can be found on the stones."
+
+# Ruins of Old Cael
+ruins.road:
+  name: Old Cael Road
+  desc: "A cracked road east of the village, patrolled by skeletons and lawless from here on. Scholar Ines camps among the loose stone."
+ruins.outskirts:
+  name: Ruined Outskirts
+  desc: "Tumbled houses picked over by skeletons and bandits. Ancient relics sometimes turn up in the rubble."
+ruins.collapsed_tower:
+  name: Collapsed Tower
+  desc: "A fallen tower haunted by wraiths. Mithril ore glints in the debris, along with ancient relics."
+ruins.plaza:
+  name: Broken Plaza
+  desc: "The old city square, now a bandit crossroads. Their hideout is east and the catacomb stairs are south."
+ruins.overgrown_street:
+  name: Overgrown Street
+  desc: "Vines and roots have taken the street back. Skeletons shuffle past seams of silver ore."
+ruins.drowned_gate:
+  name: Drowned Gate
+  desc: "The western gate of the old city, sunk to its hinges in swamp water. Skeletons and a bog lurker share it uneasily."
+ruins.bandit_hideout:
+  name: Bandit Hideout
+  desc: "The bandit captain's den, full of loot and bad manners. Star iron is stashed here. Do not come alone."
+ruins.catacomb_stairs:
+  name: Catacomb Stairs
+  desc: "Worn stairs guarded by skeletons, leading down into the catacombs. Only a party may descend."
+
+# Catacombs of the Hollow Regent
+dungeon.antechamber:
+  name: Antechamber
+  desc: "A cold hall with a sun lever and a moon lever. Two different agents must pull them within a minute to open the way south."
+dungeon.lever_hall:
+  name: Lever Hall
+  desc: "The hall behind the lever door, watched by crypt guards. An old locked chest waits for a Rogue."
+dungeon.trapped_corridor:
+  name: Trapped Corridor
+  desc: "Bone hounds pace a corridor of swinging blades. A Rogue must disarm the trap to open the way south."
+dungeon.rune_door:
+  name: Rune Door
+  desc: "A sealed door glowing with runes, with a crypt guard and a bone hound on duty. Only a Mage can read the seal and open the way west."
+dungeon.gate_hall:
+  name: Gate Hall
+  desc: "Crypt guards flank a massive portcullis. A Warrior must hold it open while the others pass west."
+dungeon.boss_lair:
+  name: Throne of the Hollow Regent
+  desc: "The Hollow Regent rules here from a throne of dust. A winch by the gate lets your Warrior in. The vault opens north once the Regent falls."
+dungeon.vault:
+  name: Regent's Vault
+  desc: "The private treasury of the Hollow Regent, quiet at last. The coffer has a lock only a Rogue can pick."

@@ -9,3 +9,4 @@ tools/bench/results/*.local.json
 tools/bots/reports/
 .DS_Store
 dev.log
+.vitest/

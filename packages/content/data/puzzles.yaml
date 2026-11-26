@@ -1,0 +1,14 @@
+# Cooperative dungeon puzzles. Each one needs specific classes and a minimum number of agents.
+# levers: every target pulled by a different agent within window_sec.   (pull_lever)
+# trap:   only a Rogue can disarm; failing hurts.                       (disarm)
+# seal:   only a Mage can read the runes.                               (read_runes)
+# gate:   a Warrior holds it open while the others pass; the winch on the far side lets the Warrior through. (hold_gate, pull_lever)
+# lock:   only a Rogue can pick it; gives loot.                         (pick_lock)
+- { id: dungeon_levers, room: dungeon.antechamber, type: levers, targets: [sun_lever, moon_lever], window_sec: 60, open_sec: 180, reset_sec: 600 }
+- { id: dungeon_chest, room: dungeon.lever_hall, type: lock, targets: [old_chest], reset_sec: 3600,
+    loot: [{ item: greater_potion, qty: 2 }, { item: ancient_relic, qty: 2 }, { item: silver_ore, qty: 3 }] }
+- { id: dungeon_trap, room: dungeon.trapped_corridor, type: trap, targets: [blade_trap], open_sec: 600, reset_sec: 900, damage: 90 }
+- { id: dungeon_seal, room: dungeon.rune_door, type: seal, targets: [rune_seal], open_sec: 600, reset_sec: 900 }
+- { id: dungeon_gate, room: dungeon.gate_hall, type: gate, targets: [portcullis], open_sec: 90, reset_sec: 1, winch_room: dungeon.boss_lair }
+- { id: vault_coffer, room: dungeon.vault, type: lock, targets: [regent_coffer], reset_sec: 7200,
+    loot: [{ item: mithril_ore, qty: 3 }, { item: star_iron, qty: 1 }, { item: greater_mana_potion, qty: 2 }, { item: gold_dye, qty: 1 }] }

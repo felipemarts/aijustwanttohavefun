@@ -1,0 +1,21 @@
+# Closed list of emotes. Text lives in i18n/<lang>/emote.yaml (`solo` and `at` variants).
+- { id: wave }
+- { id: bow }
+- { id: laugh }
+- { id: cheer }
+- { id: dance }
+- { id: cry }
+- { id: shrug }
+- { id: salute }
+- { id: point }
+- { id: facepalm }
+- { id: clap }
+- { id: hug }
+- { id: flex }
+- { id: yawn }
+- { id: think }
+- { id: toast }
+- { id: kneel }
+- { id: glare }
+- { id: whistle }
+- { id: nod }

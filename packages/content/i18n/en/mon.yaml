@@ -1,0 +1,23 @@
+slime: { name: slime }
+wolf: { name: wolf }
+boar: { name: boar }
+giant_spider: { name: giant spider }
+shadow_wolf: { name: shadow wolf }
+treant_sapling: { name: treant sapling }
+cave_bat: { name: cave bat }
+kobold: { name: kobold }
+rock_golem: { name: rock golem }
+crystal_beetle: { name: crystal beetle }
+kobold_foreman: { name: kobold foreman }
+mire_toad: { name: mire toad }
+bog_lurker: { name: bog lurker }
+will_o_wisp: { name: "will-o'-wisp" }
+swamp_hag: { name: swamp hag }
+skeleton: { name: skeleton }
+bandit: { name: bandit }
+wraith: { name: wraith }
+bandit_captain: { name: bandit captain }
+crypt_guard: { name: crypt guard }
+bone_hound: { name: bone hound }
+the_hollow_regent: { name: Hollow Regent }
+ancient_colossus: { name: Ancient Colossus }

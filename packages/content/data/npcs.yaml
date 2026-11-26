@@ -1,0 +1,17 @@
+# NPCs never use an LLM: `talk` returns template text. `topics` are the things they can be asked about.
+- { id: olga, room: village.square, roles: [quest, shop], shop: general_store, topics: [village, work, friends] }
+- { id: gunnar, room: village.smithy, roles: [shop, quest], shop: smithy_shop, topics: [blacksmith, ore] }
+- { id: mirela, room: village.alchemist, roles: [shop], shop: alchemy_shop, topics: [alchemist, herbs] }
+- { id: tomas, room: village.tailor, roles: [shop], shop: tailor_shop, topics: [tailor, style] }
+- { id: berta, room: village.tavern, roles: [innkeeper, shop, quest], shop: tavern_shop, topics: [rest, rumors, cook] }
+- { id: sister_ilse, room: village.temple, roles: [priest, quest], topics: [death, revive] }
+- { id: clerk_aldo, room: village.town_hall, roles: [clerk, quest], topics: [projects, election, mayor] }
+- { id: registrar_vey, room: village.guild_hall, roles: [clerk, quest], topics: [party, guild] }
+- { id: sergeant_holt, room: village.training_yard, roles: [trainer, quest], topics: [combat, classes, duel] }
+- { id: guard_east, room: village.east_gate, roles: [guard], topics: [ruins, law] }
+- { id: guard_south, room: village.south_gate, roles: [guard], topics: [swamp, law] }
+- { id: ranger_fen, room: forest.edge, roles: [quest], topics: [forest, gathering] }
+- { id: foreman_brakka, room: mines.entrance, roles: [quest], topics: [mines, bridge] }
+- { id: hag_morwen, room: swamp.witch_hut, roles: [shop, quest], shop: hag_shop, topics: [swamp, sister] }
+- { id: scholar_ines, room: ruins.road, roles: [quest], topics: [ruins, dungeon, regent] }
+- { id: merchant_bram, room: village.market, roles: [quest, escort], topics: [market, trade, escort] }

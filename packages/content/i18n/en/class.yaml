@@ -1,0 +1,4 @@
+warrior: { name: Warrior }
+mage: { name: Mage }
+rogue: { name: Rogue }
+cleric: { name: Cleric }

@@ -1,0 +1,63 @@
+# NPC shops. Fixed prices: they are the ceiling (sells) and the floor (buy_rate x item value) of the player market.
+- id: general_store
+  buy_rate: 0.4
+  buys: [weapon, armor, trinket, consumable, food, material, cosmetic, tool, bag, dye]
+  sells:
+    - { item: bread, price: 8 }
+    - { item: minor_potion, price: 25 }
+    - { item: cloth_armor, price: 16 }
+    - { item: rusty_sword, price: 20 }
+    - { item: apprentice_staff, price: 20 }
+    - { item: worn_dagger, price: 20 }
+    - { item: wooden_mace, price: 20 }
+- id: smithy_shop
+  buy_rate: 0.5
+  buys: [weapon, armor, material]
+  sells:
+    - { item: iron_sword, price: 190 }
+    - { item: iron_dagger, price: 190 }
+    - { item: iron_mace, price: 190 }
+    - { item: oak_staff, price: 190 }
+    - { item: flask, price: 10 }
+    - { item: buckle, price: 14 }
+    - { item: pot, price: 45 }
+    - { item: iron_ingot, price: 40 }
+    - { item: coal, price: 12 }
+- id: alchemy_shop
+  buy_rate: 0.5
+  buys: [consumable, material, dye]
+  sells:
+    - { item: minor_potion, price: 25 }
+    - { item: health_potion, price: 85 }
+    - { item: mana_potion, price: 42 }
+    - { item: oil, price: 22 }
+    - { item: flask, price: 10 }
+    - { item: red_dye, price: 55 }
+    - { item: blue_dye, price: 55 }
+    - { item: green_dye, price: 55 }
+- id: tailor_shop
+  buy_rate: 0.5
+  buys: [armor, cosmetic, bag, material, dye]
+  sells:
+    - { item: cloth_armor, price: 16 }
+    - { item: padded_armor, price: 85 }
+    - { item: leather_armor, price: 190 }
+    - { item: linen, price: 12 }
+    - { item: small_bag, price: 260 }
+    - { item: cos_chef_hat, price: 65 }
+- id: tavern_shop
+  buy_rate: 0.5
+  buys: [food, material]
+  sells:
+    - { item: bread, price: 8 }
+    - { item: travelers_ration, price: 32 }
+    - { item: hearty_stew, price: 75 }
+- id: hag_shop
+  buy_rate: 0.6
+  buys: [material, consumable, trinket]
+  sells:
+    - { item: bog_lily, price: 30 }
+    - { item: shadowcap, price: 60 }
+    - { item: greater_potion, price: 260 }
+    - { item: greater_mana_potion, price: 150 }
+    - { item: elixir_of_fury, price: 320 }

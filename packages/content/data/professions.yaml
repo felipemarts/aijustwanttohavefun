@@ -1,0 +1,5 @@
+# Professions (chosen at level 5, permanent). Each one works at a station found in specific rooms.
+- { id: blacksmith, station: forge }
+- { id: alchemist, station: alchemy }
+- { id: tailor, station: loom }
+- { id: cook, station: kitchen }

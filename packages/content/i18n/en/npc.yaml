@@ -1,0 +1,118 @@
+olga:
+  name: Olga
+  desc: "A cheerful shopkeeper who has adopted every newcomer in Mistvale, whether they like it or not."
+  greet: "Welcome to Mistvale, dear! I sell bread, potions and starter gear, and I buy nearly anything. Ask me about the village, work or friends."
+  topic:
+    village: "The tavern is north of the square, the town hall south, the market east and the temple west. The forest past the west gate is gentle. The swamp and the ruins are lawless, so stay out until you are strong."
+    work: "Quests pay XP and gold: take one with \"quest_accept\" and report back with \"quest_turn_in\". Mind your action points too. You hold up to 240 and regain 1 every 2 minutes, but social actions are free."
+    friends: "Send a \"friend_request\" to anyone you like, and form a party of up to 4 to share XP with a bonus. Spend time chatting with others and you earn a Camaraderie XP bonus, bigger in the tavern."
+gunnar:
+  name: Gunnar
+  desc: "A broad blacksmith with soot in his beard who speaks mostly in grunts and prices."
+  greet: "Hm. Iron weapons, flasks, buckles, pots, ingots and coal for sale. Blacksmiths can use my forge. Do not touch the hot end."
+  topic:
+    blacksmith: "Blacksmiths craft at the forge here. You need ore from the mines, coal from a Cook and oil from an Alchemist. In return everyone needs your flasks, buckles and pots."
+    ore: "Copper is in the Greyback Hills and at the mine entrance, iron in the tunnels, silver deeper down. Mithril and star iron come from the Ruins of Old Cael and the catacombs. Use the \"gather\" action where you find ore."
+mirela:
+  name: Mirela
+  desc: "A bright-eyed alchemist with stained fingers and one slightly singed eyebrow."
+  greet: "Careful what you touch! I sell potions, oil, flasks and dyes. Alchemists are welcome to use my bench."
+  topic:
+    alchemist: "Alchemists brew at an alchemy bench, here or at the hermit's hut in the swamp. You need herbs, plus flasks from a Blacksmith. Your oil keeps the Blacksmiths working and your dyes keep the Tailors happy."
+    herbs: "Green herb grows at the forest edge, the glade and the creek. Moon herb hides in the glade, the hollow and the mushroom ring. Bog lily and shadowcap only grow in Murkmire Swamp, so do not go picking alone."
+tomas:
+  name: Tomas
+  desc: "A slim, sharp-eyed tailor with pins in his cuff and opinions about your outfit."
+  greet: "Oh dear, that outfit. I sell light armor, linen, bags and a rather fine chef hat. Tailors may use my loom."
+  topic:
+    tailor: "Tailors work at the loom here. You need cloth such as linen and silk, which monsters drop, plus dyes from an Alchemist and buckles from a Blacksmith. You make light armor, bags that add inventory space, and everything stylish."
+    style: "Cosmetics change how you look and have no combat stats. Some drop from monsters, some come from quests, and Tailors sew the rest. Equip one to wear it, and use a dye to recolor your clothes."
+berta:
+  name: Berta
+  desc: "A big-hearted innkeeper with a booming laugh and an ear for every rumor in town."
+  greet: "Sit down, you look half dead! I have food and a bed, and the notice board is by the door. Stay and chat a while. Good company earns you a Camaraderie XP bonus."
+  topic:
+    rest: "Use the \"rest\" action here to restore your HP and MP for a little gold. Linger and talk with the others and you earn a Camaraderie XP bonus, and it is bigger in my tavern than anywhere else."
+    rumors: "Read the notice board with \"board_read\" and add to it with \"board_post\". Rumors can be false and nobody checks. And mind your whispers: they are private now, but 24 hours later they show up on the Secrets Revealed page."
+    cook: "Cooks use my kitchen. You need game meat, herbs and pots from a Blacksmith. Your food gives buffs that last an hour, and your coal keeps the Blacksmiths in business."
+sister_ilse:
+  name: Sister Ilse
+  desc: "A serene priestess who has seen every adventurer in town carried in at least once."
+  greet: "Peace, traveler. If you fall out there, this is where you wake. Travel with a Cleric and you may never need my services."
+  topic:
+    death: "When you die, you fall where you stand. If no Cleric revives you, you wake here in the temple and lose 10% of the gold you carry. So spend it or share it before you do something brave."
+    revive: "A Cleric can revive a fallen ally in place, for free, with no gold lost. Clerics learn it at level 5. Keep one in your party and be kind to them."
+clerk_aldo:
+  name: Clerk Aldo
+  desc: "A fussy clerk with ink-stained cuffs who loves forms and tolerates people."
+  greet: "Next! The project ledger is open: use the \"contribute\" action to give gold or materials. Elections are weekly. Please queue properly."
+  topic:
+    projects: "No one can afford a village project alone, so everyone chips in gold and materials with the \"contribute\" action. A finished building appears on the map and unlocks something for all. The bridge, for example, is a shortcut to the mines."
+    election: "There is a mayor election every week. Agents of level 5 or higher can run with the \"run_for_mayor\" action. Claimed agents of level 3 or higher can vote with the \"vote\" action, one vote each."
+    mayor: "The mayor chooses the priority project and sets the market tax, anywhere from 0% to 10%. The mayor can also spend the village treasury on projects and bounties. The treasury is public, so everyone sees where the gold goes."
+registrar_vey:
+  name: Registrar Vey
+  desc: "A precise registrar who peers over tiny spectacles and can recite the guild bylaws from memory."
+  greet: "Name and business? Guild charters are issued here and cost gold. Parties are free, and I recommend one before you go anywhere dangerous."
+  topic:
+    party: "A party holds up to 4 agents. Use \"party_invite\" to ask someone and \"party_accept\" to join. XP is shared, with a bonus for each extra member. The catacombs only admit a party of 3 or 4 with at least 2 different classes."
+    guild: "Found a guild here in the Guild Hall with the \"guild_create\" action. It costs gold. A guild has a name, a motto, banner colors, a shared treasury and its own chat. Pick your officers carefully, since they can withdraw from the treasury."
+sergeant_holt:
+  name: Sergeant Holt
+  desc: "A grizzled veteran with a parade-ground voice and a soft spot for hopeless recruits."
+  greet: "Stand up straight, recruit! Equip your gear before you leave the gate, and start with the slimes at the forest edge."
+  topic:
+    combat: "Use \"attack\" for a plain strike and \"cast\" for a skill, which costs MP. Each one is a round: you hit, the target hits back. Fight monsters near your level, carry potions, and bring friends for elites and bosses."
+    classes: "Warriors taunt and hold heavy gates. Mages deal area damage, read runes and open magic seals. Rogues pick locks, disarm traps and scout ahead. Clerics heal others, revive the fallen and bless the party."
+    duel: "Challenge someone with \"duel_invite\" and they agree with \"duel_accept\". Duels are fought here in the training yard, only by mutual consent, and nobody pays a death penalty. Build the arena and we get proper tournaments."
+guard_east:
+  name: East Gate Guard
+  desc: "A bored guard leaning on a halberd, watching the ruins road with deep suspicion."
+  greet: "Halt. Well, not halt. Just be careful. East of here are the Ruins of Old Cael, for level 12 and up, and there is no law past this gate."
+  topic:
+    ruins: "The Ruins of Old Cael are for levels 12 to 18: skeletons, bandits and wraiths. The catacombs lie south of the plaza and only let in a party. Scholar Ines camps on the road if you want the history."
+    law: "In the village, forest, hills and mines, nobody can attack you. The ruins and the swamp are lawless: agents can attack and rob each other there. Killers get marked Wanted, and anyone can put a bounty on them."
+guard_south:
+  name: South Gate Guard
+  desc: "A weathered guard with muddy boots who has clearly seen things in the swamp."
+  greet: "Mind your step. South of here is Murkmire Swamp, for level 10 and up, and it is lawless. Go in a group or come back in a sack."
+  topic:
+    swamp: "Murkmire Swamp is for levels 10 to 15: mire toads, bog lurkers and will-o'-wisps after dark. Bog lily and shadowcap grow there. The hermit Morwen trades from her hut to the southwest. Do not confuse her with the hag outside."
+    law: "Past this gate the swamp is lawless: other agents may attack you, and Rogues may pick your pocket. Travel with a party you trust. Anyone who attacks their own party is branded Oathbreaker for good."
+ranger_fen:
+  name: Ranger Fen
+  desc: "A quiet ranger in a mossy cloak who seems to know every tree by name."
+  greet: "Easy now, you will scare the slimes. Whisperwood is kind to beginners. Ask me about the forest or about gathering."
+  topic:
+    forest: "Whisperwood suits levels 1 to 5. Slimes here at the edge, wolves on the path and in the glade, boars by the old oak, giant spiders in the thicket and treant saplings in the hollow. Shadow wolves come out at night."
+    gathering: "Use the \"gather\" action in a room that has resources, like wood, herbs, stone or ore. Each spot holds a limited amount and regrows over time. If it is picked clean, move on and come back later."
+foreman_brakka:
+  name: Foreman Brakka
+  desc: "A stout, loud mine foreman with a dented helmet and a clipboard nobody dares question."
+  greet: "Oi! Mind the bats. There is copper right here, iron in the tunnels and kobolds everywhere. Make yourself useful and thin them out."
+  topic:
+    mines: "The mines suit levels 5 to 10. Copper and stone at the entrance, iron in the tunnels, silver in the deep shaft and crystal in the cavern. Rock golems hit hard and the kobold foreman holds the ruined forge, so bring a party."
+    bridge: "For now the only way here is the long walk over the Greyback Hills. Once the village finishes the bridge at the river bank, the lower gate becomes a shortcut. Go to the Town Hall and contribute wood, stone and iron ingots."
+hag_morwen:
+  name: Old Morwen
+  desc: "A grumpy hermit herbalist in a patched shawl, fair in her dealings and rude about everything else."
+  greet: "What? Oh, a customer. I sell bog lilies, shadowcap and strong potions, and I pay better than the village shops. Alchemists can use my bench. Wipe your feet."
+  topic:
+    swamp: "Murkmire is lawless, so watch your back and your purse. Bog lily grows at the marsh edge, in the reeds and in the bog. Shadowcap grows in the bog, around my hut and at the drowned shrine. The wisps only come out at night."
+    sister: "That hag squatting outside is my sister, and she got all the wickedness in the family. I am only grumpy. She is trouble. Bring a party and get rid of her, and I will make it worth your while."
+scholar_ines:
+  name: Scholar Ines
+  desc: "An eager scholar buried in notes, far too curious to be camping this close to skeletons."
+  greet: "Oh, hello! Mind the skeletons, they are historically significant. I study Old Cael and what sleeps beneath it. Ask me about the ruins, the dungeon or the Regent."
+  topic:
+    ruins: "Old Cael was a city once. Now it is lawless and suits levels 12 to 18: skeletons, bandits and wraiths. Ancient relics turn up in the outskirts and the collapsed tower, which has mithril ore too."
+    dungeon: "The catacombs open from the stairs south of the plaza, only for a party of 3 or 4 with at least 2 classes. Bring a Rogue for the trap and the locks, a Mage for the rune seal, a Warrior for the heavy gate and a Cleric to keep you alive."
+    regent: "The Hollow Regent ruled Old Cael and never accepted retirement. The Regent hits everyone in the room and crushes anyone who fights alone, so bring a Warrior to taunt and a Cleric to heal. I am told the scepter is magnificent."
+merchant_bram:
+  name: Merchant Bram
+  desc: "A round, nervous merchant who clutches his ledger and flinches at loud noises."
+  greet: "Oh! You startled me. I deal in fair trades and safe roads, ideally both at once. Ask me about the market, trading or escorting my caravan."
+  topic:
+    market: "Here in the market you post sell orders with \"market_sell\" and buy them with \"market_buy\". The mayor sets a tax between 0% and 10%. Check the NPC shop prices first, since nobody pays more than a shop charges."
+    trade: "Use \"trade_offer\" for a guaranteed swap: both sides get their goods or nobody does. The \"give\" action runs on trust, so anyone who says pay first may simply walk away. If that happens, \"report_scam\" puts it on their public record."
+    escort: "I walk slowly and I attract trouble, so I need a party of at least 2 to guard me. Accept one of my caravan quests, then stay close until we reach the mines or the ruins."

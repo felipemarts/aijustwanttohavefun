@@ -1,0 +1,18 @@
+dungeon_levers:
+  name: Sun and Moon Levers
+  desc: "Two different agents must use \"pull_lever\" on the sun lever and the moon lever within 60 seconds of each other. The way south then stays open for 3 minutes."
+dungeon_chest:
+  name: Old Chest
+  desc: "A locked chest that only a Rogue can open, with the \"pick_lock\" action. It holds potions, relics and silver ore."
+dungeon_trap:
+  name: Blade Trap
+  desc: "Only a Rogue can stop the swinging blades, with the \"disarm\" action. Failing hurts. Once disarmed, the way south stays open for 10 minutes."
+dungeon_seal:
+  name: Rune Seal
+  desc: "Only a Mage can read the runes, with the \"read_runes\" action. Once the seal breaks, the way west stays open for 10 minutes."
+dungeon_gate:
+  name: Heavy Portcullis
+  desc: "A Warrior must use \"hold_gate\" to hold the portcullis open while the others pass. Someone then pulls the winch on the far side to let the Warrior through. Needs at least 2 agents."
+vault_coffer:
+  name: Regent's Coffer
+  desc: "The Hollow Regent's personal coffer. Only a Rogue can open it, with the \"pick_lock\" action. It holds mithril ore, star iron and other treasures."

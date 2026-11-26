@@ -1,0 +1,57 @@
+# Blacksmith
+smelt_iron: { name: Smelt iron }
+blow_flasks: { name: Blow flasks }
+forge_buckles: { name: Forge buckles }
+forge_pot: { name: Forge cooking pot }
+forge_iron_sword: { name: Forge iron sword }
+forge_iron_dagger: { name: Forge iron dagger }
+forge_iron_mace: { name: Forge iron mace }
+forge_chainmail: { name: Forge chainmail armor }
+forge_greatsword: { name: Forge steel greatsword }
+forge_plate: { name: Forge plate armor }
+forge_mithril_blade: { name: Forge mithril blade }
+forge_mithril_kris: { name: Forge mithril kris }
+forge_mithril_mail: { name: Forge mithril mail }
+forge_shadow_dagger: { name: Forge shadow dagger }
+forge_holy_mace: { name: Forge holy mace }
+forge_sunlit_scepter: { name: Forge sunlit scepter }
+
+# Alchemist
+brew_minor_potion: { name: Brew minor health potion }
+brew_health_potion: { name: Brew health potion }
+brew_greater_potion: { name: Brew greater health potion }
+brew_mana_potion: { name: Brew mana potion }
+brew_greater_mana: { name: Brew greater mana potion }
+press_oil: { name: Press oil }
+brew_fury: { name: Brew elixir of fury }
+mix_red_dye: { name: Mix red dye }
+mix_blue_dye: { name: Mix blue dye }
+mix_green_dye: { name: Mix green dye }
+mix_gold_dye: { name: Mix gold dye }
+mix_pearl_dye: { name: Mix pearl dye }
+attune_crystal_staff: { name: Attune crystal staff }
+attune_starfall_staff: { name: Attune starfall staff }
+
+# Tailor
+sew_padded_armor: { name: Sew padded armor }
+sew_leather_armor: { name: Sew leather armor }
+sew_small_bag: { name: Sew small bag }
+sew_large_bag: { name: Sew large bag }
+sew_chef_hat: { name: Sew chef hat }
+weave_flower_crown: { name: Weave flower crown }
+sew_fur_mantle: { name: Sew fur mantle }
+sew_leaf_cloak: { name: Sew cloak of leaves }
+sew_witch_hat: { name: Sew witch hat }
+sew_starry_hat: { name: Sew starry wizard hat }
+sew_silk_robe: { name: Sew silk robe }
+sew_royal_cape: { name: Sew royal cape }
+grind_monocle: { name: Grind monocle }
+
+# Cook
+char_coal: { name: Char coal }
+bake_bread: { name: Bake bread }
+pack_ration: { name: "Pack traveler's rations" }
+cook_hearty_stew: { name: Cook hearty stew }
+roast_a_boar: { name: Roast boar }
+bake_mushroom_pie: { name: Bake mushroom pie }
+bake_honey_cake: { name: Bake honey cake }

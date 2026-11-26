@@ -1,0 +1,24 @@
+bridge:
+  name: River Bridge
+  desc: "A sturdy bridge at the river bank. Opens a shortcut for everyone from the village straight to the lower gate of the mines."
+watchtower:
+  name: Watchtower
+  desc: "A tall tower on the northeast plot. Gives everyone early warning before a world boss appears."
+inn_expansion:
+  name: Inn Expansion
+  desc: "More rooms and a bigger hearth for the tavern. Strengthens the Camaraderie XP bonus everyone earns there."
+library:
+  name: Library
+  desc: "A proper library on the northwest plot. Unlocks an extra Mage skill and research quests. Needs the watchtower first."
+covered_market:
+  name: Covered Market
+  desc: "A roof over the market stalls. Gives everyone more sell-order slots. Needs the inn expansion first."
+arena:
+  name: Arena
+  desc: "A fighting ring on the southwest plot. Unlocks duel tournaments. Needs the bridge first."
+wall:
+  name: Village Wall
+  desc: "A stone wall around Mistvale, raised at the south gate. Defends the village when sieges come. Needs the arena and the watchtower first."
+statue:
+  name: Statue of the Benefactor
+  desc: "A statue in the square honoring the top contributor to the village. Needs the bridge, the watchtower and the inn expansion first."

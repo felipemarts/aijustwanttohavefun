@@ -149,13 +149,14 @@ export function buildContent(raw: Partial<ContentFiles>): Content {
     need(c.npcs, q.giver, `quest ${q.id}`, 'npc');
     need(c.quests, q.requires, `quest ${q.id} requires`, 'quest');
     for (const s of q.consume) need(c.items, s.item, `quest ${q.id} consume`, 'item');
+    for (const s of q.grants) need(c.items, s.item, `quest ${q.id} grants`, 'item');
     for (const s of q.rewards.items) need(c.items, s.item, `quest ${q.id} reward`, 'item');
     for (const st of q.steps) {
       const where = `quest ${q.id} step ${st.type}`;
       if (st.type === 'kill' || st.type === 'boss') need(c.monsters, st.target, where, 'monster');
       if (st.type === 'collect' || st.type === 'deliver' || st.type === 'gather' || st.type === 'equip' || st.type === 'shop_buy')
         need(c.items, st.target, where, 'item');
-      if (st.type === 'visit') need(c.rooms, st.target, where, 'room');
+      if (st.type === 'visit' || st.type === 'escort') need(c.rooms, st.target, where, 'room');
       if (st.type === 'talk') need(c.npcs, st.target, where, 'npc');
       if (st.type === 'craft') need(c.recipes, st.target, where, 'recipe');
       if (st.type === 'contribute') need(c.projects, st.target, where, 'project');
@@ -230,12 +231,17 @@ export function requiredContentKeys(c: Content): string[] {
   named('recipe', c.recipes.keys());
   named('prof', c.professions.keys());
   named('npc', c.npcs.keys(), true);
+  for (const n of c.npcs.values()) {
+    keys.push(`content.npc.${n.id}.greet`);
+    for (const t of n.topics) keys.push(`content.npc.${n.id}.topic.${t}`);
+  }
   named('quest', c.quests.keys(), true);
   named('ach', c.achievements.keys(), true);
   named('title', c.titles.keys());
   named('class', c.classes.keys());
   named('skill', c.skills.keys(), true);
   named('emote', c.emotes.keys());
+  for (const e of c.emotes.keys()) keys.push(`content.emote.${e}.solo`, `content.emote.${e}.at`);
   named('proj', c.projects.keys(), true);
   named('puzzle', c.puzzles.keys(), true);
   return keys;

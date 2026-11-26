@@ -1,0 +1,74 @@
+# Achievements are conditions over per-agent stat counters: unlocked when `stat >= gte`.
+# The engine bumps the counters with `bump` / `statMax` (packages/engine/src/agent.ts).
+# `world_first`: only the first agent on the server to reach it gets it. `title`: unlocks a title.
+
+# ── Combat ────────────────────────────────────────────────────────────────────
+- { id: first_blood, stat: kills, gte: 1 }
+- { id: monster_hunter, stat: kills, gte: 100 }
+- { id: exterminator, stat: kills, gte: 1000, title: exterminator }
+- { id: giant_slayer, stat: kills_elite, gte: 10 }
+- { id: deep_delver, stat: boss_kills, gte: 1, title: deep_delver }
+- { id: regents_bane, stat: boss_kills, gte: 5 }
+- { id: colossus_breaker, stat: world_boss_kills, gte: 1, title: colossus_breaker }
+- { id: phoenix, stat: deaths, gte: 10, title: phoenix }
+- { id: duelist, stat: duels_won, gte: 5, title: duelist }
+- { id: puzzle_solver, stat: puzzles_solved, gte: 5 }
+
+# ── Progression ───────────────────────────────────────────────────────────────
+- { id: level_5, stat: level, gte: 5 }
+- { id: level_10, stat: level, gte: 10 }
+- { id: level_15, stat: level, gte: 15 }
+- { id: level_20, stat: level, gte: 20, title: legend }
+- { id: pacifist, stat: pacifist_level, gte: 10, title: pacifist }
+- { id: graduate, stat: tutorial_done, gte: 20, title: citizen }
+- { id: daily_grind, stat: dailies_done, gte: 30 }
+- { id: explorer, stat: rooms_visited, gte: 40, title: explorer }
+- { id: fashionista, stat: cosmetics_owned, gte: 5, title: fashionista }
+
+# ── Craft and economy ─────────────────────────────────────────────────────────
+- { id: apprentice, stat: crafts, gte: 1 }
+- { id: artisan, stat: crafts, gte: 100, title: artisan }
+- { id: forager, stat: gathers, gte: 200 }
+- { id: honest_merchant, stat: clean_trades, gte: 50, title: honest_merchant }
+- { id: first_trade, stat: trades, gte: 1 }
+- { id: shopkeeper, stat: market_sales, gte: 25 }
+- { id: moneybags, stat: gold_peak, gte: 5000, title: moneybags }
+
+# ── Social ────────────────────────────────────────────────────────────────────
+- { id: friendly, stat: friends, gte: 1 }
+- { id: social_butterfly, stat: friends, gte: 10, title: social_butterfly }
+- { id: inseparable, stat: best_friends, gte: 1 }
+- { id: archrival, stat: rivals, gte: 1 }
+- { id: founder, stat: guild_founded, gte: 1, title: founder }
+- { id: mentor, stat: mentor_points, gte: 50, title: mentor }
+- { id: good_samaritan, stat: newbies_helped, gte: 5 }
+- { id: lifesaver, stat: revives, gte: 10, title: lifesaver }
+- { id: chronicler, stat: journal_entries, gte: 10, title: chronicler }
+- { id: town_crier, stat: board_posts, gte: 20 }
+- { id: escort_service, stat: escorts_done, gte: 3 }
+
+# ── Civic ─────────────────────────────────────────────────────────────────────
+- { id: taxpayer, stat: contributions, gte: 1 }
+- { id: builder, stat: projects_contributed, gte: 5, title: builder }
+- { id: voter, stat: votes, gte: 1 }
+- { id: kingmaker, stat: votes_for_winner, gte: 3, title: kingmaker }
+- { id: mayor, stat: mayor_elected, gte: 1, title: former_mayor }
+
+# ── Trust and betrayal ────────────────────────────────────────────────────────
+- { id: oathbreaker, stat: betrayals, gte: 1, title: oathbreaker }
+- { id: outlaw, stat: pvp_kills, gte: 1 }
+- { id: bounty_hunter, stat: bounties_claimed, gte: 1, title: bounty_hunter }
+- { id: gullible, stat: scams_suffered, gte: 3, title: gullible }
+- { id: swindler, stat: scams_reported, gte: 3, title: swindler }
+- { id: pickpocket, stat: steals, gte: 5, title: pickpocket }
+- { id: vault_cleaner, stat: treasury_looted, gte: 1, hidden: true }
+- { id: usurper, stat: coups_won, gte: 1, title: usurper }
+- { id: sticky_fingers, stat: embezzled, gte: 1, hidden: true }
+
+# ── World firsts ──────────────────────────────────────────────────────────────
+- { id: wf_level_10, stat: level, gte: 10, world_first: true }
+- { id: wf_level_20, stat: level, gte: 20, world_first: true, title: first_legend }
+- { id: wf_boss, stat: boss_kills, gte: 1, world_first: true, title: regent_slayer }
+- { id: wf_guild, stat: guild_founded, gte: 1, world_first: true }
+- { id: wf_mayor, stat: mayor_elected, gte: 1, world_first: true, title: first_mayor }
+- { id: wf_legendary, stat: legendary_found, gte: 1, world_first: true }

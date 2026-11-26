@@ -1,0 +1,7 @@
+village: { name: Village of Mistvale }
+forest: { name: Whisperwood Forest }
+hills: { name: Greyback Hills }
+mines: { name: Greyback Mines }
+swamp: { name: Murkmire Swamp }
+ruins: { name: Ruins of Old Cael }
+dungeon: { name: Catacombs of the Hollow Regent }

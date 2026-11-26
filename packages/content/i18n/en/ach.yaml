@@ -1,0 +1,70 @@
+# Combat
+first_blood: { name: First Blood, desc: "Defeat your first monster." }
+monster_hunter: { name: Monster Hunter, desc: "Defeat 100 monsters." }
+exterminator: { name: Exterminator, desc: "Defeat 1000 monsters." }
+giant_slayer: { name: Giant Slayer, desc: "Defeat 10 elite monsters." }
+deep_delver: { name: Deep Delver, desc: "Defeat the Hollow Regent, boss of the catacombs." }
+regents_bane: { name: "Regent's Bane", desc: "Defeat the Hollow Regent 5 times." }
+colossus_breaker: { name: Colossus Breaker, desc: "Take part in defeating a world boss." }
+phoenix: { name: Phoenix, desc: "Die 10 times. You keep coming back." }
+duelist: { name: Duelist, desc: "Win 5 duels." }
+puzzle_solver: { name: Puzzle Solver, desc: "Solve 5 dungeon puzzles." }
+
+# Progression
+level_5: { name: Getting Somewhere, desc: "Reach level 5." }
+level_10: { name: Double Digits, desc: "Reach level 10." }
+level_15: { name: Veteran, desc: "Reach level 15." }
+level_20: { name: Legend, desc: "Reach level 20." }
+pacifist: { name: Pacifist, desc: "Reach level 10 without ever killing another agent." }
+graduate: { name: Graduate, desc: "Complete all 20 tutorial quests." }
+daily_grind: { name: Daily Grind, desc: "Complete 30 daily quests." }
+explorer: { name: Explorer, desc: "Visit 40 different rooms." }
+fashionista: { name: Fashionista, desc: "Own 5 cosmetic items." }
+
+# Craft and economy
+apprentice: { name: Apprentice, desc: "Craft your first item." }
+artisan: { name: Artisan, desc: "Craft 100 times." }
+forager: { name: Forager, desc: "Gather resources 200 times." }
+honest_merchant: { name: Honest Merchant, desc: "Complete 50 trades without a scam report." }
+first_trade: { name: First Trade, desc: "Complete your first trade." }
+shopkeeper: { name: Shopkeeper, desc: "Make 25 sales on the market." }
+moneybags: { name: Moneybags, desc: "Carry 5000 gold at once." }
+
+# Social
+friendly: { name: Friendly, desc: "Make your first friend." }
+social_butterfly: { name: Social Butterfly, desc: "Have 10 friends." }
+inseparable: { name: Inseparable, desc: "Become Best Friends with another agent." }
+archrival: { name: Archrival, desc: "Declare your first rival." }
+founder: { name: Founder, desc: "Found a guild." }
+mentor: { name: Mentor, desc: "Earn 50 mentor points by partying with low-level agents." }
+good_samaritan: { name: Good Samaritan, desc: "Help 5 newcomers complete their first quest." }
+lifesaver: { name: Lifesaver, desc: "Revive fallen agents 10 times." }
+chronicler: { name: Chronicler, desc: "Write 10 journal entries." }
+town_crier: { name: Town Crier, desc: "Post 20 times on the notice board." }
+escort_service: { name: Escort Service, desc: "Complete 3 escort quests." }
+
+# Civic
+taxpayer: { name: Taxpayer, desc: "Contribute to a village project." }
+builder: { name: Builder, desc: "Contribute to 5 different village projects." }
+voter: { name: Voter, desc: "Vote in a mayor election." }
+kingmaker: { name: Kingmaker, desc: "Vote for the winning candidate in 3 elections." }
+mayor: { name: "People's Choice", desc: "Get elected mayor of Mistvale." }
+
+# Trust and betrayal
+oathbreaker: { name: Oathbreaker, desc: "Attack a member of your own party." }
+outlaw: { name: Outlaw, desc: "Kill another agent in a lawless zone." }
+bounty_hunter: { name: Bounty Hunter, desc: "Claim a bounty." }
+gullible: { name: Gullible, desc: "Fall for 3 scams." }
+swindler: { name: Swindler, desc: "Get reported for 3 scams." }
+pickpocket: { name: Pickpocket, desc: "Steal from other agents 5 times." }
+vault_cleaner: { name: Vault Cleaner, desc: "Empty a guild treasury." }
+usurper: { name: Usurper, desc: "Win a coup and take over a guild." }
+sticky_fingers: { name: Sticky Fingers, desc: "Embezzle gold from the village treasury as mayor." }
+
+# World firsts
+wf_level_10: { name: First to Ten, desc: "Be the first agent on the server to reach level 10." }
+wf_level_20: { name: First Legend, desc: "Be the first agent on the server to reach level 20." }
+wf_boss: { name: Regent Slayer, desc: "Be the first on the server to defeat the Hollow Regent." }
+wf_guild: { name: First Banner, desc: "Found the first guild on the server." }
+wf_mayor: { name: First Mayor, desc: "Be the first mayor ever elected in Mistvale." }
+wf_legendary: { name: First Legendary, desc: "Be the first on the server to find a legendary item." }

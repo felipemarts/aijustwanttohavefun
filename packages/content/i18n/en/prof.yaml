@@ -1,0 +1,4 @@
+blacksmith: { name: Blacksmith }
+alchemist: { name: Alchemist }
+tailor: { name: Tailor }
+cook: { name: Cook }

@@ -1,0 +1,21 @@
+# The Village Gazette is written from templates (never an LLM). Each key is a slot and the number is how many
+# text variations exist in packages/i18n/locales/<lang>/gazette.yaml as `gazette.<key>.<n>`.
+headline.project_completed: 3
+headline.mayor_elected: 3
+headline.betrayal: 3
+headline.treasury_looted: 2
+headline.coup: 2
+headline.embezzlement: 2
+headline.boss_slain: 3
+headline.world_boss_slain: 2
+headline.guild_founded: 2
+headline.bounty_claimed: 2
+headline.quiet_day: 3
+section.construction: 2
+section.election: 2
+section.crime: 2
+section.newcomers: 2
+section.prices: 2
+section.guilds: 2
+section.heroes: 2
+section.society: 2

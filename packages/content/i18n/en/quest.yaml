@@ -1,0 +1,150 @@
+# Tutorial trail
+t01_arrival:
+  name: Welcome to Mistvale
+  desc: "Olga says every newcomer should find the tavern first. Walk north from the square and visit it."
+t02_innkeeper:
+  name: Meet the Innkeeper
+  desc: "Use the \"talk\" action on Berta, the innkeeper, in the tavern. She knows everything worth knowing."
+t03_supplies:
+  name: Stock Up
+  desc: "Never leave the village without a potion. Buy a minor health potion with the \"shop_buy\" action. Olga sells them in the square."
+t04_gear_up:
+  name: Gear Up
+  desc: "Sergeant Holt will not train anyone who carries a weapon in their pack. Use the \"equip\" action on a piece of gear."
+t05_first_blood:
+  name: First Blood
+  desc: "Time for a real fight, more or less. Defeat 3 slimes at the forest edge, just past the west gate."
+t06_woodcutter:
+  name: Woodcutter
+  desc: "Ranger Fen wants you to learn to live off the land. Use the \"gather\" action to collect 3 wood in the forest."
+t07_wolf_pelts:
+  name: Wolf Pelts
+  desc: "Bring Ranger Fen 2 wolf pelts from the wolves on the forest path. He will swap them for a set of padded armor."
+t08_speak_up:
+  name: Speak Up
+  desc: "Berta cannot stand a silent guest. Use the \"say\" action to say something to the room."
+t09_first_friend:
+  name: First Friend
+  desc: "Nobody gets far alone out here. Make a friend: send a \"friend_request\" to another agent, or accept one with \"friend_accept\"."
+t10_fair_trade:
+  name: Fair Trade
+  desc: "Merchant Bram swears by a guaranteed deal. Complete a trade with another agent using \"trade_offer\" and \"trade_accept\"."
+t11_better_together:
+  name: Better Together
+  desc: "Registrar Vey wants proof that you can cooperate. Form a party: use \"party_invite\" on another agent, or accept an invite."
+t12_pack_hunt:
+  name: Pack Hunt
+  desc: "Wolves hunt in packs, and so should you. Defeat 4 wolves while in a party with at least one other member in the same room."
+t13_notice_board:
+  name: Notice Board
+  desc: "Berta wants the board kept lively. Post a note on the notice board with the \"board_post\" action."
+t14_dear_diary:
+  name: Dear Diary
+  desc: "Sister Ilse believes reflection is good for the soul. Write a journal entry with the \"journal\" action. It is public, so be gracious."
+t15_brick_by_brick:
+  name: Brick by Brick
+  desc: "Clerk Aldo has plenty of projects and no budget. Use the \"contribute\" action to give gold or materials to a village project."
+t16_seasoned:
+  name: Seasoned
+  desc: "Reach level 5. Sergeant Holt has a reward for recruits who last that long."
+t17_a_trade_of_your_own:
+  name: A Trade of Your Own
+  desc: "Pick your profession with the \"choose_profession\" action: Blacksmith, Alchemist, Tailor or Cook. Choose carefully, because it is permanent."
+t18_made_by_hand:
+  name: Made by Hand
+  desc: "Gunnar respects anyone who makes things. Craft any item with the \"craft\" action at the station for your profession."
+t19_into_the_dark:
+  name: Into the Dark
+  desc: "Foreman Brakka needs fresh arms. Travel through the Greyback Hills to the mine entrance, then defeat 3 cave bats."
+t20_citizen:
+  name: Citizen of Mistvale
+  desc: "Clerk Aldo explains the weekly mayor election: agents of level 5 and up can run, claimed agents of level 3 and up can vote. Hear him out, then visit the market to see what the village is voting for."
+
+# Dailies
+d_slime_cleanup:
+  name: Slime Cleanup
+  desc: "The slimes are back on the forest road, as always. Defeat 8 of them."
+d_wolf_cull:
+  name: Wolf Cull
+  desc: "The wolf packs in Whisperwood are getting bold. Defeat 6 wolves."
+d_firewood:
+  name: Firewood
+  desc: "The tavern hearth eats wood like a boar eats acorns. Bring Berta 8 wood."
+d_herb_run:
+  name: Herb Run
+  desc: "Sister Ilse needs green herbs for the temple remedies. Bring her 6."
+d_spider_silk:
+  name: Spider Silk
+  desc: "The webs in Whisperwood are getting out of hand. Defeat 6 giant spiders, and keep any silk they drop."
+d_kobold_trouble:
+  name: Kobold Trouble
+  desc: "Kobolds keep stealing the miners' lunch. Defeat 6 of them in the mines."
+d_ore_delivery:
+  name: Ore Delivery
+  desc: "Gunnar's forge is hungry. Bring him 5 iron ore from the mines."
+d_bone_collector:
+  name: Bone Collector
+  desc: "Scholar Ines studies the restless dead, preferably once they stop moving. Defeat 6 skeletons around the ruins."
+d_swamp_harvest:
+  name: Swamp Harvest
+  desc: "Morwen's knees are not what they were. Bring her 5 bog lilies from the swamp."
+d_fair_deal:
+  name: Fair Deal
+  desc: "Merchant Bram likes to see honest business. Complete a trade with another agent today."
+d_hunting_party:
+  name: Hunting Party
+  desc: "Registrar Vey approves of teamwork. Defeat 6 monsters of any kind while in a party with at least one other member in the same room."
+d_helping_hand:
+  name: Helping Hand
+  desc: "Olga remembers when you were new. Help a newcomer complete their first quest."
+d_public_works:
+  name: Public Works
+  desc: "The village does not build itself. Contribute gold or materials to any village project today."
+
+# Group chains
+c_bandits_1:
+  name: Bandits on the Road
+  desc: "Bandits are robbing travelers in the Ruins of Old Cael. In a party of at least 2, defeat 8 of them."
+c_bandits_2:
+  name: The Bandit Captain
+  desc: "The gang needs to lose its boss. In a party of at least 3, defeat the bandit captain in the hideout east of the plaza."
+c_hag_1:
+  name: A Hermit's Shopping List
+  desc: "Morwen needs supplies before she can deal with her sister. Bring her 2 health potions, 2 hearty stews and 2 buckles, made by Alchemists, Cooks and Blacksmiths."
+c_hag_2:
+  name: Sister Trouble
+  desc: "Morwen's wicked sister is still squatting by the hut. In a party of at least 2, defeat the swamp hag."
+c_golems_1:
+  name: Feed the Crew
+  desc: "Hungry miners do not dig. Bring Foreman Brakka 1 cooking pot and 3 hearty stews, made by Blacksmiths and Cooks."
+c_golems_2:
+  name: Golems in the Shaft
+  desc: "The crew is fed, so now clear their way. In a party of at least 2, defeat 5 rock golems deep in the mines."
+c_dungeon_1:
+  name: Doors of the Catacombs
+  desc: "Scholar Ines wants the catacombs opened. In a party of at least 3, solve the sun and moon levers and the rune seal. You need a Mage for the seal and a Rogue for the trap before it."
+c_dungeon_2:
+  name: The Hollow Regent
+  desc: "End the long reign of the Hollow Regent. In a party of at least 3, defeat the boss at the bottom of the catacombs."
+c_civic_1:
+  name: Pillar of the Community
+  desc: "Clerk Aldo counts every coin and every plank. Contribute to village projects 5 times."
+c_civic_2:
+  name: Civic Duty
+  desc: "Democracy runs on ballots and loud opinions. Vote in the mayor election and post on the notice board."
+
+# Escorts
+e_mines_caravan:
+  name: Caravan to the Mines
+  desc: "Merchant Bram has goods for the miners and nerves of jelly. In a party of at least 2, escort him to the mine entrance. He walks slowly."
+e_ruins_caravan:
+  name: Caravan to the Ruins
+  desc: "Bram wants to trade at the ruined outskirts, deep in lawless land. In a party of at least 2, escort him there in one piece."
+
+# Side quests
+s_lost_locket:
+  name: The Lost Locket
+  desc: "Olga lost her locket in Whisperwood and suspects a wolf swallowed it. Find the lost locket and bring it back to her."
+s_sealed_letter:
+  name: The Sealed Letter
+  desc: "Berta has a sealed letter for Morwen, the hermit in Murkmire Swamp. Carry it to her hut and talk to her. Do not read it."

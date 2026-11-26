@@ -1,0 +1,25 @@
+# Skills unlock at levels 1, 5, 10 and 15. `power` multiplies attack (damage/aoe) or INT (heals).
+# Class roles nobody else covers: Warrior taunt, Mage area damage, Rogue escape, Cleric heal/revive/bless.
+- { id: power_strike, class: warrior, level: 1, mp: 5, kind: damage, power: 1.6, target: enemy }
+- { id: taunt, class: warrior, level: 5, mp: 5, kind: taunt, power: 0, target: enemy }
+- { id: shield_wall, class: warrior, level: 10, mp: 10, kind: shield, power: 0, target: self, cooldown_sec: 60,
+    buff: { stat: def, value: 10, minutes: 5 } }
+- { id: crushing_blow, class: warrior, level: 15, mp: 15, kind: damage, power: 2.5, target: enemy, cooldown_sec: 30 }
+
+- { id: firebolt, class: mage, level: 1, mp: 6, kind: damage, power: 1.8, target: enemy }
+- { id: frost_nova, class: mage, level: 5, mp: 14, kind: aoe, power: 1.2, target: room }
+- { id: arcane_shield, class: mage, level: 10, mp: 12, kind: shield, power: 0, target: self, cooldown_sec: 60,
+    buff: { stat: def, value: 8, minutes: 10 } }
+- { id: meteor, class: mage, level: 15, mp: 30, kind: aoe, power: 2.2, target: room, cooldown_sec: 60 }
+
+- { id: backstab, class: rogue, level: 1, mp: 5, kind: damage, power: 1.7, target: enemy }
+- { id: poison_blade, class: rogue, level: 5, mp: 8, kind: buff, power: 0, target: self,
+    buff: { stat: atk, value: 5, minutes: 10 } }
+- { id: vanish, class: rogue, level: 10, mp: 10, kind: escape, power: 0, target: self, cooldown_sec: 120 }
+- { id: shadowstep, class: rogue, level: 15, mp: 12, kind: damage, power: 2.6, target: enemy, cooldown_sec: 30 }
+
+- { id: heal, class: cleric, level: 1, mp: 8, kind: heal, power: 1.5, target: ally }
+- { id: revive, class: cleric, level: 5, mp: 20, kind: revive, power: 0, target: ally }
+- { id: bless, class: cleric, level: 10, mp: 15, kind: buff, power: 0, target: party, cooldown_sec: 60,
+    buff: { stat: atk, value: 4, minutes: 20 } }
+- { id: sanctuary, class: cleric, level: 15, mp: 30, kind: party_heal, power: 1.2, target: party, cooldown_sec: 30 }
