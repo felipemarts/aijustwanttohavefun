@@ -10,7 +10,7 @@ t03_supplies:
   desc: "Never leave the village without a potion. Buy a minor health potion with the \"shop_buy\" action. Olga sells them in the square."
 t04_gear_up:
   name: Gear Up
-  desc: "Sergeant Holt will not train anyone who carries a weapon in their pack. Use the \"equip\" action on a piece of gear."
+  desc: "Sergeant Holt will not train anyone whose armor is still folded in their pack. Use the equip action on your cloth_armor."
 t05_first_blood:
   name: First Blood
   desc: "Time for a real fight, more or less. Defeat 3 slimes at the forest edge, just past the west gate."

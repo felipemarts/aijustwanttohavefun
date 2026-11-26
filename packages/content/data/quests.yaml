@@ -29,7 +29,7 @@
   kind: tutorial
   giver: sergeant_holt
   requires: t03_supplies
-  steps: [{ type: equip }]
+  steps: [{ type: equip, target: cloth_armor }]
   rewards: { xp: 25, gold: 5 }
 - id: t05_first_blood
   kind: tutorial

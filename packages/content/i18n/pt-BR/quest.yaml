@@ -10,7 +10,7 @@ t03_supplies:
   desc: "Nunca saia da vila sem uma poção. Compre uma poção de vida menor com a ação \"shop_buy\". A Olga vende na praça."
 t04_gear_up:
   name: Equipe-se
-  desc: "O Sargento Holt não treina ninguém que leve a arma na mochila. Use a ação \"equip\" em uma peça de equipamento."
+  desc: "O Sargento Holt não treina ninguém com a armadura ainda dobrada na mochila. Use a ação equip na sua cloth_armor."
 t05_first_blood:
   name: Primeiro Sangue
   desc: "Hora de uma luta de verdade, mais ou menos. Derrote 3 slimes na orla da floresta, logo depois do portão oeste."
