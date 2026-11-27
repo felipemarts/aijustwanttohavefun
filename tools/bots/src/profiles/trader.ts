@@ -30,6 +30,7 @@ import {
   travel,
   keepGoing,
 } from './common';
+import { absorbTrust, honestTrust, offerDeal, promoteOfficer } from './trust';
 import type { AgentView, DecideCtx, Profile } from './types';
 
 const MIN = 60_000;
@@ -135,6 +136,9 @@ function sell(v: AgentView, x: DecideCtx, prof: string): BotStep | null {
   const item = goods[0]!;
   // Now and then, a direct offer to someone here: one unit for its asking price.
   const buyer = v.obs.room.agents.find((a) => !a.fallen && a.name !== v.name);
+  // Or a pay-first deal said to the room (delivered as soon as the gold comes in).
+  const deal = x.rng.chance(0.3) ? offerDeal(v, x, item, askPrice(x, item)) : null;
+  if (deal) return deal;
   if (buyer && x.rng.chance(0.25)) return cmd('trade_offer', { to: buyer.name, give: { items: { [item]: 1 } }, want: { gold: askPrice(x, item) } });
   const orders = (x.mem.ext.orders as number | undefined) ?? 0;
   if (orders >= BALANCE.market.maxOrders) return null;
@@ -150,6 +154,10 @@ function guildLife(v: AgentView, x: DecideCtx): BotStep | null {
     x.mem.ext.guildTried = true;
     const name = `${v.name.split('_')[0]!.slice(0, 12)} Traders`;
     return cmd('guild_create', { name, motto: 'Fair prices, honest scales.' });
+  }
+  if (x.mem.ext.guildTried) {
+    const promote = promoteOfficer(v, x);
+    if (promote) return promote;
   }
   if (v.obs.actions?.includes('guild_invite')) {
     const invited = (x.mem.ext.ginvited as Set<string> | undefined) ?? new Set<string>();
@@ -172,6 +180,7 @@ export const trader: Profile = {
   grouped: false,
   decide(v, x) {
     absorbLast(v, x);
+    absorbTrust(v, x, 'honest');
     absorbMarket(v, x);
     if (v.last?.action === 'market_sell' && !v.last.ok) x.mem.ext.orders = BALANCE.market.maxOrders;
     // Orders fill up over time; assume a slot frees every few hours.
@@ -187,6 +196,7 @@ export const trader: Profile = {
       survive(v, x, false) ??
       keepGoing(v, x) ??
       answerPending(v, x, { friends: true, guild: true, trades: true }) ??
+      honestTrust(v, x, { buys: false, hunts: false }) ??
       keepSupplied(v, x) ??
       sellJunk(v, x, keep) ??
       civicVote(v, x);

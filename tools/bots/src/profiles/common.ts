@@ -15,7 +15,7 @@ export const cmd = (action: ActionName, params: Record<string, unknown> = {}): B
 /** Bot temperament (not game balance). */
 export const BOT = {
   /** Short pause when there is nothing better to do here (a monster respawning, a party member coming). */
-  shortWait: 20_000,
+  shortWait: 45_000,
   /** A room found without prey or resources is left alone for this long. */
   avoidMs: 4 * 60_000,
   /** Gold kept aside for resting and potions before buying gear. */
@@ -25,7 +25,7 @@ export const BOT = {
   /** Items worth keeping a few of; everything else that a shop buys is sold when the bag fills. */
   sellWhenSlotsAbove: 18,
   /** Short pauses spent at an empty hunting room, waiting for a respawn, before trying another room. */
-  groundWaits: 6,
+  groundWaits: 3,
   /** A resource room found empty is left alone this long (regrowth is slow, crowds are many). */
   depletedMs: 20 * 60_000,
   /** A grouped bot with party mates in the room stops starting fights below this share of HP (solo: 0.7). */
@@ -41,6 +41,11 @@ const HOUR = 3_600_000;
 
 export function stableHash(s: string): number {
   return parseInt(hashString(s).slice(0, 8), 16);
+}
+
+/** Wanted: the village refuses service (shops, the inn) until the Infamy decays. */
+export function isWantedMe(v: AgentView): boolean {
+  return v.obs.you.title === 'wanted' || (v.obs.you.infamy ?? 0) > BALANCE.infamy.wanted;
 }
 
 export function hpShare(v: AgentView): number {
@@ -209,6 +214,14 @@ export function survive(v: AgentView, x: DecideCtx, grouped: boolean): BotStep |
     }
     return decideSolo(v, x.c);
   }
+  // Wanted: no inn will take us; recover where we stand.
+  if (isWantedMe(v) && !me.in_combat && hpShare(v) < SOLO_TUNING.fightAbove) {
+    const food = snack(v, x);
+    if (food) return food;
+    const heal = usableSkill(x.c, v.inv, v.obs.you.mp[0], 'heal');
+    if (heal && me.ap[0] >= 1) return cmd('cast', { skill: heal });
+    return { wait: 5 * 60_000 };
+  }
   // With party mates around (a Warrior to taunt, a Cleric to heal, someone to finish the kill) keep fighting lower.
   const mates = grouped && partyHereSeen(v).length > 0;
   if (hpShare(v) < (mates ? BOT.groupFightAbove : SOLO_TUNING.fightAbove)) {
@@ -323,6 +336,7 @@ function shopsSelling(c: Content, item: string): { npc: string; room: string; pr
 
 /** Buys `item` from the nearest village shop that sells it (walking there), or null when it cannot. */
 export function buyFromShop(v: AgentView, x: DecideCtx, item: string, qty = 1): BotStep | null {
+  if (isWantedMe(v)) return null;
   const shops = shopsSelling(x.c, item);
   if (!shops.length || v.obs.you.gold < shops[0]!.price * qty) return null;
   // A full bag only takes more of what it already holds.
@@ -362,7 +376,7 @@ function gearToBuy(v: AgentView, c: Content): string | null {
 export function keepSupplied(v: AgentView, x: DecideCtx): BotStep | null {
   const gear = betterGear(x.c, v.inv, v.obs.you.lvl);
   if (gear) return cmd('equip', { item: gear });
-  if (!inVillage(v)) return null;
+  if (!inVillage(v) || isWantedMe(v)) return null;
   const restPrice = BALANCE.rest.baseCost + v.obs.you.lvl * BALANCE.rest.costPerLevel;
   const me = v.obs.you;
   if (v.obs.room.flags.includes('tavern') && (me.hp[0] < me.hp[1] * 0.9 || me.mp[0] < me.mp[1] * 0.5) && me.gold >= restPrice) return cmd('rest');
@@ -375,7 +389,7 @@ export function keepSupplied(v: AgentView, x: DecideCtx): BotStep | null {
 
 /** Items the bot keeps (quest needs, its trade); everything else a shop buys is fair game for selling. */
 export function sellJunk(v: AgentView, x: DecideCtx, keep: Set<string>): BotStep | null {
-  if (!inVillage(v)) return null;
+  if (!inVillage(v) || isWantedMe(v)) return null;
   const c = x.c;
   const used = Object.keys(v.inv.items).length;
   if (used < BOT.sellWhenSlotsAbove && v.obs.you.gold > 60) return null;
@@ -519,6 +533,8 @@ export function answerPending(v: AgentView, x: DecideCtx, o: { friends?: boolean
   if (o.trades && p.trades?.length) {
     for (const t of p.trades) {
       if ((x.mem.ext.declined as Set<string> | undefined)?.has(t.id)) continue;
+      // Nothing from an agent we stopped trusting (see trust.ts).
+      if ((x.mem.ext.trust as { distrust?: Map<string, string> } | undefined)?.distrust?.has(t.from)) continue;
       const pay = goodsWorth(x.c, t.want);
       const get = goodsWorth(x.c, t.give);
       const canPay = (t.want.gold ?? 0) <= v.obs.you.gold && Object.entries(t.want.items ?? {}).every(([id, n]) => have(v, id) >= n);

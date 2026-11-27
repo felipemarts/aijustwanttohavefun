@@ -26,6 +26,9 @@ export type ObsView = {
     in_combat?: string;
     /** Bag slots used and available. */
     bag?: [number, number];
+    title?: string;
+    /** Infamy, when any (Wanted above the line: village shops and the inn refuse service). */
+    infamy?: number;
     party?: { leader: string; members: string[]; loot: string };
     guild?: string;
   };
@@ -35,10 +38,12 @@ export type ObsView = {
     flags: string[];
     exits: Record<string, string>;
     locked?: Record<string, string>;
-    agents: { name: string; class?: string; lvl?: number; rel?: string; fallen?: true }[];
+    agents: { name: string; class?: string; lvl?: number; rel?: string; fallen?: true; wanted?: true }[];
     npcs: { id: string; roles: string[] }[];
     monsters: { id: string; n: number; lvl: number; hp?: [number, number] }[];
     resources?: Record<string, number>;
+    /** Dungeon puzzles here: the action that works each, its targets, the class it needs, its live state. */
+    puzzles?: { id: string; do: string; targets: string[]; cls?: string; open?: number; pulled?: string[]; held?: string; wait?: number }[];
   };
   /** Requests waiting for an answer (names of agents, guilds, trade offers). */
   pending?: {
@@ -48,6 +53,10 @@ export type ObsView = {
     trades?: { id: string; from: string; give: { gold?: number; items?: Record<string, number> }; want: { gold?: number; items?: Record<string, number> } }[];
   };
   quest_hint?: { id: string; giver: string; room: string; state: string };
+  /** The daily world boss: minutes until it rises, or up now. */
+  world_boss?: { id: string; room: string; in?: number; up?: true };
+  /** Phase of the game day: dawn, day, dusk or night. */
+  time?: string;
   /** Actions that make sense here and now. */
   actions?: string[];
 };

@@ -15,6 +15,7 @@ import { CLASSES, createRng, TEXT_EVENT_TYPES, type ClassId, type LaunchLanguage
 import { nameGenerator } from '../names';
 import { PROFILES } from '../profiles';
 import { newBotMem, PROFILE_IDS, type AgentView, type BotMem, type InboxMsg, type LastResult, type ProfileId, type QuestView } from '../profiles/types';
+import { SimChronicle } from './chronicle';
 import { WakeHeap } from './heap';
 import { Metrics, type SimReport } from './metrics';
 
@@ -114,6 +115,9 @@ export function apportion<K extends string>(n: number, weights: Record<K, number
   return out;
 }
 
+/** Inbox events whose details the bots read (the others are passed by kind only, which is cheaper). */
+const DATA_EVENTS = new Set(['give', 'betrayal', 'pvp_kill', 'attack', 'steal', 'steal_failed', 'treasury_looted', 'scam_reported', 'guild_deposit', 'guild_rank', 'guild_join']);
+
 /** Builds what a bot may read: observation, `/me` data, new inbox messages, its last answer, `/village` on demand. */
 function viewOf(s: WorldState, bot: SimBot, now: number, rng: Rng): AgentView {
   const ctx = { now, rng };
@@ -126,7 +130,15 @@ function viewOf(s: WorldState, bot: SimBot, now: number, rng: Rng): AgentView {
   const inbox: InboxMsg[] = events.map((ev) =>
     TEXT_EVENT_TYPES.has(ev.type)
       ? { kind: ev.type, from: (ev.actor && s.agents.get(ev.actor)?.name) || '?', text: String(ev.payload.text ?? '') }
-      : { kind: ev.type },
+      : DATA_EVENTS.has(ev.type)
+        ? {
+            kind: ev.type,
+            ...(ev.actor && s.agents.get(ev.actor) ? { from: s.agents.get(ev.actor)!.name } : {}),
+            ...(ev.target && s.agents.get(ev.target) ? { target: s.agents.get(ev.target)!.name } : {}),
+            // What the API narrates in the agent's language, as data: who gave what, who stole, the event id.
+            data: ev.payload,
+          }
+        : { kind: ev.type },
   );
   return {
     obs,
@@ -154,6 +166,8 @@ export class Simulation {
   readonly s: WorldState;
   readonly bots: SimBot[] = [];
   readonly metrics: Metrics;
+  /** The Village Gazette of this world, fed with every public event. */
+  readonly chronicle: SimChronicle;
   readonly rng: Rng;
   private heap = new WakeHeap();
   private byAgent = new Map<string, SimBot>();
@@ -166,6 +180,7 @@ export class Simulation {
     this.s = createWorld(this.content, opt.start);
     this.rng = createRng(opt.seed);
     this.metrics = new Metrics(this, opt);
+    this.chronicle = new SimChronicle(this.s, opt.seed);
     this.populate();
   }
 
@@ -190,6 +205,7 @@ export class Simulation {
         const lang = langs[idx % langs.length]!;
         const reg = registerAgent(s, { name: names(), cls, lang, appearance: randomAppearance(setup), claimed: true, bot: true }, { now: opt.start, rng: this.rng });
         if (!reg.ok) throw new Error(`register failed: ${reg.error.code}`);
+        this.chronicle.consume(reg.events);
         const seed = opt.seed * 100_003 + idx;
         // First wake-up somewhere in the first interval: agents do not all arrive at once.
         const first = opt.start + Math.floor(setup.next() * cadence.everyMs);

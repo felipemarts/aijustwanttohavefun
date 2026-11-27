@@ -39,6 +39,8 @@ import {
   keepGoing,
 } from './common';
 import type { Content } from '@ajwf/content';
+import { dungeonCamp, noteMates, throughGates, worldBoss } from './dungeon';
+import { absorbTrust, honestTrust, trusted } from './trust';
 import type { AgentView, DecideCtx, Profile } from './types';
 import type { BotStep } from '../solo';
 
@@ -131,7 +133,8 @@ function pickCamp(v: AgentView, x: DecideCtx): string | null {
       if (rooms.length) return rooms[0]!;
     }
   }
-  return campFor(x.c, lead, p.leader);
+  // Strong enough and well staffed: the dungeon.
+  return dungeonCamp(v, x, lead) ?? campFor(x.c, lead, p.leader);
 }
 
 /**
@@ -170,7 +173,7 @@ function pickInvite(v: AgentView, x: DecideCtx): BotStep | null {
   const have = new Set([v.cls, ...partyHereSeen(v).map((a) => a.class)]);
   const cands = seen(v)
     .filter((a) => !a.rel || a.rel === 'friend' || a.rel === 'guild')
-    .filter((a) => !a.fallen && x.mem.lfg.has(a.name) && Math.abs((a.lvl ?? 0) - me.lvl) <= S.levelGap)
+    .filter((a) => !a.fallen && x.mem.lfg.has(a.name) && trusted(v, x, a.name) && Math.abs((a.lvl ?? 0) - me.lvl) <= S.levelGap)
     .sort((a, b) => Number(have.has(a.class ?? '')) - Number(have.has(b.class ?? '')) || a.name.localeCompare(b.name));
   // Not the same agent twice within half an hour (it may have found another group meanwhile).
   const invited = (x.mem.ext.invited as Map<string, number> | undefined) ?? new Map<string, number>();
@@ -206,6 +209,8 @@ function partyPlay(v: AgentView, x: DecideCtx): BotStep | null {
   const low = Math.min(lvl, ...x.mem.partyLevels.values());
   const lastMate = (x.mem.ext.mateSeenAt as number | undefined) ?? v.now;
   if (lvl - low >= S.outgrown || v.now - lastMate > S.aloneMs) return cmd('party_leave');
+  // A mate who cannot be trusted any more (Wanted, a known cheat): leave.
+  if (partyHereSeen(v).some((a) => !trusted(v, x, a.name))) return cmd('party_leave');
   // Grow the party with agents looking for one, wherever we meet them.
   if (leader) {
     const inv = pickInvite(v, x);
@@ -231,9 +236,7 @@ function partyPlay(v: AgentView, x: DecideCtx): BotStep | null {
   }
   if (!heard) x.mem.camp = { room, at: 0 };
   const camp = room;
-  if (v.obs.room.id !== camp) {
-    return travel(v, x, camp);
-  }
+  if (v.obs.room.id !== camp) return throughGates(v, x, camp);
   const duty = clericDuty(v, x);
   if (duty) return duty;
   // Repeat the camp now and then for members who joined later or missed it.
@@ -248,23 +251,27 @@ function partyPlay(v: AgentView, x: DecideCtx): BotStep | null {
 }
 
 /** The social policy, with a hook for extra behaviour tried first (the traitor's opportunities). */
-export function decideSocial(v: AgentView, x: DecideCtx, first: ((v: AgentView, x: DecideCtx) => BotStep | null)[] = []): BotStep {
+export function decideSocial(v: AgentView, x: DecideCtx, first: ((v: AgentView, x: DecideCtx) => BotStep | null)[] = [], role: 'honest' | 'traitor' = 'honest'): BotStep {
   absorbLast(v, x);
   readInbox(v, x);
   watchParty(v, x);
+  absorbTrust(v, x, role === 'traitor' ? 'traitor' : null);
+  noteMates(v, x);
   for (const hook of first) {
     const s = hook(v, x);
     if (s) return s;
   }
   const inParty = partySize(v) >= 2;
   // An invite from someone standing here, while not grouped yet: take it (leaving a party of one first).
-  const inviter = !inParty && v.obs.pending?.party?.find((n) => seen(v).some((a) => a.name === n));
+  const inviter = !inParty && v.obs.pending?.party?.find((n) => seen(v).some((a) => a.name === n) && trusted(v, x, n));
   if (inviter && !v.obs.you.in_combat && v.obs.you.fallen === undefined) return partyOf(v) ? cmd('party_leave') : cmd('party_accept', { agent: inviter });
   const early =
     survive(v, x, true) ??
+    worldBoss(v, x) ??
     keepGoing(v, x) ??
     clericDuty(v, x) ??
     answerPending(v, x, { friends: true, guild: true, trades: true }) ??
+    (role === 'honest' ? honestTrust(v, x, { buys: true, hunts: true }) : null) ??
     keepSupplied(v, x) ??
     sellJunk(v, x, questKeep(v)) ??
     civicVote(v, x);

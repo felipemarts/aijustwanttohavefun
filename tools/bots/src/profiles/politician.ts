@@ -28,6 +28,8 @@ import {
   travel,
   keepGoing,
 } from './common';
+import { worldBoss } from './dungeon';
+import { absorbTrust, honestTrust } from './trust';
 import type { AgentView, DecideCtx, Profile } from './types';
 
 const MIN = 60_000;
@@ -108,10 +110,13 @@ export const politician: Profile = {
   grouped: false,
   decide(v, x) {
     absorbLast(v, x);
+    absorbTrust(v, x, null);
     const early =
       survive(v, x, false) ??
+      worldBoss(v, x) ??
       keepGoing(v, x) ??
       answerPending(v, x, { friends: true, guild: true, trades: true }) ??
+      honestTrust(v, x, { buys: true, hunts: true }) ??
       keepSupplied(v, x) ??
       sellJunk(v, x, new Set([...questKeep(v), 'wood', 'stone', 'silver_ore', 'crystal', 'iron_ingot', 'linen', 'pot', 'buckle'])) ??
       (v.obs.room.flags.includes('town_hall') ? mayorDuty(v, x) : null) ??

@@ -18,7 +18,7 @@ export type QuestStepView = { do: string; target?: string; have: number; need: n
 export type QuestView = { id: string; kind: string; giver: string; steps: QuestStepView[]; ready: boolean; party_min?: number };
 
 /** One inbox message as the API gives it: agent text comes with its author's name. */
-export type InboxMsg = { kind: string; from?: string; text?: string };
+export type InboxMsg = { kind: string; from?: string; target?: string; text?: string; data?: Record<string, unknown> };
 
 /** The answer to the bot's previous action. */
 export type LastResult = { action: ActionName; params: Record<string, unknown>; ok: boolean; code?: string; data?: Record<string, unknown> };
