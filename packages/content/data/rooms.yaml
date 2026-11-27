@@ -310,7 +310,7 @@
   flags: [lawless]
   rect: [84, 80, 10, 8]
   exits: { west: swamp.bog, north: swamp.sunken_road }
-  monsters: [{ id: will_o_wisp, count: 3 }, { id: wraith, count: 1, night: true }]
+  monsters: [{ id: will_o_wisp, count: 3 }, { id: wraith, count: 1 }, { id: wraith, count: 1, night: true }]
   resources: [{ id: shadowcap, max: 5, regen_per_hour: 3 }, { id: crystal, max: 2, regen_per_hour: 0.75 }]
 
 # ── The Ruins of Old Cael (12-18, lawless) ─────────────────────────────────────
@@ -336,7 +336,7 @@
   flags: [lawless]
   rect: [120, 30, 10, 8]
   exits: { south: ruins.outskirts }
-  monsters: [{ id: wraith, count: 2 }]
+  monsters: [{ id: wraith, count: 4 }]
   resources: [{ id: mithril_ore, max: 4, regen_per_hour: 1.5 }, { id: ancient_relic, max: 3, regen_per_hour: 1.05 }]
 - id: ruins.plaza
   zone: ruins
@@ -366,7 +366,7 @@
   flags: [lawless]
   rect: [132, 50, 10, 8]
   exits: { west: ruins.plaza }
-  monsters: [{ id: bandit_captain, count: 1 }, { id: bandit, count: 2 }]
+  monsters: [{ id: bandit_captain, count: 1 }, { id: bandit, count: 3 }]
   resources: [{ id: star_iron, max: 2, regen_per_hour: 0.75 }]
 - id: ruins.catacomb_stairs
   zone: ruins
@@ -375,7 +375,7 @@
   rect: [120, 60, 10, 8]
   exits: { north: ruins.plaza, down: dungeon.antechamber }
   gates: { down: { requires: party } }
-  monsters: [{ id: skeleton, count: 2 }]
+  monsters: [{ id: skeleton, count: 1 }, { id: bone_hound, count: 2 }]
 
 # ── The Catacombs of the Hollow Regent (15-20, party only) ─────────────────────
 - id: dungeon.antechamber

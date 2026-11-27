@@ -18,6 +18,7 @@ export const DUNGEON_CAMPS: { room: string; level: number; needs: string[] }[] =
   { room: 'dungeon.lever_hall', level: 15, needs: [] },
   { room: 'dungeon.trapped_corridor', level: 17, needs: ['rogue'] },
   { room: 'dungeon.rune_door', level: 18, needs: ['rogue', 'mage'] },
+  { room: 'dungeon.gate_hall', level: 19, needs: ['rogue', 'mage'] },
 ];
 
 export const DUNGEON_TUNING = {

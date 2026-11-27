@@ -178,15 +178,29 @@ export function smallTalk(v: AgentView, x: DecideCtx, force = false): BotStep | 
 
 /** The monster kinds a bot of this level hunts. Elites and group bosses only with a party around. */
 export function preyFor(c: Content, level: number, grouped: boolean, below = 3, above = 0): Set<string> {
+  const outside = openWorldKinds(c);
+  const fits = (m: Content['monsters'] extends Map<string, infer M> ? M : never) =>
+    !m.boss && m.min_group <= 1 && !(m.solo_crush >= 2 && !grouped) && !(m.elite && !grouped) && outside.has(m.id);
   const out = new Set<string>();
-  for (const m of c.monsters.values()) {
-    if (m.boss || m.min_group > 1) continue;
-    if (m.solo_crush >= 2 && !grouped) continue;
-    if (m.elite && !grouped) continue;
-    if (m.level <= level + above && m.level >= level - below) out.add(m.id);
-  }
-  if (!out.size) for (const m of c.monsters.values()) if (!m.boss && !m.elite && m.level <= level) out.add(m.id);
+  for (const m of c.monsters.values()) if (fits(m) && m.level <= level + above && m.level >= level - below) out.add(m.id);
+  if (out.size) return out;
+  // Nothing of this level outside the dungeon: the strongest open-world prey not above the agent.
+  let top = 0;
+  for (const m of c.monsters.values()) if (fits(m) && m.level <= level + above) top = Math.max(top, m.level);
+  for (const m of c.monsters.values()) if (fits(m) && m.level <= level + above && m.level >= top - below) out.add(m.id);
   return out;
+}
+
+const openWorldCache = new WeakMap<Content, Set<string>>();
+/** Monster kinds that live somewhere outside the dungeon (dungeon rooms are behind its gates and puzzles). */
+function openWorldKinds(c: Content): Set<string> {
+  let s = openWorldCache.get(c);
+  if (!s) {
+    s = new Set();
+    for (const r of c.rooms.values()) if (!r.flags.includes('dungeon')) for (const m of r.monsters) s.add(m.id);
+    openWorldCache.set(c, s);
+  }
+  return s;
 }
 
 /**
@@ -424,7 +438,9 @@ export function resourceRooms(c: Content, item: string): string[] {
 /** Gathers one of `wanted` here, or walks to the nearest room (within `maxDist` moves) that has some. */
 export function gather(v: AgentView, x: DecideCtx, wanted: string[], maxDist = Infinity): BotStep | null {
   const res = v.obs.room.resources ?? {};
-  const here = wanted.filter((id) => (res[id] ?? 0) > 0);
+  const bag = v.obs.you.bag;
+  // A full bag only takes more of what it already holds.
+  const here = wanted.filter((id) => (res[id] ?? 0) > 0 && !(bag && bag[0] >= bag[1] && have(v, id) === 0));
   if (here.length) return v.obs.you.ap[0] >= 2 ? cmd('gather', { resource: here[0]! }) : { wait: BALANCE.ap.regenMs };
   if (wanted.some((id) => id in res)) avoid(x, v.obs.room.id, v.now, BOT.depletedMs);
   const rooms = new Set(wanted.flatMap((id) => resourceRooms(x.c, id)));
