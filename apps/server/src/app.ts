@@ -20,7 +20,7 @@ import { clientIp } from './client-ip';
 import { Leaderboards } from './civic/leaderboard';
 import type { Config } from './config';
 import type { Game } from './game';
-import { buildHelp } from './help';
+import { buildHelp, buildSchema, type ActionSchemaDoc } from './help';
 import { classifyHttpError, errorBody, sendRateLimited } from './http-errors';
 import { IdempotencyCache } from './idempotency';
 import type { Metrics } from './metrics';
@@ -135,6 +135,8 @@ export type AppContext = {
   chronicle: Chronicle;
   leaderboards: Leaderboards;
   help: Record<string, unknown>;
+  /** `GET /schema`, serialised once with its ETag. */
+  schema: ActionSchemaDoc;
   docsDir: string;
   sessions: Sessions;
   cards: CardService;
@@ -178,6 +180,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     chronicle: deps.chronicle,
     leaderboards: new Leaderboards(game.state, game.now),
     help: buildHelp(),
+    schema: buildSchema(),
     docsDir: deps.docsDir,
     sessions: new Sessions(game.store, game.now, config.production),
     cards: new CardService(game, render, deps.chronicle, config.publicUrl, deps.cardsDir, deps.logger),

@@ -1,5 +1,6 @@
+import { createHash } from 'node:crypto';
 import { apCost, HANDLERS } from '@ajwf/engine';
-import { actionParamSchemas, API_VERSION, ERROR_CODES, SKILL_VERSION, type ActionName } from '@ajwf/shared';
+import { actionParamSchemas, API_VERSION, ERROR_CODES, paramSignature, SKILL_VERSION, type ActionName } from '@ajwf/shared';
 import { z } from 'zod';
 import { HTTP_ERROR_CODES } from './http-errors';
 
@@ -14,6 +15,7 @@ const ROUTES = [
   { method: 'GET', path: '/village', auth: false },
   { method: 'GET', path: '/agents/:name', auth: false },
   { method: 'GET', path: '/help', auth: false },
+  { method: 'GET', path: '/schema', auth: false, headers: ['If-None-Match'] },
 ];
 
 /** JSON Schema of an action's params as agents send them (defaults make fields optional). */
@@ -35,4 +37,23 @@ export function buildHelp(): Record<string, unknown> {
     actions,
     errors: [...new Set([...ERROR_CODES, ...HTTP_ERROR_CODES])],
   };
+}
+
+/** The body and strong ETag of `GET /schema`, computed once: the shapes only change with a new server build. */
+export type ActionSchemaDoc = { body: string; etag: string };
+
+/**
+ * `GET /schema`: for every action, the JSON Schema of its params (the same zod schemas `/act` validates with) and
+ * its one-line signature. Machine-readable, for clients that constrain a model's output to valid actions.
+ */
+export function buildSchema(): ActionSchemaDoc {
+  const actions = (Object.keys(HANDLERS) as ActionName[]).sort().map((name) => ({
+    name,
+    ap: apCost(name),
+    signature: paramSignature(name),
+    params: paramsSchema(name),
+  }));
+  const body = JSON.stringify({ ok: true, api_version: API_VERSION, skill_version: SKILL_VERSION, actions });
+  const etag = `"${createHash('sha256').update(body).digest('base64url').slice(0, 27)}"`;
+  return { body, etag };
 }

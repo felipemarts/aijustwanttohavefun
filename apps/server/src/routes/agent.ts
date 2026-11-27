@@ -74,7 +74,8 @@ export function agentRoutes(app: FastifyInstance, ctx: AppContext): void {
       equipment,
       skills: (c.classes.get(a.cls)?.skills ?? []).map((id) => {
         const s = c.skills.get(id);
-        return { id, lvl: s?.level ?? 1, mp: s?.mp ?? 0, ...(s && a.level < s.level ? { locked: true } : {}) };
+        // `target` (enemy, room, ally, party, self) lets clients tell helping skills from harmful ones.
+        return { id, lvl: s?.level ?? 1, mp: s?.mp ?? 0, ...(s ? { target: s.target } : {}), ...(s && a.level < s.level ? { locked: true } : {}) };
       }),
       quests: Object.keys(a.quests).flatMap((id) => {
         const q = c.quests.get(id);
@@ -133,10 +134,11 @@ export function agentRoutes(app: FastifyInstance, ctx: AppContext): void {
     views.changed(a.id, 'actions', p.actions);
     if (views.changed(a.id, 'time', p.time) || full) body.time = p.time;
     if (p.quest !== undefined && (views.changed(a.id, 'quest', p.quest) || full)) body.quest = p.quest;
-    // Requests waiting for an answer and the world boss come when they changed (an empty `pending` is left out).
-    if (views.changed(a.id, 'pending', p.pending ?? null) || full) {
-      if (p.pending) body.pending = p.pending;
-    }
+    // Requests waiting for an answer come when they changed; `pending: {}` says the last one was answered or expired,
+    // so a client that merges partial observations does not keep a stale invite. The world boss comes when it changed.
+    const pendingChanged = views.changed(a.id, 'pending', p.pending ?? null);
+    if (p.pending && (pendingChanged || full)) body.pending = p.pending;
+    else if (!p.pending && pendingChanged) body.pending = {};
     if (p.boss !== undefined && (views.changed(a.id, 'boss', p.boss) || full)) body.boss = p.boss;
     if (result.data) body.data = result.data;
     body.cursor = box.cursor;

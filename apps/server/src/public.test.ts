@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { apCost, HANDLERS } from '@ajwf/engine';
-import { API_VERSION, ERROR_CODES, SKILL_VERSION, type ActionName } from '@ajwf/shared';
+import { API_VERSION, ERROR_CODES, paramSignature, SKILL_VERSION, type ActionName } from '@ajwf/shared';
 import { describe, expect, it } from 'vitest';
 import { loadConfig } from './config';
 import { makeServer } from './test-helpers';
@@ -21,6 +21,47 @@ describe('GET /help', () => {
     expect(byName.size).toBe(Object.keys(HANDLERS).length);
     expect(byName.get('move')!.params).toMatchObject({ properties: { dir: { type: 'string' } }, required: ['dir'] });
     for (const code of ERROR_CODES) expect(help.errors).toContain(code);
+  });
+});
+
+describe('GET /schema', () => {
+  it('gives every action its signature and params JSON Schema, public and cacheable with an ETag', async () => {
+    const s = await makeServer();
+    const res = await s.app.inject({ method: 'GET', url: '/api/v1/schema' });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toMatch(/^application\/json/);
+    expect(res.headers['cache-control']).toBe('public, max-age=300');
+    expect(res.headers['access-control-allow-origin']).toBe('*');
+    const etag = res.headers.etag as string;
+    expect(etag).toMatch(/^"[\w-]{27}"$/);
+    const doc = res.json();
+    expect(doc).toMatchObject({ ok: true, api_version: API_VERSION, skill_version: SKILL_VERSION });
+    const names = (doc.actions as { name: string }[]).map((a) => a.name);
+    expect(names).toEqual((Object.keys(HANDLERS) as ActionName[]).sort());
+    const byName = new Map((doc.actions as { name: string; ap: number; signature: string; params: Record<string, unknown> }[]).map((a) => [a.name, a]));
+    for (const name of names as ActionName[]) {
+      const a = byName.get(name)!;
+      expect(a.ap, name).toBe(apCost(name));
+      expect(a.signature, name).toBe(paramSignature(name));
+      expect(a.params, name).toMatchObject({ type: 'object' });
+      expect(a.params, name).not.toHaveProperty('$schema');
+    }
+    expect(byName.get('move')).toMatchObject({ signature: 'move {"dir": "<dir>"}', params: { required: ['dir'] } });
+    // The same params schemas as /help, so the two never disagree.
+    const help = (await s.app.inject({ method: 'GET', url: '/api/v1/help' })).json();
+    for (const h of help.actions as { name: string; params: unknown }[]) expect(byName.get(h.name)!.params).toEqual(h.params);
+    expect((help.routes as { path: string }[]).some((r) => r.path === '/schema')).toBe(true);
+
+    // Revalidation: the same tag (also weak, or in a list) is a 304 without a body; another tag gets the body.
+    for (const inm of [etag, `W/${etag}`, `"other", ${etag}`, '*']) {
+      const again = await s.app.inject({ method: 'GET', url: '/api/v1/schema', headers: { 'if-none-match': inm } });
+      expect(again.statusCode, inm).toBe(304);
+      expect(again.body).toBe('');
+      expect(again.headers.etag).toBe(etag);
+    }
+    const stale = await s.app.inject({ method: 'GET', url: '/api/v1/schema', headers: { 'if-none-match': '"stale"' } });
+    expect(stale.statusCode).toBe(200);
+    expect(stale.json().actions.length).toBe(names.length);
   });
 });
 

@@ -69,7 +69,9 @@ describe('POST /act', () => {
     // Sent again with /act only when it changed.
     expect((await s.act(bob, 'inventory')).json().pending).toBeUndefined();
     const joined = (await s.act(bob, 'party_accept', { agent: 'Pip' })).json();
-    expect(joined.pending).toBeUndefined();
+    // Answered: an empty pending says so once, then it is left out again.
+    expect(joined.pending).toEqual({});
+    expect((await s.act(bob, 'inventory')).json().pending).toBeUndefined();
     expect(joined.room.agents[0]).toMatchObject({ name: 'Pip', rel: 'party' });
     // The quest hint carries the way to the giver.
     const moved = (await s.act(bob, 'move', { dir: 'north' })).json();
@@ -259,7 +261,7 @@ describe('GET /me', () => {
     expect(me.stats).toMatchObject({ str: expect.any(Number), vit: expect.any(Number) });
     expect(me.equipment.weapon).toBeTypeOf('string');
     expect(Object.keys(me.inventory).length).toBeGreaterThan(0);
-    expect(me.skills[0]).toMatchObject({ id: expect.any(String), lvl: 1 });
+    expect(me.skills[0]).toMatchObject({ id: expect.any(String), lvl: 1, target: 'enemy' });
     expect(me.owner_note).toBe('Try to become mayor.');
     expect(me.you.hp[0]).toBeGreaterThan(0);
     expect(me).not.toHaveProperty('offers');

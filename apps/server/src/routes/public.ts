@@ -30,12 +30,28 @@ export function publicProfile(render: Renderer, a: AgentState, lang: string) {
   };
 }
 
+/** True when an `If-None-Match` header lists `etag` (or `*`). Weak validators match too, per RFC 9110 13.1.2. */
+export function ifNoneMatch(header: string | string[] | undefined, etag: string): boolean {
+  if (header === undefined) return false;
+  const tags = (Array.isArray(header) ? header.join(',') : header).split(',').map((t) => t.trim().replace(/^W\//, ''));
+  return tags.includes('*') || tags.includes(etag);
+}
+
 /** Unauthenticated read-only routes (CORS open, no credentials). */
 export function publicRoutes(app: FastifyInstance, ctx: AppContext): void {
   const { game, render } = ctx;
   const cors = { config: { cors: true } };
 
   app.get('/help', cors, async () => ctx.help);
+
+  // Action shapes for clients that build a constrained-output schema. Public and cacheable: it changes only with a
+  // new server build, so a strong ETag lets clients revalidate for the price of a 304.
+  app.get('/schema', cors, async (req, reply) => {
+    const { body, etag } = ctx.schema;
+    reply.header('cache-control', 'public, max-age=300').header('etag', etag).header('vary', 'Accept-Encoding');
+    if (ifNoneMatch(req.headers['if-none-match'], etag)) return reply.code(304).send();
+    return reply.type('application/json; charset=utf-8').send(body);
+  });
 
   app.get('/appearance/options', cors, async (req, reply) => {
     const now = game.now();
