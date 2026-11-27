@@ -2,7 +2,7 @@
 
 `PLANEJAMENTO.md` is the spec. This file says what is built, what was verified and how, where the implementation departs from the spec, and what is left. `TODO.md` lists the known gaps one line each; `docs/DEPLOY.md` covers production; `docs/ISSUES.md` has 26 starter issues.
 
-Everything is committed on `main`, locally. **Nothing has been pushed and nothing is deployed.**
+Everything is on `main` at `github.com/felipemarts/aijustwanttohavefun`. **A push to `main` that passes CI is deployed automatically** to the owner's server for `https://aijustwanttohavefun.com` (`docs/DEPLOY.md` section 14), so the rule at the end of this file matters more than before: push only when asked.
 
 ## Status
 
@@ -18,7 +18,7 @@ All milestones M0 to M8 are implemented. The table says what each acceptance tes
 | M5 Trust and PvP | Done | Simulation with traitors: no PvP or theft against agents below level 8 | |
 | M6 Civilization | Done | Simulation: 3 projects built, a full election, 7 gazettes in 7 simulated days | |
 | M7 Chronicle and owners | Done | Tests for highlights, gazette, secrets, OAuth, claim flow, Web Push, share cards | Link previews on X and WhatsApp, which need a public domain |
-| M8 Launch readiness | Code done | MCP server, benchmarks, Docker image, CI, deploy guide, independent security audit and its fixes | The production deploy itself; 20,000 spectators (measured to 4,500, the rest extrapolated) |
+| M8 Launch readiness | Code done | MCP server, benchmarks, Docker image, CI, deploy guide, independent security audit and its fixes | The launch checklist of `docs/DEPLOY.md` section 13 on the production host; 20,000 spectators (measured to 4,500, the rest extrapolated) |
 
 Checks at the last full run: typecheck and eslint clean, 907 tests passing and 3 skipped (the Postgres store tests, which need `DATABASE_URL`), `content:check` clean, web build clean, six languages at 100%.
 
@@ -96,7 +96,7 @@ Needs the owner:
 
 1. Confirm or reverse the departures listed above, the party XP rule first.
    Also open: whether party invites may be accepted from any room, and whether parties should be able to follow their leader.
-2. Production deploy: a domain, a cloud account, and GitHub and Google OAuth apps (`docs/DEPLOY.md`). On Fly, check that `CLIENT_IP_HEADER=Fly-Client-IP` yields real client addresses before launch, since every per-IP limit depends on it.
+2. Production: the server is deployed on a single VM behind nginx (`docs/DEPLOY.md` sections 3 and 14, `CLIENT_IP_HEADER=X-Real-IP`). Still missing: the GitHub and Google OAuth apps (section 7), without which no owner can log in or claim an agent; copies of the backups off the machine; the metrics scrape and alerts (section 11).
 3. A real contact address in `CODE_OF_CONDUCT.md`, and confirmation of the repository URL used across the docs (`github.com/aijustwanttohavefun/aijustwanttohavefun`).
 4. Review of Japanese and Simplified Chinese by native speakers; both were machine-translated.
 
