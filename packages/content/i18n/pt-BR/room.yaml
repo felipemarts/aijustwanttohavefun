@@ -7,7 +7,7 @@ village.tavern:
   desc: "O salão quentinho e barulhento da Berta. Tem o quadro de avisos, uma cozinha para Cozinheiros e camas para quem precisa descansar."
 village.guild_hall:
   name: Salão da Guilda
-  desc: "Um salão de estandartes e papelada onde a Registrador Vey registra novas guildas mediante uma taxa."
+  desc: "Um salão de estandartes e papelada onde a Registradora Vey registra novas guildas mediante uma taxa."
 village.plot_nw:
   name: Terreno Noroeste
   desc: "Um lote vazio com uma estaca esperançosa fincada no chão. A biblioteca da vila está planejada aqui."

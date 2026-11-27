@@ -1,7 +1,7 @@
 import type { Appearance } from '@ajwf/appearance';
 import type { ActionName, GameEvent, LootMode } from '@ajwf/shared';
 import { capacity, derive, shownHp, slotsUsed, touch } from './agent';
-import { BALANCE, dayPhase, realDay, xpToNext } from './balance';
+import { BALANCE, dayPhase, isNight, realDay, xpToNext } from './balance';
 import { bondLevel, bondScore, type BondLevel } from './bond';
 import { escortsHere, type EscortView } from './escort';
 import { gateBlocker } from './gates';
@@ -13,6 +13,7 @@ import { routeHint } from './routes';
 import { nextTutorial, questReady } from './quests';
 import { inboxSince, newRun, type Run } from './run';
 import { tradesOf } from './trade';
+import { shownInfamy } from './trust';
 import type { AgentState, WorldState } from './types';
 import { unlockedAt } from './unlocks';
 import { civicSeen, type CivicSeen } from './village-view';
@@ -36,6 +37,8 @@ export type SeenAgent = {
   bond?: BondLevel;
   /** How the observer relates to this agent, when it does: party, friend, guild, rival. */
   rel?: Relation;
+  /** Wanted for its infamy: fair game, and a bounty may be on its head. */
+  wanted?: true;
 };
 
 type Relation = 'party' | 'friend' | 'guild' | 'rival';
@@ -69,6 +72,9 @@ export type Observation = {
     bag: [number, number];
     party?: { leader: string; members: string[]; loot: LootMode };
     guild?: string;
+    /** Public standing, shown only when not zero. */
+    honor?: number;
+    infamy?: number;
   };
   room: {
     id: string;
@@ -144,6 +150,7 @@ function seenAgents(s: WorldState, a: AgentState): { list: SeenAgent[]; others: 
         ...(b.fallen ? { fallen: true as const } : {}),
         ...(bond ? { bond } : {}),
         ...(rel ? { rel } : {}),
+        ...(b.wanted ? { wanted: true as const } : {}),
       };
     });
   return { list, others: total - list.length };
@@ -207,7 +214,17 @@ function contextActions(run: Run, a: AgentState, o: Observation['room'], pending
     if (a.cls === 'mage' && (a.inv[BALANCE.enchant.item] ?? 0) > 0) out.push('enchant');
     out.push(...civic);
   }
-  if (o.agents.length) out.push('trade_offer', 'party_invite');
+  if (o.agents.length) {
+    out.push('trade_offer', 'party_invite');
+    if (a.claimed) out.push('give');
+    // Lawless ground: other agents are fair game for those old enough; Rogues also pick pockets (in the village at night).
+    const P = BALANCE.pvp;
+    const lawless = flags.includes('lawless');
+    if (!a.combat && a.level >= P.minLevel && o.agents.some((b) => !b.fallen && b.lvl >= P.minLevel && Math.abs(b.lvl - a.level) <= P.maxGap)) {
+      if (lawless && !out.includes('attack')) out.push('attack');
+      if (a.cls === 'rogue' && (lawless || (room.zone === 'village' && isNight(run.now)))) out.push('steal');
+    }
+  }
   if (flags.includes('board')) out.push('board_read', 'board_post');
   if (pending?.friends) out.push('friend_accept');
   if (pending?.party) out.push('party_accept');
@@ -219,6 +236,8 @@ function contextActions(run: Run, a: AgentState, o: Observation['room'], pending
     const g = run.s.guilds.get(a.guild);
     if (g && o.agents.length && canManage(g, a)) out.push('guild_invite');
     out.push('guild_say');
+    const leader = g && g.leader !== a.id && g.officers.includes(a.id) ? run.s.agents.get(g.leader) : undefined;
+    if (leader && (leader.status !== 'active' || run.now - leader.lastActiveAt >= BALANCE.coup.inactiveMs)) out.push('guild_vote_coup');
   }
   out.push('say', 'emote', 'whisper', 'inventory', 'quest_list');
   return out;
@@ -253,6 +272,7 @@ export function observe(s: WorldState, agentId: string, ctx: { now: number; rng:
   for (const r of def.resources) resources[r.id] = refreshResource(s, a.room, r.id, ctx.now)?.qty ?? 0;
 
   const seen = seenAgents(s, a);
+  const infamy = shownInfamy(a, ctx.now);
   const room: Observation['room'] = {
     id: a.room,
     zone: def.zone,
@@ -290,6 +310,8 @@ export function observe(s: WorldState, agentId: string, ctx: { now: number; rng:
       ...(a.combat ? { in_combat: st.monsters.find((m) => m.uid === a.combat!.mon)?.kind ?? 'unknown' } : {}),
       ...(a.title ? { title: a.title } : {}),
       bag: [slotsUsed(c, a.inv), capacity(c, a)],
+      ...(a.honor ? { honor: a.honor } : {}),
+      ...(infamy > 0 ? { infamy } : {}),
     },
     room,
     time: dayPhase(ctx.now),

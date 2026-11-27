@@ -53,8 +53,8 @@ export type AgentState = {
   buffs: Buff[];
   /** cooldown key -> timestamp when it is ready again */
   cooldowns: Record<string, number>;
-  /** Lying defeated, waiting for a revive. Null when standing. */
-  fallen: { at: number; until: number; by?: string } | null;
+  /** Lying defeated, waiting for a revive. Null when standing. `pvp`: felled by an agent, who already took its toll. */
+  fallen: { at: number; until: number; by?: string; pvp?: true } | null;
   /** Monster uid the agent is trading blows with, and until when that counts as "in combat". */
   combat: { mon: string; until: number } | null;
 
@@ -90,9 +90,24 @@ export type AgentState = {
   /** Journal entries written on the real day `day`. */
   journal: { day: number; n: number };
 
+  /** Public standing (§7.5): rises helping others, falls betraying, stealing and scamming. May go negative. */
+  honor: number;
+  /** Infamy as of `infamyAt`; it decays lazily with time (see trust.ts `infamyNow`). */
+  infamy: number;
+  infamyAt: number;
+  /** Set while the agent is Wanted: when it started, the title to give back, and when the infamy falls back under the line. */
+  wanted: Wanted | null;
+  /** The latest `give`s this agent made, newest last, kept for `report_scam` (bounded, within the report window). */
+  gives: GiveRecord[];
+
   createdAt: number;
   lastActiveAt: number;
 };
+
+export type Wanted = { since: number; prev: string | null; until: number };
+
+/** One `give`: the id of its event (what `report_scam` names), the receiver, the shop value and whether it was reported. */
+export type GiveRecord = { id: string; to: string; value: number; at: number; reported?: true };
 
 export type MonsterInst = {
   uid: string;
@@ -130,6 +145,8 @@ export type Party = {
   rr: number;
   /** member id -> when it joined (bond for time spent together). */
   joined: Record<string, number>;
+  /** `traitor>victim` pairs already announced as betrayals in this party (each fires once). */
+  betrayed?: string[];
 };
 
 export type Guild = {
@@ -148,6 +165,8 @@ export type Guild = {
   /** item id -> quantity held by the guild. */
   vault: Record<string, number>;
   createdAt: number;
+  /** Members who voted to depose the leader, in voting order. Cleared whenever the leadership changes. */
+  coup: string[];
 };
 
 export type Stack = { item: string; qty: number };
@@ -211,6 +230,17 @@ export type Escort = {
   at: number;
 };
 
+/** Gold escrowed on an agent's head (§7.3): whoever kills it in PvP collects it all. */
+export type Bounty = {
+  target: string;
+  total: number;
+  /** Who paid, in order of first contribution (bounded). `id` is an agent id or `@village` (mayor_bounty, `name` null). */
+  by: { id: string; name: string | null; gold: number }[];
+  at: number;
+  /** When the refund check is due; only the timer with this exact time acts. */
+  due: number;
+};
+
 /** Things that happen later. Kept in a heap; plain JSON so the heap can be snapshotted. */
 export type Timer =
   | { at: number; kind: 'respawn'; room: string; slot: number }
@@ -223,7 +253,11 @@ export type Timer =
   | { at: number; kind: 'wboss'; step: 'announce' | 'spawn' | 'leave' }
   /** A stalled escort may expire. */
   | { at: number; kind: 'escort'; id: string }
-  | { at: number; kind: 'election' };
+  | { at: number; kind: 'election' }
+  /** An agent's infamy may have fallen back under the Wanted line. */
+  | { at: number; kind: 'wanted'; agent: string }
+  /** A bounty may be refunded (its target's infamy stayed at zero long enough). */
+  | { at: number; kind: 'bounty'; target: string };
 
 export type Inbox = { buf: (GameEvent | undefined)[]; head: number; size: number };
 
@@ -282,9 +316,11 @@ export type WorldState = {
   escortsIn: Map<string, Set<string>>;
   /** room id -> slot -> when its pending respawn is due. Derived from the timers. */
   respawns: Map<string, Map<number, number>>;
+  /** target agent id -> the bounty on its head. */
+  bounties: Record<string, Bounty>;
   /**
    * Keys of entities changed since the last snapshot: `agent:<id>`, `room:<id>`, `party:<id>`, `guild:<id>`, `meta`,
-   * `timers`, `trades`, `market`, `board`, `village`, `puzzles`, `wboss`, `escorts`.
+   * `timers`, `trades`, `market`, `board`, `village`, `puzzles`, `wboss`, `escorts`, `bounties`.
    */
   dirty: Set<string>;
 };

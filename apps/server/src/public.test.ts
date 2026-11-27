@@ -91,27 +91,24 @@ describe('public views', () => {
   });
 });
 
-describe('dev claim', () => {
-  it('lets an unclaimed agent be claimed with its token when DEV_LOGIN is on', async () => {
-    const s = await makeServer();
-    const res = await s.app.inject({ method: 'POST', url: '/api/v1/agents/register', remoteAddress: '198.51.100.30', payload: { name: 'Orphan', class: 'rogue' } });
-    const { api_key: key, claim_url: claimUrl } = res.json();
-    expect((await s.act(key, 'say', { text: 'hello' })).json().error.code).toBe('UNCLAIMED_LIMIT');
-    const token = claimUrl.split('/').pop();
-    const claim = await s.app.inject({ method: 'POST', url: '/api/dev/claim', payload: { claim_token: token } });
-    expect(claim.json()).toEqual({ ok: true, agent: { name: 'Orphan', claimed: true } });
-    expect([...s.store.agents.values()][0]!.claimedAt).toBe(s.clock.now());
-    expect((await s.act(key, 'say', { text: 'hello' })).json().ok).toBe(true);
-    expect((await s.app.inject({ method: 'POST', url: '/api/dev/claim', payload: { claim_token: 'nope' } })).json().error.code).toBe('NOT_FOUND');
-  });
-
-  it('does not exist without DEV_LOGIN, and DEV_LOGIN is refused in production', async () => {
-    const s = await makeServer({ devLogin: false });
-    expect((await s.app.inject({ method: 'POST', url: '/api/dev/claim', payload: { claim_token: 'x' } })).statusCode).toBe(404);
-    expect(loadConfig({ NODE_ENV: 'production', DEV_LOGIN: '1', SESSION_SECRET: 'x'.repeat(32) }).devLogin).toBe(false);
+describe('config', () => {
+  it('turns DEV_LOGIN off in production, and production needs a session secret and an https PUBLIC_URL', () => {
+    const prod = { NODE_ENV: 'production', SESSION_SECRET: 'x'.repeat(32), PUBLIC_URL: 'https://example.org' };
+    expect(loadConfig({ ...prod, DEV_LOGIN: '1' }).devLogin).toBe(false);
     expect(loadConfig({ DEV_LOGIN: '1' }).devLogin).toBe(true);
     expect(() => loadConfig({ NODE_ENV: 'production' })).toThrow(/SESSION_SECRET/);
+    expect(() => loadConfig({ ...prod, PUBLIC_URL: 'http://example.org' })).toThrow(/https/);
     expect(loadConfig({}).trustProxy).toBe(false);
     expect(loadConfig({ ADMIN_TOKEN: '' }).adminToken).toBeUndefined();
+  });
+
+  it('offers only OAuth providers with both id and secret, and push only with both VAPID keys', () => {
+    const c = loadConfig({ OAUTH_GITHUB_ID: 'id', OAUTH_GITHUB_SECRET: 'secret', OAUTH_GOOGLE_ID: 'only-id' });
+    expect(Object.keys(c.oauth)).toEqual(['github']);
+    expect(c.vapid).toBeNull();
+    expect(loadConfig({ VAPID_PUBLIC_KEY: 'a', VAPID_PRIVATE_KEY: 'b' }).vapid).toMatchObject({ publicKey: 'a', subject: 'mailto:owner@localhost' });
+    expect(loadConfig({ DEV_WEB_ORIGIN: 'http://localhost:5710' }).extraOrigins).toEqual(['http://localhost:5710']);
+    const prod = { NODE_ENV: 'production', SESSION_SECRET: 'x'.repeat(32), PUBLIC_URL: 'https://example.org' };
+    expect(loadConfig({ ...prod, DEV_WEB_ORIGIN: 'http://localhost:5710' }).extraOrigins).toEqual([]);
   });
 });

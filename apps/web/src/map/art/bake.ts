@@ -15,6 +15,13 @@ import { buildTerrain, T, type TerrainGrid, ZONES } from './terrain';
 export type WorldLight = { x: number; y: number; kind: A.LightKind; w?: number; h?: number };
 export type Ambient = { x: number; y: number; kind: 'firefly' | 'wisp' };
 export type Site = { x: number; y: number; w: number; h: number; plot: boolean };
+/** A pre-rendered picture of a room's dressing, its anchor placed at world (x, y). */
+export type SiteArt = { art: A.Art; x: number; y: number };
+/**
+ * Rooms whose own dressing a finished project replaces (tavern, market, south gate, square): the art as it stands
+ * today and as it stands once built. They are left out of the baked ground so the scene can swap them.
+ */
+export type SiteVariants = { base: SiteArt; done: SiteArt; statueAt: { x: number; y: number } | null };
 
 export type Baked = {
   x: number;
@@ -26,13 +33,19 @@ export type Baked = {
   glints: { x: number; y: number; color: number }[];
   ambient: Ambient[];
   sites: Record<string, Site>;
+  variants: Record<string, SiteVariants>;
   bridge: { x: number; y: number; w: number; h: number } | null;
   grid: TerrainGrid;
 };
 
+/** Project buildings that replace the dressing of the room they are built in. */
+const VARIANT_BUILDINGS = new Set(['inn', 'covered_market', 'wall', 'statue']);
+
 const SOFT = new Set<number>([T.GRASS, T.FOREST, T.DRY, T.MUD, T.SAND, T.GLADE]);
 const WATERY = new Set<number>([T.WATER, T.MURK]);
 const WALL = new Set<number>([T.ROCK, T.DWALL]);
+/** Wild ground types whose borders are softened. */
+const BLEND = new Set<number>([T.GRASS, T.FOREST, T.DRY, T.SAND, T.MUD, T.ROCK, T.DWALL]);
 
 type Stamp = { art: A.Art; x: number; y: number; shadow?: number };
 
@@ -71,10 +84,73 @@ export function bakeMap(rooms: RoomInfo[], world: StaticWorld | null, chunkSize 
     }
   }
 
+  // ── 1b. Soft borders between wild zones ───────────────────────────────────────
+  // Zones meet along tile edges, which reads as a staircase. Where two wild ground types touch, each pixel takes the
+  // type found at a noise-warped position instead, so the border becomes an organic, dithered line.
+  const isWild = (tx: number, ty: number) => {
+    if (tx < grid.x0 || ty < grid.y0 || tx >= grid.x0 + grid.w || ty >= grid.y0 + grid.h) return false;
+    const k = kAt(tx, ty);
+    return grid.room[k]! < 0 && grid.path[k]! === 0;
+  };
+  const warped = new Map<number, Uint8Array>();
+  for (let ty = grid.y0; ty < grid.y0 + grid.h; ty++) {
+    for (let tx = grid.x0; tx < grid.x0 + grid.w; tx++) {
+      const t = tAt(tx, ty);
+      if (!BLEND.has(t) || !isWild(tx, ty)) continue;
+      let border = false;
+      for (let dy = -1; dy <= 1 && !border; dy++)
+        for (let dx = -1; dx <= 1; dx++) {
+          const n = tAt(tx + dx, ty + dy);
+          if (n !== t && BLEND.has(n) && isWild(tx + dx, ty + dy)) {
+            border = true;
+            break;
+          }
+        }
+      if (!border) continue;
+      const types = new Uint8Array(TILE * TILE);
+      for (let ly = 0; ly < TILE; ly++)
+        for (let lx = 0; lx < TILE; lx++) {
+          const x = tx * TILE + lx;
+          const y = ty * TILE + ly;
+          const wx = x + (smoothNoise(x, y, 26, 31) - 0.5) * 30 + (noise2(x, y, 33) - 0.5) * 3;
+          const wy = y + (smoothNoise(x, y, 26, 32) - 0.5) * 30 + (noise2(x, y, 34) - 0.5) * 3;
+          const stx = Math.floor(wx / TILE);
+          const sty = Math.floor(wy / TILE);
+          let tt = tAt(stx, sty);
+          if (!BLEND.has(tt) || !isWild(stx, sty)) tt = t;
+          types[ly * TILE + lx] = tt;
+          if (tt !== t) map.px(x, y, tileColor(tt, x, y, lx, ly));
+        }
+      warped.set(kAt(tx, ty), types);
+    }
+  }
+  /** Ground type of one pixel, after the warp. */
+  const typeAtPx = (x: number, y: number) => {
+    const tx = Math.floor(x / TILE);
+    const ty = Math.floor(y / TILE);
+    const w = tx < grid.x0 || ty < grid.y0 || tx >= grid.x0 + grid.w || ty >= grid.y0 + grid.h ? undefined : warped.get(kAt(tx, ty));
+    return w ? w[(y - ty * TILE) * TILE + (x - tx * TILE)]! : tAt(tx, ty);
+  };
+  /** Tiles whose wall faces are drawn per pixel: warped tiles and their neighbours. */
+  const pixelWalls = (tx: number, ty: number) => {
+    for (let dy = -1; dy <= 1; dy++)
+      for (let dx = -1; dx <= 1; dx++) {
+        const x = tx + dx;
+        const y = ty + dy;
+        if (x < grid.x0 || y < grid.y0 || x >= grid.x0 + grid.w || y >= grid.y0 + grid.h) continue;
+        if (warped.has(kAt(x, y))) return true;
+      }
+    return false;
+  };
+
   // ── 2. Edges: water banks, wall faces, soft path borders ──────────────────────
   for (let ty = grid.y0; ty < grid.y0 + grid.h; ty++) {
     for (let tx = grid.x0; tx < grid.x0 + grid.w; tx++) {
       const t = tAt(tx, ty);
+      if (!WATERY.has(t) && pixelWalls(tx, ty) && (WALL.has(t) || WALL.has(tAt(tx, ty - 1)) || WALL.has(tAt(tx, ty + 1)) || warped.has(kAt(tx, ty)))) {
+        pixelWallFaces(tx, ty);
+        continue;
+      }
       const up = tAt(tx, ty - 1);
       const down = tAt(tx, ty + 1);
       const left = tAt(tx - 1, ty);
@@ -127,14 +203,45 @@ export function bakeMap(rooms: RoomInfo[], world: StaticWorld | null, chunkSize 
     }
   }
 
+  function pixelWallFaces(tx: number, ty: number) {
+    for (let ly = 0; ly < TILE; ly++)
+      for (let lx = 0; lx < TILE; lx++) {
+        const x = tx * TILE + lx;
+        const y = ty * TILE + ly;
+        const pt = typeAtPx(x, y);
+        if (WALL.has(pt)) {
+          let d = 0;
+          for (let k = 1; k <= 7; k++) {
+            const below = typeAtPx(x, y + k);
+            if (!WALL.has(below)) {
+              d = below === T.VOID ? 0 : k;
+              break;
+            }
+          }
+          if (!d) continue;
+          const face = pt === T.ROCK ? P.rockMid : P.dwallLight;
+          map.px(x, y, d === 7 ? shade(face, 1.25) : (x + Math.floor(y / 3)) % 5 === 0 ? shade(face, 0.8) : face);
+        } else if (pt !== T.VOID) {
+          for (let k = 1; k <= 3; k++)
+            if (WALL.has(typeAtPx(x, y - k))) {
+              map.px(x, y, shade(colorUnder(map, x, y), k === 1 ? 0.6 : 0.78));
+              break;
+            }
+        }
+      }
+  }
+
   // ── 3. Props ─────────────────────────────────────────────────────────────────
   const stamps: Stamp[] = [];
   const lights: WorldLight[] = [];
   const glints: Baked['glints'] = [];
   const ambient: Ambient[] = [];
   const sites: Record<string, Site> = {};
+  const variants: Record<string, SiteVariants> = {};
+  let sink: Stamp[] = stamps;
+  const statue: { at: { x: number; y: number } | null } = { at: null };
   const put = (art: A.Art, x: number, y: number, shadow = 0) =>
-    stamps.push({ art, x: Math.round(x), y: Math.round(y), shadow });
+    sink.push({ art, x: Math.round(x), y: Math.round(y), shadow });
   const isPath = (px: number, py: number) => {
     const tx = Math.floor(px / TILE);
     const ty = Math.floor(py / TILE);
@@ -200,8 +307,29 @@ export function bakeMap(rooms: RoomInfo[], world: StaticWorld | null, chunkSize 
     }
   }
 
-  // Room dressing.
-  for (const room of rooms) dressRoom(room);
+  // Room dressing. Project sites that replace a room's look get two pictures instead of baked props.
+  for (const room of rooms) {
+    const proj = world?.projects.find((p) => p.site === room.id);
+    if (proj && !room.flags.includes('plot') && VARIANT_BUILDINGS.has(proj.building)) {
+      sink = [];
+      dressRoom(room, false); // records the site and paints the ground details once; its props are dropped
+      sink = stamps;
+      const pics: SiteArt[] = [];
+      let at: { x: number; y: number } | null = null;
+      for (const done of [false, true]) {
+        const list: Stamp[] = [];
+        sink = list;
+        statue.at = null;
+        dressRoom(room, done, true);
+        sink = stamps;
+        if (done) at = statue.at;
+        pics.push(renderStamps(list));
+      }
+      variants[room.id] = { base: pics[0]!, done: pics[1]!, statueAt: at };
+      continue;
+    }
+    dressRoom(room, false);
+  }
 
   // Swamp mist: pale dithered veils over water and mud.
   for (let wy = oy; wy < oy + H; wy += 32)
@@ -254,10 +382,46 @@ export function bakeMap(rooms: RoomInfo[], world: StaticWorld | null, chunkSize 
   const bridge = grid.bridge
     ? { x: grid.bridge.x * TILE, y: grid.bridge.y * TILE, w: grid.bridge.w * TILE, h: grid.bridge.h * TILE }
     : null;
-  return { x: ox, y: oy, w: W, h: H, chunks, lights, glints, ambient, sites, bridge, grid };
+  return { x: ox, y: oy, w: W, h: H, chunks, lights, glints, ambient, sites, variants, bridge, grid };
+
+  /** Draws a list of stamps (depth sorted) into their own picture, anchored at the bottom centre. */
+  function renderStamps(list: Stamp[]): SiteArt {
+    let x0 = Infinity;
+    let y0 = Infinity;
+    let x1 = -Infinity;
+    let y1 = -Infinity;
+    for (const st of list) {
+      const ax = st.x - st.art.ax;
+      const ay = st.y - st.art.ay;
+      const sw = st.shadow ?? 0;
+      x0 = Math.min(x0, ax, st.x - sw / 2 - 1);
+      y0 = Math.min(y0, ay);
+      x1 = Math.max(x1, ax + st.art.buf.w, st.x + sw / 2 + 1);
+      y1 = Math.max(y1, ay + st.art.buf.h, st.y + Math.max(3, Math.round(sw / 5)) + 1);
+    }
+    if (!Number.isFinite(x0)) return { art: { buf: new PixelBuf(1, 1), ax: 0, ay: 0, lights: [] }, x: 0, y: 0 };
+    x0 = Math.floor(x0);
+    y0 = Math.floor(y0);
+    const buf = new PixelBuf(Math.ceil(x1) - x0, Math.ceil(y1) - y0);
+    buf.ox = -x0;
+    buf.oy = -y0;
+    const lightsOut: A.Light[] = [];
+    list.sort((a, b) => a.y - b.y || a.x - b.x);
+    for (const st of list) {
+      if (st.shadow) shadowEllipse(buf, st.x, st.y, st.shadow);
+      buf.blit(st.art.buf, 0, 0, st.art.buf.w, st.art.buf.h, st.x - st.art.ax, st.y - st.art.ay);
+      for (const l of st.art.lights) lightsOut.push({ ...l, x: st.x - st.art.ax + l.x - x0, y: st.y - st.art.ay + l.y - y0 });
+    }
+    buf.ox = 0;
+    buf.oy = 0;
+    const ax = Math.floor(buf.w / 2);
+    const ay = buf.h - 1;
+    return { art: { buf, ax, ay, lights: lightsOut }, x: x0 + ax, y: y0 + ay };
+  }
 
   // ── Room dressing ──────────────────────────────────────────────────────────
-  function dressRoom(room: RoomInfo) {
+  /** `done`: dress as it looks once the room's project is built. `propsOnly`: skip sites and ground details. */
+  function dressRoom(room: RoomInfo, done: boolean, propsOnly = false) {
     const [rtx, rty, rtw, rth] = room.rect;
     const rx = rtx * TILE;
     const ry = rty * TILE;
@@ -274,8 +438,10 @@ export function bakeMap(rooms: RoomInfo[], world: StaticWorld | null, chunkSize 
     const plot = room.flags.includes('plot');
     const projectSite = world?.projects.find((p) => p.site === id);
 
-    if (plot) sites[id] = { x: cx, y: band + 2, w: rw - 28, h: 58, plot: true };
-    else if (projectSite) sites[id] = siteFor(projectSite.building, room, rx, ry, rw, rh, band);
+    if (!propsOnly) {
+      if (plot) sites[id] = { x: cx, y: band + 2, w: rw - 28, h: 58, plot: true };
+      else if (projectSite) sites[id] = siteFor(projectSite.building, room, rx, ry, rw, rh, band);
+    }
     if (plot) {
       put(A.bush(seed, 0x5f9a52), rx + 8, ry + rh - 6);
       return;
@@ -305,12 +471,22 @@ export function bakeMap(rooms: RoomInfo[], world: StaticWorld | null, chunkSize 
       switch (id) {
         case 'village.square':
           put(A.fountain(), rx + 40, band + 2, 0);
-          put(A.flowerBox(seed), R + 6, ry + 36);
-          put(A.bench(), R + 12, band);
           put(A.lamp(), cx - 22, band);
           put(A.lamp(), cx + 22, band);
-          A.flowers(map, rx + 4, ry + rh - 14, seed + 1);
-          A.flowers(map, rx + rw - 16, ry + rh - 14, seed + 2);
+          if (!propsOnly) {
+            A.flowers(map, rx + 4, ry + rh - 14, seed + 1);
+            A.flowers(map, rx + rw - 16, ry + rh - 14, seed + 2);
+          }
+          if (done) {
+            // the statue garden: plinth between two flower beds; the figure is placed by the scene
+            put(A.flowerBed(seed), R - 16, band + 6);
+            put(A.flowerBed(seed + 7), R + 26, band + 6);
+            put(A.plinth(), R + 6, band + 4, 26);
+            statue.at = { x: R + 6, y: band + 4 - 17 };
+          } else {
+            put(A.flowerBox(seed), R + 6, ry + 36);
+            put(A.bench(), R + 12, band);
+          }
           break;
         case 'village.tavern':
           left(
@@ -321,9 +497,17 @@ export function bakeMap(rooms: RoomInfo[], world: StaticWorld | null, chunkSize 
               -14,
             ),
           );
-          put(A.noticeBoard(), R - 6, band);
-          put(A.barrel(), R + 18, band - 2);
-          put(A.barrel(), R + 26, band + 2);
+          if (done) {
+            // the inn expansion: a guest wing across the lane, the board moved out front
+            put(A.innWing(), R + 2, band + 2, 54);
+            put(A.barrel(), rx + rw - 5, band + 6);
+            put(A.noticeBoard(), rx + 14, band + 30);
+            put(A.bench(), rx + 46, band + 30);
+          } else {
+            put(A.noticeBoard(), R - 6, band);
+            put(A.barrel(), R + 18, band - 2);
+            put(A.barrel(), R + 26, band + 2);
+          }
           break;
         case 'village.guild_hall':
           put(
@@ -420,6 +604,12 @@ export function bakeMap(rooms: RoomInfo[], world: StaticWorld | null, chunkSize 
           put(A.loom(), R, band + 2);
           break;
         case 'village.market':
+          if (done) {
+            put(A.coveredMarket(rw - 12, seed), cx, band + 6);
+            put(A.crate(), rx + 8, band + 14);
+            put(A.barrel(), rx + rw - 8, band + 14);
+            break;
+          }
           put(A.stall(seed, 0xd9534f), rx + 30, band + 2, 30);
           put(A.stall(seed + 1, 0x5b8def), cx, band + 2, 30);
           put(A.stall(seed + 2, 0xe8c35a), rx + rw - 30, band + 2, 30);
@@ -456,7 +646,7 @@ export function bakeMap(rooms: RoomInfo[], world: StaticWorld | null, chunkSize 
           else put(A.house({ w: 70, wallH: 24, roofH: 18, windows: 3, chimney: true }), cx, band, 60);
       }
       // lamp posts at the room corners along the paths
-      if (id !== 'village.square' && r() < 0.6) put(A.lamp(), rx + 6, ry + rh - 2);
+      if (id !== 'village.square' && r() < 0.6 && !(done && id === 'village.south_gate')) put(A.lamp(), rx + 6, ry + rh - 2);
     }
 
     function dressGate() {
@@ -476,6 +666,17 @@ export function bakeMap(rooms: RoomInfo[], world: StaticWorld | null, chunkSize 
           36,
         );
         put(A.haybale(), id === 'village.west_gate' ? R : L, band);
+      } else if (done) {
+        // the village wall: stone runs reaching past the room, two towers flanking the gate
+        const y = ry + rh - 2;
+        const gl = cx - TILE - 20;
+        const gr = cx + TILE + 20;
+        put(A.wallRun(gl - (rx - 16)), (rx - 16 + gl) / 2, y);
+        put(A.wallRun(rx + rw + 16 - gr), (gr + rx + rw + 16) / 2, y);
+        put(A.gateTower(), cx - TILE - 10, y + 4);
+        put(A.gateTower(), cx + TILE + 10, y + 4);
+        put(A.house({ w: 40, wallH: 20, roofH: 14, roof: P.roofDark, windows: 1 }), L, band, 40);
+        put(A.weaponRack(), R, band);
       } else {
         const y = ry + rh - 2;
         put(A.palisade(cx - TILE - rx - 6), rx + (cx - TILE - rx - 6) / 2, y);
@@ -763,7 +964,8 @@ export function bakeMap(rooms: RoomInfo[], world: StaticWorld | null, chunkSize 
         h: 40,
         plot: false,
       };
-    if (building === 'wall') return { x: cx, y: ry + rh + 6, w: rw, h: 26, plot: false };
+    if (building === 'wall') return { x: cx, y: ry + rh + 2, w: rw, h: 30, plot: false };
+    if (building === 'covered_market') return { x: cx, y: band + 6, w: rw - 24, h: 46, plot: false };
     if (building === 'statue') return { x: rx + rw - 34, y: band + 2, w: 40, h: 46, plot: false };
     void room;
     return { x: rx + rw - 34, y: band + 2, w: 58, h: 48, plot: false };
@@ -828,139 +1030,139 @@ function tileBase(t: number): number {
   }
 }
 
+/** Colour of the pixel (x, y) of a tile of type `t`; (lx, ly) are the coordinates inside the tile. */
+function tileColor(t: number, x: number, y: number, lx: number, ly: number): number {
+  const n = noise2(x, y, 1);
+  let c: number;
+  switch (t) {
+    case T.GRASS: {
+      c = smoothNoise(x, y, 40, 3) > 0.66 ? mix(P.grass, P.grassLight, 0.4) : P.grass;
+      if (n < 0.06) c = P.grassDark;
+      else if (n > 0.965) c = P.grassLight;
+      break;
+    }
+    case T.COBBLE: {
+      const row = Math.floor(y / 4);
+      const off = (row % 2) * 3;
+      const col = Math.floor((x + off) / 6);
+      const edge = y % 4 === 3 || (x + off) % 6 === 5;
+      const tone = noise2(col, row, 7);
+      c = edge
+        ? P.cobbleDark
+        : tone < 0.25
+          ? shade(P.cobble, 0.93)
+          : tone > 0.85
+            ? P.cobbleLight
+            : P.cobble;
+      if (!edge && y % 4 === 0 && (x + off) % 6 === 0) c = P.cobbleLight;
+      break;
+    }
+    case T.DIRT:
+      c =
+        n < 0.1
+          ? P.dirtDark
+          : n > 0.975
+            ? 0xc2a57c
+            : smoothNoise(x, y, 20, 8) > 0.7
+              ? shade(P.dirt, 0.95)
+              : P.dirt;
+      break;
+    case T.FOREST:
+      c = smoothNoise(x, y, 30, 4) > 0.62 ? P.forestLight : P.forest;
+      if (n < 0.13) c = P.forestDark;
+      else if (n > 0.975) c = 0x6b5a3a;
+      break;
+    case T.GLADE:
+      c = smoothNoise(x, y, 30, 4) > 0.6 ? 0x6aa864 : 0x5f9a5c;
+      if (n < 0.08) c = P.forestLight;
+      else if (n > 0.97) c = P.flowerYellow;
+      break;
+    case T.DRY:
+      c = smoothNoise(x, y, 36, 5) > 0.64 ? P.dryLight : P.dry;
+      if (n < 0.08) c = P.dryDark;
+      else if (n > 0.95 && noise2(x, y + 1, 1) > 0.5) c = P.dryLight;
+      break;
+    case T.CAVE:
+      c = n < 0.1 ? P.caveDark : n > 0.97 ? P.caveLight : P.cave;
+      if (Math.abs(smoothNoise(x, y, 18, 6) - 0.5) < 0.012) c = P.caveDark;
+      break;
+    case T.ROCK: {
+      const f = smoothNoise(x, y, 7, 7);
+      c = f > 0.72 ? P.rockLight : f > 0.45 ? P.rockMid : P.rock;
+      if (n < 0.04) c = P.rock;
+      break;
+    }
+    case T.MUD:
+      c = smoothNoise(x, y, 22, 9) > 0.6 ? P.moss : P.mud;
+      if (n < 0.1) c = P.mudDark;
+      break;
+    case T.MURK:
+      c = smoothNoise(x, y, 28, 10) > 0.62 ? P.murkDark : P.murk;
+      if (noise2(Math.floor(x / 5), y, 13) > 0.985) c = P.murkLight;
+      break;
+    case T.PLANK_H:
+      c = lx % 4 === 3 ? P.plankDark : n < 0.08 ? shade(P.plank, 0.9) : P.plank;
+      if (lx % 4 === 1 && (ly === 2 || ly === 13)) c = OUTLINE;
+      break;
+    case T.PLANK_V:
+      c = ly % 4 === 3 ? P.plankDark : n < 0.08 ? shade(P.plank, 0.9) : P.plank;
+      if (ly % 4 === 1 && (lx === 2 || lx === 13)) c = OUTLINE;
+      break;
+    case T.FLAG: {
+      const row = Math.floor(y / 8);
+      const off = (row % 2) * 4;
+      const col = Math.floor((x + off) / 8);
+      const edge = y % 8 === 7 || (x + off) % 8 === 7;
+      const tone = noise2(col, row, 15);
+      c = edge ? P.flagDark : tone < 0.3 ? shade(P.flag, 0.94) : tone > 0.85 ? P.flagLight : P.flag;
+      if (!edge && tone > 0.6 && tone < 0.68 && (x + off) % 8 === y % 8) c = 0x7e705c;
+      if (edge && noise2(x, y, 16) > 0.93) c = P.ivy;
+      break;
+    }
+    case T.SAND:
+      c =
+        n < 0.08
+          ? P.sandDark
+          : n > 0.985
+            ? P.flagDark
+            : smoothNoise(x, y, 30, 17) > 0.65
+              ? shade(P.sand, 0.96)
+              : P.sand;
+      break;
+    case T.BRICK: {
+      const row = Math.floor(y / 5);
+      const off = (row % 2) * 5;
+      const edge = y % 5 === 4 || (x + off) % 10 === 9;
+      c = edge ? P.brickDark : y % 5 === 0 ? P.brickLight : n < 0.06 ? shade(P.brick, 0.9) : P.brick;
+      break;
+    }
+    case T.DWALL: {
+      const row = Math.floor(y / 5);
+      const off = (row % 2) * 5;
+      c = y % 5 === 4 || (x + off) % 10 === 9 ? 0x18121f : P.dwall;
+      break;
+    }
+    case T.WATER:
+      c = smoothNoise(x, y, 26, 18) > 0.6 ? P.waterDark : P.water;
+      if (noise2(Math.floor(x / 4), y, 19) > 0.98) c = P.waterLight;
+      break;
+    case T.STAIRS:
+      c = ly % 4 === 0 ? P.flagLight : ly % 4 === 3 ? shade(P.flagDark, 0.7) : P.flag;
+      if (lx === 0 || lx === 15) c = P.flagDark;
+      break;
+    default:
+      c = VOID;
+  }
+  return c;
+}
+
 /** Paints one 16x16 tile at tile coordinates (tx, ty). */
 function paintTile(map: PixelBuf, tx: number, ty: number, t: number) {
   const x0 = tx * TILE;
   const y0 = ty * TILE;
   const h = hash32(`${tx},${ty}`, 1);
-  for (let ly = 0; ly < TILE; ly++) {
-    for (let lx = 0; lx < TILE; lx++) {
-      const x = x0 + lx;
-      const y = y0 + ly;
-      const n = noise2(x, y, 1);
-      let c: number;
-      switch (t) {
-        case T.GRASS: {
-          c = smoothNoise(x, y, 40, 3) > 0.66 ? mix(P.grass, P.grassLight, 0.4) : P.grass;
-          if (n < 0.06) c = P.grassDark;
-          else if (n > 0.965) c = P.grassLight;
-          break;
-        }
-        case T.COBBLE: {
-          const row = Math.floor(y / 4);
-          const off = (row % 2) * 3;
-          const col = Math.floor((x + off) / 6);
-          const edge = y % 4 === 3 || (x + off) % 6 === 5;
-          const tone = noise2(col, row, 7);
-          c = edge
-            ? P.cobbleDark
-            : tone < 0.25
-              ? shade(P.cobble, 0.93)
-              : tone > 0.85
-                ? P.cobbleLight
-                : P.cobble;
-          if (!edge && y % 4 === 0 && (x + off) % 6 === 0) c = P.cobbleLight;
-          break;
-        }
-        case T.DIRT:
-          c =
-            n < 0.1
-              ? P.dirtDark
-              : n > 0.975
-                ? 0xc2a57c
-                : smoothNoise(x, y, 20, 8) > 0.7
-                  ? shade(P.dirt, 0.95)
-                  : P.dirt;
-          break;
-        case T.FOREST:
-          c = smoothNoise(x, y, 30, 4) > 0.62 ? P.forestLight : P.forest;
-          if (n < 0.13) c = P.forestDark;
-          else if (n > 0.975) c = 0x6b5a3a;
-          break;
-        case T.GLADE:
-          c = smoothNoise(x, y, 30, 4) > 0.6 ? 0x6aa864 : 0x5f9a5c;
-          if (n < 0.08) c = P.forestLight;
-          else if (n > 0.97) c = P.flowerYellow;
-          break;
-        case T.DRY:
-          c = smoothNoise(x, y, 36, 5) > 0.64 ? P.dryLight : P.dry;
-          if (n < 0.08) c = P.dryDark;
-          else if (n > 0.95 && noise2(x, y + 1, 1) > 0.5) c = P.dryLight;
-          break;
-        case T.CAVE:
-          c = n < 0.1 ? P.caveDark : n > 0.97 ? P.caveLight : P.cave;
-          if (Math.abs(smoothNoise(x, y, 18, 6) - 0.5) < 0.012) c = P.caveDark;
-          break;
-        case T.ROCK: {
-          const f = smoothNoise(x, y, 7, 7);
-          c = f > 0.72 ? P.rockLight : f > 0.45 ? P.rockMid : P.rock;
-          if (n < 0.04) c = P.rock;
-          break;
-        }
-        case T.MUD:
-          c = smoothNoise(x, y, 22, 9) > 0.6 ? P.moss : P.mud;
-          if (n < 0.1) c = P.mudDark;
-          break;
-        case T.MURK:
-          c = smoothNoise(x, y, 28, 10) > 0.62 ? P.murkDark : P.murk;
-          if (noise2(Math.floor(x / 5), y, 13) > 0.985) c = P.murkLight;
-          break;
-        case T.PLANK_H:
-          c = lx % 4 === 3 ? P.plankDark : n < 0.08 ? shade(P.plank, 0.9) : P.plank;
-          if (lx % 4 === 1 && (ly === 2 || ly === 13)) c = OUTLINE;
-          break;
-        case T.PLANK_V:
-          c = ly % 4 === 3 ? P.plankDark : n < 0.08 ? shade(P.plank, 0.9) : P.plank;
-          if (ly % 4 === 1 && (lx === 2 || lx === 13)) c = OUTLINE;
-          break;
-        case T.FLAG: {
-          const row = Math.floor(y / 8);
-          const off = (row % 2) * 4;
-          const col = Math.floor((x + off) / 8);
-          const edge = y % 8 === 7 || (x + off) % 8 === 7;
-          const tone = noise2(col, row, 15);
-          c = edge ? P.flagDark : tone < 0.3 ? shade(P.flag, 0.94) : tone > 0.85 ? P.flagLight : P.flag;
-          if (!edge && tone > 0.6 && tone < 0.68 && (x + off) % 8 === y % 8) c = 0x7e705c;
-          if (edge && noise2(x, y, 16) > 0.93) c = P.ivy;
-          break;
-        }
-        case T.SAND:
-          c =
-            n < 0.08
-              ? P.sandDark
-              : n > 0.985
-                ? P.flagDark
-                : smoothNoise(x, y, 30, 17) > 0.65
-                  ? shade(P.sand, 0.96)
-                  : P.sand;
-          break;
-        case T.BRICK: {
-          const row = Math.floor(y / 5);
-          const off = (row % 2) * 5;
-          const edge = y % 5 === 4 || (x + off) % 10 === 9;
-          c = edge ? P.brickDark : y % 5 === 0 ? P.brickLight : n < 0.06 ? shade(P.brick, 0.9) : P.brick;
-          break;
-        }
-        case T.DWALL: {
-          const row = Math.floor(y / 5);
-          const off = (row % 2) * 5;
-          c = y % 5 === 4 || (x + off) % 10 === 9 ? 0x18121f : P.dwall;
-          break;
-        }
-        case T.WATER:
-          c = smoothNoise(x, y, 26, 18) > 0.6 ? P.waterDark : P.water;
-          if (noise2(Math.floor(x / 4), y, 19) > 0.98) c = P.waterLight;
-          break;
-        case T.STAIRS:
-          c = ly % 4 === 0 ? P.flagLight : ly % 4 === 3 ? shade(P.flagDark, 0.7) : P.flag;
-          if (lx === 0 || lx === 15) c = P.flagDark;
-          break;
-        default:
-          c = VOID;
-      }
-      map.px(x, y, c);
-    }
-  }
+  for (let ly = 0; ly < TILE; ly++)
+    for (let lx = 0; lx < TILE; lx++) map.px(x0 + lx, y0 + ly, tileColor(t, x0 + lx, y0 + ly, lx, ly));
   // grass tufts and pebbles, one per some tiles
   if ((t === T.GRASS || t === T.FOREST || t === T.DRY || t === T.GLADE) && (h & 7) < 3) {
     const tx0 = x0 + 2 + ((h >>> 4) % 11);

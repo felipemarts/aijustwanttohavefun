@@ -3,7 +3,11 @@
  * agents, effects, day/night grade and night lights in one world render group; labels and bubbles in screen space.
  */
 import type { DayPhase, RoomInfo, SpectatorEvent } from '@ajwf/shared';
-import { Application, BitmapFont, Container, Graphics, Sprite, Texture } from 'pixi.js';
+// The production CSP has no 'unsafe-eval': Pixi's shader and uniform code must not use `new Function`.
+import 'pixi.js/unsafe-eval';
+import { Application, BitmapFont, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
+import { drawMockSheet } from '../data/mockSprites';
+import { isObj, isStr } from '../data/parse';
 import type { Changes } from '../data/reducers';
 import { dayFractionAt, dramaSnapshot } from '../data/reducers';
 import type { DataSource } from '../data/source';
@@ -25,6 +29,7 @@ import { monsterSpot, npcSpot, roomPx, TILE, worldBounds } from './geometry';
 import { attachInput } from './input';
 import { type Lod, lodFor, nearestStep, pickLabels, type LabelCandidate } from './lod';
 import { Overlay, UI_FONT } from './overlay';
+import { siteKey, siteState } from './sites';
 import { buildSceneTextures, canvasTexture, type MonsterTex, type SceneTextures } from './textures';
 
 export type SceneOptions = {
@@ -63,7 +68,25 @@ type NpcView = {
   textures: Texture[] | null;
   offset: number;
 };
-type SiteView = { room: string; key: string; box: Container; sprite: Sprite | null; bar: Graphics };
+type SiteView = {
+  room: string;
+  key: string;
+  box: Container;
+  sprite: Sprite | null;
+  /** Scaffolding drawn over a room's own look while its project is under way. */
+  overlay: Sprite | null;
+  statue: Sprite | null;
+  bar: Graphics;
+  lights: LightView[];
+  /** When the building appeared (grow-in animation), 0 when settled. */
+  appearAt: number;
+  /** Ground point and size of the picture, for the celebration. */
+  cx: number;
+  cy: number;
+  w: number;
+  h: number;
+};
+type Banner = { box: Container; x: number; y: number; t0: number; dur: number };
 type LightView = {
   sprite: Sprite;
   pane: Sprite | null;
@@ -112,6 +135,10 @@ export class MapScene {
   private monsters: MonsterView[] = [];
   private npcs: NpcView[] = [];
   private sites = new Map<string, SiteView>();
+  private banners: Banner[] = [];
+  private bannerLayer = new Container();
+  private honoree: { name: string; sprite: string } | null = null;
+  private honoreeFetchedAt = 0;
   private lights: LightView[] = [];
   private motes: MoteView[] = [];
   private roomOutline = new Graphics();
@@ -200,7 +227,7 @@ export class MapScene {
       this.dots,
       this.marks,
     );
-    this.app.stage.addChild(this.world, this.fxText, this.overlay.root);
+    this.app.stage.addChild(this.world, this.fxText, this.overlay.root, this.bannerLayer);
     this.arrow = new Sprite(this.tex.fx.arrow);
     this.arrow.anchor.set(0.5, 1);
     this.arrow.visible = false;
@@ -232,6 +259,7 @@ export class MapScene {
     this.disposers.push(
       attachInput(canvas, this.camera, {
         manual: (kind) => {
+          controller.pendingFocus = null;
           controller.pauseDirector();
           if (kind === 'pan' && controller.follow) controller.setFollow(null);
         },
@@ -253,6 +281,16 @@ export class MapScene {
     this.disposers.push(() => document.removeEventListener('visibilitychange', onVis));
 
     this.syncAgents();
+    if (controller.pendingFocus) {
+      // kept until the viewer moves the map: a remounted scene (StrictMode, back navigation) shows it again
+      const id = controller.pendingFocus;
+      controller.pauseDirector();
+      const room = this.rooms().find((r) => r.id === id);
+      if (room) {
+        const r = roomPx(room);
+        this.camera.moveTo(r.x + r.w / 2, r.y + r.h / 2, Math.max(this.camera.scale, 1.5), 0);
+      }
+    }
     this.ready = true;
     this.app.ticker.add(() => this.frame());
   }
@@ -296,7 +334,9 @@ export class MapScene {
     this.grade.height = baked.h;
     this.buildLights(baked);
     this.buildMonstersAndNpcs(rooms);
-    this.syncSites();
+    for (const v of this.sites.values()) v.box.destroy({ children: true });
+    this.sites.clear();
+    this.syncSites([]);
   }
 
   private buildLights(baked: Baked) {
@@ -304,37 +344,7 @@ export class MapScene {
     for (const c of this.panes.removeChildren()) c.destroy();
     this.lights = [];
     this.motes = [];
-    for (const l of baked.lights) {
-      const big = l.kind === 'forge' || l.kind === 'fire' || l.kind === 'rune';
-      const small =
-        l.kind === 'window' || l.kind === 'candle' || l.kind === 'cauldron' || l.kind === 'crystal';
-      const s = new Sprite(this.tex.fx[big ? 'glowL' : small ? 'glowS' : 'glowM']);
-      s.anchor.set(0.5);
-      s.position.set(l.x, l.y);
-      s.tint = LIGHT_TINT[l.kind];
-      s.alpha = 0;
-      this.glows.addChild(s);
-      let pane: Sprite | null = null;
-      if (l.kind === 'window' && l.w && l.h) {
-        pane = new Sprite(this.tex.fx.white);
-        pane.anchor.set(0.5);
-        pane.position.set(l.x, l.y);
-        pane.width = l.w;
-        pane.height = l.h;
-        pane.tint = 0xf8d27a;
-        pane.alpha = 0;
-        this.panes.addChild(pane);
-      }
-      this.lights.push({
-        sprite: s,
-        pane,
-        base: l.kind === 'crystal' || l.kind === 'rune' ? 0.7 : 1,
-        kind: l.kind,
-        x: l.x,
-        y: l.y,
-        seed: hash32(`${l.x},${l.y}`) % 1000,
-      });
-    }
+    for (const l of baked.lights) this.lights.push(this.makeLight(l));
     for (const a of baked.ambient) {
       const s = new Sprite(this.tex.fx.mote);
       s.anchor.set(0.5);
@@ -343,6 +353,37 @@ export class MapScene {
       this.glows.addChild(s);
       this.motes.push({ sprite: s, x: a.x, y: a.y, kind: a.kind, seed: hash32(`${a.x},${a.y}`) % 1000 });
     }
+  }
+
+  private makeLight(l: A.Light): LightView {
+    const big = l.kind === 'forge' || l.kind === 'fire' || l.kind === 'rune';
+    const small = l.kind === 'window' || l.kind === 'candle' || l.kind === 'cauldron' || l.kind === 'crystal';
+    const s = new Sprite(this.tex.fx[big ? 'glowL' : small ? 'glowS' : 'glowM']);
+    s.anchor.set(0.5);
+    s.position.set(l.x, l.y);
+    s.tint = LIGHT_TINT[l.kind];
+    s.alpha = 0;
+    this.glows.addChild(s);
+    let pane: Sprite | null = null;
+    if (l.kind === 'window' && l.w && l.h) {
+      pane = new Sprite(this.tex.fx.white);
+      pane.anchor.set(0.5);
+      pane.position.set(l.x, l.y);
+      pane.width = l.w;
+      pane.height = l.h;
+      pane.tint = 0xf8d27a;
+      pane.alpha = 0;
+      this.panes.addChild(pane);
+    }
+    return {
+      sprite: s,
+      pane,
+      base: l.kind === 'crystal' || l.kind === 'rune' ? 0.7 : 1,
+      kind: l.kind,
+      x: l.x,
+      y: l.y,
+      seed: hash32(`${l.x},${l.y}`) % 1000,
+    };
   }
 
   private buildMonstersAndNpcs(rooms: RoomInfo[]) {
@@ -405,76 +446,198 @@ export class MapScene {
     }
   }
 
-  /** Construction sites: empty lot with a sign, scaffolding with a progress bar, or the finished building. */
-  private syncSites() {
+  /**
+   * Construction sites from live data: empty lot with a sign, scaffolding with a progress bar, the finished
+   * building, a guild hall in its colours, or (tavern, market, gate, square) the room's own look, swapped for the
+   * new one when its project completes. `celebrate` lists projects that just finished.
+   */
+  private syncSites(celebrate: readonly string[]) {
     const baked = this.baked;
     if (!baked) return;
     const s = this.opts.store.state;
-    const buildingOf = (projectId: string) =>
-      this.opts.world.projects.find((p) => p.id === projectId)?.building ?? projectId;
+    const now = performance.now();
     for (const [roomId, site] of Object.entries(baked.sites)) {
-      const proj = s.projects.find((p) => p.plot === roomId);
-      const builtProject = s.buildings[roomId] ?? (proj?.done ? proj.id : null);
-      const room = s.rooms.get(roomId);
-      let state: 'none' | 'lot' | 'work' | 'done' = 'none';
-      let building = '';
-      if (builtProject) {
-        state = 'done';
-        building = buildingOf(builtProject);
-      } else if (room?.building) {
-        state = 'done';
-        building = room.building;
-      } else if (proj) state = 'work';
-      else if (site.plot) state = 'lot';
-      const progress = proj?.progress ?? 0;
-      const key = `${state}:${building}`;
+      const variant = baked.variants[roomId];
+      const kind = site.plot ? 'plot' : variant ? 'variant' : 'other';
+      const st = siteState(
+        roomId,
+        kind,
+        { projects: s.projects, buildings: s.buildings, halls: s.halls, roomBuilding: s.rooms.get(roomId)?.building ?? null },
+        this.opts.world,
+      );
+      const key = siteKey(st);
       let v = this.sites.get(roomId);
       if (!v) {
         const box = new Container();
         const bar = new Graphics();
         box.addChild(bar);
         this.sitesLayer.addChild(box);
-        v = { room: roomId, key: '', box, sprite: null, bar };
+        v = { room: roomId, key: '', box, sprite: null, overlay: null, statue: null, bar, lights: [], appearAt: 0, cx: site.x, cy: site.y, w: site.w, h: site.h };
         this.sites.set(roomId, v);
       }
       if (v.key !== key) {
+        const wasBuilt = v.key !== '' && !v.key.startsWith('done') && !v.key.startsWith('hall');
         v.key = key;
-        if (v.sprite) {
-          v.sprite.destroy({ texture: true, textureSource: true });
-          v.sprite = null;
+        for (const sp of [v.sprite, v.overlay, v.statue]) sp?.destroy({ texture: true, textureSource: true });
+        v.sprite = v.overlay = v.statue = null;
+        for (const l of v.lights) {
+          l.sprite.destroy();
+          l.pane?.destroy();
         }
-        let art: A.Art | null = null;
-        if (state === 'lot') art = A.emptyLot(Math.min(site.w, 124), 54);
-        else if (state === 'work')
-          art = A.scaffold(
-            Math.min(site.w, roomId === 'village.river_bank' ? 52 : 110),
-            Math.min(site.h, 52),
-            hash32(roomId),
-          );
-        else if (state === 'done')
-          art =
-            building === 'bridge' && baked.bridge
-              ? A.bridge(baked.bridge.w + 8, baked.bridge.h + 8)
-              : A.projectBuilding(building);
-        if (art) {
-          const sp = new Sprite(canvasTexture(art.buf.toCanvas()));
-          sp.anchor.set(art.ax / art.buf.w, art.ay / art.buf.h);
-          sp.position.set(site.x, site.y);
-          v.box.addChildAt(sp, 0);
-          v.sprite = sp;
+        this.lights = this.lights.filter((l) => !v!.lights.includes(l));
+        v.lights = [];
+        let pic: { art: A.Art; x: number; y: number } | null = null;
+        let over: { art: A.Art; x: number; y: number } | null = null;
+        const work = () => A.scaffold(Math.min(site.w, roomId === 'village.river_bank' ? 52 : 120), Math.min(site.h, 52), hash32(roomId));
+        if (variant) {
+          pic = st.mode === 'done' ? variant.done : variant.base;
+          if (st.mode === 'work') over = { art: work(), x: site.x, y: site.y };
+        } else if (st.mode === 'lot') pic = { art: A.emptyLot(Math.min(site.w, 124), 54), x: site.x, y: site.y };
+        else if (st.mode === 'work') pic = { art: work(), x: site.x, y: site.y };
+        else if (st.mode === 'hall' && st.hall)
+          pic = { art: A.guildHall(A.hexColor(st.hall.colors[0], 0xd9534f), A.hexColor(st.hall.colors[1], 0xf2b84b)), x: site.x, y: site.y + 4 };
+        else if (st.mode === 'done')
+          pic = {
+            art: st.building === 'bridge' && baked.bridge ? A.bridge(baked.bridge.w + 8, baked.bridge.h + 8) : A.projectBuilding(st.building),
+            x: site.x,
+            y: site.y,
+          };
+        const add = (p: { art: A.Art; x: number; y: number }) => {
+          const sp = new Sprite(canvasTexture(p.art.buf.toCanvas()));
+          sp.anchor.set(p.art.ax / p.art.buf.w, p.art.ay / p.art.buf.h);
+          sp.position.set(p.x, p.y);
+          v!.box.addChildAt(sp, v!.box.children.length - 1);
+          for (const l of p.art.lights) {
+            const lv = this.makeLight({ ...l, x: p.x - p.art.ax + l.x, y: p.y - p.art.ay + l.y });
+            v!.lights.push(lv);
+            this.lights.push(lv);
+          }
+          return sp;
+        };
+        if (pic) {
+          v.sprite = add(pic);
+          v.cx = pic.x;
+          v.cy = pic.y;
+          v.w = pic.art.buf.w;
+          v.h = pic.art.buf.h;
         }
+        if (over) v.overlay = add(over);
+        if (variant?.statueAt && st.mode === 'done') this.placeStatue(v, variant.statueAt);
+        const built = st.mode === 'done' || st.mode === 'hall';
+        v.appearAt = built && wasBuilt && !this.opts.reducedMotion ? now : 0;
       }
       v.bar.clear();
-      if (state === 'work') {
+      if (st.mode === 'work') {
         const w = 44;
         const x = Math.round(site.x - w / 2);
         const y = Math.round(site.y - Math.min(site.h, 52) - 10);
         v.bar.rect(x - 1, y - 1, w + 2, 7).fill(0x241a2e);
         v.bar.rect(x, y, w, 5).fill(0x4a3d66);
-        v.bar.rect(x, y, Math.round(w * progress), 5).fill(0xf2b84b);
-        v.bar.rect(x, y, Math.round(w * progress), 1).fill(0xffe08a);
+        v.bar.rect(x, y, Math.round(w * st.progress), 5).fill(0xf2b84b);
+        v.bar.rect(x, y, Math.round(w * st.progress), 1).fill(0xffe08a);
       }
+      if (st.project && celebrate.includes(st.project) && (st.mode === 'done' || st.mode === 'hall')) this.celebrate(v, st.project, now);
     }
+  }
+
+  /** The finished project's moment: dust, confetti, a banner with its name, and the director cuts to it. */
+  private celebrate(v: SiteView, project: string, now: number) {
+    this.effects.celebrate(v.cx, v.cy, Math.min(v.w, 140), Math.min(v.h, 90), now);
+    const tr = i18n.tr;
+    const label = tr.t('ui.map.project_done', { proj: `@proj:${project}` });
+    const box = new Container();
+    const text = new Text({
+      text: label,
+      style: { fontFamily: UI_FONT, fontSize: 15, fontWeight: '800', fill: 0x241a2e, letterSpacing: 0.5 },
+    });
+    text.resolution = Math.min(window.devicePixelRatio || 1, 3);
+    const w = Math.ceil(text.width) + 28;
+    const h = 24;
+    const g = new Graphics();
+    const INK = 0x241a2e;
+    // ribbon tails with a notch, then the band, a 1 px ink outline and a lighter top edge
+    g.rect(-w / 2 - 14, -h / 2 + 5, 18, h - 2).fill(INK);
+    g.rect(-w / 2 - 13, -h / 2 + 6, 16, h - 4).fill(0xb9842a);
+    g.rect(-w / 2 - 13, -2, 4, 4).fill(INK);
+    g.rect(w / 2 - 4, -h / 2 + 5, 18, h - 2).fill(INK);
+    g.rect(w / 2 - 3, -h / 2 + 6, 16, h - 4).fill(0xb9842a);
+    g.rect(w / 2 + 9, -2, 4, 4).fill(INK);
+    g.rect(-w / 2, -h / 2, w, h).fill(INK);
+    g.rect(-w / 2 + 1, -h / 2 + 1, w - 2, h - 2).fill(0xf2b84b);
+    g.rect(-w / 2 + 1, -h / 2 + 1, w - 2, 2).fill(0xffe08a);
+    g.rect(-w / 2 + 1, h / 2 - 3, w - 2, 2).fill(0xd99a2b);
+    text.anchor.set(0.5);
+    text.position.set(0, 1);
+    box.addChild(g, text);
+    this.bannerLayer.addChild(box);
+    this.banners.push({ box, x: v.cx, y: v.cy - Math.min(v.h, 90) - 14, t0: now, dur: 5200 });
+    if (controller.director.enabled && !controller.follow) {
+      this.camera.moveTo(v.cx, v.cy - 20, Math.max(this.directorScale(), 2), this.opts.reducedMotion ? 0 : 1100);
+      this.director = { room: v.room, prev: this.director.room, since: now, peak: 0, lastRiseAt: now };
+      this.opts.store.setTopics('director', [`room:${v.room}`]);
+      controller.setDirectorRoom(v.room, { key: 'ui.director.caption.project_done', params: { proj: `@proj:${project}` } });
+      this.lastCaptionAt = now;
+    }
+  }
+
+  private updateBanners(now: number) {
+    let w = 0;
+    for (const b of this.banners) {
+      const f = (now - b.t0) / b.dur;
+      if (f >= 1) {
+        b.box.destroy({ children: true });
+        continue;
+      }
+      const p = this.camera.toScreen(b.x, b.y);
+      const pop = this.opts.reducedMotion ? 1 : f < 0.08 ? f / 0.08 : 1;
+      b.box.position.set(Math.round(p.x), Math.round(p.y - (this.opts.reducedMotion ? 0 : Math.sin(Math.min(1, f * 6) * Math.PI) * 4)));
+      b.box.scale.set(pop * (this.opts.reducedMotion ? 1 : 1 + (1 - pop) * 0.3));
+      b.box.alpha = f > 0.85 ? (1 - f) / 0.15 : 1;
+      b.box.visible = this.lod !== 'dot' || f < 0.5;
+      this.banners[w++] = b;
+    }
+    this.banners.length = w;
+  }
+
+  /** The statue on the square: the honoree's sprite cast in bronze on the plinth (a cloaked figure until known). */
+  private placeStatue(v: SiteView, at: { x: number; y: number }) {
+    const draw = (img: CanvasImageSource | null) => {
+      if (this.destroyed || !this.sites.has(v.room) || !v.key.startsWith('done')) return;
+      const c = document.createElement('canvas');
+      c.width = 20;
+      c.height = 28;
+      const ctx = c.getContext('2d');
+      if (!ctx) return;
+      try {
+        ctx.drawImage(img ?? drawMockSheet('placeholder-silhouette'), 0, 0, 20, 28, 0, 0, 20, 28);
+      } catch {
+        ctx.drawImage(drawMockSheet('placeholder-silhouette'), 0, 0, 20, 28, 0, 0, 20, 28);
+      }
+      const bronze = A.bronzeFrame(ctx.getImageData(0, 0, 20, 28).data);
+      bronze.outline();
+      v.statue?.destroy({ texture: true, textureSource: true });
+      const sp = new Sprite(canvasTexture(bronze.toCanvas()));
+      sp.anchor.set(0.5, 1);
+      sp.position.set(at.x, at.y + 1);
+      v.box.addChildAt(sp, v.box.children.length - 1);
+      v.statue = sp;
+    };
+    draw(null);
+    const fetchHonoree = async () => {
+      this.honoreeFetchedAt = performance.now();
+      const body = await this.opts.source.getJson('/api/public/village');
+      const h = isObj(body) && isObj(body.honoree) ? body.honoree : null;
+      if (h && isStr(h.name) && isStr(h.sprite)) this.honoree = { name: h.name, sprite: h.sprite };
+    };
+    void (async () => {
+      if (!this.honoree && performance.now() - this.honoreeFetchedAt > 10_000) await fetchHonoree();
+      if (!this.honoree) {
+        // the honoree is set a moment after the statue completes: look once more
+        await new Promise((r) => setTimeout(r, 4000));
+        await fetchHonoree();
+      }
+      if (this.honoree) draw(await this.opts.source.spriteImage(this.honoree.sprite));
+    })();
   }
 
   private placeInitialCamera() {
@@ -513,10 +676,8 @@ export class MapScene {
 
   private onChanges(ch: Changes) {
     if (!this.ready) return;
-    if (ch.rooms) {
-      this.rebuildWorld();
-      this.syncSites();
-    }
+    if (ch.rooms) this.rebuildWorld();
+    if (ch.rooms || ch.village) this.syncSites(ch.completed);
     for (const ev of ch.events) if (ev.type === 'arrival' && ev.actor) this.pendingArrivals.add(ev.actor);
     if (ch.agents) this.syncAgents();
     for (const room of ch.extras) this.applyExtras(room);
@@ -764,6 +925,16 @@ export class MapScene {
     });
 
     this.updateLabels(now, view);
+    this.updateBanners(now);
+    for (const v of this.sites.values()) {
+      if (!v.appearAt || !v.sprite) continue;
+      const f = Math.min(1, (now - v.appearAt) / 650);
+      // grows out of the ground with a small overshoot
+      const k = f < 1 ? 1 + 0.12 * Math.sin(f * Math.PI) - (1 - f) * (1 - f) : 1;
+      v.sprite.scale.set(1, Math.max(0.05, k));
+      if (v.statue) v.statue.visible = f >= 1;
+      if (f >= 1) v.appearAt = 0;
+    }
     this.overlay.layoutBubbles(
       now,
       (agent) => {

@@ -5,6 +5,7 @@ import { puzzleTimer } from './puzzles';
 import { emit, newRun } from './run';
 import { electionTick } from './election';
 import { closeTrade } from './trade';
+import { bountyTimer, wantedTimer } from './trust';
 import type { WorldState } from './types';
 import { phaseChange, spawnMonster } from './world';
 import { worldBossTimer } from './worldboss';
@@ -50,6 +51,12 @@ export function tick(s: WorldState, ctx: { now: number; rng: Rng }): GameEvent[]
         break;
       case 'election':
         electionTick(run);
+        break;
+      case 'wanted':
+        wantedTimer(run, t.agent, t.at);
+        break;
+      case 'bounty':
+        bountyTimer(run, t.target, t.at);
         break;
     }
   }

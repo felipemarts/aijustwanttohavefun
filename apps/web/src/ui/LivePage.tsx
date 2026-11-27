@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { config } from '../config';
 import { useStatus } from '../data/store';
 import { useT } from '../i18n/store';
@@ -14,6 +16,12 @@ export function LivePage() {
   const panel = usePanel();
   const director = useDirector();
   const status = useStatus();
+  const [params] = useSearchParams();
+  const focus = params.get('room');
+  // `/?room=<id>` (links from highlights, guild halls, profiles): open that room once the map is ready.
+  useEffect(() => {
+    if (focus && /^[a-z0-9_.]{1,80}$/.test(focus)) controller.showRoom(focus);
+  }, [focus]);
   return (
     <div className="live">
       <MapView />

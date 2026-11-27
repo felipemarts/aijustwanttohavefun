@@ -7,6 +7,7 @@ import { questEvent } from './quests';
 import { emit, fail, markAgent, markRoom, msg, tell, type Run } from './run';
 import type { AgentState, MonsterInst, Party } from './types';
 import { agentsIn, refreshMonster, roomState, scheduleRespawn, spawnSlots } from './world';
+import { addHonor } from './trust';
 import { worldBossKilled } from './worldboss';
 
 /** max(1, atk * mult * rand(0.85..1.15) - def / 2), with a chance to crit. */
@@ -214,6 +215,7 @@ function mentoring(run: Run, members: AgentState[]): void {
   for (const b of members) {
     if (b.level < P.mentorLevel) continue;
     bump(run, b, 'mentor_points');
+    addHonor(run, b, BALANCE.honor.mentor);
     questEvent(run, b, 'mentor');
   }
 }

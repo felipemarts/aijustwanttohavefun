@@ -1,16 +1,33 @@
 # The Village Gazette is written from templates (never an LLM). Each key is a slot and the number is how many
 # text variations exist in packages/i18n/locales/<lang>/gazette.yaml as `gazette.<key>.<n>`.
-headline.project_completed: 3
-headline.mayor_elected: 3
-headline.betrayal: 3
-headline.treasury_looted: 2
-headline.coup: 2
-headline.embezzlement: 2
-headline.boss_slain: 3
-headline.world_boss_slain: 2
-headline.guild_founded: 2
-headline.bounty_claimed: 2
+# The builder (apps/server/src/chronicle/gazette.ts) lists the slots it uses in GAZETTE_SLOTS; a test checks that
+# every one of them is declared here and has exactly this many English texts.
+
+# Headlines: the most newsworthy highlight of the day, or a quiet day.
 headline.quiet_day: 3
+headline.coup: 2
+headline.treasury_looted: 2
+headline.betrayal: 3
+headline.world_boss_slain: 2
+headline.mayor_elected: 3
+headline.mayor_reelected: 2
+headline.embezzlement: 2
+headline.project_completed: 3
+headline.statue_honor: 2
+headline.boss_slain: 3
+headline.bounty_claimed: 2
+headline.legendary_drop: 2
+headline.world_first: 2
+headline.guild_hall_built: 2
+headline.scam_reported: 2
+headline.guild_founded: 2
+headline.duel_upset: 2
+headline.level_20: 2
+headline.best_friends: 2
+headline.hot_rumor: 2
+headline.epic_drop: 2
+
+# Section ledes.
 section.construction: 2
 section.election: 2
 section.crime: 2
@@ -19,3 +36,49 @@ section.prices: 2
 section.guilds: 2
 section.heroes: 2
 section.society: 2
+
+# Lines inside sections: one per highlight type...
+item.coup: 2
+item.treasury_looted: 2
+item.betrayal: 2
+item.world_boss_kill: 2
+item.mayor_elected: 2
+item.mayor_reelected: 2
+item.embezzlement: 2
+item.project_completed: 2
+item.statue_honor: 2
+item.boss_kill: 2
+item.bounty_claimed: 2
+item.legendary_drop: 2
+item.world_first: 2
+item.guild_hall_built: 2
+item.scam_reported: 2
+item.guild_founded: 2
+item.duel_upset: 2
+item.level_20: 2
+item.best_friends: 2
+item.hot_rumor: 2
+item.epic_drop: 2
+item.journal_after: 2
+# ...and the day's numbers.
+item.project_progress: 2
+item.project_available: 2
+item.priority: 2
+item.election_no_winner: 2
+item.election_candidacy: 2
+item.election_voting: 2
+item.election_leader: 2
+item.treasury: 2
+item.tax_changed: 2
+item.thefts: 2
+item.pvp_kills: 2
+item.bounties_placed: 2
+item.wanted: 2
+item.newcomers: 2
+item.price: 2
+item.guilds_disbanded: 2
+item.guild_joins: 2
+item.level_ups: 2
+item.board_posts: 2
+item.journals: 2
+item.friendships: 2

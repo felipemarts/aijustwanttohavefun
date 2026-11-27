@@ -47,6 +47,8 @@ class MapController {
     renderer: '',
   };
   commands: SceneCommands | null = null;
+  /** A room to show as soon as the map is ready (`/?room=<id>` links). */
+  pendingFocus: string | null = null;
   private listeners = new Map<string, Set<Listener>>();
 
   subscribe(channel: string, l: Listener) {
@@ -62,6 +64,13 @@ class MapController {
     for (const l of this.listeners.get(channel) ?? []) l();
   }
 
+  /** Opens a room and moves the camera there, now or once the scene has started. */
+  showRoom(id: string) {
+    this.openRoom(id);
+    if (this.commands) this.commands.focusRoom(id);
+    else this.pendingFocus = id;
+  }
+
   openRoom(id: string) {
     this.panel = { kind: 'room', id };
     this.emit('panel');
@@ -74,6 +83,7 @@ class MapController {
 
   closePanel() {
     this.panel = null;
+    this.pendingFocus = null;
     if (this.follow) this.setFollow(null);
     this.emit('panel');
   }

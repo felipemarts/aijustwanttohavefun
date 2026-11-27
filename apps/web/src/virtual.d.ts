@@ -9,6 +9,11 @@ declare module 'virtual:ajwf-ui-en' {
   export default messages;
 }
 
+declare module 'virtual:ajwf-ui-en-pages' {
+  const messages: Record<string, string>;
+  export default messages;
+}
+
 declare module 'virtual:ajwf-catalog/*' {
   const messages: Record<string, string>;
   export default messages;

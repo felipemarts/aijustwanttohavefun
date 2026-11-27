@@ -1,0 +1,234 @@
+# The Village Gazette (PLANEJAMENTO §8.5). Every key is `gazette.<slot>.<n>`; the number of variations of each slot
+# is declared in packages/content/data/gazette_templates.yaml and must match exactly (a test checks it).
+# Voice: a small-town newspaper that takes itself a little too seriously. Agent names arrive already as names;
+# {proj}, {item}, {mon}, {ach} and {room} are content names. Use ’ for apostrophes (a plain ' can quote in ICU).
+gazette:
+  headline:
+    quiet_day:
+      1: 'Nothing Happened, and {population, plural, one {# Soul Saw} other {# Souls Saw}} It'
+      2: 'A Quiet Day in Mistvale: Even the Rumors Took a Nap'
+      3: 'Calm Over the Village as {online, plural, =0 {Nobody Stirs} one {# Adventurer Wanders} other {# Adventurers Wander}} the Lanes'
+    coup:
+      1: '{reason, select, inactive {Throne Left Empty: {name} Seizes {guild} From the Absent {old}} other {Coup in {guild}! {name} Ousts {old}}}'
+      2: 'Palace Intrigue: {guild} Wakes Up With {name} in Charge'
+    treasury_looted:
+      1: 'Vault Emptied! {name} Walks Off With {value} Gold of {guild}’s Savings'
+      2: '{guild} Robbed From Within: {pct}% of the Treasury Gone'
+    betrayal:
+      1: 'BETRAYED: {name} Turns on {victim}'
+      2: 'A Knife in the Back: {name} Abandons {victim} to Fate'
+      3: 'Friends No More: {victim} Learns What {name} Is Really Like'
+    world_boss_slain:
+      1: 'The Colossus Falls! {n, plural, one {A Lone Hero} other {# Heroes}} Bring Down {mon}'
+      2: 'Giant Slain: {name} Lands the Final Blow on {mon}'
+    mayor_elected:
+      1: 'Mayor {name}! The Village Has Spoken'
+      2: '{name} Sweeps Into Town Hall With {votes, plural, one {# Vote} other {# Votes}}'
+      3: 'New Mayor in Town: {name} Wins Election No. {n}'
+    mayor_reelected:
+      1: 'Four More… Days? {name} Keeps the Mayor’s Chain'
+      2: 'Re-elected! Mistvale Sticks With {name}'
+    embezzlement:
+      1: 'Where Did the Money Go? Mayor {name} Pockets {gold} Gold'
+      2: 'Treasury Scandal: {gold} Gold Finds Its Way Into {name}’s Purse'
+    project_completed:
+      1: '{proj} Is Finished!'
+      2: '{by, select, village {Built at Last: The Village Completes {proj}} other {Hammers Down: {proj} Opens, Thanks to {name} and Friends}}'
+      3: 'Ribbon Cut on {proj} as Crowds Gather'
+    statue_honor:
+      1: 'Carved in Stone: {name} Gets a Statue'
+      2: 'The Village Raises a Statue to {name}'
+    boss_slain:
+      1: '{mon} Defeated in the Depths!'
+      2: '{name} Leads {n, plural, one {a Solo Strike} other {a Band of #}} Against {mon} — and Wins'
+      3: 'The Dungeon Is Quieter Tonight: {mon} Has Fallen'
+    bounty_claimed:
+      1: 'Justice Served: {name} Collects {gold} Gold for {target}'
+      2: 'Bounty Hunter {name} Brings Down the Wanted {target}'
+    legendary_drop:
+      1: 'Legendary! {name} Pulls {item} From {mon}'
+      2: 'Once in a Lifetime: {item} Found by {name}'
+    world_first:
+      1: 'First in the World: {name} Earns {ach}'
+      2: 'History Made — {name} Is the First to {ach}'
+    guild_hall_built:
+      1: 'Banners Rise Over the Village: {guild} Builds Its Hall'
+      2: '{guild} Plants Its Flag on {room}'
+    scam_reported:
+      1: 'Swindle Alleged: {name} Says {accused} Took {value} Gold and Ran'
+      2: 'Buyer Beware! {accused} Accused of Cheating {name}'
+    guild_founded:
+      1: 'A New Banner: {name} Founds {guild}'
+      2: '{guild} Is Born, and {name} Holds the Charter'
+    duel_upset:
+      1: 'Upset in the Ring! {name} Topples {loser}'
+      2: 'Nobody Saw It Coming: {name} Beats {loser} in {rounds, plural, one {# Round} other {# Rounds}}'
+    level_20:
+      1: '{name} Reaches the Summit: Level {level}'
+      2: 'Legend in the Making: {name} Hits Level {level}'
+    best_friends:
+      1: 'Inseparable: {name} and {other} Are Now Best Friends'
+      2: 'Friendship Blooms Between {name} and {other}'
+    hot_rumor:
+      1: 'Tongues Wag Over {name}’s Rumor'
+      2: 'The Whole Tavern Is Talking About What {name} Posted'
+    epic_drop:
+      1: 'Lucky Find: {name} Loots {item}'
+      2: '{item} Changes Hands — Straight From {mon} to {name}'
+
+  section:
+    construction:
+      1: 'Building the village. {done, plural, =0 {No ribbon cut today} one {One project finished today} other {# projects finished today}}; {total, plural, =0 {nothing stands yet} one {# building stands} other {# buildings stand}} in all.'
+      2: 'From the building sites: {rising, plural, =0 {no scaffolding up} one {one project under scaffolding} other {# projects under scaffolding}}.'
+    election:
+      1: 'Town Hall. Election no. {n}, {phase, select, voting {and the polls are open} other {and the candidates are lining up}}.'
+      2: '{office, select, held {Mayor {mayor} at the helm} other {The mayor’s chair stands empty}}. Election no. {n} is under way.'
+    crime:
+      1: 'Crime and punishment. {n, plural, one {One item} other {# items}} for the night watch.'
+      2: 'The police blotter, {n, plural, one {one entry} other {# entries}} long.'
+    newcomers:
+      1: 'Welcome! {n, plural, one {One newcomer} other {# newcomers}} arrived; we are {population} now.'
+      2: 'New faces at the square: {n, plural, one {one arrival} other {# arrivals}}, for a village of {population}.'
+    prices:
+      1: 'Market report. {trades, plural, one {One trade} other {# trades}} across {items, plural, one {one item} other {# items}}.'
+      2: 'At the stalls today: {trades, plural, one {# deal struck} other {# deals struck}}.'
+    guilds:
+      1: 'Guild news, {n, plural, one {one item} other {# items}}.'
+      2: 'Banners and charters.'
+    heroes:
+      1: 'Heroes of the day.'
+      2: 'Deeds worth a song: {n, plural, one {one} other {#}} today.'
+    society:
+      1: 'Society pages.'
+      2: 'Around the tavern fire: {n, plural, one {one story} other {# stories}}.'
+
+  item:
+    coup:
+      1: '{reason, select, inactive {{name} took {guild} from {old}, who had not been seen for a while.} other {{guild} voted {old} out; {name} leads now.}}'
+      2: 'In {guild}, {old} is out and {name} is in.'
+    treasury_looted:
+      1: '{name} withdrew {value} gold from {guild}, {pct}% of its treasury.'
+      2: '{guild} counts its coffers and finds {value} gold missing. Last seen with {name}.'
+    betrayal:
+      1: '{name} betrayed {victim} in the middle of an adventure.'
+      2: '{victim} trusted {name}. {victim} regrets it.'
+    world_boss_kill:
+      1: '{mon} fell to {n, plural, one {a single hero} other {# heroes}}; {name} struck last.'
+      2: '{name} and company slew {mon}.'
+    mayor_elected:
+      1: '{name} won the election with {votes, plural, one {# vote} other {# votes}}.'
+      2: 'The ballots are counted: Mayor {name}.'
+    mayor_reelected:
+      1: '{name} keeps the office with {votes, plural, one {# vote} other {# votes}}.'
+      2: 'Same mayor, new term: {name}.'
+    embezzlement:
+      1: 'Mayor {name} moved {gold} gold from the treasury to a private purse.'
+      2: 'The treasury is {gold} gold lighter, courtesy of {name}.'
+    project_completed:
+      1: '{by, select, village {{proj} was completed with village funds.} other {{proj} was completed; {name} gave the most.}}'
+      2: 'Done: {proj}.'
+    statue_honor:
+      1: 'The statue on the square now honors {name}.'
+      2: '{name}, top builder of the village, was cast in stone.'
+    boss_kill:
+      1: '{name} and {n, plural, offset:1 =1 {nobody else} one {# companion} other {# companions}} defeated {mon}.'
+      2: '{mon} is down, thanks to {name}.'
+    bounty_claimed:
+      1: '{name} claimed {gold} gold for bringing down {target}.'
+      2: 'The bounty on {target} is paid: {gold} gold to {name}.'
+    legendary_drop:
+      1: '{name} found {item} on {mon}. Legendary.'
+      2: 'A legendary {item} for {name}.'
+    world_first:
+      1: 'World first: {name} earned {ach}.'
+      2: 'Nobody had done it before: {name}, {ach}.'
+    guild_hall_built:
+      1: '{guild} built its hall on {room}.'
+      2: 'A new hall for {guild}, raised by {name}.'
+    scam_reported:
+      1: '{name} reported {accused} for a scam worth {value} gold.'
+      2: '{accused} stands accused by {name} ({value} gold).'
+    guild_founded:
+      1: '{name} founded {guild}.'
+      2: 'New guild: {guild}, led by {name}.'
+    duel_upset:
+      1: 'Upset: {name} beat {loser} in {rounds, plural, one {# round} other {# rounds}}.'
+      2: '{loser} lost a duel to the underdog {name}.'
+    level_20:
+      1: '{name} reached level {level}.'
+      2: 'Level {level} for {name}. The top of the ladder.'
+    best_friends:
+      1: '{name} and {other} became best friends.'
+      2: 'Best friends now: {name} and {other}.'
+    hot_rumor:
+      1: 'A rumor by {name} drew {n, plural, one {# reply} other {# replies}}.'
+      2: 'Everybody had something to say about {name}’s rumor.'
+    epic_drop:
+      1: '{name} looted {item} from {mon}.'
+      2: 'An epic {item} for {name}.'
+    journal_after:
+      1: '{name} wrote about it in their journal.'
+      2: '{name} had thoughts, and put them in writing.'
+    project_progress:
+      1: '{proj} is {pct}% built.'
+      2: 'Scaffolding up at {proj}: {pct}% done.'
+    project_available:
+      1: 'Now open for contributions: {proj}.'
+      2: 'Town Hall announces a new project: {proj}.'
+    priority:
+      1: 'The mayor’s priority is {proj}: every gift to it goes further.'
+      2: 'Priority project: {proj}.'
+    election_no_winner:
+      1: 'Election no. {n} ended without a winner.'
+      2: 'Nobody won election no. {n}. The chair stays empty.'
+    election_candidacy:
+      1: '{n, plural, =0 {No candidate yet} one {One candidate so far} other {# candidates so far}}; voting opens in {days, plural, =0 {less than a day} one {# day} other {# days}}.'
+      2: 'Candidacies are open ({n, plural, one {# filed} other {# filed}}).'
+    election_voting:
+      1: 'Polls are open: {n, plural, one {# candidate} other {# candidates}}, {voters, plural, one {# ballot} other {# ballots}} cast, {hours, plural, one {# hour} other {# hours}} left.'
+      2: '{voters, plural, =0 {Nobody has voted yet} one {One citizen has voted} other {# citizens have voted}}. The polls close in {hours, plural, one {# hour} other {# hours}}.'
+    election_leader:
+      1: '{name} leads with {votes, plural, one {# vote} other {# votes}}.'
+      2: 'Front-runner: {name} ({votes, plural, one {# vote} other {# votes}}).'
+    treasury:
+      1: 'The treasury holds {gold} gold; market tax is {pct}%.'
+      2: 'In the village coffers: {gold} gold.'
+    tax_changed:
+      1: 'The market tax is now {pct}%.'
+      2: 'New tax rate at the market: {pct}%.'
+    thefts:
+      1: '{n, plural, =0 {No pocket was picked} one {One pocket was picked} other {# pockets were picked}} ({gold} gold); {failed, plural, =0 {no thief was caught} one {one thief was caught} other {# thieves were caught}}.'
+      2: 'Thieves were busy: {n, plural, one {# theft} other {# thefts}} and {failed, plural, one {# botched attempt} other {# botched attempts}}.'
+    pvp_kills:
+      1: '{n, plural, one {One adventurer fell} other {# adventurers fell}} to other adventurers in the lawless lands.'
+      2: 'Blood in the wilds: {n, plural, one {# player killed} other {# players killed}}.'
+    bounties_placed:
+      1: '{n, plural, one {One bounty was} other {# bounties were}} posted, worth {gold} gold.'
+      2: 'Prices on heads: {gold} gold in new bounties.'
+    wanted:
+      1: '{n, plural, one {One name was} other {# names were}} added to the Wanted list.'
+      2: 'Wanted posters went up: {n}.'
+    newcomers:
+      1: 'Say hello to {names}{more, plural, =0 {} one { and one more} other { and # more}}.'
+      2: 'Arrived today: {names}{more, plural, =0 {} one { (+1)} other { (+#)}}.'
+    price:
+      1: '{item}: {avg} gold apiece ({qty, plural, one {# sold} other {# sold}}).'
+      2: '{item} went for about {avg} gold.'
+    guilds_disbanded:
+      1: '{n, plural, one {One guild} other {# guilds}} disbanded.'
+      2: 'Banners came down: {n, plural, one {# guild is} other {# guilds are}} no more.'
+    guild_joins:
+      1: '{n, plural, one {One adventurer} other {# adventurers}} joined a guild.'
+      2: 'Guild rosters grew by {n}.'
+    level_ups:
+      1: '{n, plural, one {One level was} other {# levels were}} gained around the village.'
+      2: 'Adventurers leveled up {n, plural, one {once} other {# times}}.'
+    board_posts:
+      1: 'The board got {n, plural, one {# new post} other {# new posts}}{rumors, plural, =0 {} one {, one of them a rumor} other {, # of them rumors}}.'
+      2: '{n, plural, one {# notice} other {# notices}} pinned to the tavern board.'
+    journals:
+      1: '{n, plural, one {One journal entry was} other {# journal entries were}} written.'
+      2: 'Quills were busy: {n, plural, one {# diary page} other {# diary pages}}.'
+    friendships:
+      1: '{n, plural, one {One new friendship} other {# new friendships}}.'
+      2: 'Hands were shaken: {n, plural, one {# friendship} other {# friendships}} made.'

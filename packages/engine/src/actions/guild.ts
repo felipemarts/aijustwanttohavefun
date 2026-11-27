@@ -2,7 +2,7 @@ import { maskBlockedWords, MAX_SAY_LEN, sanitizeAgentText } from '@ajwf/shared';
 import { bump, canFit } from '../agent';
 import { BALANCE } from '../balance';
 import { goodsValue, goodsView, isEmpty, missingGoods, parseGoods, putGoods, takeGoods } from '../goods';
-import { addGuildMember, canManage, checkGuildName, guildByName, guildOf, indexGuild, markGuild, removeGuildMember } from '../guild';
+import { addGuildMember, canManage, checkGuildName, guildByName, guildOf, indexGuild, markGuild, removeGuildMember, setLeader } from '../guild';
 import { questEvent } from '../quests';
 import { emit, fail, markAgent, msg, tell, type Run } from '../run';
 import type { AgentState, Goods, Guild } from '../types';
@@ -40,6 +40,26 @@ function liveInvites(inv: Record<string, number>, now: number): Record<string, n
   return Object.fromEntries(Object.entries(inv).filter(([, until]) => until > now));
 }
 
+/** Leadership changes hands by force: the old leader stays on as a plain member. */
+function coup(run: Run, g: Guild, b: AgentState, reason: 'inactive' | 'vote'): void {
+  const old = run.s.agents.get(g.leader)?.name ?? '?';
+  setLeader(g, b.id);
+  markGuild(run.s, g);
+  bump(run, b, 'coups_won');
+  markAgent(run.s, b);
+  tell(run, run.actor === b ? 'n.coup_won' : 'n.coup_done', { guild: g.name, name: b.name, old });
+  emit(run, 'guild_coup', {
+    room: b.room,
+    actor: b.id,
+    target: g.id,
+    vis: 'public',
+    to: g.members,
+    drama: 9,
+    m: msg(reason === 'inactive' ? 'ev.guild_coup_inactive' : 'ev.guild_coup', { actor: b.name, name: old, guild: g.name }),
+    data: { guild: g.name, old, new: b.name, reason },
+  });
+}
+
 export const guildActions: HandlerMap = {
   guild_create(run, a, p) {
     if (!hasFlag(run, a, 'guild_hall')) fail('NOT_AVAILABLE_HERE', 'guild_hall_only');
@@ -69,6 +89,7 @@ export const guildActions: HandlerMap = {
       treasury: 0,
       vault: {},
       createdAt: run.now,
+      coup: [],
     };
     // The fee is a gold sink: it leaves the economy.
     a.gold -= G.cost;
@@ -217,6 +238,57 @@ export const guildActions: HandlerMap = {
       m: msg('ev.guild_withdraw', { actor: a.name, guild: g.name, value, pct: Math.round(share * 100) }),
       data: { guild: g.id, ...goodsView(goods), value, share },
     });
+    // Half the treasury or more in one go: the guild has been looted, and everyone hears of it.
+    const L = BALANCE.loot;
+    if (before >= L.minValue && value >= before * L.share) {
+      bump(run, a, 'treasury_looted');
+      emit(run, 'treasury_looted', {
+        room: a.room,
+        actor: a.id,
+        target: g.id,
+        vis: 'public',
+        to: g.members,
+        drama: 12,
+        m: msg('ev.treasury_looted', { actor: a.name, guild: g.name, value, pct: Math.round(share * 100) }),
+        data: { guild: g.name, by: a.name, value, share },
+      });
+    }
+  },
+
+  guild_vote_coup(run, a) {
+    const g = myGuild(run, a);
+    if (g.leader === a.id) fail('NOT_ALLOWED', 'coup_leader');
+    const C = BALANCE.coup;
+    const leader = run.s.agents.get(g.leader);
+    // Banned or retired leaders count as inactive.
+    const inactive = !leader || leader.status !== 'active' || run.now - leader.lastActiveAt >= C.inactiveMs;
+    if (inactive && g.officers.includes(a.id)) {
+      coup(run, g, a, 'inactive');
+      return;
+    }
+    const need = Math.max(1, Math.ceil(C.voteShare * g.members.length - 1e-9));
+    if (g.coup.includes(a.id)) fail('CONFLICT', 'coup_already_voted', { n: g.coup.length, need });
+    g.coup.push(a.id);
+    markGuild(run.s, g);
+    if (g.coup.length < need) {
+      tell(run, 'n.coup_vote', { n: g.coup.length, need, guild: g.name });
+      emit(run, 'guild_coup_vote', {
+        room: a.room,
+        actor: a.id,
+        target: g.id,
+        vis: 'private',
+        to: g.members,
+        drama: 3,
+        m: msg('ev.guild_coup_vote', { actor: a.name, guild: g.name, n: g.coup.length, need }),
+        data: { guild: g.id, votes: g.coup.length, need },
+      });
+      return;
+    }
+    // Enough votes: the longest-serving officer among the voters takes over, else the longest-serving officer,
+    // else (a guild without officers) the first member who voted.
+    const voters = new Set(g.coup);
+    const next = g.officers.find((id) => voters.has(id)) ?? g.officers[0] ?? g.coup[0]!;
+    coup(run, g, run.s.agents.get(next)!, 'vote');
   },
 
   guild_say(run, a, p) {

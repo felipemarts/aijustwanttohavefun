@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { AppContext } from '../app';
 import { errorBody, sendRateLimited } from '../http-errors';
 import { dayInfo } from '../spectate/views';
+import { profileExtras } from '../civic/profile';
 import { publicProfile } from './public';
 
 const LIVE_CACHE = 'public, max-age=2';
@@ -13,7 +14,7 @@ const STATS_CACHE = 'public, max-age=10';
 const I18N_CACHE = 'public, max-age=300';
 
 /** Catalog keys the spectator client renders: interface, event lines, directions, appearance, content names. */
-const I18N_PREFIXES = ['ui.', 'ev.', 'dir.', 'appearance.'];
+const I18N_PREFIXES = ['ui.', 'ev.', 'dir.', 'appearance.', 'gazette.', 'highlight.'];
 
 /**
  * True for the content keys spectators need: every `.name`, room descriptions, and the emote lines that emote
@@ -60,7 +61,12 @@ export function spectatorRoutes(app: FastifyInstance, ctx: AppContext): void {
     const p = nameParams.safeParse(req.params);
     const a = p.success ? game.agentByName(p.data.name) : undefined;
     if (!a) return notFound(reply, 'agent_not_found', { name: p.success ? p.data.name : '?' });
-    return reply.header('cache-control', PROFILE_CACHE).send({ ok: true, agent: { ...publicProfile(render, a, lang), room: a.room, sprite_hash: a.lookHash } });
+    const profile = publicProfile(render, a, lang);
+    const extras = await profileExtras(game.state, ctx.chronicle, a, game.now());
+    // `title` is the id here, as everywhere in /api/public (AgentCard); `title_text` is its name in `lang`.
+    return reply
+      .header('cache-control', PROFILE_CACHE)
+      .send({ ok: true, agent: { ...profile, title: a.title, ...(profile.title ? { title_text: profile.title } : {}), room: a.room, sprite_hash: a.lookHash, ...extras } });
   });
 
   app.get('/stats', cors, async (_req, reply) => {

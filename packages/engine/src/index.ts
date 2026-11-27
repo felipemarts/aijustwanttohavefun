@@ -23,3 +23,4 @@ export { villageView, projectViews, type VillageView, type ProjectView, type Bui
 export { isProjectDone, isUnlocked, unlockedAt, marketSlots, tavernCamaraderieXp, worldBossWarning, questXpMult } from './unlocks';
 export { projectStatus, progressOf, missingFor, projectAt, STATUE_TITLE, type ProjectStatus } from './village';
 export { isMayor, MAYOR_TITLE } from './election';
+export { reputation, infamyNow, shownInfamy, isWanted, bountyOn, WANTED_TITLE, type Reputation } from './trust';

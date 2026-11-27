@@ -3,7 +3,8 @@
  * `batch` patches it. Everything coming from the wire is treated as untrusted JSON: unknown message types and fields
  * are ignored, malformed entries are skipped one by one, and a bad event never aborts the rest of the batch.
  */
-import type { AgentPos, DayPhase, RoomInfo, SpectatorEvent } from '@ajwf/shared';
+import type { AgentPos, DayPhase, ElectionInfo, HallInfo, Highlight, RoomInfo, SpectatorEvent } from '@ajwf/shared';
+import { parseElection, parseHalls, parseHighlights, parseStringMap } from './parse';
 
 export const ROOM_LOG_MAX = 150;
 export const HIGHLIGHTS_MAX = 30;
@@ -11,7 +12,24 @@ export const DAY_LENGTH_MS = 2 * 60 * 60 * 1000;
 /** Drama half-life used when the server has not sent fresh scores (matches the server's "about a minute"). */
 export const DRAMA_HALF_LIFE_MS = 60_000;
 
-export type Project = { id: string; plot: string; progress: number; done: boolean };
+export type Project = {
+  id: string;
+  plot: string;
+  progress: number;
+  done: boolean;
+  status: 'available' | 'locked' | 'done';
+  /** Building drawn when done (defaults to the content's building for the project). */
+  building?: string;
+};
+
+/** The civic state carried by `village` (and partly `world`) messages. */
+export type CivicState = {
+  mayor: string | null;
+  election: ElectionInfo | null;
+  treasury: number | null;
+  taxRate: number | null;
+  priority: string | null;
+};
 export type RoomMonsterLive = { id: string; n: number; lvl?: number; max?: number; hurt?: number[] };
 export type RoomExtras = { monsters: RoomMonsterLive[]; npcs: string[]; others: number; at: number };
 export type DayState = { phase: DayPhase; t: number; at: number; lengthMs: number };
@@ -21,12 +39,17 @@ export type WorldState = {
   agents: Map<string, AgentPos>;
   /** room -> [score, local time it was set]; read through `dramaAt()` for the decayed value. */
   drama: Map<string, [number, number]>;
+  /** Finished projects: plot room id -> project id. */
   buildings: Record<string, string>;
   projects: Project[];
+  /** Guild halls: plot room id -> hall. */
+  halls: Record<string, HallInfo>;
+  civic: CivicState;
   day: DayState;
   roomLogs: Map<string, SpectatorEvent[]>;
   roomExtras: Map<string, RoomExtras>;
-  highlights: SpectatorEvent[];
+  /** Live highlights (from `world` batches), oldest first, for the ticker. */
+  highlights: Highlight[];
   seen: Set<string>;
   seenOrder: string[];
   population: number | null;
@@ -46,6 +69,10 @@ export type Changes = {
   counts: boolean;
   day: boolean;
   drama: boolean;
+  /** Projects, buildings, halls or the civic state changed. */
+  village: boolean;
+  /** Projects that became done in this message (not on the first full): the map celebrates them. */
+  completed: string[];
   /** New events in arrival order (deduplicated), for the map's effects. */
   events: SpectatorEvent[];
   /** Agents whose position arrived in this message. */
@@ -62,6 +89,8 @@ export function emptyChanges(): Changes {
     counts: false,
     day: false,
     drama: false,
+    village: false,
+    completed: [],
     events: [],
     moved: [],
   };
@@ -74,6 +103,8 @@ export function createState(): WorldState {
     drama: new Map(),
     buildings: {},
     projects: [],
+    halls: {},
+    civic: { mayor: null, election: null, treasury: null, taxRate: null, priority: null },
     day: { phase: 'day', t: 0.3, at: 0, lengthMs: DAY_LENGTH_MS },
     roomLogs: new Map(),
     roomExtras: new Map(),
@@ -184,30 +215,6 @@ function markSeen(state: WorldState, id: string): boolean {
   return true;
 }
 
-/** Event types worth the highlights ticker (big world moments). */
-const HIGHLIGHT_TYPES = new Set([
-  'world_first',
-  'achievement',
-  'rare_drop',
-  'level_up',
-  'fallen',
-  'revive',
-  'project_completed',
-  'project_progress',
-  'boss_kill',
-  'guild_created',
-  'betrayal',
-  'mayor_elected',
-  'arrival',
-  'title',
-]);
-
-export function isHighlight(ev: SpectatorEvent): boolean {
-  if (!ev.k) return false;
-  if (HIGHLIGHT_TYPES.has(ev.type)) return true;
-  return (ev.drama ?? 0) >= 5;
-}
-
 function pushLog(state: WorldState, room: string, ev: SpectatorEvent, ch: Changes) {
   const prev = state.roomLogs.get(room) ?? [];
   // Replace the array (do not mutate): React selectors compare by identity.
@@ -225,10 +232,6 @@ function applyEvents(state: WorldState, events: unknown, localNow: number, addDr
       if (!ev || !markSeen(state, ev.id)) continue;
       ch.events.push(ev);
       if (ev.room) pushLog(state, ev.room, ev, ch);
-      if (isHighlight(ev)) {
-        state.highlights = [...state.highlights.slice(-(HIGHLIGHTS_MAX - 1)), ev];
-        ch.highlights = true;
-      }
       if (addDrama && ev.room && ev.drama && ev.drama > 0) {
         state.drama.set(ev.room, [dramaAt(state, ev.room, localNow) + ev.drama, localNow]);
         ch.drama = true;
@@ -282,33 +285,15 @@ export function applyFull(state: WorldState, topic: string, data: unknown, local
     upsertPositions(state, data.agents, ch);
     ch.agents = true;
     setDramaMap(state, data.drama, localNow, ch);
-    if (isObj(data.buildings)) {
-      const b: Record<string, string> = {};
-      for (const [k, v] of Object.entries(data.buildings)) if (isStr(v)) b[k] = v;
-      state.buildings = b;
-    }
-    state.projects = parseProjects(data.projects) ?? state.projects;
+    applyVillageDelta(state, data, ch, true);
     setDay(state, data.day, localNow, ch);
     state.hasWorld = true;
     ch.rooms = true;
     return ch;
   }
   if (topic === 'village') {
-    if (isNum(data.population)) state.population = data.population;
-    if (isNum(data.online)) state.online = data.online;
-    ch.counts = true;
+    applyVillageDelta(state, data, ch, true);
     setDay(state, data.day, localNow, ch);
-    if (isObj(data.buildings)) {
-      const b: Record<string, string> = {};
-      for (const [k, v] of Object.entries(data.buildings)) if (isStr(v)) b[k] = v;
-      state.buildings = b;
-      ch.rooms = true;
-    }
-    const projects = parseProjects(data.projects);
-    if (projects) {
-      state.projects = projects;
-      ch.rooms = true;
-    }
     return ch;
   }
   if (topic.startsWith('room:')) {
@@ -368,17 +353,100 @@ export function applyFull(state: WorldState, topic: string, data: unknown, local
   return ch;
 }
 
-function parseProjects(v: unknown): Project[] | null {
+export function parseProjects(v: unknown): Project[] | null {
   if (!Array.isArray(v)) return null;
   return v
     .filter(isObj)
     .filter((p) => isStr(p.id) && isStr(p.plot))
-    .map((p) => ({
-      id: p.id as string,
-      plot: p.plot as string,
-      progress: isNum(p.progress) ? Math.max(0, Math.min(1, p.progress)) : 0,
-      done: p.done === true,
-    }));
+    .map((p) => {
+      const done = p.done === true || p.status === 'done';
+      const status: Project['status'] = done ? 'done' : p.status === 'locked' ? 'locked' : 'available';
+      return {
+        id: p.id as string,
+        plot: p.plot as string,
+        progress: done ? 1 : isNum(p.progress) ? Math.max(0, Math.min(1, p.progress)) : 0,
+        done,
+        status,
+        ...(isStr(p.building) ? { building: p.building } : {}),
+      };
+    });
+}
+
+/**
+ * Applies a `VillageDelta` (or the village part of a `world`/`village` full). Every field present replaces what the
+ * state has; `projects` replaces by id unless `replaceAll` (a full). A project that turns done is reported in
+ * `ch.completed`, except on the very first data, so a page load never celebrates old buildings.
+ */
+export function applyVillageDelta(state: WorldState, d: unknown, ch: Changes, replaceAll = false) {
+  if (!isObj(d)) return;
+  const first = !state.hasWorld && state.projects.length === 0;
+  const projects = parseProjects(d.projects);
+  if (projects) {
+    const before = new Map(state.projects.map((p) => [p.id, p]));
+    if (replaceAll) state.projects = projects;
+    else {
+      const next = state.projects.slice();
+      for (const p of projects) {
+        const i = next.findIndex((x) => x.id === p.id);
+        if (i >= 0) next[i] = p;
+        else next.push(p);
+      }
+      state.projects = next;
+    }
+    if (!first)
+      for (const p of projects) if (p.done && before.get(p.id) && !before.get(p.id)!.done) ch.completed.push(p.id);
+    ch.village = true;
+  }
+  const buildings = parseStringMap(d.buildings);
+  if (buildings) {
+    if (!first && !projects)
+      for (const [plot, id] of Object.entries(buildings))
+        if (!state.buildings[plot] && !ch.completed.includes(id)) ch.completed.push(id);
+    state.buildings = buildings;
+    ch.village = true;
+  }
+  const halls = parseHalls(d.halls);
+  if (halls) {
+    state.halls = halls;
+    ch.village = true;
+  }
+  const c = state.civic;
+  if (d.mayor === null || isStr(d.mayor)) {
+    c.mayor = d.mayor;
+    ch.village = true;
+  } else if (isObj(d.mayor) && isStr(d.mayor.name)) {
+    c.mayor = d.mayor.name;
+    ch.village = true;
+  }
+  const election = parseElection(d.election);
+  if (election) {
+    c.election = election;
+    ch.village = true;
+  }
+  if (isNum(d.treasury)) c.treasury = d.treasury;
+  if (isNum(d.taxRate)) c.taxRate = d.taxRate;
+  if (d.priority === null || isStr(d.priority)) c.priority = d.priority;
+  if (isNum(d.treasury) || isNum(d.taxRate) || d.priority !== undefined) ch.village = true;
+  if (isNum(d.population)) {
+    state.population = d.population;
+    ch.counts = true;
+  }
+  if (isNum(d.online)) {
+    state.online = d.online;
+    ch.counts = true;
+  }
+  if (ch.village) state.civic = { ...c };
+}
+
+/** Highlights pushed in `world` batches (the ticker); deduplicated by id, bounded. */
+export function applyHighlights(state: WorldState, v: unknown, ch: Changes) {
+  const list = parseHighlights(v);
+  if (!list.length) return;
+  const have = new Set(state.highlights.map((h) => h.id));
+  const fresh = list.filter((h) => !have.has(h.id));
+  if (!fresh.length) return;
+  state.highlights = [...state.highlights, ...fresh].sort((a, b) => a.ts - b.ts).slice(-HIGHLIGHTS_MAX);
+  ch.highlights = true;
 }
 
 /** `batch`: patches the state of its topic. */
@@ -401,6 +469,8 @@ export function applyBatch(state: WorldState, msg: Obj, localNow: number): Chang
   const hasDramaMap = topic === 'world' && isObj(msg.drama);
   applyEvents(state, msg.events, localNow, !hasDramaMap, ch);
   if (hasDramaMap) setDramaMap(state, msg.drama, localNow, ch);
+  if (topic === 'world' || topic === 'village') applyVillageDelta(state, msg.village, ch);
+  if (topic === 'world') applyHighlights(state, msg.highlights, ch);
   for (const ev of ch.events) {
     if (ev.type === 'day_phase' && ev.p && isStr(ev.p.phase))
       setDay(state, { phase: ev.p.phase, t: isNum(ev.p.t) ? ev.p.t : state.day.t }, localNow, ch);
@@ -415,12 +485,3 @@ export function dayFractionAt(state: WorldState, localNow: number): number {
   return (((d.t + (localNow - d.at) / d.lengthMs) % 1) + 1) % 1;
 }
 
-/** `GET /api/public/stats` (polled): population and online counters. */
-export function applyStats(state: WorldState, body: unknown): Changes {
-  const ch = emptyChanges();
-  if (!isObj(body)) return ch;
-  if (isNum(body.population)) state.population = body.population;
-  if (isNum(body.online)) state.online = body.online;
-  ch.counts = true;
-  return ch;
-}

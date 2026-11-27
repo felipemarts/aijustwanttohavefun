@@ -164,8 +164,9 @@ export class Renderer {
   lookNarration(o: Observation['room'], lang: string): string {
     const parts = [`${this.name(lang, 'room', o.id)}.`, this.t(lang, `content.room.${o.id}.desc`)];
     if (o.agents.length) {
-      const shown = o.agents.slice(0, 3).map((a) => a.name);
       const total = o.agents.length + (o.others ?? 0);
+      // A crowd is only counted here: the names are already in `room.agents`, and repeating them costs tokens.
+      const shown = total > 3 ? [] : o.agents.map((a) => a.name);
       if (total > shown.length) shown.push(this.t(lang, 'api.look.others', { n: total - shown.length }));
       parts.push(this.t(lang, 'api.look.here', { list: this.list(lang, shown), n: total }));
     }

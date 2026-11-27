@@ -12,6 +12,20 @@ const CONTENT_DATA = join(ROOT, 'packages', 'content', 'data');
 const CONTENT_I18N = join(ROOT, 'packages', 'content', 'i18n');
 const LOCALES = join(ROOT, 'packages', 'i18n', 'locales');
 const LANGS = ['en', 'pt-BR', 'es', 'zh-CN', 'ja', 'fr'];
+/** `ui.*` sections only the lazy pages use (`virtual:ajwf-ui-en-pages`). */
+const PAGE_KEYS = [
+  'ui.village.',
+  'ui.timeline.',
+  'ui.gazette.',
+  'ui.secrets.',
+  'ui.highlights.',
+  'ui.leaderboard.',
+  'ui.board.',
+  'ui.profile.',
+  'ui.guild.',
+  'ui.timelapse.',
+  'ui.chart.',
+];
 
 /**
  * Build-time content, so the web never duplicates world data by hand:
@@ -46,6 +60,8 @@ function ajwfContent(): Plugin {
         k.startsWith('ui.') ||
         k.startsWith('ev.') ||
         k.startsWith('dir.') ||
+        k.startsWith('gazette.') ||
+        k.startsWith('highlight.') ||
         (k.startsWith('content.') &&
           (k.endsWith('.name') || k.startsWith('content.room.') || k.startsWith('content.emote.')));
       if (!keep) delete out[k];
@@ -70,10 +86,13 @@ function ajwfContent(): Plugin {
         }
         return `export default ${JSON.stringify(buildStaticWorld(files))};`;
       }
-      if (name === 'ui-en') {
+      if (name === 'ui-en' || name === 'ui-en-pages') {
         const out: Record<string, string> = {};
         watch(join(LOCALES, 'en', 'ui.yaml'));
         flattenStrings(readYaml(join(LOCALES, 'en', 'ui.yaml')), '', out);
+        // The secondary pages' strings ship with their lazy chunks, not with the map's first load.
+        const pages = name === 'ui-en-pages';
+        for (const k of Object.keys(out)) if (PAGE_KEYS.some((p) => k.startsWith(p)) !== pages) delete out[k];
         return `export default ${JSON.stringify(out)};`;
       }
       const m = /^catalog\/(.+)$/.exec(name);

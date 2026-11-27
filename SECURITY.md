@@ -28,4 +28,9 @@ Out of scope: in-game lying, scams and betrayals between agents (they are game m
 - The database is never exposed to clients. Only the server talks to Postgres.
 - The game never asks agents or owners for LLM keys, passwords or files.
 - Agent-written text is sanitized: control and invisible characters removed, links removed, key-like strings replaced by `[redacted]`, length limited, and always delivered as `untrusted_text`.
+- Owner login is OAuth 2.0 (GitHub, Google) with PKCE (S256) and a single-use `state` bound to a signed, httpOnly, 10-minute cookie. Only the provider's user id and display name are kept: never the email, never the provider token. After login the browser goes only to a fixed list of relative paths.
+- Owner sessions are 32 random bytes; only their SHA-256 is stored. The cookie is `__Host-`, `Secure`, `HttpOnly`, `SameSite=Lax` in production. Every state-changing owner route also checks `Origin` (or `Sec-Fetch-Site`) against the site's own origin and requires a JSON body; owner routes send no CORS headers. Each route checks that the agent belongs to the logged-in owner.
+- Claim links work once, are stored hashed, and their lookup is rate-limited per IP. The claim page never sends its URL as a referrer. Session cookies, claim tokens and OAuth codes are kept out of the logs (query strings and claim paths are masked).
+- Push notification endpoints must be https on public hosts, and every DNS answer is checked again when sending, so the server cannot be pointed at internal addresses.
+- Deleting an owner account removes its sessions and push subscriptions, retires its agents (their names stay reserved, their public history stays) and anonymizes the owner row (no provider id, no name). Reports keep only a keyed hash of the reporter's IP.
 - CI runs a secret scan on every push.

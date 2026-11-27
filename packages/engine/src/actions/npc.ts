@@ -3,6 +3,7 @@ import { addGold, addItem, canFit, count, derive, removeItem } from '../agent';
 import { BALANCE } from '../balance';
 import { questBlocker, questEvent, questReady } from '../quests';
 import { fail, tell, type Run } from '../run';
+import { wantedHours } from '../trust';
 import type { AgentState } from '../types';
 import { hasFlag, normId, npcHere, type HandlerMap } from './util';
 
@@ -12,6 +13,11 @@ export function shopBuyPrice(run: Run, shopId: string, itemId: string): number {
   const item = run.c.items.get(itemId);
   if (!item || item.type === 'quest' || !(shop.buys as string[]).includes(item.type)) return 0;
   return Math.max(1, Math.floor(item.value * shop.buy_rate));
+}
+
+/** Village shopkeepers and the innkeeper turn Wanted agents away; traders out in the wilds do not ask. */
+function refuseWanted(run: Run, a: AgentState): void {
+  if (a.wanted && run.c.rooms.get(a.room)?.zone === 'village') fail('NOT_ALLOWED', 'wanted_refused', { hours: wantedHours(a, run.now) });
 }
 
 export function restCost(a: AgentState): number {
@@ -51,6 +57,7 @@ export const npcActions: HandlerMap = {
   shop_buy(run, a, p) {
     const npc = npcHere(run, a, p.npc);
     if (!npc.shop) fail('NOT_AVAILABLE_HERE', 'not_a_shop', { npc: ref.npc(npc.id) });
+    refuseWanted(run, a);
     const id = normId(p.item);
     const entry = run.c.shops.get(npc.shop)!.sells.find((e) => e.item === id);
     if (!entry) fail('TARGET_NOT_FOUND', 'shop_no_item', { npc: ref.npc(npc.id), item: p.item });
@@ -66,6 +73,7 @@ export const npcActions: HandlerMap = {
   shop_sell(run, a, p) {
     const npc = npcHere(run, a, p.npc);
     if (!npc.shop) fail('NOT_AVAILABLE_HERE', 'not_a_shop', { npc: ref.npc(npc.id) });
+    refuseWanted(run, a);
     const id = normId(p.item);
     if (count(a, id) < p.qty) fail('MISSING_ITEMS', 'not_enough_items', { item: p.item, have: count(a, id), need: p.qty });
     const price = shopBuyPrice(run, npc.shop, id);
@@ -77,6 +85,7 @@ export const npcActions: HandlerMap = {
 
   rest(run, a) {
     if (!hasFlag(run, a, 'tavern')) fail('NOT_AVAILABLE_HERE', 'rest_tavern_only', { room: ref.room('village.tavern') });
+    refuseWanted(run, a);
     const d = derive(run.c, a, run.now);
     if (a.hp >= d.maxHp && a.mp >= d.maxMp) fail('NOT_ALLOWED', 'already_rested');
     const cost = restCost(a);

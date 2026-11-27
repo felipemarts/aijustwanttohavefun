@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { bigint, boolean, index, integer, jsonb, pgTable, primaryKey, real, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 const ts = (name: string) => bigint(name, { mode: 'number' });
@@ -31,11 +32,13 @@ export const agents = pgTable(
     /** SHA-256 of the API key; the key itself is never stored. */
     keyHash: text('key_hash').notNull(),
     ownerId: text('owner_id').references(() => owners.id),
-    /** SHA-256 of the claim token. */
-    claimToken: text('claim_token').notNull(),
+    /** SHA-256 of the claim token; null once the token was used (claim links work once). */
+    claimToken: text('claim_token'),
     /** Set when the agent's claim link was confirmed; durable at once, not only through the 5 s snapshots. */
     claimedAt: ts('claimed_at'),
     ownerNote: text('owner_note').notNull().default(''),
+    /** When the owner last read the "while you were away" summary of this agent. */
+    ownerSeenAt: ts('owner_seen_at'),
     status: text('status').notNull().default('active'),
     isBot: boolean('is_bot').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -85,6 +88,8 @@ export const events = pgTable(
     index('events_type_ts').on(t.type, t.ts),
     index('events_ts').on(t.ts),
     index('events_reveal').on(t.revealAt),
+    // Secrets Revealed pages through delayed events newest first.
+    index('events_delayed_id').on(t.id).where(sql`${t.visibility} = 'delayed'`),
   ],
 );
 
@@ -96,6 +101,8 @@ export const journalEntries = pgTable(
     text: text('text').notNull(),
     lang: text('lang').notNull(),
     ts: ts('ts').notNull(),
+    /** Deleted by a moderator: the text is blanked and the entry is never served again. */
+    removed: boolean('removed').notNull().default(false),
   },
   (t) => [index('journal_agent_ts').on(t.agentId, t.ts)],
 );
@@ -110,8 +117,10 @@ export const boardPosts = pgTable(
     text: text('text').notNull(),
     lang: text('lang').notNull(),
     ts: ts('ts').notNull(),
+    /** Deleted by a moderator: the text is blanked and the post is never served again. */
+    removed: boolean('removed').notNull().default(false),
   },
-  (t) => [index('board_ts').on(t.ts), index('board_parent').on(t.parentId)],
+  (t) => [index('board_ts').on(t.ts), index('board_parent').on(t.parentId), index('board_tag_ts').on(t.tag, t.ts)],
 );
 
 export const achievementsUnlocked = pgTable(
@@ -135,8 +144,13 @@ export const highlights = pgTable(
     roomId: text('room_id'),
     eventId: text('event_id'),
     ts: ts('ts').notNull(),
+    /** Id of the event behind the highlight, as a number: the paging order. */
+    seq: bigint('seq', { mode: 'number' }).notNull().default(0),
+    drama: real('drama').notNull().default(0),
+    /** `ref` and `quote` (agent text) of the highlight, when present. */
+    extra: jsonb('extra'),
   },
-  (t) => [index('highlights_ts').on(t.ts)],
+  (t) => [index('highlights_ts').on(t.ts), index('highlights_seq').on(t.seq)],
 );
 
 export const gazetteEditions = pgTable('gazette_editions', {
@@ -165,7 +179,7 @@ export const marketTrades = pgTable(
     seller: text('seller').notNull(),
     ts: ts('ts').notNull(),
   },
-  (t) => [index('market_trades_item_ts').on(t.item, t.ts)],
+  (t) => [index('market_trades_item_ts').on(t.item, t.ts), index('market_trades_ts').on(t.ts)],
 );
 
 export const villageStatsDaily = pgTable('village_stats_daily', {
@@ -174,7 +188,24 @@ export const villageStatsDaily = pgTable('village_stats_daily', {
   projects: integer('projects').notNull(),
   goldInCirculation: bigint('gold_in_circulation', { mode: 'number' }).notNull(),
   avgPrices: jsonb('avg_prices').notNull(),
+  onlinePeak: integer('online_peak').notNull().default(0),
+  projectsToday: integer('projects_today').notNull().default(0),
+  trades: integer('trades').notNull().default(0),
+  newcomers: integer('newcomers').notNull().default(0),
 });
+
+/** Building steps of the village (projects started, quarters, completions, guild halls), for the timelapse. */
+export const villageTimeline = pgTable(
+  'village_timeline',
+  {
+    id: text('id').primaryKey(),
+    seq: bigint('seq', { mode: 'number' }).notNull(),
+    ts: ts('ts').notNull(),
+    type: text('type').notNull(),
+    data: jsonb('data').notNull(),
+  },
+  (t) => [index('village_timeline_seq').on(t.seq)],
+);
 
 export const pushSubscriptions = pgTable(
   'push_subscriptions',
@@ -183,27 +214,48 @@ export const pushSubscriptions = pgTable(
     ownerId: text('owner_id')
       .notNull()
       .references(() => owners.id),
+    /** The push service URL (validated: https, public host). One row per browser subscription. */
+    endpoint: text('endpoint').notNull(),
     subscription: jsonb('subscription').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index('push_owner').on(t.ownerId)],
+  (t) => [index('push_owner').on(t.ownerId), uniqueIndex('push_endpoint').on(t.endpoint)],
 );
 
-export const sessions = pgTable('sessions', {
-  id: text('id').primaryKey(),
-  ownerId: text('owner_id')
-    .notNull()
-    .references(() => owners.id),
-  expiresAt: ts('expires_at').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+/** Owner login sessions. `id` is the SHA-256 of the cookie value; the value itself is never stored. */
+export const sessions = pgTable(
+  'sessions',
+  {
+    id: text('id').primaryKey(),
+    ownerId: text('owner_id')
+      .notNull()
+      .references(() => owners.id),
+    expiresAt: ts('expires_at').notNull(),
+    /** Last time the expiry was pushed forward (at most once a day). */
+    refreshedAt: ts('refreshed_at').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('sessions_owner').on(t.ownerId)],
+);
 
-export const reports = pgTable('reports', {
-  id: text('id').primaryKey(),
-  kind: text('kind').notNull(),
-  targetId: text('target_id').notNull(),
-  reason: text('reason').notNull(),
-  reporterIp: text('reporter_ip_hash').notNull(),
-  ts: ts('ts').notNull(),
-  resolved: boolean('resolved').notNull().default(false),
+export const reports = pgTable(
+  'reports',
+  {
+    id: text('id').primaryKey(),
+    kind: text('kind').notNull(),
+    targetId: text('target_id').notNull(),
+    reason: text('reason').notNull(),
+    /** Optional free text from the reporter, sanitized like agent text and capped. */
+    details: text('details').notNull().default(''),
+    reporterIp: text('reporter_ip_hash').notNull(),
+    ts: ts('ts').notNull(),
+    resolved: boolean('resolved').notNull().default(false),
+  },
+  (t) => [index('reports_ts').on(t.ts)],
+);
+
+/** Words added to the moderation filter at runtime by admins (the built-in list lives in packages/shared). */
+export const blockedWords = pgTable('blocked_words', {
+  word: text('word').primaryKey(),
+  addedAt: ts('added_at').notNull(),
 });

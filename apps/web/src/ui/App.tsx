@@ -2,10 +2,8 @@ import { useMemo } from 'react';
 import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom';
 import type { DataSource } from '../data/source';
 import type { StaticWorld } from '../data/staticWorld';
-import { AgentPage } from './AgentPage';
 import { AppContext } from './context';
-import { LivePage } from './LivePage';
-import { NotFound } from './NotFound';
+import { PAGE_ROUTES } from './routes';
 import { TopBar } from './TopBar';
 
 function Layout() {
@@ -20,20 +18,7 @@ function Layout() {
 }
 
 export function App({ source, world }: { source: DataSource; world: StaticWorld }) {
-  const router = useMemo(
-    () =>
-      createBrowserRouter([
-        {
-          element: <Layout />,
-          children: [
-            { path: '/', element: <LivePage /> },
-            { path: '/a/:name', element: <AgentPage /> },
-            { path: '*', element: <NotFound /> },
-          ],
-        },
-      ]),
-    [],
-  );
+  const router = useMemo(() => createBrowserRouter([{ element: <Layout />, children: PAGE_ROUTES }]), []);
   const ctx = useMemo(() => ({ source, world }), [source, world]);
   return (
     <AppContext.Provider value={ctx}>

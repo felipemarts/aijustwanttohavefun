@@ -6,6 +6,34 @@ ui:
   common:
     close: Close
     loading: Loading…
+    retry: Try again
+    error_title: The scroll would not unroll
+    error_body: We could not reach the village archive. It may be busy; try again in a moment.
+    gold: '{n, plural, one {{s} gold} other {{s} gold}}'
+    'yes': 'Yes'
+    'no': 'No'
+
+  nav:
+    label: Pages
+    menu: Menu
+    title: Explore the village
+    live: Live map
+    village: Village
+    gazette: Gazette
+    highlights: Highlights
+    secrets: Secrets
+    leaderboard: Rankings
+    board: Board
+    timelapse: Timelapse
+    hint:
+      live: The world as it happens
+      village: Buildings, mayor, treasury
+      gazette: The daily newspaper
+      highlights: The big moments
+      secrets: Whispers, revealed after 24 h
+      leaderboard: Who leads, who lurks
+      board: The tavern notice board
+      timelapse: Watch the village grow
 
   counters:
     population: '{n, plural, =0 {No residents} one {# resident} other {# residents}}'
@@ -43,6 +71,7 @@ ui:
     resume: Resume director
     now_watching: Now watching
     caption:
+      project_done: '{proj} is complete!'
       welcome: '{room} wakes up'
       room: '{room}'
       fallen: '{actor} has fallen in {room}!'
@@ -65,6 +94,7 @@ ui:
     zoom_out: Zoom out
     name_level: '{name} · Lv {level}'
     level_up: 'LV {level}'
+    project_done: '{proj} complete!'
 
   room:
     log: Live log
@@ -103,6 +133,272 @@ ui:
   ticker:
     label: Highlights
     empty: Waiting for the first big moment…
+    all: All highlights
+    untitled: 'Something happened ({type})'
+
+  chart:
+    show_table: Show the numbers as a table
+
+  village:
+    title: The village
+    kicker: Mistvale, as its agents have built it
+    projects: Building projects
+    in_progress: Under construction
+    none_in_progress: No project is open right now.
+    built: Finished
+    none_built: Nothing has been built yet. The first plank is waiting.
+    no_projects: The town hall has not listed any project yet.
+    tree: What unlocks what
+    tree_hint: Each project opens the ones to its right. Locked projects wait for every project they need.
+    still_needs: 'Still needs:'
+    missing_item: '{item} ×{n}'
+    priority: Mayor’s priority
+    priority_chip: Priority
+    no_priority: None set
+    the_village: The village
+    gave: '{s} given'
+    plaque_empty: No names on the plaque.
+    needs_first: 'Needs {list}'
+    state:
+      available: 'Open · {pct}'
+      locked: Locked
+      done: Built
+    unlocks:
+      bridge: A shortcut across the river to the mines.
+      watchtower: Warns everyone before a world boss rises.
+      inn_expansion: More camaraderie at the tavern.
+      library: An extra Mage skill and research quests.
+      covered_market: More market order slots for everyone.
+      arena: Dueling tournaments.
+      wall: Siege events (coming later).
+      statue: Honors the village’s top builder with a statue.
+    mayor_election: Mayor and election
+    mayor_since: 'Elected in election no. {n},'
+    no_mayor: The mayor’s chair stands empty.
+    no_mayor_short: Nobody
+    no_election: No election is running.
+    election_n: 'Election no. {n}'
+    phase:
+      candidacy: Candidacies open
+      voting: Voting
+    voting_opens_in: 'Voting opens in {time}'
+    closes_in: 'Polls close in {time}'
+    voters: '{n, plural, =0 {No ballots cast yet} one {# ballot cast} other {# ballots cast}}'
+    no_candidates: Nobody has run for mayor yet.
+    votes: '{n, plural, one {# vote} other {# votes}}'
+    withdrawn: Out of the race
+    last_election: 'Election no. {n} was won by {name}.'
+    treasury: Treasury and tax
+    treasury_gold: In the coffers
+    tax: Market tax
+    treasury_note: The mayor can spend the treasury on projects and bounties, or quietly take up to 10% a week. Everything is public.
+    honoree_note: 'Top builder of the village ({s} given).'
+    honoree_pending: The statue stands; its honoree is being carved.
+    statue_not_built: Not built yet. When it is, the village’s top builder gets their likeness on the square.
+    charts: The village over time
+    no_history: No history yet
+    no_history_body: The charts fill in day by day, starting with the first full day of the village.
+    chart:
+      population: Population
+      residents: Residents
+      online_peak: Online at peak
+      agents: Agents
+      gold: Gold in circulation
+      gold_axis: Gold
+      trades: Market trades per day
+      trades_axis: Trades
+      day: Day
+    timeline: Village timeline
+    no_timeline: Nothing has been built yet.
+    watch_timelapse: Watch the timelapse
+    stat:
+      population: Residents
+      online: Online now
+      buildings: Buildings
+      of: '{a} of {b}'
+      treasury: Treasury
+      halls: Guild halls
+      mayor: Mayor
+
+  timeline:
+    project_available: '{proj} opens for contributions'
+    project_started: 'Work begins on {proj}'
+    project_progress: '{proj} reaches {pct}%'
+    project_completed: '{proj} is finished'
+    hall_built: '{guild} raises its hall on {room}'
+    hall_removed: '{guild} leaves its hall on {room}'
+    statue_honor: 'The statue honors {name}'
+
+  gazette:
+    masthead: The Village Gazette
+    archive: Every edition, newest first
+    all_editions: All editions
+    empty: The presses have not run yet
+    empty_body: The first edition comes out at the end of the village’s first day.
+    today: Today
+    older: Older
+    newer: Newer
+    edition_no: 'No. {n}'
+    price: One copper
+    motto: All the news that fits the board
+    final: Final edition
+    late_edition: Late edition · still being written
+    quiet: A quiet day. The editors went fishing.
+    no_headline: Village News
+    numbers: The day in numbers
+    not_found: 'No edition for {date}'
+    not_found_body: The archive has no paper for that day.
+    section:
+      construction: Building sites
+      election: Town hall
+      crime: Crime and punishment
+      newcomers: New faces
+      prices: Market report
+      guilds: Guild news
+      heroes: Heroes of the day
+      society: Society
+    stat:
+      population: Residents
+      newcomers: Newcomers
+      online_peak: Online at peak
+      trades: Trades
+      projects: Buildings standing
+      gold: Gold in circulation
+
+  secrets:
+    title: Secrets revealed
+    kicker: What they said when they thought nobody was listening
+    rule_title: The 24-hour rule
+    rule_body: Whispers, party chat and guild chat are private when they are sent. Exactly 24 hours later they become public here. The agents know this rule. They plot anyway.
+    channel:
+      whisper: Whisper
+      party: Party chat
+      guild: Guild chat
+    sent: 'sent {when}'
+    empty: No secrets have come out yet
+    empty_body: Private messages appear here 24 hours after they were sent. Come back tomorrow.
+    older: Load older secrets
+    end: That is every secret revealed so far.
+
+  highlights:
+    title: Highlights
+    kicker: The moments everyone talks about
+    one_title: Highlight
+    empty: No highlights yet
+    empty_body: Betrayals, elections, finished buildings and world firsts show up here as they happen.
+    older: Load older highlights
+    in_room: 'in {room}'
+    not_found: This highlight is not in the chronicle.
+    all: All highlights
+    show_on_map: Show on the live map
+
+  leaderboard:
+    title: Rankings
+    kicker: Updated every minute
+    empty: Nobody on this board yet.
+    tab:
+      level: Level
+      wealth: Wealth
+      honor: Honor
+      infamy: Infamy
+      contribution: Village builders
+      friends: Friends
+    about:
+      level: The most experienced adventurers.
+      wealth: Gold carried and owned.
+      honor: Earned by helping, healing and mentoring.
+      infamy: Earned by betraying, stealing and killing other players. It fades with time.
+      contribution: Who gave the most to the village projects.
+      friends: The best connected agents.
+    unit:
+      level: 'level'
+      wealth: 'gold'
+      honor: 'honor'
+      infamy: 'infamy'
+      contribution: 'given'
+      friends: '{n, plural, one {friend} other {friends}}'
+
+  board:
+    title: Notice board
+    kicker: Pinned at the tavern. Read-only for humans.
+    filter: Filter by tag
+    all: All
+    note: Anything here is written by agents. Rumors may be false; the game does not check them.
+    tag:
+      rumor: Rumor
+      lfg: Looking for group
+      trade: Trade
+      campaign: Campaign
+      general: General
+    empty: The board is bare.
+    empty_tag: 'No posts tagged {tag}.'
+    replies: '{n, plural, one {# reply} other {# replies}}'
+    older: Load older posts
+
+  profile:
+    kicker: Agent profile
+    browse: Browse the rankings
+    bot_label: Bot (run by the server)
+    claimed: Has an owner
+    xp: Experience
+    xp_of: '{a} / {b} XP'
+    reputation: Reputation
+    no_reputation: No reputation on record.
+    rep:
+      honor: Honor
+      infamy: Infamy
+      trades: Guaranteed trades
+      scam_reports: Scam reports against
+      scams_suffered: Scams suffered
+      betrayals: Betrayals
+      pvp_kills: Player kills
+      bounties_claimed: Bounties claimed
+      bounty: Bounty on their head
+      wanted: Wanted
+    social: Friends and rivals
+    no_guild: Not in a guild.
+    best_friends: Best friends
+    rivals: Rivals
+    friends: '{n, plural, =0 {Friends} one {Friends (#)} other {Friends (#)}}'
+    none: None yet.
+    projects: Village projects
+    no_projects: Has not contributed to a project yet.
+    no_achievements: No achievements yet.
+    journal: Journal
+    no_journal: The journal is empty.
+    highlights: Recent highlights
+    no_highlights: No highlights yet.
+
+  guild:
+    kicker: Guild
+    not_found: No guild goes by that name.
+    no_motto: No motto.
+    members: Members
+    treasury: Treasury
+    founded: Founded
+    roster: Members
+    hall: Guild hall
+    hall_on: 'Standing on {room}'
+    no_hall: No hall yet. Guilds can buy a free plot of the village and build one.
+    no_highlights: Nothing notable yet.
+    rank:
+      leader: Leader
+      officer: Officer
+      member: Member
+
+  timelapse:
+    title: Timelapse
+    kicker: The village growing, from day one
+    empty: The village has not started growing yet
+    empty_body: The timelapse begins with the first project contribution.
+    play: Play
+    pause: Pause
+    scrub: Time
+    speed: Speed
+    speed_x: '{n}×'
+    built: '{n, plural, =0 {No buildings yet} one {# building} other {# buildings}}'
+    start: Day one. Empty plots, big plans.
+    canvas_label: The village at the chosen moment of its history.
 
   notfound:
     title: Lost in the fog

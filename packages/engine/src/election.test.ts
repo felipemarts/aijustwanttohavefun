@@ -4,7 +4,7 @@ import { advanceTo, build, citizen, DAY, elect } from './civic-testkit';
 import { checkInvariants } from './invariants';
 import { observe } from './observe';
 import { deactivateAgent } from './register';
-import { dataOf, errCode, errKey, HOUR, makeKit, narr, T0, worldWealth, type Kit } from './testkit';
+import { dataOf, errKey, HOUR, makeKit, narr, T0, worldWealth, type Kit } from './testkit';
 import type { AgentState } from './types';
 import { villageView } from './village-view';
 
@@ -221,8 +221,7 @@ describe('mayor powers', () => {
     refuse(k, joe, 'mayor_embezzle', { gold: 1 }, 'not_mayor');
     expect(observe(k.s, m.id, k.ctx()).actions).toEqual(expect.arrayContaining(['mayor_priority', 'mayor_tax', 'mayor_fund', 'mayor_embezzle']));
     expect(observe(k.s, joe.id, k.ctx()).actions).not.toContain('mayor_tax');
-    // mayor_bounty arrives with a later task.
-    expect(errCode(k.act(m, 'mayor_bounty', { agent: 'Joe', gold: 10 }))).toBe('INVALID_ACTION');
+    refuse(k, joe, 'mayor_bounty', { agent: m.name, gold: 10 }, 'not_mayor');
   });
 
   it('mayor_tax: 0 to 10%, read by the market', () => {

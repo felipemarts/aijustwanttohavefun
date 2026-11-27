@@ -21,9 +21,10 @@ if (config.databaseUrl) {
   store = new MemoryStore();
 }
 
-const { app, game, persistence, spectators, metrics } = await boot({ config, store, logger: log });
+const { app, game, persistence, spectators, metrics, chronicle } = await boot({ config, store, logger: log });
 game.start();
 persistence.start();
+chronicle.start();
 spectators.start();
 metrics.start();
 await app.listen({ port: config.port, host: '0.0.0.0' });
@@ -39,6 +40,7 @@ async function shutdown(signal: string): Promise<void> {
     await app.close();
     game.stop();
     await persistence.stop();
+    await chronicle.stop();
     await store.close();
     process.exit(0);
   } catch (err) {

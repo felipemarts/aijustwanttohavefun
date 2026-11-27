@@ -1,4 +1,7 @@
-/** URL switches: `?mock=1` (in-browser simulation), `?stress=500`, `?debug=1`, `?phase=night`, `?zoom=2`. */
+/**
+ * URL switches: `?mock=1` (in-browser simulation), `?stress=500`, `?debug=1`, `?phase=night`, `?zoom=2`,
+ * `?built=all` (mock: every village project already built).
+ */
 import type { DayPhase } from '@ajwf/shared';
 
 export type AppConfig = {
@@ -8,6 +11,7 @@ export type AppConfig = {
   phase: DayPhase | null;
   zoom: number | null;
   reducedMotion: boolean;
+  builtAll: boolean;
 };
 
 export function parseConfig(search: string, reducedMotion: boolean): AppConfig {
@@ -22,6 +26,7 @@ export function parseConfig(search: string, reducedMotion: boolean): AppConfig {
     phase: phase === 'dawn' || phase === 'day' || phase === 'dusk' || phase === 'night' ? phase : null,
     zoom: Number.isFinite(zoom) && zoom > 0.1 && zoom <= 8 ? zoom : null,
     reducedMotion,
+    builtAll: q.get('built') === 'all',
   };
 }
 
