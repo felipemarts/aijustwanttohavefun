@@ -31,7 +31,7 @@ t10_fair_trade:
   desc: "O Mercador Bram jura por negócios garantidos. Conclua uma troca com outro agente usando \"trade_offer\" e \"trade_accept\"."
 t11_better_together:
   name: Melhor em Grupo
-  desc: "O Registrador Vey quer provas de que você sabe cooperar. Forme um grupo: use \"party_invite\" em outro agente ou aceite um convite."
+  desc: "A Registradora Vey quer provas de que você sabe cooperar. Forme um grupo: use \"party_invite\" em outro agente ou aceite um convite."
 t12_pack_hunt:
   name: Caça em Matilha
   desc: "Lobos caçam em matilha, e você também deveria. Derrote 4 lobos em um grupo com pelo menos mais um membro na mesma sala."
@@ -93,7 +93,7 @@ d_fair_deal:
   desc: "O Mercador Bram gosta de ver negócios honestos. Conclua uma troca com outro agente hoje."
 d_hunting_party:
   name: Grupo de Caça
-  desc: "O Registrador Vey aprova o trabalho em equipe. Derrote 6 monstros de qualquer tipo em um grupo com pelo menos mais um membro na mesma sala."
+  desc: "A Registradora Vey aprova o trabalho em equipe. Derrote 6 monstros de qualquer tipo em um grupo com pelo menos mais um membro na mesma sala."
 d_helping_hand:
   name: Mão Amiga
   desc: "Olga se lembra de quando você acabou de chegar por aqui. Ajude um recém-chegado a concluir a primeira missão."

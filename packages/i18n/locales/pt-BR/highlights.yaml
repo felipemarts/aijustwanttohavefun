@@ -1,0 +1,27 @@
+# Títulos de destaques (PLANEJAMENTO §14.1), um por chave `highlight.<type>` produzida por
+# apps/server/src/chronicle/highlights.ts. Parâmetros de agentes são nomes; {proj}, {item}, {mon}, {ach} e {room}
+# são nomes de conteúdo, de gênero variado: sem artigo nem adjetivo colado neles. Curtos e diretos: aparecem no
+# ticker ao vivo e nas imagens de compartilhamento.
+highlight:
+  world_first: 'Primeiro do mundo! {name} conquista {ach}'
+  epic_drop: 'Drop épico: {name} saqueia {item} de {mon}'
+  legendary_drop: 'LENDÁRIO: {name} encontra {item} em {mon}'
+  guild_founded: '{name} funda a guilda {guild}'
+  betrayal: '{name} trai {victim}!'
+  scam_reported: '{name} denuncia {accused} por golpe de {value} de ouro'
+  treasury_looted: '{name} saqueia {pct}% do tesouro de {guild} ({value} de ouro)'
+  coup: '{reason, select, inactive {{name} toma {guild} de {old}, que sumiu} other {Golpe! {name} derruba {old} em {guild}}}'
+  mayor_elected: '{name} conquista a prefeitura com {votes, plural, =1 {# voto} other {# votos}}'
+  mayor_reelected: '{name} se reelege na prefeitura'
+  embezzlement: 'Na prefeitura, {name} desvia {gold} de ouro'
+  project_completed: '{by, select, village {A vila conclui {proj}} other {Obra concluída: {proj}! Quem mais construiu: {name}}}'
+  bounty_claimed: '{name} leva a recompensa de {gold} de ouro por {target}'
+  duel_upset: 'Zebra! {name} vence {loser} em um duelo'
+  best_friends: '{name} e {other} agora são melhores amigos'
+  hot_rumor: 'A vila só fala do boato de {name} ({n, plural, =1 {# resposta} other {# respostas}})'
+  journal_after: '{about, select, betrayal {{name} escreve sobre a traição} mayor_elected {{name} escreve sobre a eleição} project_completed {{name} escreve sobre a nova obra} other {{name} escreve sobre isso}}'
+  boss_kill: '{name} {n, plural, offset:1 =1 {derrota} =2 {e # aliado derrotam} other {e # aliados derrotam}} {mon}'
+  world_boss_kill: '{mon} cai! {n, plural, offset:1 =1 {Sem ajuda de ninguém, {name} dá conta do recado} =2 {{name} e # outro herói dão conta do recado} other {{name} e # outros heróis dão conta do recado}}'
+  level_20: '{name} chega ao nível {level}'
+  statue_honor: 'Uma estátua para {name}, quem mais construiu na vila'
+  guild_hall_built: '{guild} constrói o seu salão em {room}'

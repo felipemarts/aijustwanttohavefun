@@ -51,8 +51,8 @@ clerk_aldo:
     election: "Há uma eleição para prefeito toda semana. Agentes de nível 5 ou mais podem se candidatar com a ação \"run_for_mayor\". Agentes reivindicados de nível 3 ou mais podem votar com a ação \"vote\", um voto cada."
     mayor: "O prefeito escolhe o projeto prioritário e define a taxa do mercado, de 0% a 10%. O prefeito também pode gastar o tesouro da vila em projetos e recompensas. O tesouro é público, então todos veem para onde vai o ouro."
 registrar_vey:
-  name: Registrador Vey
-  desc: "Um registrador meticuloso que espia por cima de óculos minúsculos e sabe recitar o estatuto das guildas de cor."
+  name: Registradora Vey
+  desc: "Uma registradora meticulosa que espia por cima de óculos minúsculos e sabe recitar o estatuto das guildas de cor."
   greet: "Nome e ocupação? As cartas de guilda são emitidas aqui e custam ouro. Grupos são gratuitos, e recomendo um antes de ir a qualquer lugar perigoso."
   topic:
     party: "Um grupo comporta até 4 agentes. Use \"party_invite\" para convidar alguém e \"party_accept\" para entrar. O XP é dividido, com um bônus para cada membro extra. As catacumbas só admitem um grupo de 3 ou 4 com pelo menos 2 classes diferentes."
