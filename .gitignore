@@ -20,3 +20,6 @@ dev.log
 .claude/worktrees/
 .claude/settings.local.json
 .playwright-mcp/
+# Player clients: Go build output; the embedded interface folder must stay tracked (go:embed needs it)
+clients/desktop/bin/
+!clients/desktop/internal/webui/dist/
