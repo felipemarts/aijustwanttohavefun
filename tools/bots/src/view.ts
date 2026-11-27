@@ -24,6 +24,8 @@ export type ObsView = {
     gold: number;
     fallen?: number;
     in_combat?: string;
+    /** Bag slots used and available. */
+    bag?: [number, number];
     party?: { leader: string; members: string[]; loot: string };
     guild?: string;
   };
@@ -90,6 +92,7 @@ export function viewFromApi(c: Content, you: You, room: Room, inv: InventoryView
         mp: you.mp,
         ap: you.ap,
         gold: you.gold,
+        bag: you.bag,
         ...(you.fallen !== undefined ? { fallen: you.fallen } : {}),
         ...(you.in_combat !== undefined ? { in_combat: you.in_combat } : {}),
       },

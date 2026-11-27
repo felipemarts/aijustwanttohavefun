@@ -325,6 +325,9 @@ function shopsSelling(c: Content, item: string): { npc: string; room: string; pr
 export function buyFromShop(v: AgentView, x: DecideCtx, item: string, qty = 1): BotStep | null {
   const shops = shopsSelling(x.c, item);
   if (!shops.length || v.obs.you.gold < shops[0]!.price * qty) return null;
+  // A full bag only takes more of what it already holds.
+  const bag = v.obs.you.bag;
+  if (bag && bag[0] >= bag[1] && have(v, item) === 0) return null;
   const here = shops.find((s) => s.room === v.obs.room.id);
   if (here) return cmd('shop_buy', { npc: here.npc, item, qty });
   const to = nearest(v, x, shops.map((s) => s.room));
