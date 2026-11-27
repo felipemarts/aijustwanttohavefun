@@ -674,7 +674,7 @@ export class MapScene {
       }
       cur.banner.dur = 0;
     }
-    const box = this.makeBanner(i18n.tr.t(`ui.director.banner.${m.key}`, m.params), BANNER_TONE[m.key] ?? 'danger', 18);
+    const box = this.makeBanner(i18n.tr.t(`ui.director.banner.${m.key}`, m.params), BANNER_TONE[m.key] ?? 'danger', 26);
     const banner: Banner = { box, x: this.camera.x, y: this.camera.y, t0: now, dur: 4000, follow: this.director.star ?? undefined };
     this.banners.push(banner);
     this.starBanner = { banner, points: m.points };

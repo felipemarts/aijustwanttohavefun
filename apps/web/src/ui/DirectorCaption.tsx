@@ -8,7 +8,9 @@ import { useDirector } from '../map/controller';
 export function DirectorCaption() {
   const tr = useT();
   const d = useDirector();
-  if (!d.enabled || !d.caption) return null;
+  // While a star is followed, the star card says who and where: the chapter title is for the special moments
+  // (the welcome, a finished project), which have no star.
+  if (!d.enabled || !d.caption || d.star) return null;
   const text = tr.t(d.caption.key, d.caption.params);
   return (
     <div className="caption-wrap" aria-live="polite">
