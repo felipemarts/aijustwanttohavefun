@@ -16,18 +16,38 @@ export type InventoryView = {
 
 /** The subset of an observation a bot policy reads. The engine's `Observation` satisfies it as is. */
 export type ObsView = {
-  you: { lvl: number; hp: [number, number]; mp: [number, number]; ap: [number, number]; gold: number; fallen?: number; in_combat?: string };
+  you: {
+    lvl: number;
+    hp: [number, number];
+    mp: [number, number];
+    ap: [number, number];
+    gold: number;
+    fallen?: number;
+    in_combat?: string;
+    party?: { leader: string; members: string[]; loot: string };
+    guild?: string;
+  };
   room: {
     id: string;
     zone: string;
     flags: string[];
     exits: Record<string, string>;
     locked?: Record<string, string>;
-    agents: { name: string }[];
+    agents: { name: string; class?: string; lvl?: number; rel?: string; fallen?: true }[];
     npcs: { id: string; roles: string[] }[];
-    monsters: { id: string; n: number; lvl: number }[];
+    monsters: { id: string; n: number; lvl: number; hp?: [number, number] }[];
     resources?: Record<string, number>;
   };
+  /** Requests waiting for an answer (names of agents, guilds, trade offers). */
+  pending?: {
+    friends?: string[];
+    party?: string[];
+    guild?: string[];
+    trades?: { id: string; from: string; give: { gold?: number; items?: Record<string, number> }; want: { gold?: number; items?: Record<string, number> } }[];
+  };
+  quest_hint?: { id: string; giver: string; room: string; state: string };
+  /** Actions that make sense here and now. */
+  actions?: string[];
 };
 
 export type BotView = { obs: ObsView; inv: InventoryView };
