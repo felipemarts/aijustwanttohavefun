@@ -49,6 +49,7 @@ export async function makeServer<S extends Store = MemoryStore>(
   const config: Config = {
     production: false,
     port: 0,
+    host: '127.0.0.1',
     databaseUrl: undefined,
     migrateOnBoot: true,
     publicUrl: ORIGIN,

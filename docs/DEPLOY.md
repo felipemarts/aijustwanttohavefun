@@ -50,6 +50,7 @@ Every variable is read once at boot (`apps/server/src/config.ts`). Empty means "
 |---|---|---|
 | `NODE_ENV` | `production` in the image | `production` requires `SESSION_SECRET` and an `https://` `PUBLIC_URL`; enables `Secure`/`__Host-` cookies, HSTS, a `wss:`-only CSP, hides `/metrics` without `ADMIN_TOKEN`, ignores `DEV_LOGIN` and serves the built web app by default. Anything else is development. |
 | `PORT` | `8710` | HTTP and WebSocket port inside the container. |
+| `HOST` | `0.0.0.0` in the image and in production, `127.0.0.1` otherwise | Address the server listens on. A development server (which may have `DEV_LOGIN=1`) stays off the local network unless you set this. |
 | `DATABASE_URL` | none | `postgres://user:password@host:5432/db`. **Without it the server keeps the world in memory and loses it on stop** (fine for a demo, never for production). In production, a role that can only read and write rows, and `?sslmode=verify-full` across any network you do not control (section 5). |
 | `PUBLIC_URL` | `http://localhost:8710` | The address players and browsers use, without a trailing slash (`https://play.example.org`). Used for claim links, OAuth callbacks, share-card URLs, the CSP and the cookie origin check. Must be `https://` in production. |
 | `SESSION_SECRET` | random per process | At least 32 random characters (`openssl rand -base64 48`). Signs the OAuth login cookie and keys the reporter-IP hash. Required in production; changing it logs out logins in progress only. |

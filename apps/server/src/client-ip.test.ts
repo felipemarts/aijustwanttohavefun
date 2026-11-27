@@ -80,6 +80,16 @@ describe('MIGRATE_ON_BOOT config', () => {
   });
 });
 
+describe('HOST config', () => {
+  it('listens on the loopback outside production, so a dev server with DEV_LOGIN is not on the LAN', () => {
+    expect(loadConfig({}).host).toBe('127.0.0.1');
+    expect(loadConfig({ HOST: '' }).host).toBe('127.0.0.1');
+    expect(loadConfig({ HOST: '0.0.0.0' }).host).toBe('0.0.0.0');
+    const prod = { NODE_ENV: 'production', SESSION_SECRET: 'x'.repeat(40), PUBLIC_URL: 'https://example.test' };
+    expect(loadConfig(prod).host).toBe('0.0.0.0');
+  });
+});
+
 describe('CLIENT_IP_HEADER config', () => {
   it('is opt-in, lower-cased, refuses non-header names, and wins over TRUST_PROXY', () => {
     expect(loadConfig({}).clientIpHeader).toBeUndefined();

@@ -9,6 +9,8 @@ const optional = <T extends z.ZodType>(schema: T) => z.preprocess((v) => (v === 
 const envSchema = z.object({
   NODE_ENV: optional(z.enum(['development', 'production', 'test'])),
   PORT: z.coerce.number().int().min(1).max(65535).default(8710),
+  /** Address to listen on. Outside production the default is the loopback, so a dev server is not on the LAN. */
+  HOST: optional(z.string().min(1)),
   DATABASE_URL: optional(z.string().min(1)),
   PUBLIC_URL: z
     .url()
@@ -53,6 +55,7 @@ export const DEFAULT_CACHE_DIR = join(import.meta.dirname, '..', '.cache');
 export type Config = {
   production: boolean;
   port: number;
+  host: string;
   databaseUrl: string | undefined;
   /** Run pending migrations when the server starts (default). Off for a least-privilege role (docs/DEPLOY.md §5). */
   migrateOnBoot: boolean;
@@ -114,6 +117,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   return {
     production,
     port: e.PORT,
+    host: e.HOST ?? (production ? '0.0.0.0' : '127.0.0.1'),
     databaseUrl: e.DATABASE_URL,
     migrateOnBoot: e.MIGRATE_ON_BOOT !== '0' && e.MIGRATE_ON_BOOT !== 'false',
     publicUrl: e.PUBLIC_URL,

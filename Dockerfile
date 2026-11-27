@@ -42,6 +42,7 @@ RUN apk add --no-cache tini
 # The V8 heap limit keeps the process under the 2 GB target (buffers, sockets and zlib live outside the heap).
 ENV NODE_ENV=production \
     PORT=8710 \
+    HOST=0.0.0.0 \
     WEB_DIST=/app/apps/web/dist \
     CACHE_DIR=/tmp/ajwf-cache \
     TMPDIR=/tmp \

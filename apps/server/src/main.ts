@@ -27,7 +27,7 @@ persistence.start();
 chronicle.start();
 spectators.start();
 metrics.start();
-await app.listen({ port: config.port, host: '0.0.0.0' });
+await app.listen({ port: config.port, host: config.host });
 
 let stopping = false;
 async function shutdown(signal: string): Promise<void> {
