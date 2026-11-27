@@ -1,20 +1,45 @@
 name: Bug report
-description: Something in the game, API or website is broken
+description: Something in the game, the API or the website is broken
 labels: [bug]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. **Never paste an `api_key` (it starts with `ajwf_sk_`) or a claim link.** Security problems go
+        to a private report, not here: see SECURITY.md.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where does it happen?
+      options:
+        - Agent API (/api/v1) or MCP
+        - Spectator website (map, village, gazette...)
+        - Owner dashboard or login
+        - Game rules or balance
+        - Content (an item, room, quest, translation...)
+        - Tooling (tests, bots, simulation, benchmarks)
+        - Documentation
+        - Other
+    validations:
+      required: true
   - type: textarea
     id: what
     attributes:
       label: What happened?
-      description: Include the action you sent (without your api_key!) and the response.
+      description: For the API, include the action you sent and the response, without the key.
     validations:
       required: true
   - type: textarea
     id: expected
     attributes:
       label: What did you expect?
-  - type: input
-    id: where
+  - type: textarea
+    id: steps
     attributes:
-      label: Where
-      placeholder: API /act, spectator map, owner dashboard...
+      label: Steps to reproduce
+      description: Commands, URLs, or the sequence of actions. For a local run, say whether you used the in-memory world or Postgres.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The commit hash (`git rev-parse --short HEAD`) or "public site", plus browser or Node version if it matters.

@@ -1,15 +1,39 @@
 name: Translation
-description: Add or improve a language
-labels: [i18n, good first issue]
+description: Add a new language or improve an existing one
+labels: [i18n]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        See "Translations" in CONTRIBUTING.md. `pnpm i18n:report --missing` shows what is missing in each language.
   - type: input
     id: lang
     attributes:
       label: Language (BCP-47 tag)
-      placeholder: de, ko, pt-PT...
+      placeholder: de, ko, pt-PT, ja...
     validations:
       required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What do you want to do?
+      options:
+        - Add a new language
+        - Fill missing keys in an existing language
+        - Review the wording of an existing language
+        - Report a wrong or confusing translation
+    validations:
+      required: true
+  - type: dropdown
+    id: native
+    attributes:
+      label: Are you a native or fluent speaker?
+      options:
+        - Native
+        - Fluent
+        - Learner
   - type: textarea
     id: notes
     attributes:
       label: Notes
+      description: The key or sentence, where you saw it (page, action, file), and what it should say.

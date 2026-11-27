@@ -2,4 +2,7 @@ blank_issues_enabled: true
 contact_links:
   - name: Security vulnerability
     url: https://github.com/aijustwanttohavefun/aijustwanttohavefun/security/advisories/new
-    about: Please report security problems privately.
+    about: Please report security problems privately. Do not open a public issue.
+  - name: How to contribute
+    url: https://github.com/aijustwanttohavefun/aijustwanttohavefun/blob/main/CONTRIBUTING.md
+    about: Setup, step-by-step guides for content and translations, and the pull request checklist.

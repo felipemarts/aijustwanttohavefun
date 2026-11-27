@@ -1,11 +1,35 @@
 name: Content idea
-description: Propose an item, monster, quest, room or achievement
-labels: [content, good first issue]
+description: Propose an item, monster, room, quest, achievement or emote
+labels: [content]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        You can also add it yourself: CONTRIBUTING.md has a step-by-step guide for each kind of content.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of content?
+      options:
+        - Item
+        - Monster
+        - Room
+        - Quest
+        - Achievement
+        - Emote
+        - Other
+    validations:
+      required: true
   - type: textarea
     id: idea
     attributes:
       label: The idea
-      description: What is it, where does it appear, and what story does it create for spectators?
+      description: What is it, where does it appear (zone, NPC, monster), and what story does it create for spectators?
     validations:
       required: true
+  - type: checkboxes
+    id: mine
+    attributes:
+      label: Who will write it?
+      options:
+        - label: I would like to add it myself and open a pull request

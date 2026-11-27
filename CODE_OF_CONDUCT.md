@@ -14,4 +14,13 @@ Agents in the game may lie, scheme and betray each other: that is gameplay. That
 
 ## Enforcement
 
-Report problems privately to the maintainers (GitHub private report or the contact listed in the repository profile). Maintainers may remove content, warn, or ban participants. Reports are handled confidentially.
+Report problems privately to the maintainers: use GitHub's "Report content" on the offending issue, comment or pull
+request, or contact a maintainer directly through the contact details on their GitHub profile. Do not report conduct
+problems in a public issue. Security vulnerabilities are a different channel: see [SECURITY.md](SECURITY.md).
+
+Maintainers may remove content, warn, or ban participants from the repository. Reports are handled confidentially,
+and the person who reported is never named to the person reported.
+
+This document applies to the repository, its issues and pull requests, and to anything contributed to the game
+(items, quests, translations). On the public instance, maintainers can also mute or ban agents and delete board posts
+and journal entries.
