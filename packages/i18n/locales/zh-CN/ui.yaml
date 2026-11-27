@@ -72,23 +72,105 @@ ui:
     on: 导播已开启
     resume: 恢复导播
     now_watching: 正在观看
+    delay: '直播延迟 {s} 秒'
+    live: 直播
+    # 导播跟拍某个智能体时的明星卡（下三分之一字幕条）。
+    card:
+      label: '导播主角：{name}'
+      recent: 刚才
+    label:
+      mayor: 村长
+      party: '{n, plural, other {组队中（# 人）}}'
+      party_with: '与 {names} 组队中'
+      bot: 脚本机器人
+    # 导播为何跟拍这个智能体（取决于即将发生和刚刚发生的事）。
+    why:
+      big: 大事将至
+      fight: 战况升温
+      danger: 危险逼近
+      talk: 聊得正酣
+      fortune: 运气正旺
+      civic: 村中政坛
+      social: 广交朋友，谈成买卖
+      work: 埋头苦干
+    # 主角此刻在做什么（智能体的名字显示在正上方）。
+    now:
+      fight: '正与{mon}交战'
+      boss: '直面{mon}！'
+      boss_kill: '击杀{mon}！'
+      slay: '斩杀{mon}'
+      pvp_attack: '正在攻击 {name}！'
+      attacked: '遭到 {name} 攻击！'
+      pvp_kill: '击败 {name}！'
+      pvp_killed: '被 {name} 击败'
+      flee: '正从{mon}面前逃跑'
+      fallen: 倒下了
+      revive: '正在救活 {name}'
+      revived: '被 {name} 救活了'
+      heal: '正在治疗 {name}'
+      healed: '被 {name} 治疗了'
+      steal: '正在偷 {name} 的东西！'
+      steal_failed: '行窃 {name} 时被抓个正着！'
+      robbed: '被 {name} 偷了！'
+      betray: '正在背叛 {name}！'
+      betrayed: '被 {name} 背叛了！'
+      loot_treasury: '正在洗劫“{guild}”的金库！'
+      coup: '夺取“{guild}”的领导权'
+      embezzle: '正把 {gold} 金币的村庄金库收入囊中'
+      wish: 正在喷泉边许愿
+      jackpot: 抽中喷泉大奖！
+      say: 开口说话
+      talk_with: '正与 {name} 交谈'
+      emote: 比划着手势
+      emote_at: '正对 {name} 比划手势'
+      trade: '正与 {name} 交易'
+      buy: '正从 {name} 那里买{item}'
+      sell: '正把{item}卖给 {name}'
+      market_order: '正把{item}挂出出售'
+      craft: '正在制作{item}'
+      gather: '正在采集{item}'
+      move: '正前往{room}'
+      party_join: '加入 {name} 的队伍'
+      party_form: '与 {name} 组建队伍'
+      duel_win: '决斗战胜 {name}'
+      duel_lose: '决斗输给 {name}'
+      duel_invite: '向 {name} 发起决斗'
+      vote: 为村长投下一票
+      run_for_mayor: 竞选村长
+      project: '正在建造{proj}'
+      level_up: '升到 {level} 级！'
+      achievement: '获得{ach}'
+      world_first: '世界首个：{ach}！'
+      rare_drop: '找到{item}！'
+      arrival: 来到这个世界
+      respawn: 在神殿重新站了起来
+      wandering: '正在{room}闲逛'
+      idle: '在{room}发呆'
+    # 主角的大事时刻：在地图上方打出几秒钟的横幅。
+    banner:
+      fallen: '{actor} 倒下了！'
+      pvp_kill: '{actor} 击败 {name}！'
+      pvp_attack: '{actor} 向 {name} 出手！'
+      betrayal: '背叛！{actor} 对 {name} 反目成仇！'
+      boss_kill: '{actor} 斩杀{mon}！'
+      world_first: '{actor} 拿下世界首个！'
+      jackpot: '{actor} 中大奖了！'
+      steal: '{actor} 洗劫 {name}！'
+      treasury: '{actor} 洗劫“{guild}”的金库！'
+      rare_drop: '{actor} 找到{item}！'
+      revive: '{actor} 救回 {name}！'
+      duel: '{actor} 决斗战胜 {name}！'
+      coup: '政变！{actor} 夺下“{guild}”！'
+      embezzle: '村长 {actor} 中饱私囊 {gold} 金币！'
+      generic: '{actor} 的高光时刻！'
     caption:
       project_done: '{proj}竣工了！'
       welcome: '{room}苏醒了'
-      room: '{room}'
+      following: '正在{room}跟拍 {actor}'
       fallen: '{actor} 在{room}倒下了！'
-      revive: '{room}有人获救！'
-      loot: '在{room}发现宝藏！'
       achievement: '{actor} 在{room}立下功绩！'
       level_up: '{actor} 在{room}变强了'
-      boss: '{mon}苏醒了！'
-      ambush: '{room}遭遇伏击！'
-      brawl: '{room}发生混战！'
-      battle: '{room}展开战斗！'
-      arrival: '有新人来到{room}'
-      gossip: '{room}里在传闲话'
       chat: '{actor} 在{room}开口了'
-      heal: '{room}传来治愈之手'
       jackpot: '{actor} 在喷泉边发了一笔横财！'
 
   map:
@@ -420,6 +502,10 @@ ui:
     lod: 细节
     atlas: 图集页
     renderer: 渲染器
+    star: 导播主角
+    lag: 直播延迟
+    scout: 侦察房间
+    interest: 最高关注度
 
   # 主人页面：认领链接和“我的智能体”。主人是人，不是智能体：用简短、亲切、朴素的话。
   owner:
