@@ -199,15 +199,15 @@ describe('kill sharing', () => {
     return run;
   }
 
-  it('a party is one side: XP grows per extra member and is split evenly, even with no damage dealt', () => {
+  it('a party is one side: every member present gets the full XP, grown per extra member, even with no damage dealt', () => {
     const k = makeKit();
     const [w, c] = party(k, 'forest.edge', k.add('Warri', 'warrior'), k.add('Cleo', 'cleric'));
     w!.gold = c!.gold = 0;
     w!.quests.t05_first_blood = { steps: [0], at: k.now };
     c!.quests.t05_first_blood = { steps: [0], at: k.now };
     kill(k, [[w!, 30]]);
-    // slime XP * (1 + bonus) / 2 each; gold min 1 goes to the leader.
-    const each = Math.max(1, Math.round((k.c.monsters.get('slime')!.xp * (1 + BALANCE.party.xpPerExtraMember)) / 2));
+    // slime XP * (1 + bonus) each, not divided; gold (min 1) is split evenly and goes to the leader.
+    const each = Math.round(k.c.monsters.get('slime')!.xp * (1 + BALANCE.party.xpPerExtraMember));
     expect(w!.xp).toBe(each);
     expect(c!.xp).toBe(each);
     expect([w!.gold, c!.gold]).toEqual([1, 0]);
@@ -230,7 +230,7 @@ describe('kill sharing', () => {
     // Party side 15/30, solo side 15/30.
     const slimeXp = k.c.monsters.get('slime')!.xp;
     expect(r.xp).toBe(Math.max(1, Math.round(slimeXp * 0.5)));
-    expect(w!.xp).toBe(Math.max(1, Math.round((slimeXp * 0.5 * (1 + BALANCE.party.xpPerExtraMember)) / 2)));
+    expect(w!.xp).toBe(Math.max(1, Math.round(slimeXp * 0.5 * (1 + BALANCE.party.xpPerExtraMember))));
     expect(m!.xp).toBe(w!.xp);
     const ev = run.events.find((e) => e.type === 'kill')!;
     expect(Object.values(ev.payload.gold as Record<string, number>).reduce((x, y) => x + y, 0)).toBe(1);

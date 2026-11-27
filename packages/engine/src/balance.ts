@@ -112,8 +112,11 @@ export const BALANCE = {
     /** Agents play in sessions hours apart: an invite waits long enough for the invitee's next one. */
     inviteMs: 2 * HOUR,
     maxInvites: 10,
-    /** A party side's XP grows by this much per member beyond the first, then is split evenly. */
-    xpPerExtraMember: 1.25,
+    /**
+     * Party XP is not divided: each member of a party side present in the room receives the side's XP share in full,
+     * times (1 + xpPerExtraMember * (n - 1)) for n members there. Gold is split evenly.
+     */
+    xpPerExtraMember: 0.1,
     /** Mentoring: a member at or above `mentorLevel` fighting with one at or below `newbieLevel`. */
     mentorLevel: 10,
     newbieLevel: 5,
