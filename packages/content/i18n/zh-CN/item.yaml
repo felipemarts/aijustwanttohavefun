@@ -1,0 +1,117 @@
+# 武器
+rusty_sword: { name: 生锈的剑 }
+iron_sword: { name: 铁剑 }
+steel_greatsword: { name: 精钢巨剑 }
+mithril_blade: { name: 秘银之刃 }
+oathkeeper: { name: 守誓者 }
+apprentice_staff: { name: 学徒法杖 }
+oak_staff: { name: 橡木法杖 }
+crystal_staff: { name: 水晶法杖 }
+starfall_staff: { name: 星坠法杖 }
+worn_dagger: { name: 磨损的匕首 }
+iron_dagger: { name: 铁匕首 }
+shadow_dagger: { name: 暗影匕首 }
+mithril_kris: { name: 秘银波刃剑 }
+wooden_mace: { name: 木钉锤 }
+iron_mace: { name: 铁钉锤 }
+holy_mace: { name: 圣光钉锤 }
+sunlit_scepter: { name: 日辉权杖 }
+hollow_regents_scepter: { name: 空洞摄政王的权杖 }
+
+# 护甲
+cloth_armor: { name: 布甲 }
+padded_armor: { name: 软垫甲 }
+leather_armor: { name: 皮甲 }
+chainmail_armor: { name: 锁子甲 }
+plate_armor: { name: 板甲 }
+mithril_mail: { name: 秘银链甲 }
+wyrmscale_armor: { name: 蛟龙鳞甲 }
+
+# 饰品
+lucky_pebble: { name: 幸运卵石 }
+copper_ring: { name: 铜戒指 }
+wolf_fang_charm: { name: 狼牙护符 }
+moonstone_amulet: { name: 月光石护身符 }
+crystal_pendant: { name: 水晶吊坠 }
+bandit_signet: { name: 强盗印戒 }
+regent_eye: { name: 摄政王之眼 }
+colossus_heart: { name: 巨像之心 }
+
+# 消耗品
+minor_potion: { name: 小型治疗药水 }
+health_potion: { name: 治疗药水 }
+greater_potion: { name: 大型治疗药水 }
+mana_potion: { name: 魔力药水 }
+greater_mana_potion: { name: 大型魔力药水 }
+elixir_of_fury: { name: 狂怒药剂 }
+
+# 食物
+bread: { name: 面包 }
+travelers_ration: { name: 旅行口粮 }
+hearty_stew: { name: 浓香炖菜 }
+roast_boar: { name: 烤野猪肉 }
+mushroom_pie: { name: 蘑菇派 }
+honey_cake: { name: 蜂蜜蛋糕 }
+
+# 材料
+wood: { name: 木材 }
+stone: { name: 石头 }
+copper_ore: { name: 铜矿石 }
+iron_ore: { name: 铁矿石 }
+silver_ore: { name: 银矿石 }
+mithril_ore: { name: 秘银矿石 }
+star_iron: { name: 星铁 }
+crystal: { name: 水晶 }
+coal: { name: 煤炭 }
+green_herb: { name: 绿草药 }
+moon_herb: { name: 月光草 }
+bog_lily: { name: 沼泽百合 }
+shadowcap: { name: 影帽菇 }
+flask: { name: 烧瓶 }
+oil: { name: 灯油 }
+linen: { name: 亚麻布 }
+silk: { name: 丝绸 }
+leather: { name: 皮革 }
+wolf_pelt: { name: 狼皮 }
+raw_meat: { name: 生肉 }
+buckle: { name: 带扣 }
+pot: { name: 炊锅 }
+iron_ingot: { name: 铁锭 }
+bone: { name: 骨头 }
+slime_gel: { name: 史莱姆凝胶 }
+bat_wing: { name: 蝙蝠翅膀 }
+ancient_relic: { name: 远古遗物 }
+ectoplasm: { name: 灵质 }
+
+# 背包
+small_bag: { name: 小布袋 }
+large_bag: { name: 大布袋 }
+
+# 染料
+red_dye: { name: 红色染料 }
+blue_dye: { name: 蓝色染料 }
+green_dye: { name: 绿色染料 }
+gold_dye: { name: 金色染料 }
+pearl_dye: { name: 珍珠色染料 }
+
+# 外观装扮
+cos_crown: { name: 王冠 }
+cos_top_hat: { name: 礼帽 }
+cos_circlet: { name: 头环 }
+cos_starry_hat: { name: 星空巫师帽 }
+cos_witch_hat: { name: 女巫帽 }
+cos_flower_crown: { name: 花冠 }
+cos_chef_hat: { name: 厨师帽 }
+cos_royal_doublet: { name: 王室紧身上衣 }
+cos_silk_robe: { name: 丝绸长袍 }
+cos_royal_cape: { name: 王室披风 }
+cos_feather_cloak: { name: 羽毛斗篷 }
+cos_fur_mantle: { name: 毛皮披肩 }
+cos_leaf_cloak: { name: 树叶斗篷 }
+cos_monocle: { name: 单片眼镜 }
+cos_goggles: { name: 护目镜 }
+
+# 任务物品
+lost_locket: { name: 遗失的挂坠盒 }
+sealed_letter: { name: 密封信 }
+regent_sigil: { name: 摄政王徽记 }

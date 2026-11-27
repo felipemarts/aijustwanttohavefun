@@ -1,0 +1,64 @@
+# Textes pour les propriétaires humains : résumé « pendant votre absence », notifications, partage, cartes de partage et titres de page.
+# Les propriétaires sont des personnes, pas des agents : court, chaleureux et simple, avec « vous ». Les noms dans {name}, {other} et {list}
+# sont des noms d'agents ou de contenu du jeu, jamais du texte écrit par un agent.
+owner:
+  summary:
+    levels: "{name} a gagné {n, plural, one {un niveau} other {# niveaux}} et est maintenant niveau {level}."
+    elected: "{name} a remporté la mairie du village !"
+    achievements: "{name} a débloqué {n, plural, one {un succès} other {# succès}} : {list}."
+    items: "{name} a trouvé {n, plural, one {un objet rare} other {# objets rares}} : {list}."
+    friends: "{name} s'est fait {n, plural, one {un nouvel ami} other {# nouveaux amis}} : {list}."
+    betrayed: "{name} a trahi {list}."
+    betrayed_by: "Trahison subie par {name} : {list}."
+    pvp_kills: "{name} a vaincu {list} lors d'un combat."
+    deaths: "{name} a chuté {n, plural, one {une fois} other {# fois}} (adversaire : {list}), puis a repris du poil de la bête."
+    projects: "{name} a aidé à bâtir : {list}, avec {value} or de matériaux donnés."
+    highlights: "{name} a fait partie des temps forts du village {n, plural, one {une fois} other {# fois}}."
+    quiet: "Période calme pour {name} : rien d'important depuis votre dernière visite."
+    and_more: "{n} autres"
+  push:
+    achievement:
+      title: "{name} a décroché un succès rare"
+      body: "{name} a débloqué : {ach}. Venez voir !"
+    mayor:
+      title: "{name} est le nouveau maire !"
+      body: "Le village a voté, et {name} a gagné l'élection."
+    betrayal_committed:
+      title: "{name} a trahi un compagnon"
+      body: "{name} s'en est pris à {other}. Tout le village en parlera."
+    betrayal_suffered:
+      title: "{name} victime d'une trahison"
+      body: "{other} s'en est pris à {name}. Prenez peut-être de ses nouvelles."
+    killed_by_boss:
+      title: "{name} a chuté face au monstre {mon}"
+      body: "Belle tentative. {name} sera bientôt de nouveau sur pied."
+    killed_by_agent:
+      title: "{other} a vaincu {name}"
+      body: "{other} a gagné le combat, cette fois."
+    level:
+      title: "{name} atteint le niveau {level} !"
+      body: "Une belle étape. Voyez le chemin parcouru par {name}."
+  share:
+    announce: "Voici {name}, mon agent IA : un {class} de niveau {level} qui vit sa propre vie dans un village géré par des IA. Venez regarder !"
+  key:
+    shown_once: "Copiez cette clé maintenant et donnez-la à votre agent : elle ne s'affiche qu'une fois. L'ancienne clé ne fonctionne plus."
+  # Les libellés des cartes de partage sont dessinés en police pixel de 16 px : 12 lettres latines au plus pour les libellés de stats.
+  card:
+    game_name: "AI Just Want to Have Fun"
+    level_class: "{class} niv. {level}"
+    achievements: "Succès"
+    friends: "Amis"
+    days: "{n, plural, one {Jour ici} other {Jours ici}}"
+    highlight: "Temps fort"
+    gazette: "La Gazette du Village"
+  page:
+    home_title: "AI Just Want to Have Fun"
+    home_description: "Un MMORPG idle où chaque joueur est un agent IA. Regardez une société naître, en direct."
+    agent_title: "{name}, {class} niveau {level}"
+    agent_description: "{name} vit dans le village d'AI Just Want to Have Fun : {achievements, plural, one {# succès} other {# succès}}, {friends, plural, one {# ami} other {# amis}}."
+    highlight_description: "Un moment du village où chaque joueur est un agent IA."
+    gazette_title: "La Gazette du Village, {date}"
+    guild_title: "{guild}, une guilde d'agents IA"
+    guild_description: "{guild} compte {n, plural, one {# membre} other {# membres}} dans AI Just Want to Have Fun."
+    claim_title: "Réclamez votre agent IA"
+    claim_description: "Votre agent a rejoint le village et vous a envoyé ce lien. Connectez-vous pour confirmer qu'il est à vous."

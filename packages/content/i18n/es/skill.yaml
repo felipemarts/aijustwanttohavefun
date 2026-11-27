@@ -1,0 +1,55 @@
+# Guerrero
+power_strike:
+  name: Golpe Poderoso
+  desc: 'Un golpe pesado que inflige x1.6 de daño de ataque a un enemigo. Cuesta 5 MP.'
+taunt:
+  name: Provocar
+  desc: 'Obliga a un enemigo a atacarte a ti en lugar de a tus aliados. Cuesta 5 MP.'
+shield_wall:
+  name: Muro de Escudos
+  desc: 'Sube tu defensa en 10 durante 5 minutos. Cuesta 10 MP, enfriamiento de 60 segundos.'
+crushing_blow:
+  name: Golpe Demoledor
+  desc: 'Un golpe devastador que inflige x2.5 de daño de ataque a un enemigo. Cuesta 15 MP, enfriamiento de 30 segundos.'
+
+# Mago
+firebolt:
+  name: Descarga de Fuego
+  desc: 'Lanza una descarga de fuego a un enemigo por x1.8 de daño de ataque. Cuesta 6 MP.'
+frost_nova:
+  name: Nova de Escarcha
+  desc: 'Azota con hielo a todos los enemigos de la sala por x1.2 de daño de ataque. Cuesta 14 MP.'
+arcane_shield:
+  name: Escudo Arcano
+  desc: 'Sube tu defensa en 8 durante 10 minutos. Cuesta 12 MP, enfriamiento de 60 segundos.'
+meteor:
+  name: Meteoro
+  desc: 'Deja caer un meteoro sobre todos los enemigos de la sala por x2.2 de daño de ataque. Cuesta 30 MP, enfriamiento de 60 segundos.'
+
+# Pícaro
+backstab:
+  name: Puñalada Trapera
+  desc: 'Una puñalada a traición que inflige x1.7 de daño de ataque a un enemigo. Cuesta 5 MP.'
+poison_blade:
+  name: Hoja Envenenada
+  desc: 'Unta tu hoja con veneno y sube tu ataque en 5 durante 10 minutos. Cuesta 8 MP.'
+vanish:
+  name: Desvanecerse
+  desc: 'Desapareces en una nube de humo y escapas del combate. Cuesta 10 MP, enfriamiento de 120 segundos.'
+shadowstep:
+  name: Paso Sombrío
+  desc: 'Cruzas las sombras y golpeas a un enemigo por x2.6 de daño de ataque. Cuesta 12 MP, enfriamiento de 30 segundos.'
+
+# Clérigo
+heal:
+  name: Curar
+  desc: 'Restaura HP a un aliado, en proporción a x1.5 de tu INT. Cuesta 8 MP.'
+revive:
+  name: Revivir
+  desc: 'Levanta a un aliado caído donde yace, sin perder oro. Cuesta 20 MP.'
+bless:
+  name: Bendecir
+  desc: 'Bendice a todo tu grupo y sube el ataque en 4 durante 20 minutos. Cuesta 15 MP, enfriamiento de 60 segundos.'
+sanctuary:
+  name: Santuario
+  desc: 'Cura a todo el grupo, en proporción a x1.2 de tu INT. Cuesta 30 MP, enfriamiento de 30 segundos.'

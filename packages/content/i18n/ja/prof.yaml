@@ -1,0 +1,4 @@
+blacksmith: { name: 鍛冶屋 }
+alchemist: { name: 錬金術師 }
+tailor: { name: 仕立て屋 }
+cook: { name: 料理人 }

@@ -1,0 +1,163 @@
+appearance:
+  # Chaque valeur de chapeau, haut, cape et accessoire porte son article indéfini (le genre dépend du mot).
+  # {initial} n'est pas utilisé en français : l'article est déjà dans la valeur.
+  desc: "{subject} avec {hair}, portant {garments}"
+  desc_accessory: "{subject} avec {hair}, portant {garments}, et avec {accessory}"
+  subject: "un {species} {build}"
+  hair: "des cheveux {color} {style}"
+  hair_bald: "un crâne chauve et luisant"
+  item: "{item}"
+  dyed: "{n, plural, one {{items} en {color}} other {{items}, le tout en {color}}}"
+  build:
+    human: robuste
+    elf: élancé
+    dwarf: trapu
+    orc: costaud
+    gnome: minuscule
+    goblin: noueux
+  species:
+    human: humain
+    elf: elfe
+    dwarf: nain
+    orc: orc
+    gnome: gnome
+    goblin: gobelin
+  skin:
+    s0: très claire
+    s1: claire
+    s2: hâlée
+    s3: olive
+    s4: brune
+    s5: foncée
+  hair_style:
+    short: courts
+    long: longs
+    mohawk: en crête
+    bald: rasés
+    braids: tressés
+    ponytail: attachés en queue-de-cheval
+    bun: relevés en chignon
+    curly: bouclés
+    spiky: hérissés
+    bob: coupés au carré
+    side: coiffés avec la raie sur le côté
+    afro: volumineux
+    topknot: noués en chignon haut
+    pigtails: en couettes
+    shaggy: en bataille
+  hair_color:
+    c0: noir de jais
+    c1: châtains
+    c2: argentés
+    c3: dorés
+    c4: cuivrés
+    c5: auburn
+    c6: blanc neige
+    c7: vert mousse
+    c8: bleu saphir
+    c9: rose pâle
+    c10: violets
+    c11: bleu-vert
+  hat:
+    none: pas de chapeau
+    hood: une capuche
+    wizard_hat: un chapeau de magicien
+    helm: un heaume
+    beret: un béret
+    flower_crown: une couronne de fleurs
+    cap: une casquette
+    bandana: un bandana
+    horned_helm: un heaume à cornes
+    tricorn: un tricorne
+    crown: une couronne
+    straw_hat: un chapeau de paille
+    top_hat: un haut-de-forme
+    feathered_hat: un chapeau à plumes
+    headband: un bandeau
+    witch_hat: un chapeau de sorcière
+    turban: un turban
+    cowl: un capuchon
+    circlet: un diadème
+    chef_hat: une toque de cuisinier
+    starry_wizard_hat: un chapeau de mage étoilé
+  top:
+    tunic: une tunique
+    jerkin: un justaucorps
+    robe: une robe
+    shirt: une chemise
+    vest: un gilet
+    doublet: un pourpoint
+    apron: un tablier
+    chainmail: une chemise de mailles
+    poncho: un poncho
+    sweater: un pull
+    coat: un manteau
+    tabard: un tabard
+    corset: un corset
+    hoodie: une tunique à capuche
+    kimono: un kimono
+    leather_vest: un gilet de cuir
+    sash_shirt: une chemise à large ceinture
+    blouse: une blouse
+    scale_shirt: une cotte d'écailles
+    patched_jerkin: un justaucorps rapiécé
+    royal_doublet: un pourpoint royal
+    silk_robe: une robe de soie
+  bottom:
+    trousers: un pantalon
+    skirt: une jupe
+    shorts: un short
+    kilt: un kilt
+    leggings: un legging
+    long_skirt: une jupe longue
+    breeches: une culotte bouffante
+    baggy_pants: un pantalon ample
+    sarong: un paréo
+    robe_skirt: une jupe-robe
+  cloak:
+    none: pas de cape
+    cape: une cape
+    long_cloak: une longue cape
+    short_cape: une cape courte
+    tattered_cloak: une cape en lambeaux
+    fur_mantle: un mantelet de fourrure
+    hooded_cloak: une cape à capuche
+    royal_cape: une cape royale
+    leaf_cloak: une cape de feuilles
+    feather_cloak: une cape de plumes
+    shawl: un châle
+  accessory:
+    none: rien d'autre
+    round_glasses: des lunettes rondes
+    pipe: une pipe
+    eyepatch: un cache-œil
+    earring: une boucle d'oreille
+    scar: une cicatrice
+    monocle: un monocle
+    freckles: des taches de rousseur
+    beard: une barbe
+    mustache: une moustache
+    goggles: des lunettes de protection
+    necklace: un collier
+    flower: une fleur derrière l'oreille
+    nose_ring: un anneau au nez
+    war_paint: de la peinture de guerre
+    bandage: un bandage autour de la tête
+  dye:
+    d0: cramoisi
+    d1: bleu roi
+    d2: vert forêt
+    d3: prune
+    d4: ambre
+    d5: anthracite
+    d6: ivoire
+    d7: ocre
+    d8: bleu-vert
+    d9: rose
+    d10: olive
+    d11: bleu nuit
+    d12: sang-de-bœuf
+    d13: moutarde
+    d14: ardoise
+    d15: corail
+    d16: nacre

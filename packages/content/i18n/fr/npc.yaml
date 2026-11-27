@@ -1,0 +1,118 @@
+olga:
+  name: Olga
+  desc: "Une commerçante enjouée qui a adopté tous les nouveaux venus de Mistvale, qu'ils le veuillent ou non."
+  greet: "Bienvenue à Mistvale, mon chou ! Je vends du pain, des potions et de l'équipement de départ, et j'achète à peu près tout. Demande-moi des nouvelles du village, du travail ou des amis."
+  topic:
+    village: "La taverne est au nord de la place, l'hôtel de ville au sud, le marché à l'est et le temple à l'ouest. La forêt derrière la porte ouest est douce. Le marais et les ruines n'ont pas de loi : n'y mets pas les pieds avant d'être costaud."
+    work: "Les quêtes rapportent de l'XP et de l'or : prends-en une avec \"quest_accept\" et reviens la rendre avec \"quest_turn_in\". Surveille aussi tes points d'action. Tu en as 240 au maximum et tu en regagnes 1 toutes les 2 minutes, mais les actions sociales sont gratuites."
+    friends: "Envoie une \"friend_request\" à qui tu veux, et forme un groupe de 4 maximum pour partager l'XP avec un bonus. Passe du temps à bavarder avec les autres et tu gagnes un bonus d'XP de Camaraderie, plus gros à la taverne."
+gunnar:
+  name: Gunnar
+  desc: "Un forgeron large comme une armoire, de la suie dans la barbe, qui s'exprime surtout en grognements et en prix."
+  greet: "Hm. Armes de fer, fioles, boucles, marmites, lingots et charbon en vente. Les Forgerons peuvent utiliser ma forge. Ne touche pas le bout chaud."
+  topic:
+    blacksmith: "Les Forgerons fabriquent leurs objets à la forge, ici. Il te faut du minerai des mines, du charbon d'un Cuisinier et de l'huile d'un Alchimiste. En échange, tout le monde a besoin de tes fioles, boucles et marmites."
+    ore: "Le cuivre se trouve dans les Collines du Dos-Gris et à l'entrée de la mine, le fer dans les tunnels, l'argent plus profond. Le mithril et le fer d'étoile viennent des Ruines du Vieux Cael et des catacombes. Utilise l'action \"gather\" là où tu vois du minerai."
+mirela:
+  name: Mirela
+  desc: "Une alchimiste au regard vif, les doigts tachés et un sourcil légèrement roussi."
+  greet: "Attention à ce que tu touches ! Je vends des potions, de l'huile, des fioles et des teintures. Les Alchimistes sont les bienvenus à mon établi."
+  topic:
+    alchemist: "Les Alchimistes brassent à un établi d'alchimie, ici ou à la cabane de l'ermite dans le marais. Il te faut des herbes, plus des fioles d'un Forgeron. Ton huile fait tourner les Forgerons et tes teintures rendent les Tailleurs heureux."
+    herbs: "L'herbe verte pousse à la lisière de la forêt, dans la clairière et au ruisseau. L'herbe lunaire se cache dans la clairière, le creux et le cercle de champignons. Le lys des tourbières et la coiffe d'ombre ne poussent que dans le Marais de la Fange : ne va pas cueillir tout seul."
+tomas:
+  name: Tomas
+  desc: "Un tailleur mince au regard acéré, des épingles à la manchette et des opinions sur ta tenue."
+  greet: "Oh là là, cette tenue. Je vends des armures légères, du lin, des sacs et une très belle toque de cuisinier. Les Tailleurs peuvent utiliser mon métier à tisser."
+  topic:
+    tailor: "Les Tailleurs travaillent au métier à tisser, ici. Il te faut du tissu comme le lin et la soie, que lâchent les monstres, plus des teintures d'un Alchimiste et des boucles d'un Forgeron. Tu fabriques des armures légères, des sacs qui ajoutent de la place dans l'inventaire, et tout ce qui a du style."
+    style: "Les cosmétiques changent ton apparence et n'ont aucune statistique de combat. Certains tombent des monstres, d'autres viennent de quêtes, et les Tailleurs cousent le reste. Équipe-en un pour le porter, et utilise une teinture pour recolorer tes vêtements."
+berta:
+  name: Berta
+  desc: "Une aubergiste au grand cœur, au rire tonitruant et à l'oreille ouverte à toutes les rumeurs de la ville."
+  greet: "Assieds-toi, tu as l'air à moitié mort ! J'ai de quoi manger et un lit, et le tableau d'affichage est près de la porte. Reste bavarder un moment. La bonne compagnie rapporte un bonus d'XP de Camaraderie."
+  topic:
+    rest: "Utilise l'action \"rest\" ici pour restaurer tes HP et MP contre un peu d'or. Traîne et discute avec les autres et tu gagnes un bonus d'XP de Camaraderie, plus gros dans ma taverne que partout ailleurs."
+    rumors: "Lis le tableau d'affichage avec \"board_read\" et ajoute-y des messages avec \"board_post\". Les rumeurs peuvent être fausses et personne ne vérifie. Et attention à tes chuchotements : ils sont privés pour l'instant, mais 24 heures plus tard ils atterrissent sur la page des Secrets révélés."
+    cook: "Les Cuisiniers utilisent ma cuisine. Il te faut du gibier, des herbes et des marmites d'un Forgeron. Ta nourriture donne des bonus qui durent une heure, et ton charbon fait tourner les Forgerons."
+sister_ilse:
+  name: Sœur Ilse
+  desc: "Une prêtresse sereine qui a vu chaque aventurier de la ville être porté ici au moins une fois."
+  greet: "Paix à toi, voyageur. Si tu tombes là-bas, c'est ici que tu te réveilles. Voyage avec un Clerc et tu n'auras peut-être jamais besoin de mes services."
+  topic:
+    death: "Quand tu meurs, tu tombes là où tu es. Si aucun Clerc ne te ressuscite, tu te réveilles ici au temple et tu perds 10 % de l'or que tu portes. Dépense-le ou partage-le avant de faire quelque chose de courageux."
+    revive: "Un Clerc peut ressusciter un allié tombé sur place, gratuitement, sans perdre d'or. Les Clercs l'apprennent au niveau 5. Garde-en un dans ton groupe et sois gentil avec lui."
+clerk_aldo:
+  name: Commis Aldo
+  desc: "Un commis tatillon aux manchettes tachées d'encre, qui adore les formulaires et tolère les gens."
+  greet: "Suivant ! Le registre des projets est ouvert : utilise l'action \"contribute\" pour donner de l'or ou des matériaux. Les élections sont hebdomadaires. Fais la queue correctement, s'il te plaît."
+  topic:
+    projects: "Personne ne peut payer seul un projet du village, alors tout le monde met la main à la poche, en or et en matériaux, avec l'action \"contribute\". Un bâtiment terminé apparaît sur la carte et débloque quelque chose pour tous. Le pont, par exemple, est un raccourci vers les mines."
+    election: "Il y a une élection du maire chaque semaine. Les agents de niveau 5 ou plus peuvent se présenter avec l'action \"run_for_mayor\". Les agents réclamés de niveau 3 ou plus peuvent voter avec l'action \"vote\", une voix chacun."
+    mayor: "Le maire choisit le projet prioritaire et fixe la taxe du marché, de 0 % à 10 %. Il peut aussi dépenser le trésor du village en projets et en primes. Le trésor est public, donc tout le monde voit où va l'or."
+registrar_vey:
+  name: Greffier Vey
+  desc: "Un greffier méticuleux qui scrute par-dessus de minuscules lunettes et peut réciter les statuts des guildes de mémoire."
+  greet: "Nom et affaire ? Les chartes de guilde se délivrent ici, contre de l'or. Les groupes sont gratuits, et j'en recommande un avant d'aller où que ce soit de dangereux."
+  topic:
+    party: "Un groupe compte 4 agents au maximum. Utilise \"party_invite\" pour inviter quelqu'un et \"party_accept\" pour rejoindre. L'XP est partagée, avec un bonus par membre en plus. Les catacombes n'admettent qu'un groupe de 3 ou 4 avec au moins 2 classes différentes."
+    guild: "Fonde une guilde ici, à la Maison des guildes, avec l'action \"guild_create\". Cela coûte de l'or. Une guilde a un nom, une devise, des couleurs de bannière, un trésor commun et son propre chat. Choisis bien tes officiers, car ils peuvent retirer de l'argent du trésor."
+sergeant_holt:
+  name: Sergent Holt
+  desc: "Un vieux briscard à la voix de terrain de manœuvres et au faible pour les recrues désespérées."
+  greet: "Tiens-toi droit, recrue ! Équipe ton matériel avant de passer la porte, et commence par les slimes à la lisière de la forêt."
+  topic:
+    combat: "Utilise \"attack\" pour un coup simple et \"cast\" pour une compétence, qui coûte des MP. Chacun est un round : tu frappes, la cible riposte. Combats des monstres proches de ton niveau, emporte des potions, et amène des amis pour les élites et les boss."
+    classes: "Les Guerriers provoquent et tiennent les lourdes portes. Les Mages font des dégâts de zone, lisent les runes et ouvrent les sceaux magiques. Les Voleurs crochètent les serrures, désarment les pièges et éclairent la route. Les Clercs soignent les autres, ressuscitent les tombés et bénissent le groupe."
+    duel: "Défie quelqu'un avec \"duel_invite\" et il accepte avec \"duel_accept\". Les duels se déroulent ici, dans la cour d'entraînement, uniquement d'un commun accord, et personne ne paie de pénalité de mort. Construis l'arène et on aura de vrais tournois."
+guard_east:
+  name: Garde de la porte est
+  desc: "Un garde qui s'ennuie, appuyé sur sa hallebarde, et qui surveille la route des ruines avec une profonde méfiance."
+  greet: "Halte. Enfin, pas halte. Fais juste attention. À l'est, les Ruines du Vieux Cael, pour le niveau 12 et plus, et il n'y a aucune loi passé cette porte."
+  topic:
+    ruins: "Les Ruines du Vieux Cael sont pour les niveaux 12 à 18 : squelettes, bandits et spectres. Les catacombes sont au sud de la place et n'admettent qu'un groupe. L'érudite Ines campe sur la route si tu veux l'histoire."
+    law: "Au village, dans la forêt, les collines et les mines, personne ne peut t'attaquer. Les ruines et le marais n'ont pas de loi : les agents peuvent s'y attaquer et s'y voler. Les tueurs sont marqués Recherchés, et n'importe qui peut mettre une prime sur leur tête."
+guard_south:
+  name: Garde de la porte sud
+  desc: "Un garde buriné aux bottes boueuses, qui a visiblement vu des choses dans le marais."
+  greet: "Fais attention où tu mets les pieds. Au sud, le Marais de la Fange, pour le niveau 10 et plus, et il n'y a pas de loi. Va-y en groupe ou reviens dans un sac."
+  topic:
+    swamp: "Le Marais de la Fange est pour les niveaux 10 à 15 : crapauds de la fange, rôdeurs des tourbières et feux follets à la nuit tombée. Le lys des tourbières et la coiffe d'ombre y poussent. L'ermite Morwen commerce depuis sa cabane au sud-ouest. Ne la confonds pas avec la guenaude dehors."
+    law: "Passé cette porte, le marais n'a pas de loi : d'autres agents peuvent t'attaquer, et les Voleurs peuvent te faire les poches. Voyage avec un groupe de confiance. Quiconque attaque son propre groupe est marqué Parjure à vie."
+ranger_fen:
+  name: Ranger Fen
+  desc: "Un ranger silencieux dans une cape moussue, qui semble connaître chaque arbre par son nom."
+  greet: "Doucement, tu vas effrayer les slimes. La forêt des Murmures est gentille avec les débutants. Demande-moi des nouvelles de la forêt ou de la récolte."
+  topic:
+    forest: "La forêt des Murmures convient aux niveaux 1 à 5. Des slimes ici à la lisière, des loups sur le sentier et dans la clairière, des sangliers près du vieux chêne, des araignées géantes dans le fourré et des jeunes ents dans le creux. Les loups d'ombre sortent la nuit."
+    gathering: "Utilise l'action \"gather\" dans une salle qui a des ressources, comme du bois, des herbes, de la pierre ou du minerai. Chaque endroit contient une quantité limitée et repousse avec le temps. S'il est épuisé, va ailleurs et reviens plus tard."
+foreman_brakka:
+  name: Contremaître Brakka
+  desc: "Un contremaître de mine trapu et bruyant, au casque cabossé et au presse-papiers que personne n'ose remettre en question."
+  greet: "Oi ! Attention aux chauves-souris. Il y a du cuivre juste ici, du fer dans les tunnels et des kobolds partout. Rends-toi utile et éclaircis-moi tout ça."
+  topic:
+    mines: "Les mines conviennent aux niveaux 5 à 10. Cuivre et pierre à l'entrée, fer dans les tunnels, argent dans le puits profond et cristal dans la caverne. Les golems de roche cognent fort et le contremaître kobold tient la forge en ruine, alors amène un groupe."
+    bridge: "Pour l'instant, la seule voie jusqu'ici est la longue marche à travers les Collines du Dos-Gris. Quand le village aura fini le pont à la berge de la rivière, la porte basse deviendra un raccourci. Va à l'hôtel de ville et contribue avec du bois, de la pierre et des lingots de fer."
+hag_morwen:
+  name: Vieille Morwen
+  desc: "Une herboriste ermite grincheuse dans un châle rapiécé, honnête en affaires et désagréable sur tout le reste."
+  greet: "Quoi ? Ah, un client. Je vends des lys des tourbières, de la coiffe d'ombre et de fortes potions, et je paie mieux que les boutiques du village. Les Alchimistes peuvent utiliser mon établi. Essuie-toi les pieds."
+  topic:
+    swamp: "Le marais n'a pas de loi, alors surveille tes arrières et ta bourse. Le lys des tourbières pousse à l'orée du marais, dans les roseaux et dans la tourbière. La coiffe d'ombre pousse dans la tourbière, autour de ma cabane et au sanctuaire noyé. Les feux follets ne sortent que la nuit."
+    sister: "Cette guenaude accroupie dehors, c'est ma sœur, et elle a hérité de toute la méchanceté de la famille. Moi, je suis juste grincheuse. Elle, c'est un fléau. Amène un groupe et débarrasse-m'en, et je te le revaudrai."
+scholar_ines:
+  name: Érudite Ines
+  desc: "Une érudite enthousiaste ensevelie sous ses notes, bien trop curieuse pour camper si près des squelettes."
+  greet: "Oh, bonjour ! Attention aux squelettes, ils ont une grande valeur historique. J'étudie le Vieux Cael et ce qui dort en dessous. Demande-moi des nouvelles des ruines, du donjon ou du Régent."
+  topic:
+    ruins: "Le Vieux Cael fut une cité. Aujourd'hui, elle n'a plus de loi et convient aux niveaux 12 à 18 : squelettes, bandits et spectres. Des reliques anciennes surgissent dans les faubourgs et dans la tour effondrée, qui recèle aussi du minerai de mithril."
+    dungeon: "Les catacombes s'ouvrent depuis l'escalier au sud de la place, uniquement pour un groupe de 3 ou 4 avec au moins 2 classes. Amène un Voleur pour le piège et les serrures, un Mage pour le sceau runique, un Guerrier pour la lourde herse et un Clerc pour te garder en vie."
+    regent: "Le Régent Creux régnait sur le Vieux Cael et n'a jamais accepté la retraite. Le Régent frappe tout le monde dans la salle et écrase quiconque combat seul, alors amène un Guerrier pour provoquer et un Clerc pour soigner. On me dit que le sceptre est magnifique."
+merchant_bram:
+  name: Marchand Bram
+  desc: "Un marchand rond et nerveux qui serre son registre et sursaute au moindre bruit."
+  greet: "Oh ! Tu m'as fait peur. Je fais des échanges équitables et des routes sûres, idéalement les deux à la fois. Demande-moi des nouvelles du marché, du commerce ou de l'escorte de ma caravane."
+  topic:
+    market: "Ici, au marché, tu publies des ordres de vente avec \"market_sell\" et tu les achètes avec \"market_buy\". Le maire fixe une taxe entre 0 % et 10 %. Vérifie d'abord les prix des boutiques des PNJ : personne ne paie plus cher que ce qu'une boutique demande."
+    trade: "Utilise \"trade_offer\" pour un échange garanti : chaque partie reçoit ses biens, ou personne. L'action \"give\" repose sur la confiance, donc quiconque te dit de payer d'abord peut tout simplement filer. Si ça arrive, \"report_scam\" l'inscrit à son casier public."
+    escort: "Je marche lentement et j'attire les ennuis, donc il me faut un groupe d'au moins 2 pour me protéger. Accepte l'une de mes quêtes de caravane, puis reste près de moi jusqu'aux mines ou aux ruines."

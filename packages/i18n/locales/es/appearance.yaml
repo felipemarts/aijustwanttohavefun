@@ -1,0 +1,163 @@
+appearance:
+  # {initial} (primera letra de la palabra siguiente) se usa en inglés para a/an; en español no hace falta.
+  # Las prendas van sin artículo ("viste capucha y jubón"), así no hay que concordar género.
+  desc: '{subject} con {hair}, que viste {garments}'
+  desc_accessory: '{subject} con {hair} y {accessory}, que viste {garments}'
+  subject: 'un {species} {build}'
+  hair: '{style} de color {color}'
+  hair_bald: 'la cabeza calva y reluciente'
+  item: '{item}'
+  dyed: '{n, plural, one {{items} de color {color}} other {{items}, todo de color {color}}}'
+  build:
+    human: robusto
+    elf: esbelto
+    dwarf: rechoncho
+    orc: fornido
+    gnome: diminuto
+    goblin: enjuto
+  species:
+    human: humano
+    elf: elfo
+    dwarf: enano
+    orc: orco
+    gnome: gnomo
+    goblin: goblin
+  skin:
+    s0: piel pálida
+    s1: piel clara
+    s2: piel bronceada
+    s3: piel aceitunada
+    s4: piel morena
+    s5: piel oscura
+  hair_style:
+    short: pelo corto
+    long: melena larga
+    mohawk: cresta
+    bald: cabeza calva
+    braids: trenzas
+    ponytail: coleta
+    bun: moño
+    curly: pelo rizado
+    spiky: pelo de punta
+    bob: media melena
+    side: pelo con raya al lado
+    afro: pelo afro voluminoso
+    topknot: moño alto
+    pigtails: coletas
+    shaggy: pelo desgreñado
+  hair_color:
+    c0: negro azabache
+    c1: castaño
+    c2: plateado
+    c3: dorado
+    c4: cobrizo
+    c5: caoba
+    c6: blanco nieve
+    c7: verde musgo
+    c8: azul zafiro
+    c9: rosa
+    c10: violeta
+    c11: verde azulado
+  hat:
+    none: sin sombrero
+    hood: capucha
+    wizard_hat: sombrero de mago
+    helm: yelmo
+    beret: boina
+    flower_crown: corona de flores
+    cap: gorra
+    bandana: bandana
+    horned_helm: yelmo con cuernos
+    tricorn: tricornio
+    crown: corona
+    straw_hat: sombrero de paja
+    top_hat: chistera
+    feathered_hat: sombrero con pluma
+    headband: cinta en la frente
+    witch_hat: sombrero de bruja
+    turban: turbante
+    cowl: cogulla
+    circlet: diadema
+    chef_hat: gorro de cocinero
+    starry_wizard_hat: sombrero de mago estrellado
+  top:
+    tunic: túnica
+    jerkin: coleto
+    robe: ropón
+    shirt: camisa
+    vest: chaleco
+    doublet: jubón
+    apron: delantal
+    chainmail: camisa de malla
+    poncho: poncho
+    sweater: suéter
+    coat: abrigo
+    tabard: tabardo
+    corset: corsé
+    hoodie: túnica con capucha
+    kimono: kimono
+    leather_vest: chaleco de cuero
+    sash_shirt: camisa con fajín
+    blouse: blusa
+    scale_shirt: camisa de escamas
+    patched_jerkin: coleto remendado
+    royal_doublet: jubón real
+    silk_robe: ropón de seda
+  bottom:
+    trousers: pantalones
+    skirt: falda
+    shorts: pantalones cortos
+    kilt: kilt
+    leggings: mallas
+    long_skirt: falda larga
+    breeches: calzones
+    baggy_pants: pantalones anchos
+    sarong: pareo
+    robe_skirt: falda de ropón
+  cloak:
+    none: sin capa
+    cape: capa
+    long_cloak: capa larga
+    short_cape: capa corta
+    tattered_cloak: capa raída
+    fur_mantle: manto de piel
+    hooded_cloak: capa con capucha
+    royal_cape: capa real
+    leaf_cloak: capa de hojas
+    feather_cloak: capa de plumas
+    shawl: chal
+  accessory:
+    none: nada más
+    round_glasses: unas gafas redondas
+    pipe: una pipa
+    eyepatch: un parche en el ojo
+    earring: un pendiente
+    scar: una cicatriz
+    monocle: un monóculo
+    freckles: pecas
+    beard: una barba
+    mustache: un bigote
+    goggles: unas gafas protectoras
+    necklace: un collar
+    flower: una flor tras la oreja
+    nose_ring: un aro en la nariz
+    war_paint: pintura de guerra
+    bandage: una venda en la cabeza
+  dye:
+    d0: carmesí
+    d1: azul real
+    d2: verde bosque
+    d3: ciruela
+    d4: ámbar
+    d5: gris carbón
+    d6: marfil
+    d7: tierra
+    d8: verde azulado
+    d9: rosa
+    d10: oliva
+    d11: azul medianoche
+    d12: burdeos
+    d13: mostaza
+    d14: gris pizarra
+    d15: coral
+    d16: perla

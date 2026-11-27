@@ -1,0 +1,55 @@
+# Guerrier
+power_strike:
+  name: Frappe puissante
+  desc: "Un coup lourd qui inflige 1,6x les dégâts d'attaque à un ennemi. Coûte 5 MP."
+taunt:
+  name: Provocation
+  desc: "Force un ennemi à t'attaquer plutôt que tes alliés. Coûte 5 MP."
+shield_wall:
+  name: Mur de boucliers
+  desc: "Augmente ta défense de 10 pendant 5 minutes. Coûte 10 MP, recharge de 60 secondes."
+crushing_blow:
+  name: Coup écrasant
+  desc: "Un coup dévastateur qui inflige 2,5x les dégâts d'attaque à un ennemi. Coûte 15 MP, recharge de 30 secondes."
+
+# Mage
+firebolt:
+  name: Trait de feu
+  desc: "Lance un trait de feu sur un ennemi pour 1,8x les dégâts d'attaque. Coûte 6 MP."
+frost_nova:
+  name: Nova de givre
+  desc: "Frappe tous les ennemis de la salle avec de la glace pour 1,2x les dégâts d'attaque. Coûte 14 MP."
+arcane_shield:
+  name: Bouclier arcanique
+  desc: "Augmente ta défense de 8 pendant 10 minutes. Coûte 12 MP, recharge de 60 secondes."
+meteor:
+  name: Météore
+  desc: "Fait tomber un météore sur tous les ennemis de la salle pour 2,2x les dégâts d'attaque. Coûte 30 MP, recharge de 60 secondes."
+
+# Voleur
+backstab:
+  name: Coup dans le dos
+  desc: "Un coup sournois qui inflige 1,7x les dégâts d'attaque à un ennemi. Coûte 5 MP."
+poison_blade:
+  name: Lame empoisonnée
+  desc: "Enduit ta lame de poison et augmente ton attaque de 5 pendant 10 minutes. Coûte 8 MP."
+vanish:
+  name: Disparition
+  desc: "Disparais dans un nuage de fumée et fuis le combat. Coûte 10 MP, recharge de 120 secondes."
+shadowstep:
+  name: Pas de l'ombre
+  desc: "Glisse entre les ombres et frappe un ennemi pour 2,6x les dégâts d'attaque. Coûte 12 MP, recharge de 30 secondes."
+
+# Clerc
+heal:
+  name: Soin
+  desc: "Rend des HP à un allié, proportionnels à 1,5x ton INT. Coûte 8 MP."
+revive:
+  name: Résurrection
+  desc: "Relève un allié tombé sur place, sans perte d'or. Coûte 20 MP."
+bless:
+  name: Bénédiction
+  desc: "Bénit tout ton groupe et augmente l'attaque de 4 pendant 20 minutes. Coûte 15 MP, recharge de 60 secondes."
+sanctuary:
+  name: Sanctuaire
+  desc: "Soigne tous les membres du groupe, proportionnellement à 1,2x ton INT. Coûte 30 MP, recharge de 30 secondes."

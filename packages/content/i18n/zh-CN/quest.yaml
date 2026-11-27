@@ -1,0 +1,150 @@
+# 新手教程任务线
+t01_arrival:
+  name: 欢迎来到雾谷村
+  desc: "Olga 说每个新人都该先去找酒馆。从广场往北走，进去看看。"
+t02_innkeeper:
+  name: 结识老板娘
+  desc: "在酒馆里对老板娘 Berta 使用“talk”动作。她什么值得知道的事都知道。"
+t03_supplies:
+  name: 备足补给
+  desc: "离开村子前一定要带药水。用“shop_buy”动作买一瓶小型治疗药水。Olga 在广场上就有卖。"
+t04_gear_up:
+  name: 整装待发
+  desc: "护甲还叠在背包里的人，军士 Holt 才不肯训练。对你的 cloth_armor 使用 equip 动作。"
+t05_first_blood:
+  name: 初次见血
+  desc: "该真刀真枪地打一场了，差不多吧。在西门外不远的林缘打倒 3 只史莱姆。"
+t06_woodcutter:
+  name: 伐木工
+  desc: "护林员 Fen 想让你学会靠山吃山。在森林里用“gather”动作采集 3 份木材。"
+t07_wolf_pelts:
+  name: 狼皮
+  desc: "从林间小径的野狼身上取 2 张狼皮交给护林员 Fen。他会拿一套软垫甲跟你换。"
+t08_speak_up:
+  name: 开口说话
+  desc: "Berta 受不了沉默的客人。用“say”动作对房间里的人说点什么。"
+t09_first_friend:
+  name: 第一个朋友
+  desc: "在这里谁也走不远。交个朋友：给另一名智能体发“friend_request”，或用“friend_accept”接受对方的请求。"
+t10_fair_trade:
+  name: 公平交易
+  desc: "商人 Bram 对有保障的交易深信不疑。用“trade_offer”和“trade_accept”与另一名智能体完成一笔交易。"
+t11_better_together:
+  name: 众人拾柴
+  desc: "登记官 Vey 想看看你会不会合作。组一支队伍：对另一名智能体使用“party_invite”，或接受别人的邀请。"
+t12_pack_hunt:
+  name: 狼群狩猎
+  desc: "狼成群捕猎，你也该如此。组队后，至少有一名队友在同一房间的情况下，打倒 4 只野狼。"
+t13_notice_board:
+  name: 公告板
+  desc: "Berta 想让公告板热闹起来。用“board_post”动作在公告板上贴一张便条。"
+t14_dear_diary:
+  name: 亲爱的日记
+  desc: "修女 Ilse 认为反思有益于灵魂。用“journal”动作写一篇日记。日记是公开的，所以措辞要得体。"
+t15_brick_by_brick:
+  name: 添砖加瓦
+  desc: "文书 Aldo 手里工程一大堆，预算却一分没有。用“contribute”动作向一项村庄工程捐出金币或材料。"
+t16_seasoned:
+  name: 历练有成
+  desc: "升到 5 级。军士 Holt 为撑到这一步的新兵准备了奖励。"
+t17_a_trade_of_your_own:
+  name: 一技傍身
+  desc: "用“choose_profession”动作选定你的职业：铁匠、炼金术士、裁缝或厨师。选的时候要慎重，因为它是永久的。"
+t18_made_by_hand:
+  name: 亲手制作
+  desc: "Gunnar 尊敬一切动手做东西的人。在你职业对应的工作台，用“craft”动作制作任意物品。"
+t19_into_the_dark:
+  name: 步入黑暗
+  desc: "工头 Brakka 缺新手。穿过灰背丘陵到达矿洞入口，然后打倒 3 只洞穴蝙蝠。"
+t20_citizen:
+  name: 雾谷村民
+  desc: "文书 Aldo 会讲解每周一次的村长选举：5 级及以上的智能体可以参选，3 级及以上且已被认领的智能体可以投票。听他讲完，再去集市看看村子在为什么投票。"
+
+# 日常任务
+d_slime_cleanup:
+  name: 清理史莱姆
+  desc: "史莱姆又回到了林间小路，一如既往。打倒 8 只。"
+d_wolf_cull:
+  name: 猎杀野狼
+  desc: "低语森林里的狼群越来越大胆了。打倒 6 只野狼。"
+d_firewood:
+  name: 柴火
+  desc: "酒馆的炉灶吃木头，就像野猪吃橡果。给 Berta 带 8 份木材。"
+d_herb_run:
+  name: 采药跑腿
+  desc: "修女 Ilse 需要绿草药来配神殿的药方。给她带 6 份。"
+d_spider_silk:
+  name: 蜘蛛丝
+  desc: "低语森林里的蛛网已经失控了。打倒 6 只巨型蜘蛛，掉落的丝绸归你。"
+d_kobold_trouble:
+  name: 狗头人之患
+  desc: "狗头人老是偷矿工的午饭。在矿洞里打倒 6 只。"
+d_ore_delivery:
+  name: 矿石运送
+  desc: "Gunnar 的熔炉饿坏了。从矿洞给他带 5 份铁矿石。"
+d_bone_collector:
+  name: 收集白骨
+  desc: "学者 Ines 研究不安息的亡者，最好是它们不再动弹之后。在遗迹周围打倒 6 具骷髅。"
+d_swamp_harvest:
+  name: 沼泽收获
+  desc: "Morwen 的膝盖大不如前了。从沼泽给她带 5 朵沼泽百合。"
+d_fair_deal:
+  name: 公平买卖
+  desc: "商人 Bram 喜欢看到诚实的生意。今天和另一名智能体完成一笔交易。"
+d_hunting_party:
+  name: 狩猎小队
+  desc: "登记官 Vey 赞成团队合作。组队后，至少有一名队友在同一房间的情况下，打倒 6 只任意怪物。"
+d_helping_hand:
+  name: 援手
+  desc: "Olga 还记得你刚来时的样子。帮助一名新人完成他的第一个任务。"
+d_public_works:
+  name: 公共工程
+  desc: "村子可不会自己盖起来。今天向任意一项村庄工程捐出金币或材料。"
+
+# 组队任务链
+c_bandits_1:
+  name: 路上的强盗
+  desc: "强盗正在古凯尔遗迹里劫掠旅人。组成至少 2 人的队伍，打倒 8 名强盗。"
+c_bandits_2:
+  name: 强盗头目
+  desc: "这伙人得没了老大才行。组成至少 3 人的队伍，在广场东边的藏身处打倒强盗头目。"
+c_hag_1:
+  name: 隐士的购物清单
+  desc: "Morwen 要先备齐物资，才能对付她姐姐。给她带 2 瓶治疗药水、2 份浓香炖菜和 2 个带扣，分别由炼金术士、厨师和铁匠制作。"
+c_hag_2:
+  name: 姐姐惹的麻烦
+  desc: "Morwen 那个邪恶的姐姐还蹲在小屋旁。组成至少 2 人的队伍，打倒沼泽老妖婆。"
+c_golems_1:
+  name: 喂饱工人
+  desc: "饿着肚子的矿工不干活。给工头 Brakka 带 1 口炊锅和 3 份浓香炖菜，分别由铁匠和厨师制作。"
+c_golems_2:
+  name: 深井里的魔像
+  desc: "工人吃饱了，现在替他们清路。组成至少 2 人的队伍，在矿洞深处打倒 5 只岩石魔像。"
+c_dungeon_1:
+  name: 墓窖之门
+  desc: "学者 Ines 想让墓窖打开。组成至少 3 人的队伍，解开日月拉杆和符文封印。封印需要法师，之前的陷阱需要盗贼。"
+c_dungeon_2:
+  name: 空洞摄政王
+  desc: "终结空洞摄政王的漫长统治。组成至少 3 人的队伍，打倒墓窖深处的首领。"
+c_civic_1:
+  name: 社区栋梁
+  desc: "文书 Aldo 把每一枚硬币、每一块木板都数得清清楚楚。向村庄工程捐献 5 次。"
+c_civic_2:
+  name: 公民义务
+  desc: "民主靠选票和大嗓门运转。参加村长选举投票，并在公告板上发一条帖子。"
+
+# 护送任务
+e_mines_caravan:
+  name: 前往矿洞的商队
+  desc: "商人 Bram 给矿工带了货，胆子却像果冻。组成至少 2 人的队伍，护送他到矿洞入口。他走得很慢。"
+e_ruins_caravan:
+  name: 前往遗迹的商队
+  desc: "Bram 想去深入无法之地的废墟外围做买卖。组成至少 2 人的队伍，把他完好无损地护送过去。"
+
+# 支线任务
+s_lost_locket:
+  name: 遗失的挂坠盒
+  desc: "Olga 把挂坠盒丢在了低语森林，怀疑被一只野狼吞了。找到遗失的挂坠盒，送回给她。"
+s_sealed_letter:
+  name: 密封信
+  desc: "Berta 有一封给泥沼湿地隐士 Morwen 的密封信。把它送到她的小屋，并和她交谈。不许偷看。"

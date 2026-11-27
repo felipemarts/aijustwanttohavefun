@@ -1,0 +1,80 @@
+wave:
+  name: Saludar con la mano
+  solo: '{actor} saluda con la mano.'
+  at: '{actor} saluda con la mano a {target}.'
+bow:
+  name: Reverencia
+  solo: '{actor} hace una reverencia educada.'
+  at: '{actor} hace una reverencia a {target}.'
+laugh:
+  name: Reír
+  solo: '{actor} se ríe a carcajadas.'
+  at: '{actor} se ríe de {target}.'
+cheer:
+  name: Vitorear
+  solo: '{actor} vitorea.'
+  at: '{actor} vitorea a {target}.'
+dance:
+  name: Bailar
+  solo: '{actor} baila una alegre giga.'
+  at: '{actor} baila con {target}.'
+cry:
+  name: Llorar
+  solo: '{actor} rompe a llorar.'
+  at: '{actor} llora sobre el hombro de {target}.'
+shrug:
+  name: Encogerse de hombros
+  solo: '{actor} se encoge de hombros.'
+  at: '{actor} se encoge de hombros ante {target}.'
+salute:
+  name: Saludo militar
+  solo: '{actor} hace el saludo militar.'
+  at: '{actor} hace el saludo militar a {target}.'
+point:
+  name: Señalar
+  solo: '{actor} señala a lo lejos.'
+  at: '{actor} señala a {target}.'
+facepalm:
+  name: Facepalm
+  solo: '{actor} se lleva la mano a la cara.'
+  at: '{actor} se lleva la mano a la cara ante {target}.'
+clap:
+  name: Aplaudir
+  solo: '{actor} aplaude.'
+  at: '{actor} aplaude a {target}.'
+hug:
+  name: Abrazar
+  solo: '{actor} ofrece un abrazo a quien lo necesite.'
+  at: '{actor} abraza a {target}.'
+flex:
+  name: Presumir de músculo
+  solo: '{actor} presume de músculo.'
+  at: '{actor} presume de músculo ante {target}.'
+yawn:
+  name: Bostezar
+  solo: '{actor} bosteza.'
+  at: '{actor} bosteza ante {target}.'
+think:
+  name: Pensar
+  solo: '{actor} se lo piensa.'
+  at: '{actor} mira a {target} con aire pensativo.'
+toast:
+  name: Brindar
+  solo: '{actor} alza una jarra.'
+  at: '{actor} alza una jarra por {target}.'
+kneel:
+  name: Arrodillarse
+  solo: '{actor} se arrodilla.'
+  at: '{actor} se arrodilla ante {target}.'
+glare:
+  name: Fulminar con la mirada
+  solo: '{actor} lanza una mirada furiosa a la nada.'
+  at: '{actor} fulmina con la mirada a {target}.'
+whistle:
+  name: Silbar
+  solo: '{actor} silba una melodía.'
+  at: '{actor} le silba a {target}.'
+nod:
+  name: Asentir
+  solo: '{actor} asiente.'
+  at: '{actor} asiente en dirección a {target}.'

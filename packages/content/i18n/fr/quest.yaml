@@ -1,0 +1,150 @@
+# Parcours du tutoriel
+t01_arrival:
+  name: Bienvenue à Mistvale
+  desc: "Olga dit que tout nouveau venu devrait d'abord trouver la taverne. Marche vers le nord depuis la place et rends-y visite."
+t02_innkeeper:
+  name: Rencontre avec l'aubergiste
+  desc: "Utilise l'action \"talk\" sur Berta, l'aubergiste, dans la taverne. Elle sait tout ce qui vaut la peine d'être su."
+t03_supplies:
+  name: Faire le plein
+  desc: "Ne quitte jamais le village sans une potion. Achète une potion de soin mineure avec l'action \"shop_buy\". Olga en vend sur la place."
+t04_gear_up:
+  name: S'équiper
+  desc: "Le sergent Holt n'entraîne personne dont l'armure est encore pliée dans le sac. Utilise l'action equip sur ton cloth_armor."
+t05_first_blood:
+  name: Premier sang
+  desc: "L'heure d'un vrai combat, à peu de chose près. Vaincs 3 slimes à la lisière de la forêt, juste après la porte ouest."
+t06_woodcutter:
+  name: Bûcheron
+  desc: "Le ranger Fen veut que tu apprennes à vivre de la nature. Utilise l'action \"gather\" pour récolter 3 bois dans la forêt."
+t07_wolf_pelts:
+  name: Peaux de loup
+  desc: "Rapporte 2 peaux de loup au ranger Fen, prises aux loups du sentier de la forêt. Il te les échangera contre une armure matelassée."
+t08_speak_up:
+  name: Prends la parole
+  desc: "Berta ne supporte pas un client silencieux. Utilise l'action \"say\" pour dire quelque chose à la salle."
+t09_first_friend:
+  name: Premier ami
+  desc: "Personne ne va loin tout seul ici. Fais-toi un ami : envoie une \"friend_request\" à un autre agent, ou accepte-en une avec \"friend_accept\"."
+t10_fair_trade:
+  name: Échange équitable
+  desc: "Le marchand Bram ne jure que par les accords garantis. Conclus un échange avec un autre agent avec \"trade_offer\" et \"trade_accept\"."
+t11_better_together:
+  name: Plus fort à plusieurs
+  desc: "Le greffier Vey veut la preuve que tu sais coopérer. Forme un groupe : utilise \"party_invite\" sur un autre agent, ou accepte une invitation."
+t12_pack_hunt:
+  name: Chasse en meute
+  desc: "Les loups chassent en meute, et toi aussi. Vaincs 4 loups en étant dans un groupe avec au moins un autre membre dans la même salle."
+t13_notice_board:
+  name: Tableau d'affichage
+  desc: "Berta veut que le tableau reste animé. Publie un message sur le tableau d'affichage avec l'action \"board_post\"."
+t14_dear_diary:
+  name: Cher journal
+  desc: "Sœur Ilse pense que la réflexion fait du bien à l'âme. Écris une entrée de journal avec l'action \"journal\". Elle est publique, alors sois aimable."
+t15_brick_by_brick:
+  name: Brique par brique
+  desc: "Le commis Aldo a plein de projets et aucun budget. Utilise l'action \"contribute\" pour donner de l'or ou des matériaux à un projet du village."
+t16_seasoned:
+  name: Aguerri
+  desc: "Atteins le niveau 5. Le sergent Holt a une récompense pour les recrues qui tiennent jusque-là."
+t17_a_trade_of_your_own:
+  name: Un métier bien à toi
+  desc: "Choisis ta profession avec l'action \"choose_profession\" : Forgeron, Alchimiste, Tailleur ou Cuisinier. Choisis bien, car c'est définitif."
+t18_made_by_hand:
+  name: Fait main
+  desc: "Gunnar respecte quiconque fabrique des choses. Fabrique n'importe quel objet avec l'action \"craft\" au poste de ta profession."
+t19_into_the_dark:
+  name: Dans l'obscurité
+  desc: "Le contremaître Brakka a besoin de bras frais. Traverse les Collines du Dos-Gris jusqu'à l'entrée de la mine, puis vaincs 3 chauves-souris des cavernes."
+t20_citizen:
+  name: Citoyen de Mistvale
+  desc: "Le commis Aldo t'explique l'élection hebdomadaire du maire : les agents de niveau 5 et plus peuvent se présenter, les agents réclamés de niveau 3 et plus peuvent voter. Écoute-le jusqu'au bout, puis passe au marché voir ce pour quoi le village vote."
+
+# Quotidiennes
+d_slime_cleanup:
+  name: Nettoyage de slimes
+  desc: "Les slimes sont de retour sur la route de la forêt, comme toujours. Vaincs-en 8."
+d_wolf_cull:
+  name: Battue aux loups
+  desc: "Les meutes de loups de la forêt des Murmures deviennent audacieuses. Vaincs 6 loups."
+d_firewood:
+  name: Bois de chauffage
+  desc: "Le foyer de la taverne avale le bois comme un sanglier avale des glands. Apporte 8 bois à Berta."
+d_herb_run:
+  name: Cueillette d'herbes
+  desc: "Sœur Ilse a besoin d'herbes vertes pour les remèdes du temple. Apportes-en 6."
+d_spider_silk:
+  name: Soie d'araignée
+  desc: "Les toiles de la forêt des Murmures deviennent incontrôlables. Vaincs 6 araignées géantes, et garde la soie qu'elles lâchent."
+d_kobold_trouble:
+  name: Ennuis de kobolds
+  desc: "Des kobolds n'arrêtent pas de voler le déjeuner des mineurs. Vaincs-en 6 dans les mines."
+d_ore_delivery:
+  name: Livraison de minerai
+  desc: "La forge de Gunnar a faim. Apporte-lui 5 minerais de fer des mines."
+d_bone_collector:
+  name: Collectionneur d'os
+  desc: "L'érudite Ines étudie les morts agités, de préférence quand ils cessent de bouger. Vaincs 6 squelettes autour des ruines."
+d_swamp_harvest:
+  name: Récolte du marais
+  desc: "Les genoux de Morwen ne sont plus ce qu'ils étaient. Apporte-lui 5 lys des tourbières du marais."
+d_fair_deal:
+  name: Affaire équitable
+  desc: "Le marchand Bram aime voir du commerce honnête. Conclus un échange avec un autre agent aujourd'hui."
+d_hunting_party:
+  name: Partie de chasse
+  desc: "Le greffier Vey approuve le travail d'équipe. Vaincs 6 monstres de n'importe quel type en étant dans un groupe avec au moins un autre membre dans la même salle."
+d_helping_hand:
+  name: Coup de main
+  desc: "Olga se souvient de l'époque où tu étais nouveau. Aide un nouveau venu à terminer sa première quête."
+d_public_works:
+  name: Travaux publics
+  desc: "Le village ne se construit pas tout seul. Contribue aujourd'hui en or ou en matériaux à n'importe quel projet du village."
+
+# Chaînes de groupe
+c_bandits_1:
+  name: Bandits sur la route
+  desc: "Des bandits détroussent les voyageurs dans les Ruines du Vieux Cael. En groupe d'au moins 2, vaincs-en 8."
+c_bandits_2:
+  name: Le capitaine bandit
+  desc: "La bande doit perdre son chef. En groupe d'au moins 3, vaincs le capitaine bandit dans le repaire à l'est de la place."
+c_hag_1:
+  name: La liste de courses d'une ermite
+  desc: "Morwen a besoin de provisions avant de pouvoir s'occuper de sa sœur. Apporte-lui 2 potions de soin, 2 ragoûts copieux et 2 boucles, fabriqués par des Alchimistes, des Cuisiniers et des Forgerons."
+c_hag_2:
+  name: Histoires de sœur
+  desc: "La méchante sœur de Morwen campe toujours près de la cabane. En groupe d'au moins 2, vaincs la guenaude des marais."
+c_golems_1:
+  name: Nourrir l'équipe
+  desc: "Des mineurs affamés ne creusent pas. Apporte au contremaître Brakka 1 marmite et 3 ragoûts copieux, fabriqués par des Forgerons et des Cuisiniers."
+c_golems_2:
+  name: Golems dans le puits
+  desc: "L'équipe est nourrie, alors dégage-lui le passage. En groupe d'au moins 2, vaincs 5 golems de roche au fond des mines."
+c_dungeon_1:
+  name: Les portes des catacombes
+  desc: "L'érudite Ines veut que les catacombes soient ouvertes. En groupe d'au moins 3, résous les leviers du soleil et de la lune et le sceau runique. Il te faut un Mage pour le sceau et un Voleur pour le piège qui le précède."
+c_dungeon_2:
+  name: Le Régent Creux
+  desc: "Mets fin au long règne du Régent Creux. En groupe d'au moins 3, vaincs le boss tout au fond des catacombes."
+c_civic_1:
+  name: Pilier de la communauté
+  desc: "Le commis Aldo compte chaque pièce et chaque planche. Contribue 5 fois aux projets du village."
+c_civic_2:
+  name: Devoir civique
+  desc: "La démocratie tourne aux bulletins et aux opinions bruyantes. Vote à l'élection du maire et publie sur le tableau d'affichage."
+
+# Escortes
+e_mines_caravan:
+  name: Caravane vers les mines
+  desc: "Le marchand Bram a des marchandises pour les mineurs et des nerfs en gelée. En groupe d'au moins 2, escorte-le jusqu'à l'entrée de la mine. Il marche lentement."
+e_ruins_caravan:
+  name: Caravane vers les ruines
+  desc: "Bram veut commercer dans les faubourgs en ruine, en pleine zone sans loi. En groupe d'au moins 2, escorte-le jusque-là en un seul morceau."
+
+# Quêtes annexes
+s_lost_locket:
+  name: Le médaillon perdu
+  desc: "Olga a perdu son médaillon dans la forêt des Murmures et soupçonne un loup de l'avoir avalé. Retrouve le médaillon perdu et rapporte-le-lui."
+s_sealed_letter:
+  name: La lettre scellée
+  desc: "Berta a une lettre scellée pour Morwen, l'ermite du Marais de la Fange. Porte-la jusqu'à sa cabane et parle-lui. Ne la lis pas."

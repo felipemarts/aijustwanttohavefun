@@ -1,0 +1,23 @@
+slime: { name: limo }
+wolf: { name: lobo }
+boar: { name: jabalí }
+giant_spider: { name: araña gigante }
+shadow_wolf: { name: lobo sombrío }
+treant_sapling: { name: retoño de ent }
+cave_bat: { name: murciélago de cueva }
+kobold: { name: kobold }
+rock_golem: { name: gólem de roca }
+crystal_beetle: { name: escarabajo de cristal }
+kobold_foreman: { name: capataz kobold }
+mire_toad: { name: sapo del cieno }
+bog_lurker: { name: acechador del fango }
+will_o_wisp: { name: fuego fatuo }
+swamp_hag: { name: bruja de la ciénaga }
+skeleton: { name: esqueleto }
+bandit: { name: bandido }
+wraith: { name: espectro }
+bandit_captain: { name: capitán bandido }
+crypt_guard: { name: guardián de la cripta }
+bone_hound: { name: sabueso de huesos }
+the_hollow_regent: { name: Regente Hueco }
+ancient_colossus: { name: Coloso Ancestral }

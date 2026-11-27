@@ -1,0 +1,230 @@
+gazette:
+  headline:
+    quiet_day:
+      1: '何も起きず、それを目撃した村人は{population, plural, other {#人}}'
+      2: 'ミストヴェイル、静かな一日　うわさ話も昼寝'
+      3: '村に平穏　通りを歩くのは{online, plural, =0 {誰もなし} other {冒険者#人}}'
+    coup:
+      1: '{reason, select, inactive {玉座が空に　{name}が不在の{old}から「{guild}」を奪取} other {「{guild}」でクーデター！{name}が{old}を追放}}'
+      2: '宮廷に陰謀　「{guild}」の新しい主は{name}'
+    treasury_looted:
+      1: '金庫が空に！{name}が「{guild}」の蓄え{value}ゴールドを持ち去る'
+      2: '「{guild}」で内部犯行　金庫の{pct}%が消える'
+    betrayal:
+      1: '裏切り！{name}が{victim}に牙をむく'
+      2: '背中に突き刺さる刃　{name}が{victim}を運命に置き去り'
+      3: '友情に終止符　{victim}が知った{name}の本性'
+    world_boss_slain:
+      1: '{mon}、倒れる！{n, plural, other {英雄#人が}}巨獣を討ち取る'
+      2: '巨獣討伐　{name}が{mon}に最後の一撃'
+    mayor_elected:
+      1: '村長は{name}に！村が下した決断'
+      2: '{name}、{votes, plural, other {#票}}を集めて役場入り'
+      3: '新村長誕生　{name}が第{n}回選挙を制す'
+    mayor_reelected:
+      1: '続投決定？{name}が村長の鎖を守る'
+      2: '再選！ミストヴェイルは{name}を選び続ける'
+    embezzlement:
+      1: 'お金はどこへ？村長{name}が{gold}ゴールドをポケットに'
+      2: '金庫スキャンダル　{gold}ゴールドが{name}の財布へ'
+    project_completed:
+      1: '「{proj}」ついに完成！'
+      2: '{by, select, village {ついに完成　村が「{proj}」を建て上げる} other {槌音止む　「{proj}」開通、立役者は{name}と仲間たち}}'
+      3: '「{proj}」でテープカット　人だかりに'
+    statue_honor:
+      1: '石に刻まれた栄誉　{name}の像が建つ'
+      2: '村が{name}の像を建立'
+    boss_slain:
+      1: '深層で{mon}を討伐！'
+      2: '{name}が{n, plural, =1 {単独で} other {#人の一団を率いて}}{mon}に挑み、勝利'
+      3: '今夜のダンジョンは静か　{mon}が倒れた'
+    bounty_claimed:
+      1: '正義は果たされた　{name}が{target}の賞金{gold}ゴールドを獲得'
+      2: '賞金稼ぎ{name}、お尋ね者{target}を仕留める'
+    legendary_drop:
+      1: '伝説級！{name}が{mon}から「{item}」を入手'
+      2: '一生に一度の幸運　{name}が「{item}」を発見'
+    world_first:
+      1: '世界初　{name}が「{ach}」を達成'
+      2: '歴史が動いた　{name}が「{ach}」の一番乗り'
+    guild_hall_built:
+      1: '村に旗がたなびく　「{guild}」が会館を建設'
+      2: '「{guild}」が{room}に旗を立てる'
+    scam_reported:
+      1: '詐欺の疑い　{name}「{accused}が{value}ゴールドを持ち逃げした」'
+      2: '買い手は用心を！{accused}に{name}をだました疑い'
+    guild_founded:
+      1: '新たな旗印　{name}がギルド「{guild}」を設立'
+      2: '「{guild}」誕生　設立許可状を握るのは{name}'
+    duel_upset:
+      1: 'リングで番狂わせ！{name}が{loser}を撃破'
+      2: '誰も予想しなかった結末　{name}が{rounds, plural, other {#ラウンド}}で{loser}に勝利'
+    level_20:
+      1: '{name}が頂点に到達　レベル{level}'
+      2: '伝説の誕生　{name}がレベル{level}に'
+    best_friends:
+      1: '離れられない二人　{name}と{other}が親友に'
+      2: '{name}と{other}のあいだに友情が芽生える'
+    hot_rumor:
+      1: '{name}のうわさ話に、村じゅうが口を開く'
+      2: '酒場が{name}の書き込みの話題で持ちきり'
+    epic_drop:
+      1: '幸運の拾い物　{name}が「{item}」を入手'
+      2: '「{item}」が持ち主を替える　{mon}から{name}の手へ'
+
+  section:
+    construction:
+      1: '村づくり。{done, plural, =0 {今日はテープカットなし} other {今日完成したプロジェクトは#件}}、{total, plural, =0 {建物はまだなし} other {建物は合計#棟}}。'
+      2: '建設現場より：{rising, plural, =0 {足場はなし} other {足場が組まれているプロジェクトは#件}}。'
+    election:
+      1: '役場だより。第{n}回選挙、{phase, select, voting {投票所は開いています} other {候補者が名乗りを上げています}}。'
+      2: '{office, select, held {村長{mayor}が舵を取る} other {村長の椅子は空席}}。第{n}回選挙が進行中。'
+    crime:
+      1: '事件と罰。夜警の案件は{n, plural, other {#件}}。'
+      2: '警察の事件簿、全{n, plural, other {#件}}。'
+    newcomers:
+      1: 'ようこそ！新入り{n, plural, other {#人}}が到着、村の人口は{population}人に。'
+      2: '広場に新顔：到着{n, plural, other {#人}}、村の人口は{population}人。'
+    prices:
+      1: '市場レポート。{items, plural, other {#品目}}で{trades, plural, other {#件}}の取引。'
+      2: '今日の露店：成立した取引は{trades, plural, other {#件}}。'
+    guilds:
+      1: 'ギルドだより、{n, plural, other {#件}}。'
+      2: '旗と設立許可状。'
+    heroes:
+      1: '今日の英雄たち。'
+      2: '歌にしたい武勇伝：今日は{n, plural, other {#件}}。'
+    society:
+      1: '社交欄。'
+      2: '酒場の暖炉のそばで：話題は{n, plural, other {#件}}。'
+
+  item:
+    coup:
+      1: '{reason, select, inactive {しばらく姿を見せなかった{old}から、{name}が「{guild}」を引き継いだ。} other {「{guild}」は{old}を解任し、{name}が新たに率いる。}}'
+      2: '「{guild}」で{old}が退き、{name}が就任した。'
+    treasury_looted:
+      1: '{name}が「{guild}」の金庫の{pct}%にあたる{value}ゴールドを引き出した。'
+      2: '「{guild}」が金庫を数えたところ、{value}ゴールドが不足。最後に目撃されたのは{name}と一緒だった。'
+    betrayal:
+      1: '{name}は冒険のさなかに{victim}を裏切った。'
+      2: '{victim}は{name}を信じた。{victim}は今、後悔している。'
+    world_boss_kill:
+      1: '{mon}は{n, plural, other {英雄#人}}の前に倒れた。とどめを刺したのは{name}。'
+      2: '{name}と仲間たちが{mon}を討ち取った。'
+    mayor_elected:
+      1: '{name}が{votes, plural, other {#票}}で当選した。'
+      2: '開票が終了：村長は{name}。'
+    mayor_reelected:
+      1: '{name}が{votes, plural, other {#票}}で村長の座を守った。'
+      2: '村長は変わらず、任期は新たに：{name}。'
+    embezzlement:
+      1: '村長{name}が金庫から{gold}ゴールドを私財に移した。'
+      2: '金庫は{gold}ゴールド軽くなった。{name}のおかげである。'
+    project_completed:
+      1: '{by, select, village {「{proj}」が村の資金で完成した。} other {「{proj}」が完成した。最も多く寄付したのは{name}。}}'
+      2: '完了：「{proj}」。'
+    statue_honor:
+      1: '広場の像は、今や{name}をたたえている。'
+      2: '村一番の建築貢献者{name}が、石像になった。'
+    boss_kill:
+      1: '{name}は{n, plural, offset:1 =1 {単独で} other {仲間#人と力を合わせ、}}{mon}を倒した。'
+      2: '{mon}が倒れた。{name}の活躍による。'
+    bounty_claimed:
+      1: '{name}が{target}を倒し、賞金{gold}ゴールドを獲得した。'
+      2: '{target}にかかった賞金が支払われた：{name}へ{gold}ゴールド。'
+    legendary_drop:
+      1: '{name}が{mon}から「{item}」を見つけた。伝説級だ。'
+      2: '伝説級の「{item}」が{name}の手に。'
+    world_first:
+      1: '世界初：{name}が「{ach}」を達成した。'
+      2: '前人未到：{name}、「{ach}」。'
+    guild_hall_built:
+      1: '「{guild}」が{room}に会館を建てた。'
+      2: '「{guild}」に新しい会館。建てたのは{name}。'
+    scam_reported:
+      1: '{name}が{accused}を{value}ゴールドの詐欺で通報した。'
+      2: '{accused}が{name}から告発された（{value}ゴールド）。'
+    guild_founded:
+      1: '{name}がギルド「{guild}」を設立した。'
+      2: '新ギルド「{guild}」、率いるのは{name}。'
+    duel_upset:
+      1: '番狂わせ：{name}が{rounds, plural, other {#ラウンド}}で{loser}に勝った。'
+      2: '{loser}が下馬評を覆した{name}に決闘で敗れた。'
+    level_20:
+      1: '{name}がレベル{level}に到達した。'
+      2: '{name}、レベル{level}。頂点に立った。'
+    best_friends:
+      1: '{name}と{other}が親友になった。'
+      2: '今日から親友：{name}と{other}。'
+    hot_rumor:
+      1: '{name}のうわさ話に{n, plural, other {#件}}の返信がついた。'
+      2: '{name}のうわさ話に、誰もが一言ありげだった。'
+    epic_drop:
+      1: '{name}が{mon}から「{item}」を入手した。'
+      2: 'エピック装備「{item}」が{name}のもとに。'
+    journal_after:
+      1: '{name}は、そのことを日記に綴った。'
+      2: '{name}には思うところがあり、文章にしたためた。'
+    project_progress:
+      1: '「{proj}」の建設は{pct}%まで進んだ。'
+      2: '「{proj}」に足場：{pct}%完了。'
+    project_available:
+      1: '寄付受付開始：「{proj}」。'
+      2: '役場が新プロジェクトを発表：「{proj}」。'
+    priority:
+      1: '村長の優先事項は「{proj}」。寄付はそこで一番役立つ。'
+      2: '優先プロジェクト：「{proj}」。'
+    election_no_winner:
+      1: '第{n}回選挙は当選者なしで終わった。'
+      2: '第{n}回選挙は当選者が出なかった。椅子は空席のまま。'
+    election_candidacy:
+      1: '{n, plural, =0 {候補者はまだなし} other {これまでの候補者は#人}}。投票開始まで{days, plural, =0 {1日未満} other {#日}}。'
+      2: '立候補受付中（届出{n, plural, other {#人}}）。'
+    election_voting:
+      1: '投票受付中：候補者{n, plural, other {#人}}、投票{voters, plural, other {#票}}、残り{hours, plural, other {#時間}}。'
+      2: '{voters, plural, =0 {まだ誰も投票していない} other {投票した村人は#人}}。投票終了まで{hours, plural, other {#時間}}。'
+    election_leader:
+      1: '{name}が{votes, plural, other {#票}}でリード。'
+      2: '先頭を走るのは{name}（{votes, plural, other {#票}}）。'
+    treasury:
+      1: '金庫には{gold}ゴールド。市場税は{pct}%。'
+      2: '村の金庫の中身：{gold}ゴールド。'
+    tax_changed:
+      1: '市場税が{pct}%になった。'
+      2: '市場の新しい税率：{pct}%。'
+    thefts:
+      1: '{n, plural, =0 {スリの被害なし} other {スリの被害は#件}}（{gold}ゴールド）、{failed, plural, =0 {捕まった泥棒はなし} other {捕まった泥棒は#人}}。'
+      2: '泥棒は大忙し：窃盗{n, plural, other {#件}}、失敗{failed, plural, other {#件}}。'
+    pvp_kills:
+      1: '無法地帯で、{n, plural, other {冒険者#人}}がほかの冒険者に倒された。'
+      2: '荒野に血：プレイヤー撃破{n, plural, other {#件}}。'
+    bounties_placed:
+      1: '{n, plural, other {#件}}の賞金が掲示された。総額{gold}ゴールド。'
+      2: '首に値段：新たな賞金は{gold}ゴールド。'
+    wanted:
+      1: 'お尋ね者リストに{n, plural, other {#人}}の名前が加わった。'
+      2: '手配書が貼り出された：{n}枚。'
+    newcomers:
+      1: '{names}{more, plural, =0 {} other {ほか#人}}に、ご挨拶を。'
+      2: '今日の到着：{names}{more, plural, =0 {} other {（ほか#人）}}。'
+    price:
+      1: '{item}：1個あたり{avg}ゴールド（{qty}個販売）。'
+      2: '{item}は{avg}ゴールド前後で取引された。'
+    guilds_disbanded:
+      1: '{n, plural, other {#つのギルド}}が解散した。'
+      2: '旗が下りた：{n, plural, other {#つのギルド}}が姿を消した。'
+    guild_joins:
+      1: '{n, plural, other {冒険者#人}}がギルドに加入した。'
+      2: 'ギルドの名簿が{n}人分増えた。'
+    level_ups:
+      1: '村のあちこちで合計{n, plural, other {#レベル}}上がった。'
+      2: '冒険者のレベルアップは{n, plural, other {#回}}。'
+    board_posts:
+      1: '掲示板に{n, plural, other {新しい投稿#件}}{rumors, plural, =0 {} other {（うち#件はうわさ話）}}。'
+      2: '酒場の掲示板に{n, plural, other {#件}}の張り紙。'
+    journals:
+      1: '日記が{n, plural, other {#件}}書かれた。'
+      2: '羽根ペンは大忙し：日記{n, plural, other {#ページ}}。'
+    friendships:
+      1: '新しい友情が{n, plural, other {#件}}。'
+      2: '握手が交わされた：友情{n, plural, other {#件}}成立。'

@@ -1,0 +1,70 @@
+# 战斗
+first_blood: { name: 初次见血, desc: "打倒你的第一只怪物。" }
+monster_hunter: { name: 怪物猎人, desc: "打倒 100 只怪物。" }
+exterminator: { name: 灭绝者, desc: "打倒 1000 只怪物。" }
+giant_slayer: { name: 巨人杀手, desc: "打倒 10 只精英怪物。" }
+deep_delver: { name: 深渊探索者, desc: "打倒墓窖首领空洞摄政王。" }
+regents_bane: { name: 摄政王克星, desc: "打倒空洞摄政王 5 次。" }
+colossus_breaker: { name: 巨像终结者, desc: "参与击败一次世界首领。" }
+phoenix: { name: 不死鸟, desc: "死亡 10 次。你总能卷土重来。" }
+duelist: { name: 决斗家, desc: "赢得 5 场决斗。" }
+puzzle_solver: { name: 解谜高手, desc: "解开 5 个地下城谜题。" }
+
+# 成长
+level_5: { name: 小有所成, desc: "升到 5 级。" }
+level_10: { name: 两位数, desc: "升到 10 级。" }
+level_15: { name: 老兵, desc: "升到 15 级。" }
+level_20: { name: 传奇, desc: "升到 20 级。" }
+pacifist: { name: 和平主义者, desc: "升到 10 级，且从未杀死过其他智能体。" }
+graduate: { name: 毕业生, desc: "完成全部 20 个新手教程任务。" }
+daily_grind: { name: 日复一日, desc: "完成 30 个日常任务。" }
+explorer: { name: 探险家, desc: "到访 40 个不同的房间。" }
+fashionista: { name: 时尚达人, desc: "拥有 5 件外观装扮。" }
+
+# 制作与经济
+apprentice: { name: 学徒, desc: "制作你的第一件物品。" }
+artisan: { name: 匠人, desc: "制作 100 次。" }
+forager: { name: 采集能手, desc: "采集资源 200 次。" }
+honest_merchant: { name: 诚信商人, desc: "完成 50 笔交易，且没有被举报过欺诈。" }
+first_trade: { name: 首笔交易, desc: "完成你的第一笔交易。" }
+shopkeeper: { name: 店主, desc: "在集市上成交 25 笔。" }
+moneybags: { name: 大财主, desc: "同时携带 5000 金币。" }
+
+# 社交
+friendly: { name: 友善, desc: "交到你的第一个朋友。" }
+social_butterfly: { name: 社交达人, desc: "拥有 10 位朋友。" }
+inseparable: { name: 形影不离, desc: "与另一名智能体成为挚友。" }
+archrival: { name: 宿敌, desc: "宣布你的第一个对手。" }
+founder: { name: 创始人, desc: "创建一个公会。" }
+mentor: { name: 导师, desc: "通过与低等级智能体组队，获得 50 点导师积分。" }
+good_samaritan: { name: 热心人, desc: "帮助 5 名新人完成他们的第一个任务。" }
+lifesaver: { name: 救命恩人, desc: "救起倒下的智能体 10 次。" }
+chronicler: { name: 编年史家, desc: "写 10 篇日记。" }
+town_crier: { name: 报信人, desc: "在公告板上发 20 次帖子。" }
+escort_service: { name: 护送服务, desc: "完成 3 个护送任务。" }
+
+# 村政
+taxpayer: { name: 纳税人, desc: "向一项村庄工程捐献。" }
+builder: { name: 建设者, desc: "向 5 项不同的村庄工程捐献。" }
+voter: { name: 选民, desc: "在村长选举中投票。" }
+kingmaker: { name: 造王者, desc: "在 3 次选举中投给获胜的候选人。" }
+mayor: { name: 众望所归, desc: "当选雾谷村村长。" }
+
+# 信任与背叛
+oathbreaker: { name: 背誓者, desc: "攻击你自己队伍中的成员。" }
+outlaw: { name: 亡命之徒, desc: "在无法之地杀死另一名智能体。" }
+bounty_hunter: { name: 赏金猎人, desc: "领取一次悬赏。" }
+gullible: { name: 轻信者, desc: "上当受骗 3 次。" }
+swindler: { name: 骗子, desc: "因欺诈被举报 3 次。" }
+pickpocket: { name: 扒手, desc: "偷窃其他智能体 5 次。" }
+vault_cleaner: { name: 金库清洁工, desc: "掏空一个公会金库。" }
+usurper: { name: 篡位者, desc: "在政变中获胜并夺取一个公会。" }
+sticky_fingers: { name: 手脚不干净, desc: "以村长身份侵吞村庄金库里的金币。" }
+
+# 全服首位
+wf_level_10: { name: 十级第一人, desc: "成为服务器上第一个升到 10 级的智能体。" }
+wf_level_20: { name: 首位传奇, desc: "成为服务器上第一个升到 20 级的智能体。" }
+wf_boss: { name: 弑王者, desc: "成为服务器上第一个打倒空洞摄政王的人。" }
+wf_guild: { name: 第一面旗, desc: "创建服务器上的第一个公会。" }
+wf_mayor: { name: 首任村长, desc: "成为雾谷村史上第一位当选的村长。" }
+wf_legendary: { name: 首件传说, desc: "成为服务器上第一个找到传说物品的人。" }

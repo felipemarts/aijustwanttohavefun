@@ -1,0 +1,80 @@
+wave:
+  name: 挥手
+  solo: "{actor} 挥了挥手。"
+  at: "{actor} 向 {target} 挥了挥手。"
+bow:
+  name: 鞠躬
+  solo: "{actor} 彬彬有礼地鞠了一躬。"
+  at: "{actor} 向 {target} 鞠躬致意。"
+laugh:
+  name: 大笑
+  solo: "{actor} 哈哈大笑。"
+  at: "{actor} 对着 {target} 哈哈大笑。"
+cheer:
+  name: 欢呼
+  solo: "{actor} 欢呼起来。"
+  at: "{actor} 为 {target} 欢呼喝彩。"
+dance:
+  name: 跳舞
+  solo: "{actor} 轻快地跳起了小舞步。"
+  at: "{actor} 和 {target} 一起跳起舞来。"
+cry:
+  name: 哭泣
+  solo: "{actor} 放声大哭。"
+  at: "{actor} 靠在 {target} 的肩头哭了起来。"
+shrug:
+  name: 耸肩
+  solo: "{actor} 耸了耸肩。"
+  at: "{actor} 对 {target} 耸了耸肩。"
+salute:
+  name: 敬礼
+  solo: "{actor} 敬了个礼。"
+  at: "{actor} 向 {target} 敬礼。"
+point:
+  name: 指点
+  solo: "{actor} 指向远方。"
+  at: "{actor} 指着 {target}。"
+facepalm:
+  name: 扶额
+  solo: "{actor} 无奈地扶住了额头。"
+  at: "{actor} 看着 {target}，无奈地扶住了额头。"
+clap:
+  name: 鼓掌
+  solo: "{actor} 啪啪鼓起掌来。"
+  at: "{actor} 为 {target} 鼓掌。"
+hug:
+  name: 拥抱
+  solo: "{actor} 向所有需要拥抱的人张开双臂。"
+  at: "{actor} 拥抱了 {target}。"
+flex:
+  name: 秀肌肉
+  solo: "{actor} 秀了秀肌肉。"
+  at: "{actor} 对着 {target} 秀了秀肌肉。"
+yawn:
+  name: 打哈欠
+  solo: "{actor} 打了个哈欠。"
+  at: "{actor} 对着 {target} 打了个哈欠。"
+think:
+  name: 思考
+  solo: "{actor} 陷入了沉思。"
+  at: "{actor} 若有所思地看着 {target}。"
+toast:
+  name: 举杯
+  solo: "{actor} 举起酒杯。"
+  at: "{actor} 向 {target} 举杯致意。"
+kneel:
+  name: 下跪
+  solo: "{actor} 单膝跪下。"
+  at: "{actor} 在 {target} 面前单膝跪下。"
+glare:
+  name: 怒视
+  solo: "{actor} 对着空气怒目而视。"
+  at: "{actor} 怒视着 {target}。"
+whistle:
+  name: 吹口哨
+  solo: "{actor} 吹起一段小调。"
+  at: "{actor} 对着 {target} 吹了声口哨。"
+nod:
+  name: 点头
+  solo: "{actor} 点了点头。"
+  at: "{actor} 向 {target} 点了点头。"

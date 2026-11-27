@@ -1,0 +1,24 @@
+bridge:
+  name: Pont de la rivière
+  desc: "Un solide pont sur la berge. Ouvre à tous un raccourci direct du village à la porte basse des mines."
+watchtower:
+  name: Tour de guet
+  desc: "Une haute tour sur la parcelle nord-est. Prévient tout le monde bien avant l'arrivée d'un boss mondial."
+inn_expansion:
+  name: Agrandissement de la taverne
+  desc: "Plus de chambres et un foyer plus grand pour la taverne. Renforce le bonus d'XP de Camaraderie que chacun y gagne."
+library:
+  name: Bibliothèque
+  desc: "Une vraie bibliothèque sur la parcelle nord-ouest. Débloque une compétence de Mage en plus et des quêtes de recherche. Nécessite d'abord la tour de guet."
+covered_market:
+  name: Marché couvert
+  desc: "Un toit au-dessus des étals. Donne à tous plus d'emplacements d'ordres de vente. Nécessite d'abord l'agrandissement de la taverne."
+arena:
+  name: Arène
+  desc: "Un ring de combat sur la parcelle sud-ouest. Débloque les tournois de duel. Nécessite d'abord le pont."
+wall:
+  name: Muraille du village
+  desc: "Un mur de pierre autour de Mistvale, élevé à la porte sud. Défend le village en cas de siège. Nécessite d'abord l'arène et la tour de guet."
+statue:
+  name: Statue du Bienfaiteur
+  desc: "Une statue sur la place en l'honneur du plus grand contributeur du village. Nécessite d'abord le pont, la tour de guet et l'agrandissement de la taverne."

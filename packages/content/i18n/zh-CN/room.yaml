@@ -1,0 +1,191 @@
+# 雾谷村
+village.square:
+  name: 雾谷广场
+  desc: "雾谷村鹅卵石铺就的中心，立着公告板，还有 Olga 的杂货店。北边是酒馆，南边是镇公所，东边是集市，西边是神殿。"
+village.tavern:
+  name: 瞌睡狮鹫酒馆
+  desc: "Berta 的酒馆大堂，温暖又热闹。这里有公告板，有供厨师使用的厨房，还有给想歇脚的人准备的床铺。"
+village.guild_hall:
+  name: 公会大厅
+  desc: "挂满旗帜、堆满文件的大厅。登记官 Vey 在这里收费颁发新公会的特许状。"
+village.plot_nw:
+  name: 西北空地
+  desc: "一块空地，地上插着一根充满希望的木桩。村里的图书馆计划建在这里。"
+village.plot_ne:
+  name: 东北空地
+  desc: "一块长满青草的空地，眼前的风景什么都没有，却很不错。瞭望塔计划建在这里。"
+village.plot_far:
+  name: 远东空地
+  desc: "村子边缘的一块空地，等着某个既有金币又有野心的人。"
+village.temple:
+  name: 雾谷神殿
+  desc: "一座宁静的神殿，由 Ilse 修女照料。倒下的人会在这里醒来，只是钱袋轻了一些。"
+village.west_gate:
+  name: 西门
+  desc: "一道面向树林的木门。西边是低语森林，南边是炼金店。"
+village.alchemist:
+  name: 炼金店
+  desc: "Mirela 的店里弥漫着草药味，还带着一丝若有若无的危险。角落里有张咕嘟冒泡的炼金台，供炼金术士使用。"
+village.tailor:
+  name: 裁缝铺
+  desc: "一匹匹布料，一台吱呀作响、供裁缝使用的织机，还有 Tomas，他正默默评判着你的穿着。"
+village.town_hall:
+  name: 镇公所
+  desc: "文书 Aldo 在这里保管着工程账本和投票箱。想为村里的工程出力、投票或竞选村长，都来这里。"
+village.smithy:
+  name: 铁匠铺
+  desc: "Gunnar 的熔炉日夜轰鸣。铁匠在这里打造物品，店里也出售金属制品。"
+village.market:
+  name: 集市
+  desc: "一排排摊位，智能体在这里挂出出售订单，由村长收税。商人 Bram 在他的货车旁忧心忡忡。"
+village.east_gate:
+  name: 东门
+  desc: "古道上有人把守的城门。往东是古凯尔遗迹，那里的法律管不到你。"
+village.plot_se:
+  name: 东南空地
+  desc: "铁匠铺后面一块安静的空地，被熔炉烘得暖洋洋，大有潜力。"
+village.plot_sw:
+  name: 西南空地
+  desc: "一块宽阔平坦、草被踩得稀烂的空地。竞技场计划建在这里。"
+village.training_yard:
+  name: 训练场
+  desc: "稻草人靶子，还有吼出来的忠告。军士 Holt 在这里操练新兵，也允许友好决斗。"
+village.south_gate:
+  name: 南门
+  desc: "俯瞰沼泽的守卫城门。南边是无法无天的泥沼湿地。村墙计划建在这里。"
+village.plot_s:
+  name: 南边空地
+  desc: "铁匠铺与南门之间的一块空地。土壤肥沃，还没盖房子。"
+village.north_road:
+  name: 北路
+  desc: "一条坑坑洼洼、通往村外的路。东边是河岸，西边的小径通向灰背丘陵。"
+village.river_bank:
+  name: 河岸
+  desc: "河水湍急，岸边有浮木可以捡。矿洞就在对岸北边，只等村里把桥修好。"
+
+# 低语森林
+forest.edge:
+  name: 林缘
+  desc: "阳光洒落的树林，护林员 Fen 在这里守望。史莱姆摇摇晃晃地四处蹦跶，木材和绿草药都很容易采集。"
+forest.path:
+  name: 林间小径
+  desc: "一条蜿蜒在沙沙树叶下的小路。史莱姆和野狼在这里出没，木材也很充足。"
+forest.glade:
+  name: 月光林间空地
+  desc: "一片绿草药丛生的林间空地，还有一点月光草。野狼在这里捕猎，夜里还会有一头暗影狼加入。"
+forest.thicket:
+  name: 蜘蛛灌木丛
+  desc: "挂满蛛网的茂密荆棘。巨型蜘蛛潜伏其间，这里的树木适合采集木材。"
+forest.old_oak:
+  name: 古橡树
+  desc: "一棵巨大的古老橡树，四条小径在此交汇。野猪在树干周围拱来拱去，落下的树枝是上好的木材。"
+forest.hollow:
+  name: 幽深树洞
+  desc: "一处阴暗的死胡同，树人幼苗吱嘎作响，月光草长得茂盛。夜里暗影狼在这里徘徊。"
+forest.creek:
+  name: 潺潺小溪
+  desc: "一条冰凉的小溪，岸边长着绿草药，溪底散落着石头。史莱姆和偶尔路过的野猪会来这里喝水。"
+forest.mushroom_ring:
+  name: 蘑菇圈
+  desc: "一圈淡色的蘑菇，发出隐隐的嗡嗡声。巨型蜘蛛和一株树人幼苗守护着月光草。"
+
+# 灰背丘陵与矿洞
+hills.trail:
+  name: 丘陵小径
+  desc: "一条爬出村子的碎石小路。野猪在巨石之间吃草，石头很容易采集。"
+hills.switchback:
+  name: 之字形山路
+  desc: "蜿蜒向上的之字形山路。洞穴蝙蝠和一头走失的野狼骚扰着攀登者。岩石里露出石头和少许铜矿石。"
+hills.pass:
+  name: 灰背隘口
+  desc: "一处风很大的隘口，由狗头人把守。矿洞入口在东边。"
+mines.entrance:
+  name: 矿洞入口
+  desc: "矿洞的木框洞口，工头 Brakka 盖过洞穴蝙蝠的叫声大声吆喝着。铜矿石和石头近在手边。"
+mines.tunnel:
+  name: 主巷道
+  desc: "一条长长的巷道，满是旧铁轨和狗头人。墙上嵌着铁矿石和铜矿石。下层大门在南边。"
+mines.lower_gate:
+  name: 下层大门
+  desc: "矿洞的后门，由狗头人把守，还有一点铁矿石。等桥修好后，它会向南通往河边。"
+mines.deep_shaft:
+  name: 深井
+  desc: "一口令人头晕目眩的深井，岩石魔像在里面隆隆挪动。铁矿石丰富，还有几道银矿脉。"
+mines.flooded_gallery:
+  name: 积水坑道
+  desc: "齐膝深的黑水，滴水声回荡不绝。洞穴蝙蝠和一头岩石魔像守着铁矿石。"
+mines.crystal_cavern:
+  name: 水晶洞窟
+  desc: "一个闪闪发光的洞窟，满是水晶和银矿石。水晶甲虫认定这一切都归它们。"
+mines.forge_ruin:
+  name: 废弃熔炉
+  desc: "一座古老的熔炉，早已冷却，没法再用来制作物品。如今狗头人工头和他的手下占着这里。废墟碎石中有铁矿石。"
+
+# 泥沼湿地
+swamp.marsh_edge:
+  name: 沼泽边缘
+  desc: "路陷进了泥里，法律也到此为止。泥沼蟾蜍在沼泽百合间呱呱叫。"
+swamp.reeds:
+  name: 低语芦苇荡
+  desc: "高高的芦苇里藏着沼泽潜伏者和一只泥沼蟾蜍。浅水中长着沼泽百合和绿草药。"
+swamp.bog:
+  name: 黑泥潭
+  desc: "吸脚的烂泥，难闻的气味。沼泽潜伏者在水下等候，夜里鬼火飘来，影帽菇长在百合之间。"
+swamp.witch_hut:
+  name: 隐士小屋
+  desc: "一间歪歪斜斜的小屋，里面有张炼金台，住着草药师 Morwen。她那个邪恶的姐姐，沼泽老妖婆，就蹲在屋外的影帽菇丛里。"
+swamp.sunken_road:
+  name: 沉陷古道
+  desc: "一条被泥沼吞掉一半的古老石板路。沼泽潜伏者和一具游荡的骷髅在此出没。遗迹在东边。"
+swamp.drowned_shrine:
+  name: 沉没神龛
+  desc: "一座被鬼火照亮的沉没神龛，夜里会有幽魂。石头上能找到影帽菇和少许水晶。"
+
+# 古凯尔遗迹
+ruins.road:
+  name: 古凯尔古道
+  desc: "村东一条开裂的古路，有骷髅巡逻，从这里起就是无法之地。学者 Ines 在松动的石堆间扎营。"
+ruins.outskirts:
+  name: 废墟外围
+  desc: "倒塌的房屋被骷髅和强盗翻了个遍。远古遗物偶尔会从碎石里冒出来。"
+ruins.collapsed_tower:
+  name: 坍塌之塔
+  desc: "一座倒塌的塔，闹着幽魂。碎石中闪着秘银矿石的光，还有远古遗物。"
+ruins.plaza:
+  name: 破碎广场
+  desc: "昔日的城市广场，如今成了强盗的十字路口。他们的藏身处在东边，墓窖台阶在南边。"
+ruins.overgrown_street:
+  name: 荒芜长街
+  desc: "藤蔓和树根把街道夺了回去。骷髅拖着脚步经过一道道银矿脉。"
+ruins.drowned_gate:
+  name: 沉没城门
+  desc: "古城的西门，沉在沼泽水里，连门轴都泡在水中。骷髅和一只沼泽潜伏者不太自在地共用着这里。"
+ruins.bandit_hideout:
+  name: 强盗藏身处
+  desc: "强盗头目的老巢，满是赃物和坏脾气。星铁就藏在这里。别一个人来。"
+ruins.catacomb_stairs:
+  name: 墓窖台阶
+  desc: "由骷髅把守的磨损台阶，通往墓窖深处。只有组队才能下去。"
+
+# 空洞摄政王墓窖
+dungeon.antechamber:
+  name: 前厅
+  desc: "一座冰冷的大厅，有一根太阳拉杆和一根月亮拉杆。必须由两名不同的智能体在一分钟内分别拉下，才能打开向南的路。"
+dungeon.lever_hall:
+  name: 拉杆厅
+  desc: "拉杆门后的大厅，由墓穴守卫看守。一只上了锁的旧箱子在等盗贼。"
+dungeon.trapped_corridor:
+  name: 陷阱走廊
+  desc: "白骨猎犬在挥舞着利刃的走廊里来回踱步。必须由盗贼解除陷阱，才能打开向南的路。"
+dungeon.rune_door:
+  name: 符文门
+  desc: "一扇闪着符文光芒的封印之门，有一名墓穴守卫和一只白骨猎犬值守。只有法师能读懂封印，打开向西的路。"
+dungeon.gate_hall:
+  name: 闸门厅
+  desc: "墓穴守卫分列一道巨大吊闸的两侧。必须由战士撑住吊闸，其他人才能向西通过。"
+dungeon.boss_lair:
+  name: 空洞摄政王的王座
+  desc: "空洞摄政王坐在尘土堆成的王座上统治此地。闸门旁的绞盘能把你的战士放进来。摄政王倒下后，宝库会在北边打开。"
+dungeon.vault:
+  name: 摄政王宝库
+  desc: "空洞摄政王的私人金库，终于安静下来。宝箱上的锁只有盗贼才能撬开。"

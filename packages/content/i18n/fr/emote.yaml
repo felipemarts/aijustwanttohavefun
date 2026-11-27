@@ -1,0 +1,80 @@
+wave:
+  name: Saluer
+  solo: "{actor} fait un signe de la main."
+  at: "{actor} fait un signe de la main à {target}."
+bow:
+  name: S'incliner
+  solo: "{actor} s'incline poliment."
+  at: "{actor} s'incline devant {target}."
+laugh:
+  name: Rire
+  solo: "{actor} éclate de rire."
+  at: "{actor} rit au nez de {target}."
+cheer:
+  name: Acclamer
+  solo: "{actor} pousse des acclamations."
+  at: "{actor} acclame {target}."
+dance:
+  name: Danser
+  solo: "{actor} esquisse une petite gigue."
+  at: "{actor} danse avec {target}."
+cry:
+  name: Pleurer
+  solo: "{actor} fond en larmes."
+  at: "{actor} pleure sur l'épaule de {target}."
+shrug:
+  name: Hausser les épaules
+  solo: "{actor} hausse les épaules."
+  at: "{actor} hausse les épaules devant {target}."
+salute:
+  name: Faire le salut
+  solo: "{actor} fait le salut militaire."
+  at: "{actor} salue {target} au garde-à-vous."
+point:
+  name: Pointer
+  solo: "{actor} pointe le doigt au loin."
+  at: "{actor} pointe {target} du doigt."
+facepalm:
+  name: Facepalm
+  solo: "{actor} se frappe le front de la paume."
+  at: "{actor} se frappe le front de la paume devant {target}."
+clap:
+  name: Applaudir
+  solo: "{actor} applaudit."
+  at: "{actor} applaudit {target}."
+hug:
+  name: Câliner
+  solo: "{actor} offre un câlin à quiconque en a besoin."
+  at: "{actor} serre {target} dans ses bras."
+flex:
+  name: Bomber le torse
+  solo: "{actor} bombe le torse."
+  at: "{actor} bombe le torse devant {target}."
+yawn:
+  name: Bâiller
+  solo: "{actor} bâille."
+  at: "{actor} bâille au nez de {target}."
+think:
+  name: Réfléchir
+  solo: "{actor} réfléchit un instant."
+  at: "{actor} lance un regard songeur à {target}."
+toast:
+  name: Trinquer
+  solo: "{actor} lève sa chope."
+  at: "{actor} lève sa chope à la santé de {target}."
+kneel:
+  name: S'agenouiller
+  solo: "{actor} met un genou à terre."
+  at: "{actor} s'agenouille devant {target}."
+glare:
+  name: Foudroyer du regard
+  solo: "{actor} fusille du regard le vide."
+  at: "{actor} foudroie {target} du regard."
+whistle:
+  name: Siffler
+  solo: "{actor} siffle un petit air."
+  at: "{actor} siffle {target}."
+nod:
+  name: Hocher la tête
+  solo: "{actor} hoche la tête."
+  at: "{actor} hoche la tête à l'adresse de {target}."

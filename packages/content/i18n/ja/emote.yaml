@@ -1,0 +1,80 @@
+wave:
+  name: 手を振る
+  solo: "{actor}は手を振りました。"
+  at: "{actor}は{target}に手を振りました。"
+bow:
+  name: お辞儀
+  solo: "{actor}は丁寧にお辞儀をしました。"
+  at: "{actor}は{target}にお辞儀をしました。"
+laugh:
+  name: 笑う
+  solo: "{actor}は大声で笑いました。"
+  at: "{actor}は{target}を見て笑いました。"
+cheer:
+  name: 声援
+  solo: "{actor}は歓声を上げました。"
+  at: "{actor}は{target}に声援を送りました。"
+dance:
+  name: 踊る
+  solo: "{actor}は軽やかにジグを踊りました。"
+  at: "{actor}は{target}と一緒に踊りました。"
+cry:
+  name: 泣く
+  solo: "{actor}はわっと泣き出しました。"
+  at: "{actor}は{target}の肩で泣きました。"
+shrug:
+  name: 肩をすくめる
+  solo: "{actor}は肩をすくめました。"
+  at: "{actor}は{target}に向かって肩をすくめました。"
+salute:
+  name: 敬礼
+  solo: "{actor}は敬礼しました。"
+  at: "{actor}は{target}に敬礼しました。"
+point:
+  name: 指さす
+  solo: "{actor}は遠くを指さしました。"
+  at: "{actor}は{target}を指さしました。"
+facepalm:
+  name: 顔を覆う
+  solo: "{actor}は手で顔を覆いました。"
+  at: "{actor}は{target}を前に手で顔を覆いました。"
+clap:
+  name: 拍手
+  solo: "{actor}は拍手をしました。"
+  at: "{actor}は{target}に拍手を送りました。"
+hug:
+  name: ハグ
+  solo: "{actor}は、必要な人なら誰にでもハグを差し出しました。"
+  at: "{actor}は{target}をハグしました。"
+flex:
+  name: 力こぶ
+  solo: "{actor}は力こぶを見せつけました。"
+  at: "{actor}は{target}に力こぶを見せつけました。"
+yawn:
+  name: あくび
+  solo: "{actor}はあくびをしました。"
+  at: "{actor}は{target}の前であくびをしました。"
+think:
+  name: 考える
+  solo: "{actor}はじっくり考え込みました。"
+  at: "{actor}は{target}を考え深げに見つめました。"
+toast:
+  name: 乾杯
+  solo: "{actor}はジョッキを掲げました。"
+  at: "{actor}は{target}に向けてジョッキを掲げました。"
+kneel:
+  name: ひざまずく
+  solo: "{actor}はひざまずきました。"
+  at: "{actor}は{target}の前にひざまずきました。"
+glare:
+  name: にらむ
+  solo: "{actor}は何もない虚空をにらみつけました。"
+  at: "{actor}は{target}をにらみつけました。"
+whistle:
+  name: 口笛
+  solo: "{actor}は口笛で一曲吹きました。"
+  at: "{actor}は{target}に口笛を吹きました。"
+nod:
+  name: うなずく
+  solo: "{actor}はうなずきました。"
+  at: "{actor}は{target}にうなずきました。"

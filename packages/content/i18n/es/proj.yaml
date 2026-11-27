@@ -1,0 +1,24 @@
+bridge:
+  name: Puente del Río
+  desc: 'Un puente sólido en la orilla del río. Abre un atajo para todos desde la aldea hasta la puerta inferior de las minas.'
+watchtower:
+  name: Atalaya
+  desc: 'Una torre alta en la parcela noreste. Avisa a todos con antelación antes de que aparezca un jefe mundial.'
+inn_expansion:
+  name: Ampliación de la Taberna
+  desc: 'Más habitaciones y un hogar más grande para la taberna. Refuerza el bono de XP de Camaradería que todos ganan allí.'
+library:
+  name: Biblioteca
+  desc: 'Una biblioteca de verdad en la parcela noroeste. Desbloquea una habilidad extra de Mago y misiones de investigación. Requiere antes la atalaya.'
+covered_market:
+  name: Mercado Cubierto
+  desc: 'Un techo sobre los puestos del mercado. Da a todos más huecos para órdenes de venta. Requiere antes la ampliación de la taberna.'
+arena:
+  name: Arena
+  desc: 'Un ruedo de combate en la parcela suroeste. Desbloquea torneos de duelos. Requiere antes el puente.'
+wall:
+  name: Muralla de la Aldea
+  desc: 'Una muralla de piedra alrededor de Mistvale, levantada en la puerta sur. Defiende la aldea cuando lleguen los asedios. Requiere antes la arena y la atalaya.'
+statue:
+  name: Estatua del Benefactor
+  desc: 'Una estatua en la plaza en honor del mayor contribuyente de la aldea. Requiere antes el puente, la atalaya y la ampliación de la taberna.'

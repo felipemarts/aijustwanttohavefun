@@ -1,0 +1,191 @@
+# Village de Mistvale
+village.square:
+  name: Place de Mistvale
+  desc: "Le cœur pavé de Mistvale, avec un tableau d'affichage et l'épicerie d'Olga. Taverne au nord, hôtel de ville au sud, marché à l'est, temple à l'ouest."
+village.tavern:
+  name: Taverne du Griffon Endormi
+  desc: "La salle chaude et bruyante de Berta. On y trouve le tableau d'affichage, une cuisine pour les Cuisiniers et des lits pour qui a besoin de repos."
+village.guild_hall:
+  name: Maison des guildes
+  desc: "Une salle de bannières et de paperasse où le greffier Vey enregistre les nouvelles guildes contre quelques pièces."
+village.plot_nw:
+  name: Parcelle nord-ouest
+  desc: "Un terrain vague orné d'un piquet plein d'espoir. La bibliothèque du village est prévue ici."
+village.plot_ne:
+  name: Parcelle nord-est
+  desc: "Un terrain herbeux avec une belle vue sur rien de particulier. La tour de guet est prévue ici."
+village.plot_far:
+  name: Parcelle de l'extrême est
+  desc: "Un terrain vague au bord du village, qui attend quelqu'un d'ambitieux avec de l'or."
+village.temple:
+  name: Temple de Mistvale
+  desc: "Un temple paisible tenu par sœur Ilse. Les tombés s'y réveillent, la bourse un peu plus légère."
+village.west_gate:
+  name: Porte ouest
+  desc: "Une porte de bois face aux arbres. La Forêt des Murmures s'étend à l'ouest, et l'alchimiste se trouve au sud."
+village.alchemist:
+  name: Boutique d'alchimie
+  desc: "La boutique de Mirela sent les herbes et le danger léger. Un établi d'alchimie bouillonne dans un coin, pour les Alchimistes."
+village.tailor:
+  name: Boutique du tailleur
+  desc: "Des rouleaux de tissu, un métier à tisser qui grince pour les Tailleurs, et Tomas, qui juge discrètement ta tenue."
+village.town_hall:
+  name: Hôtel de ville
+  desc: "Le commis Aldo y tient le registre des projets et l'urne électorale. Viens contribuer aux projets du village, voter ou te présenter à la mairie."
+village.smithy:
+  name: Forge
+  desc: "La forge de Gunnar rugit jour et nuit. Les Forgerons y fabriquent leurs objets, et la boutique vend des articles de métal."
+village.market:
+  name: Marché
+  desc: "Des rangées d'étals où les agents publient leurs ordres de vente, taxés par le maire. Le marchand Bram se ronge les sangs près de sa charrette."
+village.east_gate:
+  name: Porte est
+  desc: "Une porte gardée sur la vieille route. À l'est, les Ruines du Vieux Cael, où la loi ne te suit pas."
+village.plot_se:
+  name: Parcelle sud-est
+  desc: "Un terrain vague et tranquille derrière la forge, tiède de sa chaleur et plein de potentiel."
+village.plot_sw:
+  name: Parcelle sud-ouest
+  desc: "Un grand terrain plat d'herbe piétinée. L'arène est prévue ici."
+village.training_yard:
+  name: Cour d'entraînement
+  desc: "Des mannequins de paille et des conseils hurlés. Le sergent Holt y dresse les recrues, et les duels amicaux sont permis."
+village.south_gate:
+  name: Porte sud
+  desc: "Une porte gardée au-dessus des marais. Le Marais de la Fange, sans loi, s'étend au sud. La muraille du village est prévue ici."
+village.plot_s:
+  name: Parcelle sud
+  desc: "Un terrain vague entre la forge et la porte sud. Bonne terre, rien de construit pour l'instant."
+village.north_road:
+  name: Route du nord
+  desc: "Une route défoncée qui sort du village. La berge de la rivière est à l'est et le sentier des Collines du Dos-Gris à l'ouest."
+village.river_bank:
+  name: Berge de la rivière
+  desc: "Une rivière rapide avec du bois flotté à ramasser. Les mines sont juste en face, au nord, une fois que le village aura bâti le pont."
+
+# Forêt des Murmures
+forest.edge:
+  name: Lisière de la forêt
+  desc: "Des arbres ensoleillés où le ranger Fen fait le guet. Des slimes se dandinent, et le bois et les herbes vertes se récoltent facilement."
+forest.path:
+  name: Sentier de la forêt
+  desc: "Un sentier sinueux sous des feuilles qui murmurent. Slimes et loups y rôdent, et le bois ne manque pas."
+forest.glade:
+  name: Clairière lunaire
+  desc: "Une clairière riche en herbes vertes, avec un peu d'herbe lunaire. Les loups chassent ici, et un loup d'ombre les rejoint la nuit."
+forest.thicket:
+  name: Fourré des araignées
+  desc: "Des ronces denses tendues de toiles. Des araignées géantes guettent parmi des arbres bons pour le bois."
+forest.old_oak:
+  name: Le Vieux Chêne
+  desc: "Un énorme chêne ancien où quatre sentiers se croisent. Des sangliers fouillent autour du tronc, et les branches tombées font du bon bois."
+forest.hollow:
+  name: Creux profond
+  desc: "Une impasse sombre où les jeunes ents craquent et où l'herbe lunaire pousse dru. Les loups d'ombre rôdent la nuit."
+forest.creek:
+  name: Ruisseau bavard
+  desc: "Un ruisseau froid, avec des herbes vertes sur les berges et des pierres libres dans le lit. Des slimes et quelques sangliers viennent y boire."
+forest.mushroom_ring:
+  name: Cercle de champignons
+  desc: "Un cercle de champignons pâles qui bourdonne doucement. Des araignées géantes et un jeune ent protègent l'herbe lunaire."
+
+# Collines du Dos-Gris et mines
+hills.trail:
+  name: Sentier des collines
+  desc: "Un sentier rocailleux qui monte hors du village. Des sangliers broutent entre les rochers, et la pierre se ramasse facilement."
+hills.switchback:
+  name: Lacets
+  desc: "Un chemin en zigzag dans les collines. Des chauves-souris des cavernes et un loup égaré harcèlent les grimpeurs. De la pierre et un peu de minerai de cuivre affleurent."
+hills.pass:
+  name: Col du Dos-Gris
+  desc: "Un col venteux tenu par des kobolds. L'entrée de la mine est à l'est."
+mines.entrance:
+  name: Entrée de la mine
+  desc: "La bouche boisée des mines, où le contremaître Brakka hurle par-dessus les chauves-souris des cavernes. Minerai de cuivre et pierre à portée de main."
+mines.tunnel:
+  name: Tunnel principal
+  desc: "Un long tunnel de vieux rails et de kobolds. Du minerai de fer et de cuivre garnit les parois. La porte basse est au sud."
+mines.lower_gate:
+  name: Porte basse
+  desc: "La porte de derrière des mines, tenue par des kobolds, avec un peu de minerai de fer. Elle s'ouvre au sud sur la rivière une fois le pont bâti."
+mines.deep_shaft:
+  name: Puits profond
+  desc: "Un puits vertigineux où des golems de roche rôdent en grinçant. Riche en minerai de fer, avec quelques veines d'argent."
+mines.flooded_gallery:
+  name: Galerie inondée
+  desc: "De l'eau noire jusqu'aux genoux et des échos qui goutent. Des chauves-souris des cavernes et un golem de roche gardent le minerai de fer."
+mines.crystal_cavern:
+  name: Caverne de cristal
+  desc: "Une grotte scintillante de cristal et de minerai d'argent. Les scarabées de cristal considèrent que tout est à eux."
+mines.forge_ruin:
+  name: Forge en ruine
+  desc: "Une forge ancienne, froide depuis longtemps et inutile pour fabriquer quoi que ce soit. Le contremaître kobold et son équipe la dirigent maintenant. Du minerai de fer traîne dans les gravats."
+
+# Marais de la Fange
+swamp.marsh_edge:
+  name: Orée du marais
+  desc: "La route s'enfonce dans la boue et la loi s'arrête ici. Des crapauds de la fange coassent parmi les lys des tourbières."
+swamp.reeds:
+  name: Roseaux murmurants
+  desc: "De grands roseaux cachent des rôdeurs des tourbières et un crapaud de la fange. Lys des tourbières et herbes vertes poussent dans les bas-fonds."
+swamp.bog:
+  name: Tourbière noire
+  desc: "Une boue qui aspire et de mauvaises odeurs. Des rôdeurs des tourbières attendent en dessous, des feux follets dérivent la nuit, et la coiffe d'ombre pousse parmi les lys."
+swamp.witch_hut:
+  name: Cabane de l'ermite
+  desc: "Une cabane de guingois avec un établi d'alchimie, la maison de l'herboriste Morwen. Sa méchante sœur, la guenaude des marais, campe dehors parmi les coiffes d'ombre."
+swamp.sunken_road:
+  name: Route engloutie
+  desc: "Une vieille route pavée à moitié avalée par la fange. Des rôdeurs des tourbières et un squelette errant la hantent. Les ruines sont à l'est."
+swamp.drowned_shrine:
+  name: Sanctuaire noyé
+  desc: "Un sanctuaire englouti éclairé par des feux follets, avec un spectre la nuit. On trouve de la coiffe d'ombre et un peu de cristal sur les pierres."
+
+# Ruines du Vieux Cael
+ruins.road:
+  name: Route du Vieux Cael
+  desc: "Une route fissurée à l'est du village, patrouillée par des squelettes et sans loi à partir d'ici. L'érudite Ines campe parmi les pierres éparses."
+ruins.outskirts:
+  name: Faubourgs en ruine
+  desc: "Des maisons effondrées fouillées par des squelettes et des bandits. Des reliques anciennes surgissent parfois des gravats."
+ruins.collapsed_tower:
+  name: Tour effondrée
+  desc: "Une tour tombée, hantée par des spectres. Du minerai de mithril brille dans les débris, avec des reliques anciennes."
+ruins.plaza:
+  name: Place brisée
+  desc: "L'ancienne place de la cité, aujourd'hui carrefour de bandits. Leur repaire est à l'est et l'escalier des catacombes au sud."
+ruins.overgrown_street:
+  name: Rue envahie
+  desc: "Lianes et racines ont repris la rue. Des squelettes la traversent d'un pas traînant, près de filons de minerai d'argent."
+ruins.drowned_gate:
+  name: Porte noyée
+  desc: "La porte ouest de l'ancienne cité, enfoncée jusqu'aux gonds dans l'eau du marais. Squelettes et rôdeur des tourbières la partagent à contrecœur."
+ruins.bandit_hideout:
+  name: Repaire des bandits
+  desc: "L'antre du capitaine bandit, plein de butin et de mauvaises manières. Du fer d'étoile est planqué ici. N'y va pas seul."
+ruins.catacomb_stairs:
+  name: Escalier des catacombes
+  desc: "Des marches usées gardées par des squelettes, qui descendent vers les catacombes. Seul un groupe peut descendre."
+
+# Catacombes du Régent Creux
+dungeon.antechamber:
+  name: Antichambre
+  desc: "Une salle froide avec un levier du soleil et un levier de la lune. Deux agents différents doivent les actionner en moins d'une minute pour ouvrir la voie du sud."
+dungeon.lever_hall:
+  name: Salle des leviers
+  desc: "La salle derrière la porte à leviers, surveillée par des gardes de la crypte. Un vieux coffre verrouillé attend un Voleur."
+dungeon.trapped_corridor:
+  name: Couloir piégé
+  desc: "Des chiens d'os arpentent un couloir de lames qui se balancent. Un Voleur doit désarmer le piège pour ouvrir la voie du sud."
+dungeon.rune_door:
+  name: Porte runique
+  desc: "Une porte scellée qui brille de runes, gardée par un garde de la crypte et un chien d'os. Seul un Mage peut lire le sceau et ouvrir la voie de l'ouest."
+dungeon.gate_hall:
+  name: Salle de la herse
+  desc: "Des gardes de la crypte encadrent une massive herse. Un Guerrier doit la tenir ouverte pendant que les autres passent à l'ouest."
+dungeon.boss_lair:
+  name: Trône du Régent Creux
+  desc: "Le Régent Creux règne ici depuis un trône de poussière. Un treuil près de la herse laisse entrer ton Guerrier. Le caveau s'ouvre au nord une fois le Régent tombé."
+dungeon.vault:
+  name: Caveau du Régent
+  desc: "Le trésor privé du Régent Creux, enfin tranquille. Le coffre a une serrure que seul un Voleur peut crocheter."

@@ -1,0 +1,117 @@
+# Weapons
+rusty_sword: { name: 錆びた剣 }
+iron_sword: { name: 鉄の剣 }
+steel_greatsword: { name: 鋼の大剣 }
+mithril_blade: { name: ミスリルの刃 }
+oathkeeper: { name: オースキーパー }
+apprentice_staff: { name: 見習いの杖 }
+oak_staff: { name: 樫の杖 }
+crystal_staff: { name: 水晶の杖 }
+starfall_staff: { name: 星降りの杖 }
+worn_dagger: { name: 使い古しの短剣 }
+iron_dagger: { name: 鉄の短剣 }
+shadow_dagger: { name: 影の短剣 }
+mithril_kris: { name: ミスリルのクリス }
+wooden_mace: { name: 木のメイス }
+iron_mace: { name: 鉄のメイス }
+holy_mace: { name: 聖なるメイス }
+sunlit_scepter: { name: 陽光の笏 }
+hollow_regents_scepter: { name: うつろの摂政の笏 }
+
+# Armor
+cloth_armor: { name: 布の鎧 }
+padded_armor: { name: キルトアーマー }
+leather_armor: { name: 革の鎧 }
+chainmail_armor: { name: 鎖帷子 }
+plate_armor: { name: プレートアーマー }
+mithril_mail: { name: ミスリルの鎖帷子 }
+wyrmscale_armor: { name: ワイアームの鱗鎧 }
+
+# Trinkets
+lucky_pebble: { name: 幸運の小石 }
+copper_ring: { name: 銅の指輪 }
+wolf_fang_charm: { name: 狼牙のお守り }
+moonstone_amulet: { name: 月長石のアミュレット }
+crystal_pendant: { name: 水晶のペンダント }
+bandit_signet: { name: 山賊の印章指輪 }
+regent_eye: { name: 摂政の瞳 }
+colossus_heart: { name: 巨像の心臓 }
+
+# Consumables
+minor_potion: { name: 小回復ポーション }
+health_potion: { name: 回復ポーション }
+greater_potion: { name: 大回復ポーション }
+mana_potion: { name: マナポーション }
+greater_mana_potion: { name: 大マナポーション }
+elixir_of_fury: { name: 激怒のエリクサー }
+
+# Food
+bread: { name: パン }
+travelers_ration: { name: 旅人の携帯食 }
+hearty_stew: { name: 具だくさんシチュー }
+roast_boar: { name: 猪の丸焼き }
+mushroom_pie: { name: きのこパイ }
+honey_cake: { name: はちみつケーキ }
+
+# Materials
+wood: { name: 木材 }
+stone: { name: 石材 }
+copper_ore: { name: 銅鉱石 }
+iron_ore: { name: 鉄鉱石 }
+silver_ore: { name: 銀鉱石 }
+mithril_ore: { name: ミスリル鉱石 }
+star_iron: { name: 星鉄 }
+crystal: { name: 水晶 }
+coal: { name: 木炭 }
+green_herb: { name: 緑の薬草 }
+moon_herb: { name: 月の薬草 }
+bog_lily: { name: 沼ユリ }
+shadowcap: { name: 影傘 }
+flask: { name: フラスコ }
+oil: { name: 油 }
+linen: { name: 亜麻布 }
+silk: { name: 絹 }
+leather: { name: 革 }
+wolf_pelt: { name: 狼の毛皮 }
+raw_meat: { name: 生肉 }
+buckle: { name: バックル }
+pot: { name: 調理鍋 }
+iron_ingot: { name: 鉄のインゴット }
+bone: { name: 骨 }
+slime_gel: { name: スライムゼリー }
+bat_wing: { name: コウモリの羽 }
+ancient_relic: { name: 古代の遺物 }
+ectoplasm: { name: エクトプラズム }
+
+# Bags
+small_bag: { name: 小さな鞄 }
+large_bag: { name: 大きな鞄 }
+
+# Dyes
+red_dye: { name: 赤の染料 }
+blue_dye: { name: 青の染料 }
+green_dye: { name: 緑の染料 }
+gold_dye: { name: 金の染料 }
+pearl_dye: { name: 真珠色の染料 }
+
+# Cosmetics
+cos_crown: { name: 王冠 }
+cos_top_hat: { name: シルクハット }
+cos_circlet: { name: サークレット }
+cos_starry_hat: { name: 星空の三角帽子 }
+cos_witch_hat: { name: 魔女の帽子 }
+cos_flower_crown: { name: 花冠 }
+cos_chef_hat: { name: コック帽 }
+cos_royal_doublet: { name: 王家のダブレット }
+cos_silk_robe: { name: 絹のローブ }
+cos_royal_cape: { name: 王家のマント }
+cos_feather_cloak: { name: 羽根のマント }
+cos_fur_mantle: { name: 毛皮のケープ }
+cos_leaf_cloak: { name: 木の葉のマント }
+cos_monocle: { name: 片眼鏡 }
+cos_goggles: { name: ゴーグル }
+
+# Quest items
+lost_locket: { name: なくしたロケット }
+sealed_letter: { name: 封をされた手紙 }
+regent_sigil: { name: 摂政の紋章 }

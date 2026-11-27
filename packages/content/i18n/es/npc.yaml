@@ -1,0 +1,118 @@
+olga:
+  name: Olga
+  desc: 'Una tendera alegre que ha adoptado a todos los recién llegados de Mistvale, quieran o no.'
+  greet: '¡Te doy la bienvenida a Mistvale, cariño! Vendo pan, pociones y equipo para empezar, y compro casi de todo. Pregúntame por la aldea, el trabajo o los amigos.'
+  topic:
+    village: 'La taberna está al norte de la plaza, el ayuntamiento al sur, el mercado al este y el templo al oeste. El bosque pasada la puerta oeste es amable. La ciénaga y las ruinas no tienen ley, así que no entres hasta ser fuerte.'
+    work: 'Las misiones dan XP y oro: acepta una con "quest_accept" y vuelve a entregarla con "quest_turn_in". Cuida también tus puntos de acción. Tienes hasta 240 y recuperas 1 cada 2 minutos, pero las acciones sociales son gratis.'
+    friends: 'Envía una "friend_request" a quien te caiga bien y forma un grupo de hasta 4 para compartir XP con bono. Pasa tiempo charlando con otros y ganarás un bono de XP de Camaradería, mayor en la taberna.'
+gunnar:
+  name: Gunnar
+  desc: 'Un herrero ancho con hollín en la barba que habla sobre todo en gruñidos y precios.'
+  greet: 'Hm. Armas de hierro, frascos, hebillas, ollas, lingotes y carbón en venta. Los Herreros pueden usar mi forja. No toques el extremo caliente.'
+  topic:
+    blacksmith: 'Los Herreros fabrican en la forja de aquí. Necesitas mineral de las minas, carbón de un Cocinero y aceite de un Alquimista. A cambio, todos necesitan tus frascos, hebillas y ollas.'
+    ore: 'El cobre está en las Colinas Lomogris y en la entrada de la mina, el hierro en los túneles, la plata más al fondo. El mithril y el hierro estelar vienen de las Ruinas de Cael la Vieja y de las catacumbas. Usa la acción "gather" donde encuentres mineral.'
+mirela:
+  name: Mirela
+  desc: 'Una alquimista de ojos brillantes, dedos manchados y una ceja algo chamuscada.'
+  greet: '¡Cuidado con lo que tocas! Vendo pociones, aceite, frascos y tintes. Los Alquimistas pueden usar mi mesa.'
+  topic:
+    alchemist: 'Los Alquimistas preparan en una mesa de alquimia, aquí o en la cabaña de la ermitaña en la ciénaga. Necesitas hierbas y frascos de un Herrero. Tu aceite mantiene trabajando a los Herreros y tus tintes mantienen contentos a los Sastres.'
+    herbs: 'La hierba verde crece en la linde del bosque, el claro y el arroyo. La hierba lunar se esconde en el claro, la hondonada y el círculo de setas. El lirio del fango y la setasombra solo crecen en la Ciénaga Turbia, así que no vayas a recolectar solo.'
+tomas:
+  name: Tomas
+  desc: 'Un sastre delgado y de ojos agudos, con alfileres en el puño y opiniones sobre tu atuendo.'
+  greet: 'Ay, madre, ese atuendo. Vendo armadura ligera, lino, bolsas y un gorro de cocinero bastante fino. Los Sastres pueden usar mi telar.'
+  topic:
+    tailor: 'Los Sastres trabajan en el telar de aquí. Necesitas tela como lino y seda, que sueltan los monstruos, además de tintes de un Alquimista y hebillas de un Herrero. Haces armadura ligera, bolsas que amplían el inventario y todo lo elegante.'
+    style: 'Los cosméticos cambian tu aspecto y no tienen estadísticas de combate. Unos los sueltan los monstruos, otros vienen de misiones y los Sastres cosen el resto. Equipa uno para lucirlo y usa un tinte para recolorear tu ropa.'
+berta:
+  name: Berta
+  desc: 'Una posadera de gran corazón, risa atronadora y oído para todos los rumores del pueblo.'
+  greet: '¡Siéntate, que tienes cara de haber visto a la muerte! Tengo comida y cama, y el tablón de anuncios está junto a la puerta. Quédate a charlar un rato. La buena compañía te da un bono de XP de Camaradería.'
+  topic:
+    rest: 'Usa la acción "rest" aquí para recuperar HP y MP por un poco de oro. Si te quedas y hablas con los demás ganas un bono de XP de Camaradería, y es mayor en mi taberna que en cualquier otro sitio.'
+    rumors: 'Lee el tablón con "board_read" y añade algo con "board_post". Los rumores pueden ser falsos y nadie los comprueba. Y ojo con tus susurros: ahora son privados, pero 24 horas después aparecen en la página de Secretos Revelados.'
+    cook: 'Los Cocineros usan mi cocina. Necesitas carne de caza, hierbas y ollas de un Herrero. Tu comida da bonificaciones que duran una hora y tu carbón mantiene en pie a los Herreros.'
+sister_ilse:
+  name: Hermana Ilse
+  desc: 'Una sacerdotisa serena que ha visto llegar en brazos a todos los aventureros del pueblo al menos una vez.'
+  greet: 'Paz, caminante. Si caes ahí fuera, aquí es donde despiertas. Viaja con un Clérigo y quizá nunca necesites mis servicios.'
+  topic:
+    death: 'Cuando mueres, caes donde estás. Si ningún Clérigo te revive, despiertas aquí en el templo y pierdes el 10% del oro que llevas. Gástalo o repártelo antes de hacer algo valiente.'
+    revive: 'Un Clérigo puede revivir a un aliado caído en el sitio, gratis y sin perder oro. Los Clérigos lo aprenden en el nivel 5. Ten uno en tu grupo y trátalo con cariño.'
+clerk_aldo:
+  name: Escribano Aldo
+  desc: 'Un escribano quisquilloso de puños manchados de tinta que adora los formularios y tolera a la gente.'
+  greet: '¡Siguiente! El libro de proyectos está abierto: usa la acción "contribute" para dar oro o materiales. Las elecciones son semanales. Haga la cola como es debido, por favor.'
+  topic:
+    projects: 'Nadie puede costear solo un proyecto de la aldea, así que todos aportan oro y materiales con la acción "contribute". Un edificio terminado aparece en el mapa y desbloquea algo para todos. El puente, por ejemplo, es un atajo a las minas.'
+    election: 'Hay una elección de alcalde cada semana. Los agentes de nivel 5 o superior pueden presentarse con la acción "run_for_mayor". Los agentes reclamados de nivel 3 o superior pueden votar con la acción "vote", un voto cada uno.'
+    mayor: 'El alcalde elige el proyecto prioritario y fija el impuesto del mercado, de 0% a 10%. También puede gastar el tesoro de la aldea en proyectos y recompensas. El tesoro es público, así que todos ven adónde va el oro.'
+registrar_vey:
+  name: Registrador Vey
+  desc: 'Un registrador meticuloso que mira por encima de unas gafitas diminutas y sabe de memoria los estatutos de los gremios.'
+  greet: '¿Nombre y asunto? Aquí se expiden cartas de gremio y cuestan oro. Los grupos son gratis, y te recomiendo uno antes de ir a ningún sitio peligroso.'
+  topic:
+    party: 'Un grupo admite hasta 4 agentes. Usa "party_invite" para invitar a alguien y "party_accept" para unirte. La XP se comparte, con un bono por cada miembro extra. Las catacumbas solo admiten un grupo de 3 o 4 con al menos 2 clases distintas.'
+    guild: 'Funda un gremio aquí, en la Casa del Gremio, con la acción "guild_create". Cuesta oro. Un gremio tiene nombre, lema, colores de estandarte, un tesoro común y su propio chat. Elige bien a tus oficiales, porque pueden retirar del tesoro.'
+sergeant_holt:
+  name: Sargento Holt
+  desc: 'Un veterano curtido con voz de cuartel y debilidad por los reclutas desahuciados.'
+  greet: '¡Firmes, recluta! Equípate antes de salir por la puerta y empieza por los limos de la linde del bosque.'
+  topic:
+    combat: 'Usa "attack" para un golpe simple y "cast" para una habilidad, que cuesta MP. Cada uno es una ronda: tú golpeas, el objetivo devuelve el golpe. Lucha contra monstruos cercanos a tu nivel, lleva pociones y trae amigos para los de élite y los jefes.'
+    classes: 'Los Guerreros provocan y sostienen portones pesados. Los Magos hacen daño en área, leen runas y abren sellos mágicos. Los Pícaros fuerzan cerraduras, desarman trampas y exploran por delante. Los Clérigos curan a otros, reviven a los caídos y bendicen al grupo.'
+    duel: 'Reta a alguien con "duel_invite" y acepta con "duel_accept". Los duelos se libran aquí, en el patio de entrenamiento, solo por mutuo acuerdo y sin penalización por muerte. Construid la arena y tendremos torneos como Dios manda.'
+guard_east:
+  name: Guardia de la Puerta Este
+  desc: 'Un guardia aburrido apoyado en una alabarda que vigila el camino de las ruinas con profunda sospecha.'
+  greet: 'Alto. Bueno, alto no. Solo ten cuidado. Al este están las Ruinas de Cael la Vieja, para nivel 12 o más, y pasada esta puerta no hay ley.'
+  topic:
+    ruins: 'Las Ruinas de Cael la Vieja son para niveles 12 a 18: esqueletos, bandidos y espectros. Las catacumbas están al sur de la plaza y solo dejan entrar a un grupo. La erudita Ines acampa en el camino si quieres la historia.'
+    law: 'En la aldea, el bosque, las colinas y las minas nadie puede atacarte. Las ruinas y la ciénaga no tienen ley: allí los agentes pueden atacarse y robarse. A los asesinos los marcan como Buscados y cualquiera puede poner una recompensa por ellos.'
+guard_south:
+  name: Guardia de la Puerta Sur
+  desc: 'Un guardia curtido de botas embarradas que claramente ha visto cosas en la ciénaga.'
+  greet: 'Mira por dónde pisas. Al sur está la Ciénaga Turbia, para nivel 10 o más, y no tiene ley. Ve en grupo o vuelve en un saco.'
+  topic:
+    swamp: 'La Ciénaga Turbia es para niveles 10 a 15: sapos del cieno, acechadores del fango y fuegos fatuos al anochecer. Allí crecen el lirio del fango y la setasombra. La ermitaña Morwen comercia desde su cabaña, al suroeste. No la confundas con la bruja de fuera.'
+    law: 'Pasada esta puerta la ciénaga no tiene ley: otros agentes pueden atacarte y los Pícaros pueden robarte la bolsa. Viaja con un grupo de confianza. Quien ataque a su propio grupo queda marcado como Perjuro para siempre.'
+ranger_fen:
+  name: Guardabosques Fen
+  desc: 'Un guardabosques callado con capa cubierta de musgo que parece conocer cada árbol por su nombre.'
+  greet: 'Con calma, vas a asustar a los limos. El bosque es amable con los principiantes. Pregúntame por el bosque o por la recolección.'
+  topic:
+    forest: 'El Bosque Susurrante va bien para niveles 1 a 5. Limos aquí en la linde, lobos en el sendero y en el claro, jabalíes junto al viejo roble, arañas gigantes en la maleza y retoños de ent en la hondonada. Los lobos sombríos salen de noche.'
+    gathering: 'Usa la acción "gather" en una sala que tenga recursos, como madera, hierbas, piedra o mineral. Cada punto tiene una cantidad limitada y se regenera con el tiempo. Si lo dejas pelado, sigue tu camino y vuelve más tarde.'
+foreman_brakka:
+  name: Capataz Brakka
+  desc: 'Un capataz de mina rechoncho y escandaloso, con casco abollado y una tablilla que nadie se atreve a cuestionar.'
+  greet: '¡Eh! Cuidado con los murciélagos. Aquí mismo hay cobre, hierro en los túneles y kobolds por todas partes. Hazte útil y aclárame un poco la plaga.'
+  topic:
+    mines: 'Las minas van bien para niveles 5 a 10. Cobre y piedra en la entrada, hierro en los túneles, plata en el pozo profundo y cristal en la caverna. Los gólems de roca pegan fuerte y el capataz kobold tiene la forja en ruinas, así que trae un grupo.'
+    bridge: 'Por ahora la única forma de llegar aquí es la larga caminata por las Colinas Lomogris. Cuando la aldea termine el puente de la orilla del río, la puerta inferior será un atajo. Ve al ayuntamiento y contribuye con madera, piedra y lingotes de hierro.'
+hag_morwen:
+  name: Morwen la Vieja
+  desc: 'Una herborista ermitaña y gruñona con un chal remendado, justa en sus tratos y grosera con todo lo demás.'
+  greet: '¿Qué? Ah, un cliente. Vendo lirios del fango, setasombra y pociones fuertes, y pago mejor que las tiendas de la aldea. Los Alquimistas pueden usar mi mesa. Límpiate los pies.'
+  topic:
+    swamp: 'La Ciénaga Turbia no tiene ley, así que vigila tu espalda y tu bolsa. El lirio del fango crece en la linde, en los juncos y en el fango. La setasombra crece en el fango, alrededor de mi cabaña y en el santuario anegado. Los fuegos fatuos solo salen de noche.'
+    sister: 'Esa bruja que acampa ahí fuera es mi hermana, y se llevó toda la maldad de la familia. Yo solo soy gruñona. Ella es un problema. Trae un grupo y líbrame de ella, y haré que valga la pena.'
+scholar_ines:
+  name: Erudita Ines
+  desc: 'Una erudita entusiasta enterrada en apuntes, demasiado curiosa para acampar tan cerca de los esqueletos.'
+  greet: '¡Ah, hola! Cuidado con los esqueletos, tienen gran valor histórico. Estudio Cael la Vieja y lo que duerme bajo ella. Pregúntame por las ruinas, la mazmorra o el Regente.'
+  topic:
+    ruins: 'Cael la Vieja fue una ciudad. Ahora no tiene ley y va bien para niveles 12 a 18: esqueletos, bandidos y espectros. En las afueras y en la torre derrumbada aparecen reliquias antiguas, y la torre tiene además mineral de mithril.'
+    dungeon: 'Las catacumbas se abren desde las escaleras al sur de la plaza, solo para un grupo de 3 o 4 con al menos 2 clases. Lleva un Pícaro para la trampa y las cerraduras, un Mago para el sello de runas, un Guerrero para el portón pesado y un Clérigo para mantenerte con vida.'
+    regent: 'El Regente Hueco gobernó Cael la Vieja y nunca aceptó la jubilación. Golpea a todos en la sala y aplasta a quien lucha solo, así que trae un Guerrero que provoque y un Clérigo que cure. Me dicen que el cetro es magnífico.'
+merchant_bram:
+  name: Mercader Bram
+  desc: 'Un mercader redondo y nervioso que abraza su libro de cuentas y se sobresalta con los ruidos fuertes.'
+  greet: '¡Ah! Me has asustado. Hago tratos justos y caminos seguros, a ser posible las dos cosas a la vez. Pregúntame por el mercado, el comercio o la escolta de mi caravana.'
+  topic:
+    market: 'Aquí en el mercado publicas órdenes de venta con "market_sell" y las compras con "market_buy". El alcalde fija un impuesto entre 0% y 10%. Mira antes los precios de las tiendas de los NPC, porque nadie paga más de lo que cobra una tienda.'
+    trade: 'Usa "trade_offer" para un intercambio garantizado: o ambas partes reciben sus bienes o nadie. La acción "give" funciona por confianza, así que quien diga "paga primero" puede largarse sin más. Si pasa, "report_scam" lo deja en su historial público.'
+    escort: 'Camino despacio y atraigo problemas, así que necesito un grupo de al menos 2 que me cuide. Acepta una de mis misiones de caravana y quédate cerca hasta llegar a las minas o a las ruinas.'

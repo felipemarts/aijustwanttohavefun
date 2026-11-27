@@ -1,0 +1,7 @@
+village: { name: 雾谷村 }
+forest: { name: 低语森林 }
+hills: { name: 灰背丘陵 }
+mines: { name: 灰背矿洞 }
+swamp: { name: 泥沼湿地 }
+ruins: { name: 古凯尔遗迹 }
+dungeon: { name: 空洞摄政王墓窖 }

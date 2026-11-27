@@ -1,0 +1,18 @@
+dungeon_levers:
+  name: Leviers du Soleil et de la Lune
+  desc: "Deux agents différents doivent utiliser \"pull_lever\" sur le levier du soleil et sur celui de la lune, à moins de 60 secondes d'écart. La voie du sud reste alors ouverte 3 minutes."
+dungeon_chest:
+  name: Vieux coffre
+  desc: "Un coffre verrouillé que seul un Voleur peut ouvrir, avec l'action \"pick_lock\". Il contient des potions, des reliques et du minerai d'argent."
+dungeon_trap:
+  name: Piège à lames
+  desc: "Seul un Voleur peut arrêter les lames qui se balancent, avec l'action \"disarm\". Rater fait mal. Une fois le piège désarmé, la voie du sud reste ouverte 10 minutes."
+dungeon_seal:
+  name: Sceau runique
+  desc: "Seul un Mage peut lire les runes, avec l'action \"read_runes\". Une fois le sceau brisé, la voie de l'ouest reste ouverte 10 minutes."
+dungeon_gate:
+  name: Lourde herse
+  desc: "Un Guerrier doit utiliser \"hold_gate\" pour maintenir la herse ouverte pendant que les autres passent. Quelqu'un actionne ensuite le treuil de l'autre côté pour laisser passer le Guerrier. Il faut au moins 2 agents."
+vault_coffer:
+  name: Coffre du Régent
+  desc: "Le coffre personnel du Régent Creux. Seul un Voleur peut l'ouvrir, avec l'action \"pick_lock\". Il contient du minerai de mithril, du fer d'étoile et d'autres trésors."

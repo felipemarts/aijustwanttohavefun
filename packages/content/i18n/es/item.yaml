@@ -1,0 +1,117 @@
+# Armas
+rusty_sword: { name: espada oxidada }
+iron_sword: { name: espada de hierro }
+steel_greatsword: { name: mandoble de acero }
+mithril_blade: { name: hoja de mithril }
+oathkeeper: { name: Guardajuramentos }
+apprentice_staff: { name: bastón de aprendiz }
+oak_staff: { name: bastón de roble }
+crystal_staff: { name: bastón de cristal }
+starfall_staff: { name: bastón de lluvia estelar }
+worn_dagger: { name: daga desgastada }
+iron_dagger: { name: daga de hierro }
+shadow_dagger: { name: daga sombría }
+mithril_kris: { name: kris de mithril }
+wooden_mace: { name: maza de madera }
+iron_mace: { name: maza de hierro }
+holy_mace: { name: maza sagrada }
+sunlit_scepter: { name: cetro bañado de sol }
+hollow_regents_scepter: { name: cetro del Regente Hueco }
+
+# Armaduras
+cloth_armor: { name: armadura de tela }
+padded_armor: { name: armadura acolchada }
+leather_armor: { name: armadura de cuero }
+chainmail_armor: { name: armadura de cota de malla }
+plate_armor: { name: armadura de placas }
+mithril_mail: { name: cota de mithril }
+wyrmscale_armor: { name: armadura de escamas de wyrm }
+
+# Abalorios
+lucky_pebble: { name: guijarro de la suerte }
+copper_ring: { name: anillo de cobre }
+wolf_fang_charm: { name: amuleto de colmillo de lobo }
+moonstone_amulet: { name: amuleto de piedra lunar }
+crystal_pendant: { name: colgante de cristal }
+bandit_signet: { name: sello de bandido }
+regent_eye: { name: ojo del Regente }
+colossus_heart: { name: corazón de coloso }
+
+# Consumibles
+minor_potion: { name: poción de salud menor }
+health_potion: { name: poción de salud }
+greater_potion: { name: poción de salud mayor }
+mana_potion: { name: poción de maná }
+greater_mana_potion: { name: poción de maná mayor }
+elixir_of_fury: { name: elixir de furia }
+
+# Comida
+bread: { name: pan }
+travelers_ration: { name: ración de viajero }
+hearty_stew: { name: estofado contundente }
+roast_boar: { name: jabalí asado }
+mushroom_pie: { name: pastel de setas }
+honey_cake: { name: pastel de miel }
+
+# Materiales
+wood: { name: madera }
+stone: { name: piedra }
+copper_ore: { name: mineral de cobre }
+iron_ore: { name: mineral de hierro }
+silver_ore: { name: mineral de plata }
+mithril_ore: { name: mineral de mithril }
+star_iron: { name: hierro estelar }
+crystal: { name: cristal }
+coal: { name: carbón }
+green_herb: { name: hierba verde }
+moon_herb: { name: hierba lunar }
+bog_lily: { name: lirio del fango }
+shadowcap: { name: setasombra }
+flask: { name: frasco }
+oil: { name: aceite }
+linen: { name: lino }
+silk: { name: seda }
+leather: { name: cuero }
+wolf_pelt: { name: piel de lobo }
+raw_meat: { name: carne cruda }
+buckle: { name: hebilla }
+pot: { name: olla }
+iron_ingot: { name: lingote de hierro }
+bone: { name: hueso }
+slime_gel: { name: gel de limo }
+bat_wing: { name: ala de murciélago }
+ancient_relic: { name: reliquia antigua }
+ectoplasm: { name: ectoplasma }
+
+# Bolsas
+small_bag: { name: bolsa pequeña }
+large_bag: { name: bolsa grande }
+
+# Tintes
+red_dye: { name: tinte rojo }
+blue_dye: { name: tinte azul }
+green_dye: { name: tinte verde }
+gold_dye: { name: tinte dorado }
+pearl_dye: { name: tinte nacarado }
+
+# Cosméticos
+cos_crown: { name: corona }
+cos_top_hat: { name: chistera }
+cos_circlet: { name: diadema }
+cos_starry_hat: { name: sombrero de mago estrellado }
+cos_witch_hat: { name: sombrero de bruja }
+cos_flower_crown: { name: corona de flores }
+cos_chef_hat: { name: gorro de cocinero }
+cos_royal_doublet: { name: jubón real }
+cos_silk_robe: { name: ropón de seda }
+cos_royal_cape: { name: capa real }
+cos_feather_cloak: { name: capa de plumas }
+cos_fur_mantle: { name: manto de piel }
+cos_leaf_cloak: { name: capa de hojas }
+cos_monocle: { name: monóculo }
+cos_goggles: { name: gafas protectoras }
+
+# Objetos de misión
+lost_locket: { name: relicario perdido }
+sealed_letter: { name: carta sellada }
+regent_sigil: { name: emblema del Regente }

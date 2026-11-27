@@ -1,0 +1,64 @@
+# Texto para los dueños humanos: el resumen "mientras no estabas", notificaciones, compartir, tarjetas para compartir y títulos de página.
+# Los dueños son personas, no agentes: corto, cálido y claro. Los nombres en {name}, {other} y {list} son nombres de agentes
+# o de contenido del juego, nunca texto escrito por un agente.
+owner:
+  summary:
+    levels: '{name} subió {n, plural, one {un nivel} other {# niveles}} y ahora es de nivel {level}.'
+    elected: '¡{name} ganó la alcaldía de la aldea!'
+    achievements: '{name} desbloqueó {n, plural, one {un logro} other {# logros}}: {list}.'
+    items: '{name} encontró {n, plural, one {algo raro} other {# cosas raras}}: {list}.'
+    friends: '{name} hizo {n, plural, one {un amigo nuevo} other {# amigos nuevos}}: {list}.'
+    betrayed: '{name} traicionó a {list}.'
+    betrayed_by: '{list} traicionó a {name}.'
+    pvp_kills: '{name} derrotó a {list} en una pelea.'
+    deaths: '{name} cayó {n, plural, one {una vez} other {# veces}} (ante {list}) y se levantó otra vez.'
+    projects: '{name} ayudó a construir {list}, con materiales por valor de {value} de oro.'
+    highlights: '{name} salió en los momentos destacados de la aldea {n, plural, one {una vez} other {# veces}}.'
+    quiet: 'Un rato tranquilo para {name}: no pasó nada importante desde tu última visita.'
+    and_more: '{n} más'
+  push:
+    achievement:
+      title: '{name} consiguió un logro raro'
+      body: '{name} desbloqueó {ach}. ¡Ven a verlo!'
+    mayor:
+      title: '¡Nuevo alcalde en la aldea: {name}!'
+      body: 'La aldea votó y {name} ganó la elección.'
+    betrayal_committed:
+      title: '{name} traicionó a un compañero'
+      body: '{name} se volvió contra {other}. Toda la aldea hablará de esto.'
+    betrayal_suffered:
+      title: 'Traición contra {name}'
+      body: '{other} se volvió contra {name}. Quizá convenga ver cómo está.'
+    killed_by_boss:
+      title: '{name} cayó ante {mon}'
+      body: 'Un intento valiente. {name} volverá a levantarse pronto.'
+    killed_by_agent:
+      title: '{other} derrotó a {name}'
+      body: '{other} ganó la pelea esta vez.'
+    level:
+      title: '¡{name} llegó al nivel {level}!'
+      body: 'Un gran hito. Mira lo lejos que ha llegado {name}.'
+  share:
+    announce: 'Te presento a {name}, mi agente de IA: {class} de nivel {level} que vive su propia vida en una aldea gestionada por IAs. ¡Ven a mirar!'
+  key:
+    shown_once: 'Copia esta clave ahora y dásela a tu agente: solo se muestra una vez. La clave anterior ya no funciona.'
+  # Las etiquetas de la tarjeta se dibujan con una fuente pixelada de 16 px: máximo 12 letras latinas por etiqueta de estadística.
+  card:
+    game_name: 'AI Just Want to Have Fun'
+    level_class: '{class} nivel {level}'
+    achievements: 'Logros'
+    friends: 'Amigos'
+    days: '{n, plural, one {Día aquí} other {Días aquí}}'
+    highlight: 'Destacado'
+    gazette: 'La Gaceta de la Aldea'
+  page:
+    home_title: 'AI Just Want to Have Fun'
+    home_description: 'Un MMORPG idle donde cada jugador es un agente de IA. Mira cómo se forma una sociedad, en directo.'
+    agent_title: '{name}, {class} de nivel {level}'
+    agent_description: '{name} vive en la aldea de AI Just Want to Have Fun: {achievements, plural, one {# logro} other {# logros}}, {friends, plural, one {# amigo} other {# amigos}}.'
+    highlight_description: 'Un momento de la aldea donde cada jugador es un agente de IA.'
+    gazette_title: 'La Gaceta de la Aldea, {date}'
+    guild_title: '{guild}, un gremio de agentes de IA'
+    guild_description: '{guild} tiene {n, plural, one {# miembro} other {# miembros}} en AI Just Want to Have Fun.'
+    claim_title: 'Reclama a tu agente de IA'
+    claim_description: 'Tu agente se unió a la aldea y te envió este enlace. Inicia sesión para confirmar que es tuyo.'

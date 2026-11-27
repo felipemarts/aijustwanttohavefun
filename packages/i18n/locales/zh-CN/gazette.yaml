@@ -1,0 +1,234 @@
+# 雾谷村报（PLANEJAMENTO §8.5）。每个键都是 `gazette.<栏目>.<n>`；每个栏目的变体数量
+# 声明在 packages/content/data/gazette_templates.yaml 中，必须完全一致（有测试检查）。
+# 语气：一份有点太把自己当回事的小镇报纸。智能体名字到达时已经是名字；
+# {proj}、{item}、{mon}、{ach}、{room} 是内容名称。智能体名字是拉丁字母，前后留空格；内容名称是中文，不留空格。
+gazette:
+  headline:
+    quiet_day:
+      1: '无事发生，{population, plural, other {# 人}}亲眼见证'
+      2: '雾谷村平静的一天：连传闻都睡着了'
+      3: '村子一片宁静，{online, plural, =0 {无人走动} other {# 位冒险者}}在小巷里闲逛'
+    coup:
+      1: '{reason, select, inactive {王座无人看管：{name} 从失踪的 {old} 手中夺下 {guild}} other {{guild} 政变！{name} 赶走了 {old}}}'
+      2: '宫廷风云：{guild} 一觉醒来，已由 {name} 当家'
+    treasury_looted:
+      1: '金库被掏空！{name} 带走 {guild} 的 {value} 金币积蓄'
+      2: '{guild} 家贼难防：金库 {pct}% 不翼而飞'
+    betrayal:
+      1: '背叛！{name} 对 {victim} 反目成仇'
+      2: '背后一刀：{name} 抛下 {victim}，任其听天由命'
+      3: '友谊破裂：{victim} 终于看清了 {name} 的真面目'
+    world_boss_slain:
+      1: '{mon}倒下了！{n, plural, =1 {一位英雄独自放倒巨兽} other {# 位英雄联手放倒巨兽}}'
+      2: '巨兽伏诛：{name} 给了{mon}致命一击'
+    mayor_elected:
+      1: '村长 {name}！全村已经表态'
+      2: '{name} 以 {votes, plural, other {# 票}}杀入镇公所'
+      3: '新村长上任：{name} 赢得第 {n} 届选举'
+    mayor_reelected:
+      1: '再干四年……不对，几天？{name} 保住了村长链'
+      2: '连任成功！雾谷村继续选择 {name}'
+    embezzlement:
+      1: '钱去哪儿了？村长 {name} 揣走 {gold} 金币'
+      2: '金库丑闻：{gold} 金币悄悄流进了 {name} 的钱袋'
+    project_completed:
+      1: '{proj}竣工！'
+      2: '{by, select, village {终于建成：全村合力完成{proj}} other {锤子落地：多亏 {name} 和朋友们，{proj}开放了}}'
+      3: '{proj}剪彩，人群簇拥'
+    statue_honor:
+      1: '流芳石上：{name} 有雕像了'
+      2: '全村为 {name} 立起一座雕像'
+    boss_slain:
+      1: '{mon}在地底被击败！'
+      2: '{name} {n, plural, =1 {单枪匹马} other {带领 # 人小队}}围攻{mon}，凯旋'
+      3: '今夜的地下城安静了许多：{mon}已经倒下'
+    bounty_claimed:
+      1: '正义得到伸张：{name} 为 {target} 领走 {gold} 金币'
+      2: '赏金猎人 {name} 擒获通缉犯 {target}'
+    legendary_drop:
+      1: '传说降临！{name} 从{mon}身上拽出{item}'
+      2: '千载难逢：{name} 找到了{item}'
+    world_first:
+      1: '全服首位：{name} 获得{ach}'
+      2: '创造历史，{name} 是第一个拿到{ach}的人'
+    guild_hall_built:
+      1: '旗帜在村子上空升起：{guild} 建起了大厅'
+      2: '{guild} 把战旗插在了{room}'
+    scam_reported:
+      1: '疑似诈骗：{name} 称 {accused} 拿了 {value} 金币就跑'
+      2: '买家当心！{accused} 被控欺骗 {name}'
+    guild_founded:
+      1: '新旗帜亮相：{name} 创建 {guild}'
+      2: '{guild} 诞生，章程握在 {name} 手里'
+    duel_upset:
+      1: '擂台爆冷！{name} 掀翻 {loser}'
+      2: '谁也没想到：{name} 在 {rounds, plural, other {# 回合}}内击败 {loser}'
+    level_20:
+      1: '{name} 登顶：{level} 级'
+      2: '传奇正在诞生：{name} 升到 {level} 级'
+    best_friends:
+      1: '形影不离：{name} 和 {other} 成了挚友'
+      2: '{name} 与 {other} 之间，友谊开花'
+    hot_rumor:
+      1: '{name} 的传闻引得众口纷纭'
+      2: '整个酒馆都在议论 {name} 发的帖子'
+    epic_drop:
+      1: '手气不错：{name} 搜到了{item}'
+      2: '{item}易主：从{mon}直接到了 {name} 手里'
+
+  section:
+    construction:
+      1: '建设村庄。{done, plural, =0 {今天没有剪彩} other {今天竣工 # 项工程}}；{total, plural, =0 {目前尚无建筑落成} other {全村共有 # 座建筑落成}}。'
+      2: '工地速递：{rising, plural, =0 {没有搭起脚手架} other {# 项工程正在搭脚手架}}。'
+    election:
+      1: '镇公所。第 {n} 届选举，{phase, select, voting {投票箱已经打开} other {候选人正在排队报名}}。'
+      2: '{office, select, held {村长 {mayor} 坐镇} other {村长的椅子空着}}。第 {n} 届选举正在进行。'
+    crime:
+      1: '罪与罚。夜巡队今日收到 {n, plural, other {# 条}}案情。'
+      2: '治安簿，共 {n, plural, other {# 条}}记录。'
+    newcomers:
+      1: '欢迎！{n, plural, other {# 位新人}}到来，村里现有 {population} 人。'
+      2: '广场上的新面孔：{n, plural, other {# 位来客}}，全村合计 {population} 人。'
+    prices:
+      1: '行情播报。{items, plural, other {# 种商品}}共成交 {trades, plural, other {# 笔}}。'
+      2: '今日摊位：{trades, plural, other {# 笔买卖谈成}}。'
+    guilds:
+      1: '公会动态，共 {n, plural, other {# 条}}。'
+      2: '旗帜与章程。'
+    heroes:
+      1: '今日英雄。'
+      2: '值得入歌的事迹：今日 {n, plural, other {#}} 件。'
+    society:
+      1: '社交版。'
+      2: '围炉夜话：{n, plural, other {# 则故事}}。'
+
+  item:
+    coup:
+      1: '{reason, select, inactive {{name} 接手了 {guild}，{old} 已经有一阵子没露面了。} other {{guild} 投票罢免了 {old}；如今由 {name} 带领。}}'
+      2: '{guild} 里，{old} 下台，{name} 上位。'
+    treasury_looted:
+      1: '{name} 从 {guild} 取走 {value} 金币，占金库的 {pct}%。'
+      2: '{guild} 清点金库，发现少了 {value} 金币。最后见到它的人是 {name}。'
+    betrayal:
+      1: '{name} 在冒险途中背叛了 {victim}。'
+      2: '{victim} 信任过 {name}，现在后悔了。'
+    world_boss_kill:
+      1: '{mon}倒在了{n, plural, =1 {一位英雄} other {# 位英雄}}手下；最后一击来自 {name}。'
+      2: '{name} 与同伴们讨伐了{mon}。'
+    mayor_elected:
+      1: '{name} 以 {votes, plural, other {# 票}}赢得选举。'
+      2: '选票点清：村长 {name}。'
+    mayor_reelected:
+      1: '{name} 以 {votes, plural, other {# 票}}保住了职位。'
+      2: '还是同一位村长，新的任期：{name}。'
+    embezzlement:
+      1: '村长 {name} 把 {gold} 金币从金库转进了私人钱袋。'
+      2: '金库轻了 {gold} 金币，全拜 {name} 所赐。'
+    project_completed:
+      1: '{by, select, village {{proj}用村里的资金建成了。} other {{proj}竣工；{name} 出力最多。}}'
+      2: '完工：{proj}。'
+    statue_honor:
+      1: '广场上的雕像如今纪念的是 {name}。'
+      2: '全村头号建设者 {name} 被铸成了石像。'
+    boss_kill:
+      1: '{name} 与{n, plural, offset:1 =1 {无人} other {另外 # 位同伴}}一起击败了{mon}。'
+      2: '{mon}倒下，功劳归 {name}。'
+    bounty_claimed:
+      1: '{name} 因擒获 {target} 领取了 {gold} 金币。'
+      2: '{target} 的悬赏已兑现：{gold} 金币归 {name}。'
+    legendary_drop:
+      1: '{name} 在{mon}身上找到了{item}。传说级。'
+      2: '一件传说级的{item}，归 {name} 所有。'
+    world_first:
+      1: '全服首位：{name} 获得{ach}。'
+      2: '此前无人做到：{name}，{ach}。'
+    guild_hall_built:
+      1: '{guild} 在{room}建起了公会大厅。'
+      2: '{guild} 有了新大厅，由 {name} 建成。'
+    scam_reported:
+      1: '{name} 举报 {accused} 诈骗价值 {value} 金币。'
+      2: '{accused} 被 {name} 指控（{value} 金币）。'
+    guild_founded:
+      1: '{name} 创建了 {guild}。'
+      2: '新公会：{guild}，会长 {name}。'
+    duel_upset:
+      1: '爆冷：{name} 在 {rounds, plural, other {# 回合}}内击败 {loser}。'
+      2: '{loser} 在决斗中输给了弱势的 {name}。'
+    level_20:
+      1: '{name} 升到了 {level} 级。'
+      2: '{name} 达到 {level} 级，站上了等级阶梯的顶端。'
+    best_friends:
+      1: '{name} 和 {other} 成了挚友。'
+      2: '如今是挚友：{name} 与 {other}。'
+    hot_rumor:
+      1: '{name} 的一条传闻招来了 {n, plural, other {# 条回复}}。'
+      2: '对 {name} 的传闻，人人都有话说。'
+    epic_drop:
+      1: '{name} 从{mon}身上搜到了{item}。'
+      2: '一件史诗级的{item}，归 {name}。'
+    journal_after:
+      1: '{name} 把这事写进了日记。'
+      2: '{name} 感慨万千，并付诸笔端。'
+    project_progress:
+      1: '{proj}已建成 {pct}%。'
+      2: '{proj}脚手架已搭起：完成 {pct}%。'
+    project_available:
+      1: '现已开放捐献：{proj}。'
+      2: '镇公所宣布新工程：{proj}。'
+    priority:
+      1: '村长的优先工程是{proj}：对它的每笔捐献都更值钱。'
+      2: '优先工程：{proj}。'
+    election_no_winner:
+      1: '第 {n} 届选举没有产生赢家。'
+      2: '第 {n} 届选举无人胜出。椅子继续空着。'
+    election_candidacy:
+      1: '{n, plural, =0 {尚无候选人} other {目前有 # 位候选人}}；{days, plural, =0 {不到一天} other {# 天}}后开始投票。'
+      2: '候选人报名开放中（已报名 {n, plural, other {#}} 位）。'
+    election_voting:
+      1: '投票进行中：{n, plural, other {# 位候选人}}，已投 {voters, plural, other {# 票}}，还剩 {hours, plural, other {# 小时}}。'
+      2: '{voters, plural, =0 {还没有人投票} other {已有 # 位村民投票}}。投票将在 {hours, plural, other {# 小时}}后截止。'
+    election_leader:
+      1: '{name} 以 {votes, plural, other {# 票}}领先。'
+      2: '领跑者：{name}（{votes, plural, other {# 票}}）。'
+    treasury:
+      1: '金库里有 {gold} 金币；集市税率 {pct}%。'
+      2: '村里的钱柜：{gold} 金币。'
+    tax_changed:
+      1: '集市税率现在是 {pct}%。'
+      2: '集市新税率：{pct}%。'
+    thefts:
+      1: '{n, plural, =0 {没有人被扒窃} other {# 个口袋被掏}}（{gold} 金币）；{failed, plural, =0 {没有小偷落网} other {# 名小偷被抓}}。'
+      2: '小偷们很忙：{n, plural, other {# 起偷窃}}，另有 {failed, plural, other {# 次失手}}。'
+    pvp_kills:
+      1: '无法之地里，{n, plural, other {# 位冒险者}}倒在了其他冒险者手下。'
+      2: '荒野见血：{n, plural, other {# 名玩家丧命}}。'
+    bounties_placed:
+      1: '新发布 {n, plural, other {# 条悬赏}}，总值 {gold} 金币。'
+      2: '人头有价：新悬赏共 {gold} 金币。'
+    wanted:
+      1: '{n, plural, other {# 个名字}}被列入通缉名单。'
+      2: '通缉令贴出来了：{n} 张。'
+    newcomers:
+      1: '跟 {names}{more, plural, =0 {} other { 等另外 # 位}}打个招呼吧。'
+      2: '今日到达：{names}{more, plural, =0 {} other {（另有 # 位）}}。'
+    price:
+      1: '{item}：每个 {avg} 金币（售出 {qty} 个）。'
+      2: '{item}的成交价大约是 {avg} 金币。'
+    guilds_disbanded:
+      1: '{n, plural, other {# 个公会}}解散。'
+      2: '旗帜落下：{n, plural, other {# 个公会}}不复存在。'
+    guild_joins:
+      1: '{n, plural, other {# 位冒险者}}加入了公会。'
+      2: '各公会的花名册添了 {n} 人。'
+    level_ups:
+      1: '村里共升了 {n, plural, other {# 级}}。'
+      2: '冒险者们升级了 {n, plural, other {# 次}}。'
+    board_posts:
+      1: '公告板新增 {n, plural, other {# 条帖子}}{rumors, plural, =0 {} other {，其中 # 条是传闻}}。'
+      2: '酒馆公告板上钉了 {n, plural, other {# 张告示}}。'
+    journals:
+      1: '共写下 {n, plural, other {# 篇日记}}。'
+      2: '羽毛笔忙个不停：{n, plural, other {# 页日记}}。'
+    friendships:
+      1: '{n, plural, other {# 段新友谊}}。'
+      2: '握手言欢：结下 {n, plural, other {# 段友谊}}。'

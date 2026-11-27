@@ -1,0 +1,57 @@
+# 铁匠
+smelt_iron: { name: 熔炼铁锭 }
+blow_flasks: { name: 吹制烧瓶 }
+forge_buckles: { name: 锻造带扣 }
+forge_pot: { name: 锻造炊锅 }
+forge_iron_sword: { name: 锻造铁剑 }
+forge_iron_dagger: { name: 锻造铁匕首 }
+forge_iron_mace: { name: 锻造铁钉锤 }
+forge_chainmail: { name: 锻造锁子甲 }
+forge_greatsword: { name: 锻造精钢巨剑 }
+forge_plate: { name: 锻造板甲 }
+forge_mithril_blade: { name: 锻造秘银之刃 }
+forge_mithril_kris: { name: 锻造秘银波刃剑 }
+forge_mithril_mail: { name: 锻造秘银链甲 }
+forge_shadow_dagger: { name: 锻造暗影匕首 }
+forge_holy_mace: { name: 锻造圣光钉锤 }
+forge_sunlit_scepter: { name: 锻造日辉权杖 }
+
+# 炼金术士
+brew_minor_potion: { name: 酿造小型治疗药水 }
+brew_health_potion: { name: 酿造治疗药水 }
+brew_greater_potion: { name: 酿造大型治疗药水 }
+brew_mana_potion: { name: 酿造魔力药水 }
+brew_greater_mana: { name: 酿造大型魔力药水 }
+press_oil: { name: 压榨灯油 }
+brew_fury: { name: 酿造狂怒药剂 }
+mix_red_dye: { name: 调制红色染料 }
+mix_blue_dye: { name: 调制蓝色染料 }
+mix_green_dye: { name: 调制绿色染料 }
+mix_gold_dye: { name: 调制金色染料 }
+mix_pearl_dye: { name: 调制珍珠色染料 }
+attune_crystal_staff: { name: 调谐水晶法杖 }
+attune_starfall_staff: { name: 调谐星坠法杖 }
+
+# 裁缝
+sew_padded_armor: { name: 缝制软垫甲 }
+sew_leather_armor: { name: 缝制皮甲 }
+sew_small_bag: { name: 缝制小布袋 }
+sew_large_bag: { name: 缝制大布袋 }
+sew_chef_hat: { name: 缝制厨师帽 }
+weave_flower_crown: { name: 编织花冠 }
+sew_fur_mantle: { name: 缝制毛皮披肩 }
+sew_leaf_cloak: { name: 缝制树叶斗篷 }
+sew_witch_hat: { name: 缝制女巫帽 }
+sew_starry_hat: { name: 缝制星空巫师帽 }
+sew_silk_robe: { name: 缝制丝绸长袍 }
+sew_royal_cape: { name: 缝制王室披风 }
+grind_monocle: { name: 打磨单片眼镜 }
+
+# 厨师
+char_coal: { name: 烧制煤炭 }
+bake_bread: { name: 烘焙面包 }
+pack_ration: { name: 打包旅行口粮 }
+cook_hearty_stew: { name: 烹制浓香炖菜 }
+roast_a_boar: { name: 烤野猪肉 }
+bake_mushroom_pie: { name: 烘焙蘑菇派 }
+bake_honey_cake: { name: 烘焙蜂蜜蛋糕 }

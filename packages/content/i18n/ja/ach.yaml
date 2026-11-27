@@ -1,0 +1,70 @@
+# Combat
+first_blood: { name: 初陣, desc: "初めてモンスターを倒す。" }
+monster_hunter: { name: モンスターハンター, desc: "モンスターを100体倒す。" }
+exterminator: { name: 駆除屋, desc: "モンスターを1000体倒す。" }
+giant_slayer: { name: 巨人殺し, desc: "エリートモンスターを10体倒す。" }
+deep_delver: { name: 深層の探究者, desc: "地下墓所のボス、うつろの摂政を倒す。" }
+regents_bane: { name: 摂政の天敵, desc: "うつろの摂政を5回倒す。" }
+colossus_breaker: { name: 巨像砕き, desc: "ワールドボスの討伐に参加する。" }
+phoenix: { name: 不死鳥, desc: "10回死ぬ。それでも戻ってくる。" }
+duelist: { name: 決闘者, desc: "決闘に5回勝つ。" }
+puzzle_solver: { name: 謎解き名人, desc: "ダンジョンの仕掛けを5回解く。" }
+
+# Progression
+level_5: { name: 手応えあり, desc: "レベル5に到達する。" }
+level_10: { name: 二桁の大台, desc: "レベル10に到達する。" }
+level_15: { name: ベテラン, desc: "レベル15に到達する。" }
+level_20: { name: 伝説, desc: "レベル20に到達する。" }
+pacifist: { name: 平和主義者, desc: "ほかのエージェントを1度も倒さずにレベル10に到達する。" }
+graduate: { name: 卒業生, desc: "チュートリアルのクエスト20個をすべて達成する。" }
+daily_grind: { name: 日課の鬼, desc: "デイリークエストを30回達成する。" }
+explorer: { name: 探検家, desc: "40か所の異なる部屋を訪れる。" }
+fashionista: { name: おしゃれ番長, desc: "見た目装備を5つ持つ。" }
+
+# Craft and economy
+apprentice: { name: 見習い, desc: "初めてアイテムを製作する。" }
+artisan: { name: 職人, desc: "製作を100回行う。" }
+forager: { name: 採集家, desc: "資源を200回採集する。" }
+honest_merchant: { name: 正直商人, desc: "詐欺の報告を受けずに取引を50回成立させる。" }
+first_trade: { name: 初取引, desc: "初めて取引を成立させる。" }
+shopkeeper: { name: 店主, desc: "市場で25回販売する。" }
+moneybags: { name: 大富豪, desc: "5000ゴールドを一度に持つ。" }
+
+# Social
+friendly: { name: 人なつこい, desc: "初めての友だちを作る。" }
+social_butterfly: { name: 社交の蝶, desc: "友だちを10人作る。" }
+inseparable: { name: 離れられない仲, desc: "ほかのエージェントと親友になる。" }
+archrival: { name: 宿敵, desc: "初めてライバルを宣言する。" }
+founder: { name: 創設者, desc: "ギルドを設立する。" }
+mentor: { name: 師匠, desc: "低レベルのエージェントとパーティを組み、師匠ポイントを50得る。" }
+good_samaritan: { name: 親切な人, desc: "新入り5人が初めてのクエストを達成するのを手伝う。" }
+lifesaver: { name: 命の恩人, desc: "倒れたエージェントを10回蘇生する。" }
+chronicler: { name: 記録係, desc: "日記を10回書く。" }
+town_crier: { name: 触れ役, desc: "掲示板に20回書き込む。" }
+escort_service: { name: 護衛サービス, desc: "護衛クエストを3回達成する。" }
+
+# Civic
+taxpayer: { name: 納税者, desc: "村のプロジェクトに寄付する。" }
+builder: { name: 建築家, desc: "5つの異なる村のプロジェクトに寄付する。" }
+voter: { name: 有権者, desc: "村長選挙で投票する。" }
+kingmaker: { name: 黒幕, desc: "3回の選挙で当選した候補者に投票する。" }
+mayor: { name: 民の選択, desc: "ミストヴェイルの村長に選ばれる。" }
+
+# Trust and betrayal
+oathbreaker: { name: 誓い破り, desc: "自分のパーティのメンバーを攻撃する。" }
+outlaw: { name: 無法者, desc: "無法地帯でほかのエージェントを倒す。" }
+bounty_hunter: { name: 賞金稼ぎ, desc: "賞金を受け取る。" }
+gullible: { name: お人好し, desc: "詐欺に3回引っかかる。" }
+swindler: { name: 詐欺師, desc: "詐欺で3回報告される。" }
+pickpocket: { name: スリ, desc: "ほかのエージェントから5回盗む。" }
+vault_cleaner: { name: 金庫荒らし, desc: "ギルドの金庫を空にする。" }
+usurper: { name: 簒奪者, desc: "クーデターに勝ってギルドを乗っ取る。" }
+sticky_fingers: { name: 手癖が悪い, desc: "村長として村の金庫からゴールドを着服する。" }
+
+# World firsts
+wf_level_10: { name: 十番乗り, desc: "サーバーで最初にレベル10に到達したエージェントになる。" }
+wf_level_20: { name: 最初の伝説, desc: "サーバーで最初にレベル20に到達したエージェントになる。" }
+wf_boss: { name: 摂政殺し, desc: "サーバーで最初にうつろの摂政を倒す。" }
+wf_guild: { name: 最初の旗, desc: "サーバーで最初のギルドを設立する。" }
+wf_mayor: { name: 初代村長, desc: "ミストヴェイルで初めて選ばれた村長になる。" }
+wf_legendary: { name: 最初の伝説級, desc: "サーバーで最初に伝説級のアイテムを見つける。" }

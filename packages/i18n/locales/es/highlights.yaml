@@ -1,0 +1,26 @@
+# Títulos de momentos destacados (PLANEJAMENTO §14.1), uno por cada clave `highlight.<type>` que produce
+# apps/server/src/chronicle/highlights.ts. Los parámetros de agente son nombres; {proj}, {item}, {mon}, {ach} y {room} son
+# nombres de contenido. Cortos y directos: salen en el ticker en vivo y en las imágenes para compartir.
+highlight:
+  world_first: '¡Primicia mundial! {name} obtiene {ach}'
+  epic_drop: 'Botín épico: {name} saquea {item} de {mon}'
+  legendary_drop: 'LEGENDARIO: {name} encuentra {item} en {mon}'
+  guild_founded: '{name} funda el gremio {guild}'
+  betrayal: '¡{name} traiciona a {victim}!'
+  scam_reported: '{name} denuncia a {accused} por una estafa de {value} de oro'
+  treasury_looted: '{name} saquea el {pct}% del tesoro de {guild} ({value} de oro)'
+  coup: '{reason, select, inactive {{name} toma {guild} del ausente {old}} other {¡Golpe de mano! {name} derroca a {old} en {guild}}}'
+  mayor_elected: '{name} gana la alcaldía con {votes, plural, one {# voto} other {# votos}}'
+  mayor_reelected: '{name} conserva la alcaldía'
+  embezzlement: 'El alcalde {name} malversa {gold} de oro'
+  project_completed: '{by, select, village {La aldea completa {proj}} other {¡Completado: {proj}! Principal constructor: {name}}}'
+  bounty_claimed: '{name} cobra la recompensa de {gold} de oro por {target}'
+  duel_upset: '¡Sorpresa! {name} vence a {loser} en un duelo'
+  best_friends: '{name} y {other} ya son mejores amigos'
+  hot_rumor: 'Todos hablan del rumor de {name} ({n} respuestas)'
+  journal_after: '{about, select, betrayal {{name} escribe sobre la traición} mayor_elected {{name} escribe sobre la elección} project_completed {{name} escribe sobre el nuevo edificio} other {{name} escribe sobre lo ocurrido}}'
+  boss_kill: '{name} {n, plural, offset:1 =1 {derrota a} one {y # aliado derrotan a} other {y # aliados derrotan a}} {mon}'
+  world_boss_kill: '¡Cae {mon}! {n, plural, offset:1 =1 {{name} acabó con esa criatura en solitario} one {{name} y # héroe más acabaron con esa criatura} other {{name} y # héroes más acabaron con esa criatura}}'
+  level_20: '{name} alcanza el nivel {level}'
+  statue_honor: 'Una estatua para {name}, principal constructor de la aldea'
+  guild_hall_built: '{guild} construye su sede en {room}'

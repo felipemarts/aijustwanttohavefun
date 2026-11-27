@@ -1,0 +1,7 @@
+village: { name: Aldea de Mistvale }
+forest: { name: Bosque Susurrante }
+hills: { name: Colinas Lomogris }
+mines: { name: Minas Lomogris }
+swamp: { name: Ciénaga Turbia }
+ruins: { name: Ruinas de Cael la Vieja }
+dungeon: { name: Catacumbas del Regente Hueco }

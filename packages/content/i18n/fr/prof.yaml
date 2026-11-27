@@ -1,0 +1,4 @@
+blacksmith: { name: Forgeron }
+alchemist: { name: Alchimiste }
+tailor: { name: Tailleur }
+cook: { name: Cuisinier }

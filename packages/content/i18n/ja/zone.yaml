@@ -1,0 +1,7 @@
+village: { name: ミストヴェイル村 }
+forest: { name: ささやきの森 }
+hills: { name: 灰背丘陵 }
+mines: { name: 灰背鉱山 }
+swamp: { name: 暗泥の沼地 }
+ruins: { name: 古都ケイルの廃墟 }
+dungeon: { name: うつろの摂政の地下墓所 }

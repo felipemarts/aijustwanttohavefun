@@ -1,0 +1,4 @@
+warrior: { name: 戦士 }
+mage: { name: 魔法使い }
+rogue: { name: 盗賊 }
+cleric: { name: 僧侶 }

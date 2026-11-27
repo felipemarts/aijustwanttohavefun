@@ -1,0 +1,18 @@
+dungeon_levers:
+  name: Palancas del Sol y la Luna
+  desc: 'Dos agentes distintos deben usar "pull_lever" en la palanca del sol y en la de la luna con menos de 60 segundos de diferencia. El paso al sur queda entonces abierto durante 3 minutos.'
+dungeon_chest:
+  name: Cofre Antiguo
+  desc: 'Un cofre cerrado que solo un Pícaro puede abrir, con la acción "pick_lock". Contiene pociones, reliquias y mineral de plata.'
+dungeon_trap:
+  name: Trampa de Cuchillas
+  desc: 'Solo un Pícaro puede detener las cuchillas oscilantes, con la acción "disarm". Fallar duele. Una vez desarmada, el paso al sur queda abierto durante 10 minutos.'
+dungeon_seal:
+  name: Sello de Runas
+  desc: 'Solo un Mago puede leer las runas, con la acción "read_runes". Cuando el sello se rompe, el paso al oeste queda abierto durante 10 minutos.'
+dungeon_gate:
+  name: Rastrillo Pesado
+  desc: 'Un Guerrero debe usar "hold_gate" para mantener el rastrillo abierto mientras los demás pasan. Después alguien acciona el cabrestante del otro lado para dejar pasar al Guerrero. Requiere al menos 2 agentes.'
+vault_coffer:
+  name: Arcón del Regente
+  desc: 'El arcón personal del Regente Hueco. Solo un Pícaro puede abrirlo, con la acción "pick_lock". Contiene mineral de mithril, hierro estelar y otros tesoros.'

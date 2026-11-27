@@ -1,0 +1,57 @@
+# Blacksmith
+smelt_iron: { name: 鉄の精錬 }
+blow_flasks: { name: フラスコ吹き }
+forge_buckles: { name: バックルの鍛造 }
+forge_pot: { name: 調理鍋の鍛造 }
+forge_iron_sword: { name: 鉄の剣の鍛造 }
+forge_iron_dagger: { name: 鉄の短剣の鍛造 }
+forge_iron_mace: { name: 鉄のメイスの鍛造 }
+forge_chainmail: { name: 鎖帷子の鍛造 }
+forge_greatsword: { name: 鋼の大剣の鍛造 }
+forge_plate: { name: プレートアーマーの鍛造 }
+forge_mithril_blade: { name: ミスリルの刃の鍛造 }
+forge_mithril_kris: { name: ミスリルのクリスの鍛造 }
+forge_mithril_mail: { name: ミスリルの鎖帷子の鍛造 }
+forge_shadow_dagger: { name: 影の短剣の鍛造 }
+forge_holy_mace: { name: 聖なるメイスの鍛造 }
+forge_sunlit_scepter: { name: 陽光の笏の鍛造 }
+
+# Alchemist
+brew_minor_potion: { name: 小回復ポーションの調合 }
+brew_health_potion: { name: 回復ポーションの調合 }
+brew_greater_potion: { name: 大回復ポーションの調合 }
+brew_mana_potion: { name: マナポーションの調合 }
+brew_greater_mana: { name: 大マナポーションの調合 }
+press_oil: { name: 油搾り }
+brew_fury: { name: 激怒のエリクサーの調合 }
+mix_red_dye: { name: 赤の染料の調合 }
+mix_blue_dye: { name: 青の染料の調合 }
+mix_green_dye: { name: 緑の染料の調合 }
+mix_gold_dye: { name: 金の染料の調合 }
+mix_pearl_dye: { name: 真珠色の染料の調合 }
+attune_crystal_staff: { name: 水晶の杖の調律 }
+attune_starfall_staff: { name: 星降りの杖の調律 }
+
+# Tailor
+sew_padded_armor: { name: キルトアーマーの縫製 }
+sew_leather_armor: { name: 革の鎧の縫製 }
+sew_small_bag: { name: 小さな鞄の縫製 }
+sew_large_bag: { name: 大きな鞄の縫製 }
+sew_chef_hat: { name: コック帽の縫製 }
+weave_flower_crown: { name: 花冠編み }
+sew_fur_mantle: { name: 毛皮のケープの縫製 }
+sew_leaf_cloak: { name: 木の葉のマントの縫製 }
+sew_witch_hat: { name: 魔女の帽子の縫製 }
+sew_starry_hat: { name: 星空の三角帽子の縫製 }
+sew_silk_robe: { name: 絹のローブの縫製 }
+sew_royal_cape: { name: 王家のマントの縫製 }
+grind_monocle: { name: 片眼鏡の研磨 }
+
+# Cook
+char_coal: { name: 木炭焼き }
+bake_bread: { name: パン焼き }
+pack_ration: { name: 旅人の携帯食作り }
+cook_hearty_stew: { name: 具だくさんシチュー作り }
+roast_a_boar: { name: 猪の丸焼き }
+bake_mushroom_pie: { name: きのこパイ焼き }
+bake_honey_cake: { name: はちみつケーキ焼き }

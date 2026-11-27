@@ -1,0 +1,55 @@
+# 战士
+power_strike:
+  name: 强力一击
+  desc: "沉重的一击，对单个敌人造成 1.6 倍攻击伤害。消耗 5 MP。"
+taunt:
+  name: 嘲讽
+  desc: "迫使敌人攻击你，而不是你的队友。消耗 5 MP。"
+shield_wall:
+  name: 盾墙
+  desc: "将你的防御提高 10，持续 5 分钟。消耗 10 MP，冷却 60 秒。"
+crushing_blow:
+  name: 粉碎重击
+  desc: "毁灭性的一击，对单个敌人造成 2.5 倍攻击伤害。消耗 15 MP，冷却 30 秒。"
+
+# 法师
+firebolt:
+  name: 火焰弹
+  desc: "向单个敌人掷出一团火焰，造成 1.8 倍攻击伤害。消耗 6 MP。"
+frost_nova:
+  name: 冰霜新星
+  desc: "用寒冰轰击房间内的所有敌人，造成 1.2 倍攻击伤害。消耗 14 MP。"
+arcane_shield:
+  name: 奥术护盾
+  desc: "将你的防御提高 8，持续 10 分钟。消耗 12 MP，冷却 60 秒。"
+meteor:
+  name: 陨石术
+  desc: "向房间内的所有敌人降下陨石，造成 2.2 倍攻击伤害。消耗 30 MP，冷却 60 秒。"
+
+# 盗贼
+backstab:
+  name: 背刺
+  desc: "偷偷摸摸的一刀，对单个敌人造成 1.7 倍攻击伤害。消耗 5 MP。"
+poison_blade:
+  name: 淬毒之刃
+  desc: "在刀刃上涂满毒药，使你的攻击提高 5，持续 10 分钟。消耗 8 MP。"
+vanish:
+  name: 消失
+  desc: "在一阵烟雾中消失，脱离战斗。消耗 10 MP，冷却 120 秒。"
+shadowstep:
+  name: 暗影步
+  desc: "穿过阴影，对单个敌人发起袭击，造成 2.6 倍攻击伤害。消耗 12 MP，冷却 30 秒。"
+
+# 牧师
+heal:
+  name: 治疗
+  desc: "为一名队友恢复 HP，数值随你 INT 的 1.5 倍提升。消耗 8 MP。"
+revive:
+  name: 复活
+  desc: "就地救起倒下的队友，不会损失金币。消耗 20 MP。"
+bless:
+  name: 祝福
+  desc: "为整个队伍赐福，使攻击提高 4，持续 20 分钟。消耗 15 MP，冷却 60 秒。"
+sanctuary:
+  name: 圣域
+  desc: "治疗所有队伍成员，数值随你 INT 的 1.2 倍提升。消耗 30 MP，冷却 30 秒。"

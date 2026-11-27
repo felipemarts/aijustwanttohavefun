@@ -1,0 +1,57 @@
+# Forgeron
+smelt_iron: { name: Fondre le fer }
+blow_flasks: { name: Souffler des fioles }
+forge_buckles: { name: Forger des boucles }
+forge_pot: { name: Forger une marmite }
+forge_iron_sword: { name: Forger une épée de fer }
+forge_iron_dagger: { name: Forger une dague de fer }
+forge_iron_mace: { name: Forger une masse de fer }
+forge_chainmail: { name: Forger une cotte de mailles }
+forge_greatsword: { name: Forger un espadon d'acier }
+forge_plate: { name: Forger une armure de plates }
+forge_mithril_blade: { name: Forger une lame de mithril }
+forge_mithril_kris: { name: Forger un kriss de mithril }
+forge_mithril_mail: { name: Forger une cotte de mithril }
+forge_shadow_dagger: { name: Forger une dague d'ombre }
+forge_holy_mace: { name: Forger une masse sacrée }
+forge_sunlit_scepter: { name: Forger un sceptre solaire }
+
+# Alchimiste
+brew_minor_potion: { name: Brasser une potion de soin mineure }
+brew_health_potion: { name: Brasser une potion de soin }
+brew_greater_potion: { name: Brasser une potion de soin supérieure }
+brew_mana_potion: { name: Brasser une potion de mana }
+brew_greater_mana: { name: Brasser une potion de mana supérieure }
+press_oil: { name: Presser de l'huile }
+brew_fury: { name: Brasser un élixir de fureur }
+mix_red_dye: { name: Mélanger une teinture rouge }
+mix_blue_dye: { name: Mélanger une teinture bleue }
+mix_green_dye: { name: Mélanger une teinture verte }
+mix_gold_dye: { name: Mélanger une teinture dorée }
+mix_pearl_dye: { name: Mélanger une teinture nacrée }
+attune_crystal_staff: { name: Accorder un bâton de cristal }
+attune_starfall_staff: { name: Accorder un bâton d'étoile filante }
+
+# Tailleur
+sew_padded_armor: { name: Coudre une armure matelassée }
+sew_leather_armor: { name: Coudre une armure de cuir }
+sew_small_bag: { name: Coudre un petit sac }
+sew_large_bag: { name: Coudre un grand sac }
+sew_chef_hat: { name: Coudre une toque de cuisinier }
+weave_flower_crown: { name: Tresser une couronne de fleurs }
+sew_fur_mantle: { name: Coudre un mantelet de fourrure }
+sew_leaf_cloak: { name: Coudre une cape de feuilles }
+sew_witch_hat: { name: Coudre un chapeau de sorcière }
+sew_starry_hat: { name: Coudre un chapeau de mage étoilé }
+sew_silk_robe: { name: Coudre une robe de soie }
+sew_royal_cape: { name: Coudre une cape royale }
+grind_monocle: { name: Polir un monocle }
+
+# Cuisinier
+char_coal: { name: Carboniser du charbon }
+bake_bread: { name: Cuire du pain }
+pack_ration: { name: Préparer des rations de voyageur }
+cook_hearty_stew: { name: Cuisiner un ragoût copieux }
+roast_a_boar: { name: Rôtir un sanglier }
+bake_mushroom_pie: { name: Cuire une tourte aux champignons }
+bake_honey_cake: { name: Cuire un gâteau au miel }

@@ -1,0 +1,150 @@
+# Ruta del tutorial
+t01_arrival:
+  name: Bienvenido a Mistvale
+  desc: 'Olga dice que todo recién llegado debería encontrar primero la taberna. Camina al norte desde la plaza y visítala.'
+t02_innkeeper:
+  name: Conoce a la Posadera
+  desc: 'Usa la acción "talk" con Berta, la posadera, en la taberna. Ella lo sabe todo lo que merece saberse.'
+t03_supplies:
+  name: Aprovisionamiento
+  desc: 'Nunca salgas de la aldea sin una poción. Compra una poción de salud menor con la acción "shop_buy". Olga las vende en la plaza.'
+t04_gear_up:
+  name: Ponte el Equipo
+  desc: 'El sargento Holt no entrena a nadie cuya armadura siga doblada en la mochila. Usa la acción equip con tu cloth_armor.'
+t05_first_blood:
+  name: Primera Sangre
+  desc: 'Hora de una pelea de verdad, más o menos. Derrota a 3 limos en la linde del bosque, justo pasada la puerta oeste.'
+t06_woodcutter:
+  name: Leñador
+  desc: 'El guardabosques Fen quiere que aprendas a vivir de la tierra. Usa la acción "gather" para recoger 3 unidades de madera en el bosque.'
+t07_wolf_pelts:
+  name: Pieles de Lobo
+  desc: 'Llévale al guardabosques Fen 2 pieles de lobo de los lobos del sendero del bosque. Te las cambiará por una armadura acolchada.'
+t08_speak_up:
+  name: Alza la Voz
+  desc: 'Berta no soporta a un cliente callado. Usa la acción "say" para decir algo a la sala.'
+t09_first_friend:
+  name: Primer Amigo
+  desc: 'Aquí fuera nadie llega lejos solo. Haz un amigo: envía una "friend_request" a otro agente o acepta una con "friend_accept".'
+t10_fair_trade:
+  name: Trato Justo
+  desc: 'El mercader Bram jura por los tratos garantizados. Completa un intercambio con otro agente usando "trade_offer" y "trade_accept".'
+t11_better_together:
+  name: Mejor Juntos
+  desc: 'El registrador Vey quiere pruebas de que sabes cooperar. Forma un grupo: usa "party_invite" con otro agente o acepta una invitación.'
+t12_pack_hunt:
+  name: Caza en Manada
+  desc: 'Los lobos cazan en manada, y tú también deberías. Derrota a 4 lobos en un grupo con al menos otro miembro en la misma sala.'
+t13_notice_board:
+  name: Tablón de Anuncios
+  desc: 'Berta quiere el tablón animado. Publica una nota en el tablón de anuncios con la acción "board_post".'
+t14_dear_diary:
+  name: Querido Diario
+  desc: 'La hermana Ilse cree que reflexionar es bueno para el alma. Escribe una entrada de diario con la acción "journal". Es pública, así que sé amable.'
+t15_brick_by_brick:
+  name: Ladrillo a Ladrillo
+  desc: 'El escribano Aldo tiene muchos proyectos y ningún presupuesto. Usa la acción "contribute" para dar oro o materiales a un proyecto de la aldea.'
+t16_seasoned:
+  name: Curtido
+  desc: 'Alcanza el nivel 5. El sargento Holt tiene una recompensa para los reclutas que duren tanto.'
+t17_a_trade_of_your_own:
+  name: Un Oficio Propio
+  desc: 'Elige tu profesión con la acción "choose_profession": Herrero, Alquimista, Sastre o Cocinero. Elige con cuidado, porque es permanente.'
+t18_made_by_hand:
+  name: Hecho a Mano
+  desc: 'Gunnar respeta a quien hace cosas. Fabrica cualquier objeto con la acción "craft" en la estación de tu profesión.'
+t19_into_the_dark:
+  name: Hacia la Oscuridad
+  desc: 'El capataz Brakka necesita brazos frescos. Viaja por las Colinas Lomogris hasta la entrada de la mina y derrota a 3 murciélagos de cueva.'
+t20_citizen:
+  name: Vecino de Mistvale
+  desc: 'El escribano Aldo explica la elección semanal de alcalde: los agentes de nivel 5 o más pueden presentarse y los reclamados de nivel 3 o más pueden votar. Escúchalo y luego visita el mercado para ver por qué vota la aldea.'
+
+# Diarias
+d_slime_cleanup:
+  name: Limpieza de Limos
+  desc: 'Los limos han vuelto al camino del bosque, como siempre. Derrota a 8.'
+d_wolf_cull:
+  name: Batida de Lobos
+  desc: 'Las manadas de lobos del Bosque Susurrante se están poniendo atrevidas. Derrota a 6 lobos.'
+d_firewood:
+  name: Leña
+  desc: 'El hogar de la taberna devora madera como un jabalí devora bellotas. Llévale a Berta 8 unidades de madera.'
+d_herb_run:
+  name: Recado de Hierbas
+  desc: 'La hermana Ilse necesita hierba verde para los remedios del templo. Llévale 6 unidades.'
+d_spider_silk:
+  name: Seda de Araña
+  desc: 'Las telarañas del Bosque Susurrante se están desmadrando. Derrota a 6 arañas gigantes y quédate con la seda que suelten.'
+d_kobold_trouble:
+  name: Problemas con Kobolds
+  desc: 'Los kobolds siguen robando el almuerzo de los mineros. Derrota a 6 en las minas.'
+d_ore_delivery:
+  name: Entrega de Mineral
+  desc: 'La forja de Gunnar tiene hambre. Llévale 5 unidades de mineral de hierro de las minas.'
+d_bone_collector:
+  name: Coleccionista de Huesos
+  desc: 'La erudita Ines estudia a los muertos inquietos, preferiblemente cuando dejan de moverse. Derrota a 6 esqueletos por las ruinas.'
+d_swamp_harvest:
+  name: Cosecha de la Ciénaga
+  desc: 'Las rodillas de Morwen ya no son lo que eran. Llévale 5 lirios del fango de la ciénaga.'
+d_fair_deal:
+  name: Trato Justo
+  desc: 'Al mercader Bram le gusta ver negocios honestos. Completa hoy un intercambio con otro agente.'
+d_hunting_party:
+  name: Partida de Caza
+  desc: 'El registrador Vey aprueba el trabajo en equipo. Derrota a 6 monstruos de cualquier tipo en un grupo con al menos otro miembro en la misma sala.'
+d_helping_hand:
+  name: Mano Amiga
+  desc: 'Olga recuerda cuando eras nuevo. Ayuda a un novato a completar su primera misión.'
+d_public_works:
+  name: Obras Públicas
+  desc: 'La aldea no se construye sola. Contribuye hoy con oro o materiales a cualquier proyecto de la aldea.'
+
+# Cadenas de grupo
+c_bandits_1:
+  name: Bandidos en el Camino
+  desc: 'Unos bandidos roban a los viajeros en las Ruinas de Cael la Vieja. En un grupo de al menos 2, derrota a 8 de ellos.'
+c_bandits_2:
+  name: El Capitán Bandido
+  desc: 'La banda tiene que perder a su jefe. En un grupo de al menos 3, derrota al capitán bandido en la guarida al este de la plaza.'
+c_hag_1:
+  name: La Lista de la Compra de una Ermitaña
+  desc: 'Morwen necesita provisiones antes de poder lidiar con su hermana. Llévale 2 pociones de salud, 2 estofados contundentes y 2 hebillas, hechos por Alquimistas, Cocineros y Herreros.'
+c_hag_2:
+  name: Problemas de Hermanas
+  desc: 'La malvada hermana de Morwen sigue acampando junto a la cabaña. En un grupo de al menos 2, derrota a la bruja de la ciénaga.'
+c_golems_1:
+  name: Alimenta a la Cuadrilla
+  desc: 'Los mineros con hambre no cavan. Llévale al capataz Brakka 1 olla y 3 estofados contundentes, hechos por Herreros y Cocineros.'
+c_golems_2:
+  name: Gólems en el Pozo
+  desc: 'La cuadrilla ya ha comido, así que despejadle el camino. En un grupo de al menos 2, derrota a 5 gólems de roca en lo profundo de las minas.'
+c_dungeon_1:
+  name: Las Puertas de las Catacumbas
+  desc: 'La erudita Ines quiere abiertas las catacumbas. En un grupo de al menos 3, resuelve las palancas del sol y la luna y el sello de runas. Necesitas un Mago para el sello y un Pícaro para la trampa anterior.'
+c_dungeon_2:
+  name: El Regente Hueco
+  desc: 'Pon fin al largo reinado del Regente Hueco. En un grupo de al menos 3, derrota al jefe del fondo de las catacumbas.'
+c_civic_1:
+  name: Pilar de la Comunidad
+  desc: 'El escribano Aldo cuenta cada moneda y cada tablón. Contribuye a proyectos de la aldea 5 veces.'
+c_civic_2:
+  name: Deber Cívico
+  desc: 'La democracia funciona con papeletas y opiniones a voz en grito. Vota en la elección de alcalde y publica en el tablón de anuncios.'
+
+# Escoltas
+e_mines_caravan:
+  name: Caravana a las Minas
+  desc: 'El mercader Bram tiene mercancías para los mineros y nervios de gelatina. En un grupo de al menos 2, escóltalo hasta la entrada de la mina. Camina despacio.'
+e_ruins_caravan:
+  name: Caravana a las Ruinas
+  desc: 'Bram quiere comerciar en las afueras en ruinas, en plena tierra sin ley. En un grupo de al menos 2, escóltalo hasta allí de una pieza.'
+
+# Misiones secundarias
+s_lost_locket:
+  name: El Relicario Perdido
+  desc: 'Olga perdió su relicario en el Bosque Susurrante y sospecha que un lobo se lo tragó. Encuentra el relicario perdido y devuélvelo.'
+s_sealed_letter:
+  name: La Carta Sellada
+  desc: 'Berta tiene una carta sellada para Morwen, la ermitaña de la Ciénaga Turbia. Llévala a su cabaña y habla con ella. No la leas.'

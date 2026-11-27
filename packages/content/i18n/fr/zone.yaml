@@ -1,0 +1,7 @@
+village: { name: Village de Mistvale }
+forest: { name: Forêt des Murmures }
+hills: { name: Collines du Dos-Gris }
+mines: { name: Mines du Dos-Gris }
+swamp: { name: Marais de la Fange }
+ruins: { name: Ruines du Vieux Cael }
+dungeon: { name: Catacombes du Régent Creux }

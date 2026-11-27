@@ -1,0 +1,191 @@
+# Aldea de Mistvale
+village.square:
+  name: Plaza de Mistvale
+  desc: 'El corazón empedrado de Mistvale, con un tablón de anuncios y la tienda de Olga. Taberna al norte, ayuntamiento al sur, mercado al este, templo al oeste.'
+village.tavern:
+  name: Taberna del Grifo Dormilón
+  desc: 'La sala cálida y ruidosa de Berta. Tiene el tablón de anuncios, una cocina para Cocineros y camas para quien necesite descansar.'
+village.guild_hall:
+  name: Casa del Gremio
+  desc: 'Un salón de estandartes y papeleo donde el registrador Vey funda gremios nuevos a cambio de una tarifa.'
+village.plot_nw:
+  name: Parcela Noroeste
+  desc: 'Un solar vacío con una estaca esperanzada clavada en el suelo. Aquí está prevista la biblioteca de la aldea.'
+village.plot_ne:
+  name: Parcela Noreste
+  desc: 'Un solar de hierba con una vista estupenda de nada en particular. Aquí está prevista la atalaya.'
+village.plot_far:
+  name: Parcela del Extremo Este
+  desc: 'Un solar vacío al borde de la aldea, a la espera de alguien con oro y ambición.'
+village.temple:
+  name: Templo de Mistvale
+  desc: 'Un templo tranquilo atendido por la hermana Ilse. Los caídos despiertan aquí, con la bolsa un poco más ligera.'
+village.west_gate:
+  name: Puerta Oeste
+  desc: 'Una puerta de madera frente a los árboles. El Bosque Susurrante queda al oeste y la alquimista al sur.'
+village.alchemist:
+  name: Tienda de Alquimia
+  desc: 'La tienda de Mirela huele a hierbas y a peligro moderado. En un rincón burbujea una mesa de alquimia para Alquimistas.'
+village.tailor:
+  name: Sastrería
+  desc: 'Rollos de tela, un telar chirriante para Sastres y Tomas, que juzga en silencio tu atuendo.'
+village.town_hall:
+  name: Ayuntamiento
+  desc: 'El escribano Aldo guarda aquí el libro de proyectos y la urna. Ven a contribuir a los proyectos de la aldea, votar o presentarte a alcalde.'
+village.smithy:
+  name: Herrería
+  desc: 'La forja de Gunnar ruge día y noche. Los Herreros fabrican aquí y la tienda vende artículos de metal.'
+village.market:
+  name: Mercado
+  desc: 'Filas de puestos donde los agentes publican órdenes de venta, con impuesto del alcalde. El mercader Bram se angustia junto a su carro.'
+village.east_gate:
+  name: Puerta Este
+  desc: 'Una puerta vigilada sobre el viejo camino. Al este están las Ruinas de Cael la Vieja, adonde la ley no te sigue.'
+village.plot_se:
+  name: Parcela Sureste
+  desc: 'Un solar tranquilo y vacío detrás de la herrería, caldeado por la forja y lleno de posibilidades.'
+village.plot_sw:
+  name: Parcela Suroeste
+  desc: 'Un solar amplio y llano de hierba pisoteada. Aquí está prevista la arena.'
+village.training_yard:
+  name: Patio de Entrenamiento
+  desc: 'Muñecos de paja y consejos a gritos. El sargento Holt adiestra aquí a los reclutas y se permiten duelos amistosos.'
+village.south_gate:
+  name: Puerta Sur
+  desc: 'Una puerta vigilada sobre las marismas. Al sur queda la Ciénaga Turbia, sin ley. Aquí está prevista la muralla de la aldea.'
+village.plot_s:
+  name: Parcela Sur
+  desc: 'Un solar vacío entre la herrería y la puerta sur. Buena tierra, todavía sin edificio.'
+village.north_road:
+  name: Camino del Norte
+  desc: 'Un camino lleno de baches que sale de la aldea. La orilla del río queda al este y el sendero a las Colinas Lomogris al oeste.'
+village.river_bank:
+  name: Orilla del Río
+  desc: 'Un río rápido con madera arrastrada para recoger. Las minas quedan justo al otro lado, al norte, cuando la aldea construya el puente.'
+
+# Bosque Susurrante
+forest.edge:
+  name: Linde del Bosque
+  desc: 'Árboles soleados donde el guardabosques Fen vigila. Los limos se bambolean por ahí y es fácil recoger madera y hierba verde.'
+forest.path:
+  name: Sendero del Bosque
+  desc: 'Un sendero sinuoso bajo hojas que susurran. Lo recorren limos y lobos, y hay madera de sobra.'
+forest.glade:
+  name: Claro Lunar
+  desc: 'Un claro rico en hierba verde, con un poco de hierba lunar. Los lobos cazan aquí y de noche se les une un lobo sombrío.'
+forest.thicket:
+  name: Maleza de Arañas
+  desc: 'Zarzas espesas cubiertas de telarañas. Las arañas gigantes acechan entre árboles buenos para sacar madera.'
+forest.old_oak:
+  name: El Viejo Roble
+  desc: 'Un roble enorme y ancestral donde se cruzan cuatro senderos. Los jabalíes hozan en su tronco y las ramas caídas dan buena madera.'
+forest.hollow:
+  name: Hondonada Profunda
+  desc: 'Un callejón sin salida en sombras donde crujen los retoños de ent y la hierba lunar crece espesa. De noche merodean lobos sombríos.'
+forest.creek:
+  name: Arroyo Parlanchín
+  desc: 'Un arroyo frío con hierba verde en las orillas y piedra suelta en el lecho. Vienen a beber limos y algún jabalí.'
+forest.mushroom_ring:
+  name: Círculo de Setas
+  desc: 'Un anillo de setas pálidas que zumba débilmente. Arañas gigantes y un retoño de ent guardan la hierba lunar.'
+
+# Colinas Lomogris y las Minas
+hills.trail:
+  name: Sendero de la Colina
+  desc: 'Un sendero pedregoso que sube desde la aldea. Los jabalíes pastan entre los peñascos y es fácil recoger piedra.'
+hills.switchback:
+  name: Los Zigzags
+  desc: 'Un camino en zigzag colina arriba. Murciélagos de cueva y algún lobo perdido molestan a quien sube. En la roca asoman piedra y un poco de mineral de cobre.'
+hills.pass:
+  name: Paso Lomogris
+  desc: 'Un paso ventoso tomado por kobolds. La entrada de la mina está al este.'
+mines.entrance:
+  name: Entrada de la Mina
+  desc: 'La boca entibada de las minas, donde el capataz Brakka grita por encima de los murciélagos de cueva. Mineral de cobre y piedra al alcance de la mano.'
+mines.tunnel:
+  name: Túnel Principal
+  desc: 'Un túnel largo de viejos raíles y kobolds. Las paredes están veteadas de mineral de hierro y de cobre. La puerta inferior queda al sur.'
+mines.lower_gate:
+  name: Puerta Inferior
+  desc: 'La puerta trasera de las minas, tomada por kobolds, con un poco de mineral de hierro. Da al sur, al río, cuando se construya el puente.'
+mines.deep_shaft:
+  name: Pozo Profundo
+  desc: 'Un pozo vertiginoso donde los gólems de roca rechinan de un lado a otro. Rico en mineral de hierro, con unas pocas vetas de plata.'
+mines.flooded_gallery:
+  name: Galería Inundada
+  desc: 'Agua negra hasta las rodillas y ecos que gotean. Murciélagos de cueva y un gólem de roca guardan el mineral de hierro.'
+mines.crystal_cavern:
+  name: Caverna de Cristal
+  desc: 'Una cueva reluciente de cristal y mineral de plata. Los escarabajos de cristal creen que todo es suyo.'
+mines.forge_ruin:
+  name: Forja en Ruinas
+  desc: 'Una forja antigua, fría desde hace siglos e inútil para fabricar. Ahora la regentan el capataz kobold y su cuadrilla. Hay mineral de hierro entre los escombros.'
+
+# Ciénaga Turbia
+swamp.marsh_edge:
+  name: Linde de la Ciénaga
+  desc: 'El camino se hunde en el barro y aquí se acaba la ley. Los sapos del cieno croan entre los lirios del fango.'
+swamp.reeds:
+  name: Juncales Susurrantes
+  desc: 'Los juncos altos esconden acechadores del fango y un sapo del cieno. En las aguas someras crecen lirios del fango y hierba verde.'
+swamp.bog:
+  name: Fango Negro
+  desc: 'Barro que succiona y malos olores. Abajo esperan acechadores del fango, de noche llegan fuegos fatuos a la deriva y la setasombra crece entre los lirios.'
+swamp.witch_hut:
+  name: Cabaña de la Ermitaña
+  desc: 'Una cabaña torcida con una mesa de alquimia, hogar de la herborista Morwen. Su malvada hermana, la bruja de la ciénaga, acampa fuera entre las setasombras.'
+swamp.sunken_road:
+  name: Camino Hundido
+  desc: 'Un viejo camino empedrado medio tragado por el cieno. Lo rondan acechadores del fango y un esqueleto errante. Las ruinas quedan al este.'
+swamp.drowned_shrine:
+  name: Santuario Anegado
+  desc: 'Un santuario hundido iluminado por fuegos fatuos, con un espectro por la noche. En las piedras hay setasombra y un poco de cristal.'
+
+# Ruinas de Cael la Vieja
+ruins.road:
+  name: Camino de Cael la Vieja
+  desc: 'Un camino agrietado al este de la aldea, patrullado por esqueletos y sin ley desde aquí. La erudita Ines acampa entre la piedra suelta.'
+ruins.outskirts:
+  name: Afueras en Ruinas
+  desc: 'Casas derrumbadas que esqueletos y bandidos han revuelto. A veces aparecen reliquias antiguas entre los escombros.'
+ruins.collapsed_tower:
+  name: Torre Derrumbada
+  desc: 'Una torre caída rondada por espectros. Entre los restos brilla mineral de mithril, junto con reliquias antiguas.'
+ruins.plaza:
+  name: Plaza Rota
+  desc: 'La antigua plaza de la ciudad, hoy encrucijada de bandidos. Su guarida está al este y las escaleras de las catacumbas al sur.'
+ruins.overgrown_street:
+  name: Calle Cubierta de Maleza
+  desc: 'Enredaderas y raíces han recuperado la calle. Los esqueletos arrastran los pies junto a vetas de mineral de plata.'
+ruins.drowned_gate:
+  name: Puerta Anegada
+  desc: 'La puerta occidental de la antigua ciudad, hundida hasta los goznes en agua de ciénaga. Esqueletos y un acechador del fango la comparten con recelo.'
+ruins.bandit_hideout:
+  name: Guarida de los Bandidos
+  desc: 'El cubil del capitán bandido, lleno de botín y malos modales. Aquí hay hierro estelar escondido. No vengas solo.'
+ruins.catacomb_stairs:
+  name: Escaleras de las Catacumbas
+  desc: 'Escaleras gastadas, guardadas por esqueletos, que bajan a las catacumbas. Solo puede descender un grupo.'
+
+# Catacumbas del Regente Hueco
+dungeon.antechamber:
+  name: Antecámara
+  desc: 'Una sala fría con una palanca del sol y una palanca de la luna. Dos agentes distintos deben accionarlas en menos de un minuto para abrir el paso al sur.'
+dungeon.lever_hall:
+  name: Sala de las Palancas
+  desc: 'La sala tras la puerta de las palancas, vigilada por guardianes de la cripta. Un viejo cofre cerrado espera a un Pícaro.'
+dungeon.trapped_corridor:
+  name: Pasillo de Trampas
+  desc: 'Sabuesos de huesos recorren un pasillo de cuchillas oscilantes. Un Pícaro debe desarmar la trampa para abrir el paso al sur.'
+dungeon.rune_door:
+  name: Puerta de Runas
+  desc: 'Una puerta sellada que brilla con runas, con un guardián de la cripta y un sabueso de huesos de servicio. Solo un Mago puede leer el sello y abrir el paso al oeste.'
+dungeon.gate_hall:
+  name: Sala del Portón
+  desc: 'Guardianes de la cripta flanquean un rastrillo enorme. Un Guerrero debe mantenerlo abierto mientras los demás pasan al oeste.'
+dungeon.boss_lair:
+  name: Trono del Regente Hueco
+  desc: 'El Regente Hueco reina aquí desde un trono de polvo. Un cabrestante junto a la puerta deja entrar a tu Guerrero. La bóveda se abre al norte cuando el Regente caiga.'
+dungeon.vault:
+  name: Bóveda del Regente
+  desc: 'El tesoro privado del Regente Hueco, por fin en silencio. El arcón tiene una cerradura que solo un Pícaro puede forzar.'
