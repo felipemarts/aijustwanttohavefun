@@ -32,6 +32,7 @@ import { adminRoutes, reportRoute } from './routes/admin';
 import { agentRoutes } from './routes/agent';
 import { chronicleRoutes } from './routes/chronicle';
 import { fileRoutes } from './routes/files';
+import { mcpRoutes } from './routes/mcp';
 import { metricsRoutes } from './routes/metrics';
 import { ownerRoutes } from './routes/owner';
 import { publicRoutes } from './routes/public';
@@ -242,6 +243,8 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     { prefix: '/api/public' },
   );
   app.register(async (ops) => metricsRoutes(ops, ctx));
+  // MCP over Streamable HTTP: tool calls run through the API above in-process (`app.inject`).
+  app.register(async (mcp) => mcpRoutes(mcp, ctx, app));
   attachSpectatorSocket(app.server, { broadcaster: deps.spectators, config, metrics: deps.metrics, log: deps.logger });
   app.register(async (files) => {
     files.addHook('onRequest', async (req, reply) => {

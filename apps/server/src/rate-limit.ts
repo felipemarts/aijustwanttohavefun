@@ -76,6 +76,11 @@ export function createLimiters() {
     report: new RateLimiter(10, 60 * MIN),
     /** Per IP, share cards (each new one is composed on the CPU). */
     og: new RateLimiter(120, MIN),
+    /**
+     * Per IP, `/mcp` messages other than tool calls with a valid key (initialize, tools/list, ping, unauthenticated
+     * calls). Tool calls themselves go through the API and its limits (`agent`, `anonymous`, `register`).
+     */
+    mcp: new RateLimiter(120, MIN),
   };
 }
 export type Limiters = ReturnType<typeof createLimiters>;
