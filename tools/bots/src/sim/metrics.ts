@@ -6,6 +6,7 @@ import { apCost, refreshResource, spawnSlots, xpToNext, BALANCE, type ActionResu
 import type { ActionName, GameEvent } from '@ajwf/shared';
 import { PROFILES } from '../profiles';
 import { PROFILE_IDS, type ProfileId } from '../profiles/types';
+import type { RenderedEdition } from './chronicle';
 import type { SimBot, SimOptions, Simulation } from './runner';
 
 const HOUR = 3_600_000;
@@ -83,6 +84,12 @@ export class Metrics {
   private projects: { id: string; t: number }[] = [];
   private elections: { n: number; t: number; voters: number; eligible: number; candidates: number; winner: string | null }[] = [];
   private civic: Record<string, number> = {};
+  /** Kills by monster kind (to see who reaches the dungeon and the world boss). */
+  readonly kills: Record<string, number> = {};
+  /** Trust and betrayal events by type (betrayal, pvp_kill, steal, scam_reported, bounty_placed...). */
+  readonly trust: Record<string, number> = {};
+  /** PvP or theft that hit (or was struck by) an agent below the PvP level: must stay empty. */
+  readonly lowLevelPvp: { type: string; t: number; actor: string; target: string; actorLevel: number; targetLevel: number }[] = [];
   /** Grouped bots' attacks and casts, and how many of them had a party mate standing in the room. */
   private groupedBlows = { all: 0, withMate: 0, inParty: 0 };
 
@@ -176,6 +183,7 @@ export class Metrics {
 
   /** Engine events, from actions and ticks. */
   onEvents(events: GameEvent[], cause: string): void {
+    this.sim.chronicle.consume(events);
     for (const ev of events) {
       const bot = this.sim.botOf(ev.actor);
       const p = ev.payload as Record<string, unknown> & { m?: { p?: Record<string, number> } };
@@ -235,6 +243,28 @@ export class Metrics {
           byDay.set(day, d);
           break;
         }
+        case 'attack':
+          if (p.pvp) this.onPvp(ev, 'pvp_blow');
+          break;
+        case 'kill':
+          inc(this.kills, String(p.mon));
+          break;
+        case 'pvp_kill':
+        case 'steal':
+        case 'steal_failed':
+          this.onPvp(ev, ev.type);
+          break;
+        case 'betrayal':
+        case 'scam_reported':
+        case 'bounty_placed':
+        case 'bounty_claimed':
+        case 'bounty_refunded':
+        case 'guild_coup':
+        case 'treasury_looted':
+        case 'give':
+        case 'wanted':
+          inc(this.trust, ev.type);
+          break;
         case 'project_completed':
           this.projects.push({ id: String(p.project), t: ev.ts });
           break;
@@ -247,6 +277,17 @@ export class Metrics {
         }
       }
     }
+  }
+
+  private onPvp(ev: GameEvent, type: string): void {
+    inc(this.trust, type);
+    const s = this.sim.s;
+    const a = ev.actor ? s.agents.get(ev.actor) : undefined;
+    const b = ev.target ? s.agents.get(ev.target) : undefined;
+    if (!a || !b) return;
+    // Levels only go up, and this runs right after the action: a level under the minimum now was under it then.
+    const min = BALANCE.pvp.minLevel;
+    if (a.level < min || b.level < min) this.lowLevelPvp.push({ type, t: ev.ts, actor: a.name, target: b.name, actorLevel: a.level, targetLevel: b.level });
   }
 
   private sample(t: number): void {
@@ -302,6 +343,8 @@ export class Metrics {
     const bots = this.sim.bots;
     const hours = (now - opt.start) / HOUR;
     this.sample(now);
+    this.sim.chronicle.finish(now);
+    const editions = this.sim.chronicle.editions;
 
     /** Hours for half of a population to reach a level (non-reachers count as never), and the share that did. */
     const levelTimes = (pop: SimBot[]) => {
@@ -419,6 +462,15 @@ export class Metrics {
         formed: this.parties.size, activeAtEnd: s.parties.size, avgLifetimeHours: round(lifetimes.reduce((a, b) => a + b, 0) / Math.max(1, lifetimes.length)), medianLifetimeHours: round(median(lifetimes)), avgMaxSize: round([...this.parties.values()].reduce((a, p) => a + p.size, 0) / Math.max(1, this.parties.size), 2) },
       trades: { guaranteed: this.guaranteed, market: this.market, prices },
       civic: { actions: this.civic, projects: this.projects.map((p) => ({ id: p.id, day: round((p.t - opt.start) / DAY, 2) })), projectsPerDay: round(this.projects.length / Math.max(1e-9, hours / 24), 2), elections: this.elections.map((e) => ({ ...e, day: round((e.t - opt.start) / DAY, 2), turnout: round(e.voters / Math.max(1, e.eligible), 3) })), treasury: s.village.treasury, mayor: s.village.mayor?.name ?? null, candidates: s.village.election.candidates.length, votesNow: Object.keys(s.village.election.votes).length },
+      trust: {
+        counts: Object.fromEntries(Object.entries(this.trust).sort((a, b) => b[1] - a[1])),
+        perDay: Object.fromEntries(Object.entries(this.trust).map(([k, n]) => [k, round(n / Math.max(1e-9, hours / 24), 2)])),
+        per1000Actions: Object.fromEntries(Object.entries(this.trust).map(([k, n]) => [k, round((n * 1000) / Math.max(1, this.sim.actions), 3)])),
+        lowLevelPvp: this.lowLevelPvp.length,
+        lowLevelExamples: this.lowLevelPvp.slice(0, 5),
+      },
+      kills: Object.fromEntries(Object.entries(this.kills).sort((a, b) => b[1] - a[1])),
+      gazette: { finalEditions: editions.filter((e) => e.final).length, editions, highlights: Object.fromEntries(Object.entries(this.sim.chronicle.highlightCounts).sort((a, b) => b[1] - a[1])) },
       refusals: { total: totalRefusals, rate: round(totalRefusals / Math.max(1, this.sim.actions), 4), byCode: Object.fromEntries(Object.entries(this.refusals).sort((a, b) => b[1] - a[1])), top: Object.fromEntries(Object.entries(this.refusalsBy).sort((a, b) => b[1] - a[1]).slice(0, 15)) },
       world: {
         monstersAliveNearVillage: round(nearSamples.reduce((a, x) => a + x.monstersAlive, 0) / Math.max(1, nearSamples.length), 3),
@@ -472,6 +524,15 @@ export type SimReport = {
     candidates: number;
     votesNow: number;
   };
+  trust: {
+    counts: Record<string, number>;
+    perDay: Record<string, number>;
+    per1000Actions: Record<string, number>;
+    lowLevelPvp: number;
+    lowLevelExamples: { type: string; t: number; actor: string; target: string; actorLevel: number; targetLevel: number }[];
+  };
+  kills: Record<string, number>;
+  gazette: { finalEditions: number; editions: RenderedEdition[]; highlights: Record<string, number> };
   refusals: { total: number; rate: number; byCode: Record<string, number>; top: Record<string, number> };
   world: { monstersAliveNearVillage: number; resourcesLeftNearVillage: number; waitShare: number; pauses: Record<string, number>; pauseRooms: Record<string, number> };
   actions: Record<string, number>;

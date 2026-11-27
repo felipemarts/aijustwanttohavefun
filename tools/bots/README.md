@@ -49,7 +49,8 @@ any invariant violation (`checkInvariants` runs every 25,000 actions and at the 
 
 ```sh
 pnpm sim                                   # 500 bots, 500,000 actions, seed 1
-pnpm sim --bots 500 --days 21 --actions 0  # three simulated weeks (pacing to level 20)
+pnpm sim --scenario civilization           # M6: 500 bots, 7.05 days, prints every gazette edition in full
+pnpm sim --scenario pacing                 # 500 bots, 21.05 days (pacing to level 20)
 pnpm sim --bots 200 --days 4 --mix social=1,fighter=1 --seed 3
 ```
 
@@ -64,6 +65,8 @@ pnpm sim --bots 200 --days 4 --mix social=1,fighter=1 --seed 3
 | `--session N` | per bucket | Max actions per session for every bucket |
 | `--think a-b` | 3-8 | Seconds between two actions of a session |
 | `--out FILE` | `reports/sim-<bots>b-<seed>-<limit>.json` | Report path (`tools/bots/reports/` is gitignored) |
+| `--scenario NAME` | none | `civilization` or `pacing` presets (explicit flags still apply) |
+| `--gazette` | off | Print every Village Gazette edition in full (always on for `civilization`) |
 | `--quiet` | off | No daily progress line |
 
 **Time model.** Agents are LLMs woken by a scheduler. Each bot belongs to a cadence bucket: it wakes every 30 min
@@ -82,15 +85,24 @@ only through the game: board posts (`lfg`, `campaign`), `say` and party chat, in
 - **social**: talks, befriends, groups up (`lfg` on the board, "LFG" said at the camp of its level band; whoever
   hears it may invite), hunts at the party camp (announced in party chat, otherwise computed from the leader's
   level), Warrior taunts, Cleric heals on request and revives, hurt members recover at camp, the leader hands on
-  gear; chats for Camaraderie.
+  gear; chats for Camaraderie. From level 15 a party of 3 or more with 2 classes camps in the Catacombs: it gathers
+  at the stairs (party gate), two members online together pull the levers, the Rogue disarms the trap and the Mage
+  reads the seal for the deeper camps (`profiles/dungeon.ts`). Everyone from level 10 joins the daily world boss.
 - **trader**: picks a profession at level 5, gathers or buys inputs (shops, other agents' market orders), crafts,
   lists goods on the market, offers guaranteed trades, founds or joins a guild.
 - **politician**: brings materials and gold to village projects, runs for mayor, campaigns on the board, votes, and
   as mayor sets the priority project, a 3% tax and funds the priority from the treasury.
-- **traitor**: `social` for now; `OPPORTUNISTIC` in `profiles/traitor.ts` is the (empty) hook list for betrayals.
+- **traitor**: plays `social` (that is how it earns trust) and takes its chances first (`OPPORTUNISTIC` in
+  `profiles/traitor.ts`): betray a party mate in a lawless room, steal (Rogues, lawless rooms and the village at
+  night), ambush a weaker stranger, empty the guild treasury as an officer and leave, vote guild coups, and offer
+  pay-first deals ("DEAL: selling ... Pay first with give") it never delivers. All within the server's rules.
 
 Everyone except fighters and explorers votes (candidates come from the board's campaign posts) and answers fair
-trades and guild invites.
+trades and guild invites. Honest agents react to cheats (`profiles/trust.ts`): a buyer whose paid-for item never came
+reports the scam with the `give` event id and stops trusting the seller; agents attacked (or whose party mate was
+killed) put a bounty on the attacker; fighters, socials and politicians of level 8+ hunt Wanted agents in lawless
+rooms now and then; nobody invites, follows or trades with an agent it learned to distrust or that is Wanted. Honest
+traders also sell with pay-first deals and deliver.
 
 **Reading the report.** The JSON holds everything; stdout prints a summary:
 
@@ -105,13 +117,21 @@ trades and guild invites.
   (inflation) over the last days.
 - Deaths, quests by kind, parties (formed, lifetime, size, share of grouped blows struck in a party and with a mate
   in the room), trades and market prices of key goods, projects completed (day), elections (turnout), civic actions.
+- *Trust and betrayal*: counts, per day and per 1,000 actions of betrayals, PvP blows and kills, thefts (and failed
+  ones), scams reported, bounties placed and claimed, coups, looted treasuries; and the number of PvP or theft events
+  that involved an agent below level 8 (the server forbids it: must be 0).
+- *Village Gazette*: the server's own chronicle code (`apps/server/src/chronicle/`: highlight detector, day tally,
+  gazette builder) fed with the public events, one edition per UTC day, headlines (and with `--gazette` every
+  section) rendered in English.
+- Kills of group and high-level monsters (dungeon, world boss, elites).
 - *Refusals* by code and the most frequent `action:code:message` (a high count means a bot or a hint is wrong), and
   the world near the village: monster slots alive, resources left, pauses by profile and room (starvation shows up
   here).
 - `samples`: the hourly time series (gold, levels by group, monsters alive, resources left, parties).
 
-The CI version is `src/sim.test.ts` (110 bots, 5 simulated days, about 20 s): no invariant broken, groups at least
-1.8x faster than solo, every profile progresses, deterministic for a seed.
+The CI version is `src/sim.test.ts`: 110 bots for 5 simulated days (no invariant broken, groups at least 1.8x faster
+than solo, every profile progresses, traitors betray, scam and get bounties, no PvP or theft below level 8) and 70
+bots for 7.05 days (projects completed, one full election, 7 gazette editions); deterministic for a seed.
 
 ## Other scripts
 

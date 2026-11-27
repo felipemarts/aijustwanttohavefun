@@ -8,7 +8,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PROFILE_IDS, type ProfileId } from './profiles/types';
-import { formatReport } from './sim/format';
+import { formatGazette, formatReport } from './sim/format';
 import { DEFAULT_CADENCE, DEFAULT_MIX, defaultOptions, Simulation, type Cadence } from './sim/runner';
 
 const HELP = `Usage: pnpm sim [options]
@@ -21,7 +21,15 @@ const HELP = `Usage: pnpm sim [options]
   --session N       max actions per session for every bucket
   --think a-b       seconds between two actions of a session (default 3-8)
   --out FILE        report path (default tools/bots/reports/sim-<bots>b-<seed>-<limit>.json)
-  --quiet           no daily progress lines`;
+  --quiet           no daily progress lines
+  --scenario NAME   preset: civilization (500 bots, 7.05 days: projects, an election, 7 gazettes, printed in
+                    full), pacing (500 bots, 21.05 days); explicit flags override it`;
+
+/** Presets: the M6 civilization acceptance and the three-week pacing run. */
+const SCENARIOS: Record<string, { bots: number; days: number; gazette: boolean }> = {
+  civilization: { bots: 500, days: 7.05, gazette: true },
+  pacing: { bots: 500, days: 21.05, gazette: false },
+};
 
 function arg(argv: string[], name: string): string | undefined {
   const i = argv.indexOf(`--${name}`);
@@ -61,10 +69,13 @@ function main(argv: string[]): void {
   const session = num('session');
   if (session) cadence = cadence.map((c) => ({ ...c, actions: session }));
   const think = (arg(argv, 'think') ?? '3-8').split('-').map((x) => Number(x) * 1000) as [number, number];
-  const actions = num('actions', 500_000)!;
-  const days = num('days');
+  const scenarioName = arg(argv, 'scenario');
+  const scenario = scenarioName ? SCENARIOS[scenarioName] : undefined;
+  if (scenarioName && !scenario) throw new Error(`--scenario: unknown ${scenarioName} (${Object.keys(SCENARIOS).join(', ')})`);
+  const actions = num('actions', scenario ? 0 : 500_000)!;
+  const days = num('days', scenario?.days);
   const opt = defaultOptions({
-    bots: num('bots', 500)!,
+    bots: num('bots', scenario?.bots ?? 500)!,
     ...(actions > 0 ? { actions } : { actions: undefined }),
     ...(days !== undefined ? { days } : {}),
     seed: num('seed', 1)!,
@@ -77,11 +88,15 @@ function main(argv: string[]): void {
   const report = sim.run();
   const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'reports');
   const limit = days !== undefined ? `${days}d` : `${actions}a`;
-  const out = arg(argv, 'out') ?? join(root, `sim-${opt.bots}b-${opt.seed}-${limit}.json`);
+  const out = arg(argv, 'out') ?? join(root, `sim-${scenarioName ? `${scenarioName}-` : ''}${opt.bots}b-${opt.seed}-${limit}.json`);
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, JSON.stringify(report, null, 2));
   console.log('');
   console.log(formatReport(report));
+  if (scenario?.gazette || argv.includes('--gazette')) {
+    console.log('');
+    console.log(formatGazette(report));
+  }
   console.log('');
   console.log(`Report: ${out}`);
 }

@@ -41,6 +41,8 @@ export function formatReport(r: SimReport): string {
   out.push(`Net gold created: ${r.gold.net}; supply growth over the last days: ${(r.gold.supplyGrowthPerDay * 100).toFixed(1)}%/day`);
   out.push('');
   out.push(`Deaths: ${fmtMap(r.deaths)}`);
+  const top = ['crypt_guard', 'bone_hound', 'the_hollow_regent', 'ancient_colossus', 'wraith', 'bandit_captain', 'swamp_hag', 'kobold_foreman', 'rock_golem'];
+  out.push(`Kills of group and high-level monsters: ${top.map((m) => `${m} ${r.kills[m] ?? 0}`).join(', ')}`);
   out.push(`Quests completed: ${fmtMap(r.quests)}`);
   out.push(`Parties: ${r.parties.formed} formed, ${r.parties.activeAtEnd} alive at the end, lifetime avg ${r.parties.avgLifetimeHours}h median ${r.parties.medianLifetimeHours}h, avg max size ${r.parties.avgMaxSize}; grouped bots' blows: ${(r.parties.blowsInParty * 100).toFixed(0)}% in a party, ${(r.parties.blowsWithMate * 100).toFixed(0)}% with a party mate in the room`);
   out.push(`Trades: ${r.trades.guaranteed} guaranteed; market ${r.trades.market.trades} trades, ${r.trades.market.units} units, ${r.trades.market.gold} gold`);
@@ -51,10 +53,32 @@ export function formatReport(r: SimReport): string {
   out.push(`Elections: ${cv.elections.map((e) => `#${e.n} day ${e.day}: ${e.candidates} candidates, ${e.voters}/${e.eligible} voted (${(e.turnout * 100).toFixed(0)}%), winner ${e.winner ?? 'none'}`).join('; ') || 'none closed'}; current: ${cv.candidates} candidates, ${cv.votesNow} votes; mayor ${cv.mayor ?? 'none'}`);
   out.push(`Civic actions: ${fmtMap(cv.actions, 12)}`);
   out.push('');
+  const g = r.gazette;
+  out.push(`Village Gazette: ${g.finalEditions} final editions; highlights: ${fmtMap(g.highlights, 12)}`);
+  for (const e of g.editions) out.push(`  ${e.date}${e.final ? '' : ' (running)'}: ${e.headline}  [${e.highlights} highlights]`);
+  out.push('');
+  out.push(`Trust and betrayal: ${fmtMap(r.trust.counts, 14)}`);
+  out.push(`  per day: ${fmtMap(r.trust.perDay, 14)}`);
+  out.push(`  PvP or theft involving an agent below level 8: ${r.trust.lowLevelPvp}`);
+  out.push('');
   out.push(`Refusals: ${r.refusals.total} (${(r.refusals.rate * 100).toFixed(2)}% of actions): ${fmtMap(r.refusals.byCode)}`);
   out.push(`  top: ${fmtMap(r.refusals.top, 10)}`);
   out.push(`World near the village: ${(r.world.monstersAliveNearVillage * 100).toFixed(0)}% of daytime monster slots alive, ${(r.world.resourcesLeftNearVillage * 100).toFixed(0)}% of resource stock left; ${(r.world.waitShare * 100).toFixed(1)}% of turns were pauses`);
   out.push(`  pauses: ${fmtMap(r.world.pauses, 12)}`);
   out.push(`  where: ${fmtMap(r.world.pauseRooms, 10)}`);
+  return out.join('\n');
+}
+
+/** Every edition of the Village Gazette in full, as a reader would see it. */
+export function formatGazette(r: SimReport): string {
+  const out: string[] = ['THE VILLAGE GAZETTE'];
+  for (const e of r.gazette.editions) {
+    out.push('');
+    out.push(`=== ${e.date}${e.final ? '' : ' (running)'} === ${e.headline}`);
+    for (const sec of e.sections) {
+      out.push(`  ${sec.title}`);
+      for (const item of sec.items) out.push(`    - ${item}`);
+    }
+  }
   return out.join('\n');
 }
