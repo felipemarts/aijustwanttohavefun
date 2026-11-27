@@ -137,12 +137,13 @@ describe('levels', () => {
   it('a kill can level up; the curve is used through real actions', () => {
     const k = makeKit();
     const a = k.add('Pip', 'warrior', { room: 'forest.edge' });
-    a.xp = 95;
+    const slimeXp = k.c.monsters.get('slime')!.xp;
+    a.xp = xpToNext(1) - slimeXp + 1;
     const m = k.monsters('forest.edge')[0]!;
     let r;
     for (let i = 0; i < 10 && m.hp > 0; i++) r = k.ok(a, 'attack', { target: m.uid });
     expect(a.level).toBe(2);
-    expect(a.xp).toBe(95 + 12 - 100);
+    expect(a.xp).toBe(1);
     expect(keys(r!)).toContain('n.level_up');
   });
 
@@ -168,8 +169,8 @@ describe('levels', () => {
     const m = k.monsters('forest.edge')[0]!;
     let r;
     for (let i = 0; i < 10 && m.hp > 0; i++) r = k.ok(a, 'attack', { target: m.uid });
-    // 8 - 1 = 7 levels apart: 1 - 0.2 * (7 - 3) = 0.2.
-    expect(narr(r!, 'n.kill')!.xp).toBe(Math.round(12 * 0.2));
+    // 8 - 1 = 7 levels apart: 1 - 0.2 * (7 - 3) = 0.2 (never under 1 XP).
+    expect(narr(r!, 'n.kill')!.xp).toBe(Math.max(1, Math.round(k.c.monsters.get('slime')!.xp * 0.2)));
   });
 });
 

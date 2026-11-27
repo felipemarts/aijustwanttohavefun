@@ -24,14 +24,14 @@ describe('gather', () => {
     const r = k.act(a, 'gather', { resource: 'green_herb' });
     expect(errCode(r)).toBe('NOT_AVAILABLE_HERE');
     expect(errKey(r)).toBe('err.resource_depleted');
-    // 4 per hour: one every 15 minutes.
-    k.advance(14 * MIN);
+    const every = HOUR / k.c.rooms.get('forest.edge')!.resources.find((x) => x.id === 'green_herb')!.regen_per_hour;
+    k.advance(every - MIN);
     expect(k.err(a, 'gather', { resource: 'green_herb' })).toBe('NOT_AVAILABLE_HERE');
     k.advance(2 * MIN);
     k.ok(a, 'gather', { resource: 'green_herb' });
     expect(k.err(a, 'gather', { resource: 'green_herb' })).toBe('NOT_AVAILABLE_HERE');
-    // The partial interval carried over: the next unit comes 15 minutes after the previous one, not after the gather.
-    k.advance(14 * MIN);
+    // The partial interval carried over: the next unit comes one interval after the previous one, not after the gather.
+    k.advance(every - MIN);
     k.ok(a, 'gather', { resource: 'green_herb' });
     k.advance(10 * HOUR);
     expect(observe(k.s, a.id, k.ctx()).room.resources!.green_herb).toBe(6);

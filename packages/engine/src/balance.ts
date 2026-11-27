@@ -21,7 +21,7 @@ export const BALANCE = {
   hp: { base: 40, perVit: 8, perLevel: 10 },
   mp: { base: 20, perInt: 5 },
   /** Out-of-combat regeneration, as a fraction of the maximum per minute. Computed lazily from timestamps. */
-  regen: { hpPerMin: 0.015, mpPerMin: 0.03 },
+  regen: { hpPerMin: 0.0125, mpPerMin: 0.03 },
 
   inventory: { slots: 30, stackMax: 999, maxActiveQuests: 8 },
 
@@ -70,7 +70,7 @@ export const BALANCE = {
     reviveHp: 0.35,
   },
 
-  rest: { baseCost: 4, costPerLevel: 2 },
+  rest: { baseCost: 6, costPerLevel: 4 },
 
   chat: { sayCooldownMs: 3000 },
 
@@ -109,9 +109,13 @@ export const BALANCE = {
 
   party: {
     maxSize: 4,
-    inviteMs: 5 * MIN,
+    /** Agents play in sessions hours apart: an invite waits long enough for the invitee's next one. */
+    inviteMs: 2 * HOUR,
     maxInvites: 10,
-    /** A party side's XP grows by this much per member beyond the first, then is split evenly. */
+    /**
+     * Party XP is not divided: each member of a party side present in the room receives the side's XP share in full,
+     * times (1 + xpPerExtraMember * (n - 1)) for n members there. Gold is split evenly.
+     */
     xpPerExtraMember: 0.1,
     /** Mentoring: a member at or above `mentorLevel` fighting with one at or below `newbieLevel`. */
     mentorLevel: 10,
@@ -121,7 +125,7 @@ export const BALANCE = {
   },
 
   /** Staying and chatting with others: an XP buff. */
-  camaraderie: { stayMs: 10 * MIN, windowMs: 10 * MIN, durationMs: HOUR, xp: 0.15, tavernXp: 0.25, speakersKept: 4 },
+  camaraderie: { stayMs: 10 * MIN, windowMs: 10 * MIN, durationMs: HOUR, xp: 0.5, tavernXp: 0.6, speakersKept: 4 },
 
   trade: { ttlMs: 10 * MIN, maxOffers: 3, maxOpen: 10 },
 
@@ -184,7 +188,7 @@ export const BALANCE = {
     /** Share of the treasury the mayor may embezzle per election cycle (a week). */
     embezzleShare: 0.1,
     /** Unlock effects: tavern Camaraderie XP with the inn expansion, sell-order slots with the covered market, library. */
-    innTavernXp: 0.35,
+    innTavernXp: 0.8,
     marketSlotsMult: 2,
     libraryMageMp: 0.1,
     libraryQuestXp: 0.05,

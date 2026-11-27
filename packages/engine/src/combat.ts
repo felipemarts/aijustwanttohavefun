@@ -258,8 +258,9 @@ export function killMonster(run: Run, roomId: string, m: MonsterInst): void {
   for (const side of sides) {
     const share = side.dmg / total;
     const n = side.members.length;
-    // A party's XP grows with its size, then is split evenly: being there is what counts, not the damage.
-    const xpEach = side.party ? (kind.xp * share * (1 + BALANCE.party.xpPerExtraMember * (n - 1))) / n : kind.xp * share;
+    // XP is not divided in a party: every member present receives the side's share in full, grown by the party's
+    // size. Being there is what counts, not the damage. (Gold is still split evenly.)
+    const xpEach = side.party ? kind.xp * share * (1 + BALANCE.party.xpPerExtraMember * (n - 1)) : kind.xp * share;
     const credit = share >= (kind.world_boss ? BALANCE.worldBoss.creditShare : BALANCE.combat.creditShare);
     for (const b of side.members) {
       if (b !== run.actor) touch(run, b);

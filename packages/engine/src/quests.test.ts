@@ -48,10 +48,11 @@ describe('tutorial trail', () => {
     const gold0 = a.gold;
     const done = k.ok(a, 'quest_turn_in', { quest: 't01_arrival' });
     expect(narr(done, 'n.quest_done')).toEqual({ quest: '@quest:t01_arrival', gold: 10 });
-    expect(narr(done, 'n.xp')).toEqual({ xp: 20 });
+    const t01Xp = k.c.quests.get('t01_arrival')!.rewards.xp;
+    expect(narr(done, 'n.xp')).toEqual({ xp: t01Xp });
     expect(questData(done).next).toEqual({ id: 't02_innkeeper', giver: 'olga', room: 'village.square' });
     expect(a.gold).toBe(gold0 + 10);
-    expect(a.xp).toBe(20);
+    expect(a.xp).toBe(t01Xp);
     expect(a.quests).toEqual({});
     expect(a.questsDone.t01_arrival).toBe(k.now);
     expect(done.events.find((e) => e.type === 'quest_done')!.payload).toMatchObject({ quest: 't01_arrival', gold: 10 });

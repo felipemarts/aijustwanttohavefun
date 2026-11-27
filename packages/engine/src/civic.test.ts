@@ -227,7 +227,7 @@ describe('civic invariants', () => {
       'is a candidate twice',
       'tally',
       'tax rate 0.5',
-      '9999 gold of 500',
+      `9999 gold of ${k.c.projects.get('bridge')!.cost.gold}`,
       'x bread',
       'ledger sums',
       'has progress before watchtower is done',

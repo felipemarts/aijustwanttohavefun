@@ -85,15 +85,17 @@ describe('contribute', () => {
   it('never swallows excess: takes only what is missing and leaves the rest in the bag', () => {
     const k = makeKit();
     const a = citizen(k, 'Pip', 3);
-    a.gold = 900;
-    a.inv.wood = 100;
+    const cost = k.c.projects.get('bridge')!.cost;
+    const wood = cost.items.find((x) => x.item === 'wood')!.qty;
+    a.gold = cost.gold + 400;
+    a.inv.wood = wood + 40;
     a.inv.bread = 3;
-    const r = k.ok(a, 'contribute', { project: 'bridge', gold: 900, items: { wood: 100, bread: 3 } });
+    const r = k.ok(a, 'contribute', { project: 'bridge', gold: cost.gold + 400, items: { wood: wood + 40, bread: 3 } });
     expect(narr(r, 'n.contribute_trimmed')).toEqual({ goods: 'gold x400, wood x40, bread x3' });
     expect(a.gold).toBe(400);
     expect(a.inv.wood).toBe(40);
     expect(a.inv.bread).toBe(3);
-    expect(k.s.village.projects.bridge).toMatchObject({ gold: 500, items: { wood: 60 } });
+    expect(k.s.village.projects.bridge).toMatchObject({ gold: cost.gold, items: { wood } });
     // Gold and wood are complete now: offering only those is refused.
     refuse(k, a, { project: 'bridge', gold: 10, items: { wood: 5 } }, 'project_not_needed');
     expect(checkInvariants(k.s, k.now)).toEqual([]);
@@ -161,7 +163,10 @@ describe('priority bonus', () => {
     expect(before.gold - after.gold).toBe(100);
     expect((before.items.wood ?? 0) - (after.items.wood ?? 0)).toBe(10);
     expect(a.stats.contributions).toBe(120);
-    // Near the end the giver pays only what, topped up, covers the need.
+    // Near the end the giver pays only what, topped up, covers the need: 10 ingots short.
+    const ingots = k.c.projects.get('bridge')!.cost.items.find((x) => x.item === 'iron_ingot')!.qty;
+    st.items.iron_ingot = ingots - 10;
+    st.by[VILLAGE_ID] = st.by[VILLAGE_ID]! + (ingots - 10) * k.c.items.get('iron_ingot')!.value;
     a.inv.iron_ingot = 10;
     const r2 = k.ok(a, 'contribute', { project: 'bridge', items: { iron_ingot: 10 } });
     expect(r2.events.find((e) => e.type === 'project_contribution')!.payload).toMatchObject({ items: { iron_ingot: 9 }, bonus: { items: { iron_ingot: 1 } } });
@@ -200,7 +205,7 @@ describe('completion and the project tree', () => {
     expect(narr(r, 'n.project_done')).toEqual({ proj: '@proj:bridge' });
     const done = r.events.find((e) => e.type === 'project_completed')!;
     expect(done).toMatchObject({ visibility: 'public', drama: 9, roomId: 'village.river_bank', payload: { project: 'bridge', site: 'village.river_bank', building: 'bridge', unlocks: ['mines_shortcut'] } });
-    expect(done.payload.plaque).toEqual([{ id: a.id, name: 'Pip', value: 500 + 60 * 2 + 40 * 2 + 10 * 18 }]);
+    expect(done.payload.plaque).toEqual([{ id: a.id, name: 'Pip', value: p.cost.gold + p.cost.items.reduce((n, x) => n + x.qty * k.c.items.get(x.item)!.value, 0) }]);
     expect(r.events.filter((e) => e.type === 'project_available').map((e) => e.payload.project)).toEqual(['arena']);
     expect(checkInvariants(k.s, k.now)).toEqual([]);
   });
@@ -307,13 +312,13 @@ describe('unlock effects', () => {
     k.ok(war, 'inventory');
     expect(derive(k.c, mage, k.now).maxMp).toBe(Math.floor(mp * 1.1));
     expect(derive(k.c, war, k.now).maxMp).toBe(wmp);
-    // Quest rewards: c_civic_1 gives 400 XP, now 420.
+    // Quest rewards: c_civic_1 XP, now 5% more.
     war.inv.wood = 5;
     k.ok(war, 'quest_accept', { quest: 'c_civic_1' });
     for (let i = 0; i < 5; i++) k.ok(war, 'contribute', { project: 'inn_expansion', items: { wood: 1 } });
     const xp = war.xp;
     k.ok(war, 'quest_turn_in', { quest: 'c_civic_1' });
-    expect(war.xp - xp).toBe(420);
+    expect(war.xp - xp).toBe(Math.round(k.c.quests.get('c_civic_1')!.rewards.xp * 1.05));
     expect(checkInvariants(k.s, k.now)).toEqual([]);
   });
 
@@ -355,7 +360,9 @@ describe('observe', () => {
     a.gold = 50;
     k.ok(a, 'contribute', { project: 'bridge', gold: 50 });
     let o = observe(k.s, a.id, k.ctx());
-    expect(o.room.project).toEqual({ id: 'bridge', progress: 0.05 });
+    const p = k.c.projects.get('bridge')!;
+    const total = p.cost.gold + p.cost.items.reduce((n, x) => n + x.qty * k.c.items.get(x.item)!.value, 0);
+    expect(o.room.project).toEqual({ id: 'bridge', progress: Math.floor(Math.floor((50 / total) * 1000) / 10) / 100 });
     expect(o.actions).toContain('contribute');
     k.place(a, TOWN_HALL);
     o = observe(k.s, a.id, k.ctx());

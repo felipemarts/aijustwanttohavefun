@@ -158,7 +158,7 @@ describe('GET /api/v1/village', () => {
     const res = await s.get(pip.key, '/api/v1/village');
     const body = res.json();
     expect(body).toMatchObject({ ok: true, population: 4, mayor: null, treasury: 0, tax_pct: 0, priority: null, election: { n: 1, phase: 'voting', voters: 0 } });
-    expect(body.projects.open).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'bridge', site: 'village.river_bank', pct: expect.any(Number), need: expect.objectContaining({ gold: 400, wood: 50 }) })]));
+    expect(body.projects.open).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'bridge', site: 'village.river_bank', pct: expect.any(Number), need: expect.objectContaining({ gold: s.game.content.projects.get('bridge')!.cost.gold - 100, wood: s.game.content.projects.get('bridge')!.cost.items.find((x) => x.item === 'wood')!.qty - 10 }) })]));
     expect(body.projects.locked).toContain('library');
     expect(body.election.candidates).toHaveLength(3);
     expect(body.election.candidates[0].platform.untrusted_text.length).toBeLessThanOrEqual(161);

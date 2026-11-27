@@ -12,72 +12,72 @@
   kind: tutorial
   giver: olga
   steps: [{ type: visit, target: village.tavern }]
-  rewards: { xp: 20, gold: 10 }
+  rewards: { xp: 10, gold: 10 }
 - id: t02_innkeeper
   kind: tutorial
   giver: olga
   requires: t01_arrival
   steps: [{ type: talk, target: berta }]
-  rewards: { xp: 20, gold: 5, items: [{ item: bread, qty: 2 }] }
+  rewards: { xp: 10, gold: 5, items: [{ item: bread, qty: 2 }] }
 - id: t03_supplies
   kind: tutorial
   giver: olga
   requires: t02_innkeeper
   steps: [{ type: shop_buy, target: minor_potion }]
-  rewards: { xp: 25, gold: 25 }
+  rewards: { xp: 10, gold: 25 }
 - id: t04_gear_up
   kind: tutorial
   giver: sergeant_holt
   requires: t03_supplies
   steps: [{ type: equip, target: cloth_armor }]
-  rewards: { xp: 25, gold: 5 }
+  rewards: { xp: 10, gold: 5 }
 - id: t05_first_blood
   kind: tutorial
   giver: sergeant_holt
   requires: t04_gear_up
   steps: [{ type: kill, target: slime, qty: 3 }]
-  rewards: { xp: 40, gold: 15, items: [{ item: minor_potion, qty: 2 }] }
+  rewards: { xp: 20, gold: 15, items: [{ item: minor_potion, qty: 2 }] }
 - id: t06_woodcutter
   kind: tutorial
   giver: ranger_fen
   requires: t05_first_blood
   steps: [{ type: gather, target: wood, qty: 3 }]
-  rewards: { xp: 40, gold: 10 }
+  rewards: { xp: 20, gold: 10 }
 - id: t07_wolf_pelts
   kind: tutorial
   giver: ranger_fen
   requires: t06_woodcutter
   steps: [{ type: collect, target: wolf_pelt, qty: 2 }]
   consume: [{ item: wolf_pelt, qty: 2 }]
-  rewards: { xp: 70, gold: 20, items: [{ item: padded_armor }] }
+  rewards: { xp: 35, gold: 20, items: [{ item: padded_armor }] }
 - id: t08_speak_up
   kind: tutorial
   giver: berta
   requires: t07_wolf_pelts
   social: true
   steps: [{ type: say }]
-  rewards: { xp: 30, gold: 5 }
+  rewards: { xp: 15, gold: 5 }
 - id: t09_first_friend
   kind: tutorial
   giver: berta
   requires: t08_speak_up
   social: true
   steps: [{ type: friend }]
-  rewards: { xp: 60, gold: 10 }
+  rewards: { xp: 30, gold: 10 }
 - id: t10_fair_trade
   kind: tutorial
   giver: merchant_bram
   requires: t09_first_friend
   social: true
   steps: [{ type: trade }]
-  rewards: { xp: 60, gold: 25 }
+  rewards: { xp: 30, gold: 25 }
 - id: t11_better_together
   kind: tutorial
   giver: registrar_vey
   requires: t10_fair_trade
   social: true
   steps: [{ type: party }]
-  rewards: { xp: 60, gold: 10 }
+  rewards: { xp: 30, gold: 10 }
 - id: t12_pack_hunt
   kind: tutorial
   giver: sergeant_holt
@@ -85,27 +85,27 @@
   social: true
   party_min: 2
   steps: [{ type: kill, target: wolf, qty: 4 }]
-  rewards: { xp: 140, gold: 30, items: [{ item: travelers_ration, qty: 2 }] }
+  rewards: { xp: 70, gold: 30, items: [{ item: travelers_ration, qty: 2 }] }
 - id: t13_notice_board
   kind: tutorial
   giver: berta
   requires: t12_pack_hunt
   social: true
   steps: [{ type: board_post }]
-  rewards: { xp: 40, gold: 5 }
+  rewards: { xp: 20, gold: 5 }
 - id: t14_dear_diary
   kind: tutorial
   giver: sister_ilse
   requires: t13_notice_board
   steps: [{ type: journal }]
-  rewards: { xp: 40, gold: 10 }
+  rewards: { xp: 20, gold: 10 }
 - id: t15_brick_by_brick
   kind: tutorial
   giver: clerk_aldo
   requires: t14_dear_diary
   social: true
   steps: [{ type: contribute }]
-  rewards: { xp: 90, gold: 0 }
+  rewards: { xp: 45, gold: 0 }
 - id: t16_seasoned
   kind: tutorial
   giver: sergeant_holt
@@ -118,21 +118,21 @@
   requires: t16_seasoned
   level: 5
   steps: [{ type: profession }]
-  rewards: { xp: 120, gold: 20 }
+  rewards: { xp: 60, gold: 20 }
 - id: t18_made_by_hand
   kind: tutorial
   giver: gunnar
   requires: t17_a_trade_of_your_own
   level: 5
   steps: [{ type: craft }]
-  rewards: { xp: 160, gold: 30 }
+  rewards: { xp: 80, gold: 30 }
 - id: t19_into_the_dark
   kind: tutorial
   giver: foreman_brakka
   requires: t18_made_by_hand
   level: 5
   steps: [{ type: visit, target: mines.entrance }, { type: kill, target: cave_bat, qty: 3 }]
-  rewards: { xp: 320, gold: 60 }
+  rewards: { xp: 160, gold: 60 }
 - id: t20_citizen
   kind: tutorial
   giver: clerk_aldo
@@ -141,90 +141,90 @@
   social: true
   # Elections are weekly, so the trail ends by learning about them instead of waiting for one (voting is in c_civic_2).
   steps: [{ type: talk, target: clerk_aldo }, { type: visit, target: village.market }]
-  rewards: { xp: 250, gold: 50, items: [{ item: cos_flower_crown }] }
+  rewards: { xp: 125, gold: 50, items: [{ item: cos_flower_crown }] }
 
 # ── Dailies (13): 3 per day, at least 1 social ─────────────────────────────────
 - id: d_slime_cleanup
   kind: daily
   giver: sergeant_holt
   steps: [{ type: kill, target: slime, qty: 8 }]
-  rewards: { xp: 80, gold: 20 }
+  rewards: { xp: 40, gold: 20 }
 - id: d_wolf_cull
   kind: daily
   giver: ranger_fen
   level: 2
   steps: [{ type: kill, target: wolf, qty: 6 }]
-  rewards: { xp: 130, gold: 30 }
+  rewards: { xp: 65, gold: 30 }
 - id: d_firewood
   kind: daily
   giver: berta
   steps: [{ type: collect, target: wood, qty: 8 }]
   consume: [{ item: wood, qty: 8 }]
-  rewards: { xp: 90, gold: 30 }
+  rewards: { xp: 45, gold: 30 }
 - id: d_herb_run
   kind: daily
   giver: sister_ilse
   steps: [{ type: collect, target: green_herb, qty: 6 }]
   consume: [{ item: green_herb, qty: 6 }]
-  rewards: { xp: 90, gold: 30 }
+  rewards: { xp: 45, gold: 30 }
 - id: d_spider_silk
   kind: daily
   giver: ranger_fen
   level: 5
   steps: [{ type: kill, target: giant_spider, qty: 6 }]
-  rewards: { xp: 260, gold: 50 }
+  rewards: { xp: 130, gold: 50 }
 - id: d_kobold_trouble
   kind: daily
   giver: foreman_brakka
   level: 5
   steps: [{ type: kill, target: kobold, qty: 6 }]
-  rewards: { xp: 420, gold: 70 }
+  rewards: { xp: 210, gold: 70 }
 - id: d_ore_delivery
   kind: daily
   giver: gunnar
   level: 5
   steps: [{ type: collect, target: iron_ore, qty: 5 }]
   consume: [{ item: iron_ore, qty: 5 }]
-  rewards: { xp: 300, gold: 80 }
+  rewards: { xp: 150, gold: 80 }
 - id: d_bone_collector
   kind: daily
   giver: scholar_ines
   level: 12
   steps: [{ type: kill, target: skeleton, qty: 6 }]
-  rewards: { xp: 1100, gold: 150 }
+  rewards: { xp: 250, gold: 150 }
 - id: d_swamp_harvest
   kind: daily
   giver: hag_morwen
   level: 10
   steps: [{ type: collect, target: bog_lily, qty: 5 }]
   consume: [{ item: bog_lily, qty: 5 }]
-  rewards: { xp: 900, gold: 180 }
+  rewards: { xp: 315, gold: 180 }
 - id: d_fair_deal
   kind: daily
   giver: merchant_bram
   social: true
   steps: [{ type: trade }]
-  rewards: { xp: 120, gold: 30 }
+  rewards: { xp: 60, gold: 30 }
 - id: d_hunting_party
   kind: daily
   giver: registrar_vey
   social: true
   party_min: 2
   steps: [{ type: kill, qty: 6 }]
-  rewards: { xp: 220, gold: 40 }
+  rewards: { xp: 110, gold: 40 }
 - id: d_helping_hand
   kind: daily
   giver: olga
   level: 5
   social: true
   steps: [{ type: help_newbie }]
-  rewards: { xp: 300, gold: 60 }
+  rewards: { xp: 150, gold: 60 }
 - id: d_public_works
   kind: daily
   giver: clerk_aldo
   social: true
   steps: [{ type: contribute }]
-  rewards: { xp: 160, gold: 0 }
+  rewards: { xp: 80, gold: 0 }
 
 # ── Group chains (5), two steps each ──────────────────────────────────────────
 - id: c_bandits_1
@@ -234,7 +234,7 @@
   social: true
   party_min: 2
   steps: [{ type: kill, target: bandit, qty: 8 }]
-  rewards: { xp: 1800, gold: 200 }
+  rewards: { xp: 405, gold: 200 }
 - id: c_bandits_2
   kind: chain
   giver: guard_east
@@ -243,7 +243,7 @@
   social: true
   party_min: 3
   steps: [{ type: kill, target: bandit_captain }]
-  rewards: { xp: 4000, gold: 500, items: [{ item: bandit_signet }] }
+  rewards: { xp: 900, gold: 500, items: [{ item: bandit_signet }] }
 - id: c_hag_1
   kind: chain
   giver: hag_morwen
@@ -251,7 +251,7 @@
   social: true
   steps: [{ type: collect, target: health_potion, qty: 2 }, { type: collect, target: hearty_stew, qty: 2 }, { type: collect, target: buckle, qty: 2 }]
   consume: [{ item: health_potion, qty: 2 }, { item: hearty_stew, qty: 2 }, { item: buckle, qty: 2 }]
-  rewards: { xp: 1500, gold: 150, items: [{ item: shadowcap, qty: 3 }] }
+  rewards: { xp: 525, gold: 150, items: [{ item: shadowcap, qty: 3 }] }
 - id: c_hag_2
   kind: chain
   giver: hag_morwen
@@ -260,7 +260,7 @@
   social: true
   party_min: 2
   steps: [{ type: kill, target: swamp_hag }]
-  rewards: { xp: 2800, gold: 300, items: [{ item: cos_witch_hat }] }
+  rewards: { xp: 980, gold: 300, items: [{ item: cos_witch_hat }] }
 - id: c_golems_1
   kind: chain
   giver: foreman_brakka
@@ -268,7 +268,7 @@
   social: true
   steps: [{ type: collect, target: pot }, { type: collect, target: hearty_stew, qty: 3 }]
   consume: [{ item: pot }, { item: hearty_stew, qty: 3 }]
-  rewards: { xp: 700, gold: 120 }
+  rewards: { xp: 350, gold: 120 }
 - id: c_golems_2
   kind: chain
   giver: foreman_brakka
@@ -277,7 +277,7 @@
   social: true
   party_min: 2
   steps: [{ type: kill, target: rock_golem, qty: 5 }]
-  rewards: { xp: 1600, gold: 200, items: [{ item: chainmail_armor }] }
+  rewards: { xp: 800, gold: 200, items: [{ item: chainmail_armor }] }
 - id: c_dungeon_1
   kind: chain
   giver: scholar_ines
@@ -285,7 +285,7 @@
   social: true
   party_min: 3
   steps: [{ type: puzzle, target: dungeon_levers }, { type: puzzle, target: dungeon_seal }]
-  rewards: { xp: 3000, gold: 300 }
+  rewards: { xp: 450, gold: 300 }
 - id: c_dungeon_2
   kind: chain
   giver: scholar_ines
@@ -294,14 +294,14 @@
   social: true
   party_min: 3
   steps: [{ type: boss, target: the_hollow_regent }]
-  rewards: { xp: 8000, gold: 1000, items: [{ item: regent_sigil }] }
+  rewards: { xp: 1200, gold: 1000, items: [{ item: regent_sigil }] }
 - id: c_civic_1
   kind: chain
   giver: clerk_aldo
   level: 3
   social: true
   steps: [{ type: contribute, qty: 5 }]
-  rewards: { xp: 400, gold: 0 }
+  rewards: { xp: 200, gold: 0 }
 - id: c_civic_2
   kind: chain
   giver: clerk_aldo
@@ -309,7 +309,7 @@
   level: 3
   social: true
   steps: [{ type: vote }, { type: board_post }]
-  rewards: { xp: 600, gold: 100, items: [{ item: gold_dye }] }
+  rewards: { xp: 300, gold: 100, items: [{ item: gold_dye }] }
 
 # ── Escorts (2): Bram walks slowly and needs two guards ───────────────────────
 - id: e_mines_caravan
@@ -320,7 +320,7 @@
   party_min: 2
   steps: [{ type: escort, target: mines.entrance }]
   escort: { npc: merchant_bram, to: mines.entrance }
-  rewards: { xp: 900, gold: 150 }
+  rewards: { xp: 450, gold: 150 }
 - id: e_ruins_caravan
   kind: escort
   giver: merchant_bram
@@ -329,7 +329,7 @@
   party_min: 2
   steps: [{ type: escort, target: ruins.outskirts }]
   escort: { npc: merchant_bram, to: ruins.outskirts }
-  rewards: { xp: 2600, gold: 400 }
+  rewards: { xp: 585, gold: 400 }
 
 # ── Side quests (2) ───────────────────────────────────────────────────────────
 - id: s_lost_locket
@@ -337,7 +337,7 @@
   giver: olga
   steps: [{ type: collect, target: lost_locket }]
   consume: [{ item: lost_locket }]
-  rewards: { xp: 150, gold: 40, items: [{ item: lucky_pebble }] }
+  rewards: { xp: 75, gold: 40, items: [{ item: lucky_pebble }] }
 - id: s_sealed_letter
   kind: side
   giver: berta
@@ -345,4 +345,4 @@
   steps: [{ type: talk, target: hag_morwen }]
   grants: [{ item: sealed_letter }]
   consume: [{ item: sealed_letter }]
-  rewards: { xp: 900, gold: 120 }
+  rewards: { xp: 450, gold: 120 }
