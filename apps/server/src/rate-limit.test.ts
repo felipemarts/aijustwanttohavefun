@@ -1,9 +1,30 @@
 import { describe, expect, it } from 'vitest';
 import { IdempotencyCache } from './idempotency';
-import { RateLimiter } from './rate-limit';
+import { ipKey, RateLimiter } from './rate-limit';
 import { ADMIN, makeServer } from './test-helpers';
 
 describe('rate limits', () => {
+  it('counts IPv6 clients by /64, so rotating addresses inside one allocation does not reset the limits', async () => {
+    expect(ipKey('2001:db8:1:2:aaaa::1')).toBe('2001:db8:1:2::/64');
+    expect(ipKey('2001:0db8:0001:0002:ffff:ffff:ffff:ffff')).toBe('2001:db8:1:2::/64');
+    expect(ipKey('2001:db8::1')).toBe('2001:db8:0:0::/64');
+    expect(ipKey('::ffff:203.0.113.7')).toBe('203.0.113.7');
+    expect(ipKey('203.0.113.7')).toBe('203.0.113.7');
+    const s = await makeServer();
+    const reg = (ip: string, name: string) =>
+      s.app.inject({ method: 'POST', url: '/api/v1/agents/register', remoteAddress: ip, payload: { name, class: 'warrior' } });
+    for (let i = 0; i < 5; i++) expect((await reg(`2001:db8:1:2::${i + 1}`, `Six${'abcde'[i]}`)).json().ok).toBe(true);
+    // A sixth address in the same /64 is the same client; another /64 is not.
+    expect((await reg('2001:db8:1:2:dead:beef:0:1', 'Sixf')).statusCode).toBe(429);
+    expect((await reg('2001:db8:1:3::1', 'Sixg')).json().ok).toBe(true);
+  });
+
+  it('gives every request a time limit, so slow clients cannot hold connections forever', async () => {
+    const s = await makeServer();
+    expect(s.app.server.requestTimeout).toBe(30_000);
+    expect(s.app.server.headersTimeout).toBeLessThanOrEqual(60_000);
+  });
+
   it('allows 60 requests per minute per API key; the 61st gets 429 with Retry-After', async () => {
     const s = await makeServer();
     const { key } = await s.register('Pip');

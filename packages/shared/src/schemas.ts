@@ -12,7 +12,19 @@ import {
   PROFESSIONS,
 } from './constants';
 
-const id = z.string().min(1).max(64);
+/**
+ * Names of `Object.prototype` members (`__proto__`, `constructor`, `toString`...), as written and lowercased. The
+ * engine looks many ids up in plain objects (market orders, room exits), where these resolve to inherited members
+ * instead of "not found": `market_buy {order: "__proto__"}` once turned an agent's gold into NaN, which then passed
+ * every balance check. No game id is one of them, so they are refused at the boundary.
+ */
+const PROTO_NAMES = new Set(Object.getOwnPropertyNames(Object.prototype).flatMap((k) => [k, k.toLowerCase()]));
+export function isPlainKey(s: string): boolean {
+  const t = s.trim();
+  return !PROTO_NAMES.has(t) && !PROTO_NAMES.has(t.toLowerCase().replace(/[\s-]+/g, '_'));
+}
+
+const id = z.string().min(1).max(64).refine(isPlainKey, { message: 'reserved identifier' });
 const name = z.string().min(1).max(40);
 const qty = z.number().int().min(1).max(9999);
 const gold = z.number().int().min(0).max(100_000_000);

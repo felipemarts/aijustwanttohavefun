@@ -114,8 +114,16 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+      # gitleaks itself rather than gitleaks-action: the action scans only the pushed or PR range with
+      # `--first-parent --no-merges`, so commits arriving through a merge are never scanned. This scans every commit
+      # reachable from the checked-out ref, with a release binary verified against its published SHA-256.
+      - name: Scan the whole history for secrets (gitleaks)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Findings fail the job; no PR comments (that would need pull-requests: write).
-          GITLEAKS_ENABLE_COMMENTS: false
+          GITLEAKS_VERSION: 8.24.3
+          GITLEAKS_SHA256: 9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c # linux_x64
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/gitleaks.tgz" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/gitleaks.tgz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/gitleaks.tgz" -C "$RUNNER_TEMP" gitleaks
+          "$RUNNER_TEMP/gitleaks" git --redact --verbose --exit-code 1 .

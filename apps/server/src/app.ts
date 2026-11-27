@@ -57,6 +57,12 @@ declare module 'fastify' {
 }
 
 export const BODY_LIMIT = 16 * 1024;
+/**
+ * A request (headers and body) must arrive within this time. Fastify's default is no limit at all, so a client that
+ * sends a 16 KB body one byte a minute would hold its connection for days (slow-loris); 30 s is plenty for any
+ * legitimate request. WebSocket connections are not affected once upgraded.
+ */
+export const REQUEST_TIMEOUT_MS = 30_000;
 
 export type AppDeps = {
   game: Game;
@@ -141,6 +147,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   const app: FastifyInstance = Fastify<RawServerDefault, RawRequestDefaultExpression, RawReplyDefaultExpression, FastifyBaseLogger>({
     loggerInstance: deps.logger,
     bodyLimit: BODY_LIMIT,
+    requestTimeout: REQUEST_TIMEOUT_MS,
     trustProxy: config.trustProxy,
     logController: new RequestLogs(),
   });

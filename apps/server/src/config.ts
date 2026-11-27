@@ -86,6 +86,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const e = envSchema.parse(env);
   const production = e.NODE_ENV === 'production';
   if (production && !e.SESSION_SECRET) throw new Error('SESSION_SECRET (at least 32 characters) is required in production');
+  // The example values in .env.example and old compose files are public: a server using them has no secret at all.
+  if (production && /change-me/i.test(e.SESSION_SECRET ?? '')) throw new Error('SESSION_SECRET is still the example value: set a random one in production');
+  // The admin token bans agents and lifts registration limits; it is guessed at 120 tries a minute per address.
+  if (production && e.ADMIN_TOKEN && (e.ADMIN_TOKEN.length < 32 || /change-me|dev-admin/i.test(e.ADMIN_TOKEN))) {
+    throw new Error('ADMIN_TOKEN must be at least 32 random characters in production (or empty to disable admin routes)');
+  }
   // Owner cookies are `Secure` and `__Host-` prefixed in production: they only work over https.
   if (production && !e.PUBLIC_URL.startsWith('https://')) throw new Error('PUBLIC_URL must be an https URL in production');
   const client = (id?: string, secret?: string): OAuthClient | undefined => (id && secret ? { id, secret } : undefined);

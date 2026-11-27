@@ -42,7 +42,8 @@ export class I18n {
   /** Picks the best supported language for any BCP-47 tag (exact, then base language, then English). */
   resolveLang(tag: string | undefined | null): string {
     if (!tag) return REFERENCE_LANG;
-    if (this.catalogs[tag]) return tag;
+    // Own keys only: `constructor` or `__proto__` would otherwise pass as languages.
+    if (Object.hasOwn(this.catalogs, tag)) return tag;
     const lower = tag.toLowerCase();
     const exact = this.langs.find((l) => l.toLowerCase() === lower);
     if (exact) return exact;

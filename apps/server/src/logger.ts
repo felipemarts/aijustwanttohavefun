@@ -39,6 +39,28 @@ export function scrubUrl(url: string | undefined): string {
 
 type ReqLike = { method?: string; url?: string; ip?: string; socket?: { remotePort?: number } };
 
+const MAX_ERR_TEXT = 2000;
+/** Drizzle puts every bound value of a failed query in the message ("Failed query: ...\nparams: ..."). */
+const QUERY_PARAMS = /\nparams: [\s\S]*?(?=\n {4}at |\ncaused by: |$)/;
+
+/**
+ * Errors without the values of failed queries: a failed snapshot or event write would otherwise log whole world
+ * snapshots, unrevealed whispers, push subscription secrets and hashes (megabytes per retry while the database is
+ * down). The SQL text, the driver's code and the stack stay.
+ */
+export function errSerializer(e: unknown): unknown {
+  if (!(e instanceof Error)) return e;
+  const out = pino.stdSerializers.err(e) as unknown as Record<string, unknown>;
+  for (const k of ['params', 'parameters', 'values']) delete out[k];
+  for (const k of ['message', 'stack', 'detail']) {
+    const v = out[k];
+    if (typeof v === 'string') out[k] = v.replace(QUERY_PARAMS, '\nparams: [redacted]').slice(0, MAX_ERR_TEXT);
+  }
+  // What the database said (pg's DatabaseError: message, code, detail), serialized the same way.
+  if (e.cause instanceof Error) out.cause = errSerializer(e.cause);
+  return out;
+}
+
 export function createLogger(level: string, destination?: DestinationStream): Logger {
   return pino(
     {
@@ -47,6 +69,7 @@ export function createLogger(level: string, destination?: DestinationStream): Lo
       // Replaces Fastify's request serializer (which logs the raw URL).
       serializers: {
         req: (req: ReqLike) => ({ method: req.method, url: scrubUrl(req.url), remoteAddress: req.ip, remotePort: req.socket?.remotePort }),
+        err: errSerializer,
       },
     },
     destination,

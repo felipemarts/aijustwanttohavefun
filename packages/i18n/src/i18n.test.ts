@@ -21,6 +21,9 @@ describe('i18n', () => {
     expect(i18n.resolveLang('de-AT')).toBe('en');
     expect(i18n.resolveLang('FR-ca')).toBe('fr');
   });
+  it('never takes an Object.prototype member for a language', () => {
+    for (const tag of ['constructor', '__proto__', 'toString', 'valueOf', 'hasOwnProperty']) expect(i18n.resolveLang(tag)).toBe('en');
+  });
   it('falls back to English for missing keys, then to the key', () => {
     const local = new I18n({ en: { a: 'A {x}' }, fr: {} });
     expect(local.t('fr', 'a', { x: 1 })).toBe('A 1');

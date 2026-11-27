@@ -1,7 +1,12 @@
 node_modules/
 dist/
 .env
-.env.local
+.env.*
+!.env.example
+# Database dumps (deploy/backup.sh) and key material
+*.dump
+*.dump.partial
+*.pem
 *.log
 coverage/
 .cache/
@@ -13,4 +18,5 @@ dev.log
 # Example agent credentials (tools/example-agent)
 .agent-key.json
 .claude/worktrees/
+.claude/settings.local.json
 .playwright-mcp/

@@ -7,6 +7,7 @@ import type { Logger } from 'pino';
 import { WebSocketServer, type WebSocket } from 'ws';
 import type { Config } from '../config';
 import type { Metrics } from '../metrics';
+import { ipKey } from '../rate-limit';
 import type { Broadcaster, SpectatorSocket } from './broadcaster';
 import { SPECTATE } from './constants';
 
@@ -152,7 +153,8 @@ export function attachSpectatorSocket(server: Server, deps: { broadcaster: Broad
   server.on('upgrade', (req: IncomingMessage, socket: Duplex, head: Buffer) => {
     const path = (req.url ?? '').split('?')[0];
     if (path !== SPECTATE_PATH) return refuse(socket, 404, 'Not Found');
-    const ip = clientIp(req.socket.remoteAddress, req.headers['x-forwarded-for'], config.trustProxy);
+    // Counted per IPv4 address or IPv6 /64, like the HTTP rate limits.
+    const ip = ipKey(clientIp(req.socket.remoteAddress, req.headers['x-forwarded-for'], config.trustProxy));
     const admission = broadcaster.admit(ip);
     if (!admission.ok) {
       metrics.wsRejected++;

@@ -1,0 +1,17 @@
+# gitleaks configuration, used by the CI `secrets` job (and by a local `gitleaks git .`).
+[extend]
+useDefault = true
+
+# The game's own agent API keys: the default rules do not know this format.
+[[rules]]
+id = "ajwf-agent-api-key"
+description = "AI Just Want to Have Fun agent API key"
+regex = '''ajwf_sk_[A-Za-z0-9_-]{43}'''
+keywords = ["ajwf_sk_"]
+
+# Appearance `options_token` values (`opt_...`) are public, 30-minute draw ids shown in the player guide's examples,
+# not credentials. Only that match is skipped: any other secret on the same line is still reported.
+[allowlist]
+description = "Appearance options tokens in examples"
+regexTarget = "match"
+regexes = ['''^"?options_token"?\s*[:=]\s*"opt_[A-Za-z0-9_-]{16,32}"?$''']

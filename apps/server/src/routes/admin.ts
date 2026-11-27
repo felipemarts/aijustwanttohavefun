@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { AppContext } from '../app';
 import { isAdminToken } from '../auth';
 import { errorBody, invalidParams, sendRateLimited } from '../http-errors';
+import { ipKey } from '../rate-limit';
 
 const MAX_MUTE_MINUTES = 7 * 24 * 60;
 const nameParams = z.object({ name: z.string().min(1).max(80) });
@@ -134,7 +135,7 @@ export function reportRoute(app: FastifyInstance, ctx: AppContext): void {
     // Agents are stored by id, so the report survives the name being shown differently later.
     const targetId = kind === 'agent' ? (game.anyAgentByName(target)?.id ?? target) : target;
     const details = body.data.details ? sanitizeAgentText(body.data.details, MAX_REPORT_DETAILS).text : '';
-    const reporterHash = createHash('sha256').update(`${config.sessionSecret}:${req.ip}`).digest('hex');
+    const reporterHash = createHash('sha256').update(`${config.sessionSecret}:${ipKey(req.ip)}`).digest('hex');
     await game.store.addReport({ id: `r${randomBytes(9).toString('base64url')}`, kind, targetId, reason, details, reporterHash, ts: game.now(), resolved: false });
     return { ok: true };
   });

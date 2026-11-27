@@ -102,6 +102,16 @@ describe('config', () => {
     expect(loadConfig({ ADMIN_TOKEN: '' }).adminToken).toBeUndefined();
   });
 
+  it('refuses example secrets and short admin tokens in production', () => {
+    const prod = { NODE_ENV: 'production', SESSION_SECRET: 'x'.repeat(32), PUBLIC_URL: 'https://example.org' };
+    expect(() => loadConfig({ ...prod, SESSION_SECRET: 'change-me-to-a-long-random-string-0000' })).toThrow(/SESSION_SECRET/);
+    expect(() => loadConfig({ ...prod, SESSION_SECRET: 'dev-only-change-me-dev-only-change-me' })).toThrow(/SESSION_SECRET/);
+    expect(() => loadConfig({ ...prod, ADMIN_TOKEN: 'dev-admin' })).toThrow(/ADMIN_TOKEN/);
+    expect(loadConfig({ ...prod, ADMIN_TOKEN: 'k'.repeat(40) }).adminToken).toBe('k'.repeat(40));
+    // Development keeps accepting short tokens.
+    expect(loadConfig({ ADMIN_TOKEN: 'dev-admin' }).adminToken).toBe('dev-admin');
+  });
+
   it('offers only OAuth providers with both id and secret, and push only with both VAPID keys', () => {
     const c = loadConfig({ OAUTH_GITHUB_ID: 'id', OAUTH_GITHUB_SECRET: 'secret', OAUTH_GOOGLE_ID: 'only-id' });
     expect(Object.keys(c.oauth)).toEqual(['github']);

@@ -10,7 +10,8 @@ services:
     image: postgres:17-alpine
     environment:
       POSTGRES_USER: ajwf
-      POSTGRES_PASSWORD: ajwf
+      # Applied only when the pgdata volume is first created.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ajwf}
       POSTGRES_DB: ajwf
     ports:
       - '127.0.0.1:5432:5432'
@@ -30,14 +31,19 @@ services:
     read_only: true
     tmpfs:
       - /tmp
+    # Node on port 8710 as uid 1000 needs no Linux capabilities.
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
     environment:
-      DATABASE_URL: postgres://ajwf:ajwf@postgres:5432/ajwf
+      DATABASE_URL: postgres://ajwf:${POSTGRES_PASSWORD:-ajwf}@postgres:5432/ajwf
       # Production mode needs an https PUBLIC_URL (Secure cookies); plain http://localhost runs in development mode,
       # which still serves the built web app from the image.
       NODE_ENV: ${NODE_ENV:-development}
       PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8710}
-      SESSION_SECRET: ${SESSION_SECRET:-dev-only-change-me-dev-only-change-me}
-      ADMIN_TOKEN: ${ADMIN_TOKEN:-dev-admin}
+      # No shared defaults: empty means a random secret per process in development and a refusal to boot in
+      # production; an empty ADMIN_TOKEN turns the admin routes off.
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
       TRUST_PROXY: ${TRUST_PROXY:-}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       WORLD_SEED: ${WORLD_SEED:-1}
@@ -63,7 +69,7 @@ services:
     profiles: ['backup']
     image: postgres:17-alpine
     environment:
-      DATABASE_URL: postgres://ajwf:ajwf@postgres:5432/ajwf
+      DATABASE_URL: postgres://ajwf:${POSTGRES_PASSWORD:-ajwf}@postgres:5432/ajwf
       BACKUP_DIR: /backups
       BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
     volumes:

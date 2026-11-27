@@ -7,7 +7,11 @@
 # deletes dumps older than BACKUP_KEEP_DAYS. Needs pg_dump/pg_restore of the server's major version or newer.
 # Restore (into an empty database, with the game server stopped):
 #   pg_restore --clean --if-exists --no-owner -d "$DATABASE_URL" /var/backups/ajwf/ajwf-20260101-030000.dump
+# On a shared host, leave the password out of DATABASE_URL and supply it with PGPASSFILE/~/.pgpass (or PGPASSWORD):
+# the URL is on pg_dump's command line, which other local users can read with `ps`.
 set -eu
+# Dumps hold owner accounts, key hashes and push subscriptions: readable by the backup user only.
+umask 077
 
 : "${DATABASE_URL:?DATABASE_URL is required}"
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/ajwf}"

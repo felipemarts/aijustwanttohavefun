@@ -13,6 +13,8 @@ const IMMUTABLE = 'public, max-age=31536000, immutable';
 const HIGHLIGHT_RE = /^(h\d{1,15}(?:-\d+)?)\.png$/;
 const DATE_RE = /^(\d{4}-\d{2}-\d{2})\.png$/;
 const PNG_NAME_RE = /^(.{1,80})\.png$/su;
+/** A path that may be a claim link, in any spelling a router could accept. */
+const CLAIM_PATH_RE = /^\/+claim(?:[/?#;]|$)/i;
 
 /** Paths that are never pages of the web app. */
 export function isApiPath(url: string): boolean {
@@ -140,7 +142,7 @@ export async function webRoutes(app: FastifyInstance, ctx: AppContext): Promise<
   });
 
   /** The claim page: never indexed, never sends its URL (which holds the token) as a referrer. */
-  app.get('/claim/:token', async (req, reply) => {
+  function claimPage(req: FastifyRequest, reply: FastifyReply) {
     const lang = langOf(req);
     reply.header('referrer-policy', 'no-referrer');
     return page(reply, 200, {
@@ -151,7 +153,8 @@ export async function webRoutes(app: FastifyInstance, ctx: AppContext): Promise<
       url: abs('/'),
       noindex: true,
     });
-  });
+  }
+  app.get('/claim/:token', async (req, reply) => claimPage(req, reply));
 
   // ── share cards ─────────────────────────────────────────────────────────────────────────────────────────
 
@@ -193,6 +196,10 @@ export async function webRoutes(app: FastifyInstance, ctx: AppContext): Promise<
     return sendCard(req, reply, await cards.png(g.spec), g.final ? 'public, max-age=86400' : 'public, max-age=600');
   });
 
-  /** Any other page of the web app (`/village`, `/owner`...): the app shell with the site's default tags. */
-  return { fallback: (req, reply) => home(req, reply) };
+  /**
+   * Any other page of the web app (`/village`, `/owner`...): the app shell with the site's default tags. Claim links
+   * the route above misses (`/claim/<token>/`, `/Claim/<token>`: the client router still opens them as the claim
+   * page) get the claim page's protections, so their token never lands in `og:url` or the canonical link.
+   */
+  return { fallback: (req, reply) => (CLAIM_PATH_RE.test(req.url) ? claimPage(req, reply) : home(req, reply)) };
 }

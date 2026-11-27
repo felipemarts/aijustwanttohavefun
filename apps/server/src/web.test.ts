@@ -125,6 +125,13 @@ describe('HTML shells for crawlers', () => {
     expect(claim.headers['referrer-policy']).toBe('no-referrer');
     expect(tag(claim.body, 'name', 'robots')).toBe('noindex, nofollow');
     expect(claim.body).not.toContain(token);
+    // The client router opens these as the claim page too (trailing slash, any case): same protections.
+    for (const url of [`/claim/${token}/`, `/Claim/${token}`, `//claim/${token}`, `/claim/${token}/x`]) {
+      const res = await get(s, url, { accept: 'text/html' });
+      expect(res.headers['referrer-policy'], url).toBe('no-referrer');
+      expect(tag(res.body, 'name', 'robots'), url).toBe('noindex, nofollow');
+      expect(res.body, url).not.toContain(token);
+    }
 
     for (const url of ['/a/Nobody', `/h/h99999`, '/gazette/1999-01-01', '/g/Nope']) {
       const res = await get(s, url);

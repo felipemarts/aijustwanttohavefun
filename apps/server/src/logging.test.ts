@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { scrubUrl } from './logger';
+import { DrizzleQueryError } from 'drizzle-orm/errors';
+import { createLogger, scrubUrl } from './logger';
 import type { FetchLike } from './owner/oauth';
 import { ADMIN, makeServer, ORIGIN } from './test-helpers';
 
@@ -10,6 +11,19 @@ const provider: FetchLike = async (url) =>
   url.includes('access_token') ? Response.json({ access_token: ACCESS_TOKEN }) : Response.json({ id: 7, login: 'octo', name: 'Octo' });
 
 describe('logs', () => {
+  it('never contain the bound values of a failed query (snapshots, whispers, push secrets)', () => {
+    const lines: string[] = [];
+    const log = createLogger('info', { write: (line: string) => void lines.push(line) });
+    const params = ['{"inbox":[{"type":"whisper","text":"SECRET-WHISPER"}]}', 'PUSH-AUTH-SECRET'];
+    const err = new DrizzleQueryError('insert into "world_snapshots" ("key", "state") values ($1, $2::jsonb)', params, new Error('connection refused'));
+    log.error({ err }, 'snapshot failed; will retry');
+    const all = lines.join('\n');
+    expect(all).toContain('Failed query: insert into');
+    expect(all).toContain('connection refused');
+    expect(all).not.toContain('SECRET-WHISPER');
+    expect(all).not.toContain('PUSH-AUTH-SECRET');
+  });
+
   it('never contain API keys, claim tokens, the admin token, session cookies or OAuth secrets', async () => {
     const lines: string[] = [];
     const s = await makeServer({

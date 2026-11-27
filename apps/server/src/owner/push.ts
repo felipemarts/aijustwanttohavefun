@@ -36,9 +36,13 @@ for (const [net, bits] of [
 ] as const)
   BLOCKED.addSubnet(net, bits, 'ipv4');
 for (const [net, bits] of [
-  ['::', 128],
-  ['::1', 128],
+  // Unspecified, loopback and the deprecated IPv4-compatible range (`::127.0.0.1`).
+  ['::', 96],
   ['64:ff9b::', 96],
+  ['64:ff9b:1::', 48],
+  // Teredo and 6to4 embed an IPv4 address (`2002:7f00:1::` is 127.0.0.1) that a relay may reach.
+  ['2001::', 32],
+  ['2002::', 16],
   ['100::', 64],
   ['2001:db8::', 32],
   ['fc00::', 7],
@@ -70,7 +74,8 @@ export function validSubscription(endpoint: unknown, keys: unknown): { endpoint:
     return null;
   }
   if (u.protocol !== 'https:' || u.username || u.password || (u.port && u.port !== '443')) return null;
-  const host = u.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  // A trailing dot ("localhost.") names the same host.
+  const host = u.hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.+$/, '');
   if (!host || host === 'localhost' || LOCAL_SUFFIXES.some((s) => host.endsWith(s))) return null;
   if (isIP(host)) {
     if (!isPublicAddress(host)) return null;

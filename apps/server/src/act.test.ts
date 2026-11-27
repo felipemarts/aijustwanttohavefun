@@ -4,6 +4,35 @@ import { loadCatalogs } from './i18n';
 import { makeServer } from './test-helpers';
 
 describe('POST /act', () => {
+  it('refuses Object.prototype names as ids, so they cannot reach plain-object lookups in the engine', async () => {
+    const s = await makeServer();
+    const { key } = await s.register('Mule');
+    const a = s.game.agentByName('Mule')!;
+    // At the market, where `market_buy {order: "__proto__"}` used to set the buyer's gold to NaN.
+    s.game.state.roomAgents.get(a.room)!.delete(a.id);
+    a.room = 'village.market';
+    s.game.state.roomAgents.get(a.room)!.add(a.id);
+    const gold = a.gold;
+    const attempts: [string, Record<string, unknown>][] = [
+      ['market_buy', { order: '__proto__' }],
+      ['market_buy', { order: 'constructor' }],
+      ['market_buy', { order: ' Constructor ' }],
+      ['market_cancel', { order: 'toString' }],
+      ['move', { dir: '__proto__' }],
+      ['move', { dir: 'constructor' }],
+      ['give', { to: 'Mule', items: { constructor: 1 } }],
+      ['trade_accept', { trade: 'hasOwnProperty' }],
+    ];
+    for (const [action, params] of attempts) {
+      const res = await s.act(key, action, params);
+      expect(res.statusCode, `${action} ${JSON.stringify(params)}`).toBe(200);
+      expect(res.json().error?.code, `${action} ${JSON.stringify(params)}`).toBe('INVALID_PARAMS');
+    }
+    expect(a.gold).toBe(gold);
+    expect(Number.isFinite(a.gold)).toBe(true);
+    expect(a.room).toBe('village.market');
+  });
+
   it('returns narration, you, the new room after a move, actions and a cursor', async () => {
     const s = await makeServer();
     const { key } = await s.register('Pip');
