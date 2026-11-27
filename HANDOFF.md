@@ -20,7 +20,21 @@ All milestones M0 to M8 are implemented. The table says what each acceptance tes
 | M7 Chronicle and owners | Done | Tests for highlights, gazette, secrets, OAuth, claim flow, Web Push, share cards | Link previews on X and WhatsApp, which need a public domain |
 | M8 Launch readiness | Code done | MCP server, benchmarks, Docker image, CI, deploy guide, independent security audit and its fixes | The production deploy itself; 20,000 spectators (measured to 4,500, the rest extrapolated) |
 
-Checks at the last commit: typecheck and eslint clean, 817 tests passing and 3 skipped (the Postgres store tests, which need `DATABASE_URL`), `content:check` clean, web build clean.
+Checks at the last full run: typecheck and eslint clean, 907 tests passing and 3 skipped (the Postgres store tests, which need `DATABASE_URL`), `content:check` clean, web build clean, six languages at 100%.
+
+## Added after the milestones
+
+- **Wishing fountain.** Action `wish` in the village square: 1 to 10 gold into a pot kept in world state, an optional wish text, claimed agents only, once a minute. Hidden jackpot: once the pot holds 25 gold, each coin has a 0.2% chance of returning the whole pot (`BALANCE.fountain`); nothing told to agents states it. The roll uses `ActionCtx.luck`, an unpredictable source the server passes, not the shared seeded generator. Other agents are told a wish was made, not its text; spectators read the text.
+- **Director mode rebuilt** (`apps/web/src/map/director.ts`, `apps/web/src/data/delay.ts`, `apps/web/src/data/scout.ts`, `apps/web/src/ui/StarCard.tsx`). The camera follows one agent, the star. While the director is on, the screen plays 30 s late (the lag builds over the first 90 s; any manual pan, zoom or click flushes it and goes live), and an undelayed "scout" uses those 30 s to cut to an agent a few seconds before their moment. Interest is scored per agent on the server from spectator-visible events only (`packages/shared/src/interest.ts`, sent as increments in world batches). A lower-third card shows who the star is and what they are doing; big moments get a banner.
+- **Playtest fixes.** Three rounds of five Haiku players in Portuguese (about 100 actions each, with 20 scripted bots) rated the game 6 to 7 out of 10 each time. What they liked was the other agents; what hurt was logistics. Fixed from their reports: tutorial wood, refusal texts, party invite notices, open trade offers in `/me`, a stale NPC line.
+
+What the playtests still say, unfixed and mostly balance:
+
+- Monsters and gatherables near the village are fought over; kills and herbs are taken by others between two calls, and the daily herb run is not doable alone in a busy world.
+- Parties scatter: nothing keeps members together, and accepting an invite needs the same room (see `TODO.md`).
+- Trade offers go unanswered, so the daily trade quest stalls.
+- One player reported about ten wolf kills with no pelt (the drop chance is 40%); not reproduced, and worth checking who receives drops when several agents hit the same monster.
+- In those sessions nobody passed level 2 in 120 actions.
 
 ## Environment (read before running anything)
 
@@ -81,6 +95,7 @@ Risks left open on purpose (also in `TODO.md`):
 Needs the owner:
 
 1. Confirm or reverse the departures listed above, the party XP rule first.
+   Also open: whether party invites may be accepted from any room, and whether parties should be able to follow their leader.
 2. Production deploy: a domain, a cloud account, and GitHub and Google OAuth apps (`docs/DEPLOY.md`). On Fly, check that `CLIENT_IP_HEADER=Fly-Client-IP` yields real client addresses before launch, since every per-IP limit depends on it.
 3. A real contact address in `CODE_OF_CONDUCT.md`, and confirmation of the repository URL used across the docs (`github.com/aijustwanttohavefun/aijustwanttohavefun`).
 4. Review of Japanese and Simplified Chinese by native speakers; both were machine-translated.
