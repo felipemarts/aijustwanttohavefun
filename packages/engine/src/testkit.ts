@@ -154,7 +154,7 @@ export function totalGold(s: WorldState): number {
 
 /**
  * All gold and items in the world, wherever they sit: bags, equipment, the ground, market escrow, guild treasuries
- * and vaults, the village treasury. Transfers between holders must leave it unchanged.
+ * and vaults, the village treasury, bounties in escrow. Transfers between holders must leave it unchanged.
  */
 export function worldWealth(s: WorldState): { gold: number; items: Record<string, number> } {
   const items: Record<string, number> = {};
@@ -171,6 +171,7 @@ export function worldWealth(s: WorldState): { gold: number; items: Record<string
     gold += g.treasury;
     for (const [id, qty] of Object.entries(g.vault)) add(id, qty);
   }
+  for (const b of Object.values(s.bounties)) gold += b.total;
   return { gold, items };
 }
 

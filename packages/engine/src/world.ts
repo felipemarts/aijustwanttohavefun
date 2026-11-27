@@ -9,7 +9,7 @@ import { electionDue, newVillage } from './village-state';
 export type SpawnSlot = { kind: string; night: boolean };
 
 /** World entries that are not per room, party or guild (see snapshot.ts). */
-export const WORLD_KEYS = ['meta', 'timers', 'trades', 'market', 'board', 'village', 'puzzles', 'wboss', 'escorts'] as const;
+export const WORLD_KEYS = ['meta', 'timers', 'trades', 'market', 'board', 'village', 'puzzles', 'wboss', 'escorts', 'bounties'] as const;
 
 const spawnCache = new WeakMap<Content, Map<string, SpawnSlot[]>>();
 
@@ -80,6 +80,7 @@ export function createWorld(content: Content, now: number): WorldState {
     escortOfParty: new Map(),
     escortsIn: new Map(),
     respawns: new Map(),
+    bounties: {},
     dirty: new Set(),
   };
   for (const room of content.rooms.values()) {

@@ -3,6 +3,7 @@ import { bump } from '../agent';
 import { BALANCE } from '../balance';
 import { noteSpeech } from '../camaraderie';
 import { questEvent } from '../quests';
+import { WANTED_TITLE, wantedHours } from '../trust';
 import { emit, fail, msg, tell, type Run } from '../run';
 import type { AgentState } from '../types';
 import { agentByName, agentHere, cleanText, normId, type HandlerMap } from './util';
@@ -67,6 +68,8 @@ export const chatActions: HandlerMap = {
   set_title(run, a, p) {
     const id = p.title === null ? null : normId(p.title);
     if (id !== null && !a.titles.includes(id)) fail('TARGET_NOT_FOUND', 'title_not_owned', { title: p.title ?? '', titles: a.titles.join(', ') });
+    // A Wanted agent wears that title until its infamy fades; the one it had comes back then.
+    if (a.wanted && id !== WANTED_TITLE) fail('NOT_ALLOWED', 'title_wanted', { hours: wantedHours(a, run.now) });
     a.title = id;
     tell(run, id ? 'n.title_set' : 'n.title_cleared', id ? { title: `@title:${id}` } : undefined);
     emit(run, 'title', { room: a.room, actor: a.id, vis: 'public', data: { title: id } });

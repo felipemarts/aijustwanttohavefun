@@ -6,6 +6,8 @@ import { raiseBond } from '../bond';
 import { findMonster, retaliate, strike } from '../combat';
 import { emit, fail, markAgent, markRoom, msg, tell, type Run } from '../run';
 import { partyHere } from '../party';
+import { checkPvpPair, isLawless, pvpRound, pvpTarget } from '../pvp';
+import { addHonor } from '../trust';
 import type { AgentState, MonsterInst } from '../types';
 import { refreshMonster, roomState } from '../world';
 import { agentHere, normId, type HandlerMap } from './util';
@@ -34,6 +36,15 @@ function castSkill(run: Run, a: AgentState, rawSkill: string, target: string | u
   const sref = ref.skill(skill.id);
   switch (skill.kind) {
     case 'damage': {
+      // Damage skills work on agents too, under the PvP rules.
+      const b = pvpTarget(run, a, target);
+      if (b) {
+        checkPvpPair(run, a, b, isLawless(run, a.room));
+        pay(run, a, skill);
+        tell(run, 'n.cast', { skill: sref });
+        pvpRound(run, a, b, skill.power, skill.id);
+        return;
+      }
       const m = findMonster(run, a, target);
       pay(run, a, skill);
       tell(run, 'n.cast', { skill: sref });
@@ -86,6 +97,7 @@ function castSkill(run: Run, a: AgentState, rawSkill: string, target: string | u
       if (b === a) tell(run, 'n.heal_self', { skill: sref, hp: Math.round(amount) });
       else {
         bump(run, a, 'heals');
+        addHonor(run, a, BALANCE.honor.heal);
         tell(run, 'n.heal_other', { skill: sref, name: b.name, hp: Math.round(amount) });
         emit(run, 'heal', { room: a.room, actor: a.id, target: b.id, to: 'room', drama: 1, m: msg('ev.heal', { actor: a.name, name: b.name, hp: Math.round(amount) }), data: { hp: Math.round(amount) } });
         raiseBond(run, a, b, BALANCE.bond.heal);
@@ -108,6 +120,7 @@ function castSkill(run: Run, a: AgentState, rawSkill: string, target: string | u
       }
       for (const b of healed) raiseBond(run, a, b, BALANCE.bond.heal);
       if (members.length > 1) bump(run, a, 'heals');
+      if (healed.length) addHonor(run, a, BALANCE.honor.heal);
       tell(run, 'n.heal_party', { skill: sref, hp: Math.round(total), n: members.length });
       emit(run, 'heal', { room: a.room, actor: a.id, to: 'room', drama: 1, m: msg('ev.heal_party', { actor: a.name, skill: sref }), data: { hp: Math.round(total) } });
       return;
@@ -119,6 +132,7 @@ function castSkill(run: Run, a: AgentState, rawSkill: string, target: string | u
       pay(run, a, skill);
       standUp(run, b);
       bump(run, a, 'revives');
+      addHonor(run, a, BALANCE.honor.revive);
       tell(run, 'n.revive', { name: b.name });
       emit(run, 'revive', { room: a.room, actor: a.id, target: b.id, to: 'room', drama: 4, m: msg('ev.revive', { actor: a.name, name: b.name }) });
       raiseBond(run, a, b, BALANCE.bond.revive);
@@ -159,6 +173,12 @@ function disengage(run: Run, a: AgentState): void {
 
 export const combatActions: HandlerMap = {
   attack(run, a, p) {
+    const b = pvpTarget(run, a, p.target);
+    if (b) {
+      checkPvpPair(run, a, b, isLawless(run, a.room));
+      pvpRound(run, a, b, 1);
+      return;
+    }
     const m = findMonster(run, a, p.target);
     if (!strike(run, a, m, 1)) retaliate(run, a, m);
   },

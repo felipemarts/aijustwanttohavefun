@@ -286,11 +286,11 @@ export function gainXp(run: Run, a: AgentState, base: number): number {
 
 // ── Death ────────────────────────────────────────────────────────────────────
 
-/** The agent drops where it stands and waits for a revive. */
-export function fall(run: Run, a: AgentState, by: string): void {
+/** The agent drops where it stands and waits for a revive. `pvp`: felled by the agent named `by`, who took its toll. */
+export function fall(run: Run, a: AgentState, by: string, pvp = false): void {
   a.hp = 0;
   a.combat = null;
-  a.fallen = { at: run.now, until: run.now + BALANCE.death.fallenMs, by };
+  a.fallen = { at: run.now, until: run.now + BALANCE.death.fallenMs, by, ...(pvp ? { pvp: true as const } : {}) };
   run.s.timers.push({ at: a.fallen.until, kind: 'fallen', agent: a.id });
   run.s.dirty.add('timers');
   bump(run, a, 'deaths');
@@ -300,16 +300,19 @@ export function fall(run: Run, a: AgentState, by: string): void {
     actor: a.id,
     to: 'room',
     drama: 3,
-    m: msg('ev.fallen', { actor: a.name, by }),
-    data: { by },
+    m: msg(pvp ? 'ev.fallen_pvp' : 'ev.fallen', { actor: a.name, by }),
+    data: { by, ...(pvp ? { pvp: true } : {}) },
   });
   markAgent(run.s, a);
 }
 
-/** Nobody came: wake at the temple with full health, minus a share of the carried gold. */
+/**
+ * Nobody came: wake at the temple with full health, minus a share of the carried gold. An agent felled by another
+ * agent already paid its killer (PvP toll) and loses nothing more.
+ */
 export function wakeAtTemple(run: Run, a: AgentState): void {
   if (!a.fallen) return;
-  const lost = Math.floor(a.gold * BALANCE.death.goldLoss);
+  const lost = a.fallen.pvp ? 0 : Math.floor(a.gold * BALANCE.death.goldLoss);
   a.gold -= lost;
   a.fallen = null;
   a.combat = null;

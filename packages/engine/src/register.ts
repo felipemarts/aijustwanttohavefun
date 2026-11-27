@@ -71,6 +71,11 @@ export function blankAgent(now: number): AgentState {
     guildInvites: {},
     duelInvites: {},
     journal: { day: 0, n: 0 },
+    honor: 0,
+    infamy: 0,
+    infamyAt: now,
+    wanted: null,
+    gives: [],
     createdAt: now,
     lastActiveAt: now,
   };

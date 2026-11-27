@@ -6,14 +6,14 @@ import { indexOrder } from './market';
 import { indexEscort } from './escort';
 import { blankAgent } from './register';
 import { indexTrade } from './trade';
-import type { AgentState, BoardPost, Escort, Guild, Market, Party, PuzzleState, RoomState, Timer, Trade, Village, WorldBoss, WorldMeta, WorldState } from './types';
+import type { AgentState, BoardPost, Bounty, Escort, Guild, Market, Party, PuzzleState, RoomState, Timer, Trade, Village, WorldBoss, WorldMeta, WorldState } from './types';
 import { restoreVillage } from './village';
 import { createWorld, freshPuzzle, nextPhaseChange, spawnMonster, spawnSlots, WORLD_KEYS } from './world';
 import { nextWorldBossAt, pushTimers } from './worldboss';
 
 /**
  * What the server persists: agents one by one, the rest of the world by key (`meta`, `timers`, `room:<id>`,
- * `party:<id>`, `guild:<id>`, `trades`, `market`, `board`, `village`, `puzzles`, `wboss`, `escorts`). A world entry whose `data` is null was
+ * `party:<id>`, `guild:<id>`, `trades`, `market`, `board`, `village`, `puzzles`, `wboss`, `escorts`, `bounties`). A world entry whose `data` is null was
  * deleted (a dissolved party or guild): the store should drop the key.
  *
  * Both exports hand out the live objects of the world, not copies, so that saving costs nothing extra. Consumers
@@ -31,6 +31,7 @@ function worldEntry(s: WorldState, key: string): unknown {
   if (key === 'puzzles') return s.puzzles;
   if (key === 'wboss') return s.worldBoss;
   if (key === 'escorts') return [...s.escorts.values()];
+  if (key === 'bounties') return s.bounties;
   if (key.startsWith('room:')) return s.rooms.get(key.slice(5));
   if (key.startsWith('party:')) return s.parties.get(key.slice(6)) ?? null;
   if (key.startsWith('guild:')) return s.guilds.get(key.slice(6)) ?? null;
@@ -178,6 +179,8 @@ function restoreSocial(s: WorldState, world: Map<string, unknown>): void {
       g.officers = g.officers.filter((id) => g.members.includes(id));
       if (!g.members.includes(g.leader)) g.leader = g.officers[0] ?? g.members[0]!;
       g.officers = g.officers.filter((id) => id !== g.leader);
+      // Snapshots from before coups existed have no votes.
+      g.coup = (g.coup ?? []).filter((id) => id !== g.leader && g.members.includes(id));
       for (const id of Object.keys(g.vault)) if (!c.items.has(id)) delete g.vault[id];
       indexGuild(s, g);
     }
@@ -214,5 +217,14 @@ function restoreSocial(s: WorldState, world: Map<string, unknown>): void {
     indexEscort(s, e);
     // The stall timer may predate the snapshot's timers: one more check is harmless.
     s.timers.push({ at: e.at + BALANCE.escort.stallMs, kind: 'escort', id: e.id });
+  }
+
+  // A bounty is kept while its target exists; a missing refund timer is put back (only the timer at `due` acts).
+  const saved = (world.get('bounties') as Record<string, Bounty> | undefined) ?? {};
+  const timed = new Set(s.timers.toJSON().flatMap((t) => (t.kind === 'bounty' ? [`${t.target}|${t.at}`] : [])));
+  for (const [target, b] of Object.entries(saved)) {
+    if (!s.agents.has(target) || !(b.total > 0)) continue;
+    s.bounties[target] = b;
+    if (!timed.has(`${target}|${b.due}`)) s.timers.push({ at: b.due, kind: 'bounty', target });
   }
 }

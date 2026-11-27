@@ -194,6 +194,49 @@ export const BALANCE = {
 
   /** Weekly mayor election: candidacy for the first 5 days, voting during the last 48 hours. */
   election: { cycleMs: 7 * 24 * HOUR, candidacyMs: 5 * 24 * HOUR, runLevel: 5, voteLevel: 3, historyKept: 12 },
+
+  // ── Trust, lies and betrayal (PLANEJAMENTO §7) ──────────────────────────────
+
+  /** `give`: bond gained by the pair, and how long (and how many) gives stay open to `report_scam`. */
+  give: { bond: 2, reportWindowMs: 24 * HOUR, kept: 20 },
+
+  /** Honor: rises helping others, falls betraying, stealing and scamming. Clamped to [min, max]. */
+  honor: {
+    min: -1000,
+    max: 1000,
+    heal: 1,
+    revive: 3,
+    mentor: 1,
+    newbie: 3,
+    /** Village projects: `contributeBase` plus one per `contributePer` gold of value, at most `contributeMax`. */
+    contributeBase: 1,
+    contributePer: 200,
+    contributeMax: 5,
+    betrayal: -50,
+    steal: -5,
+    scam: -10,
+  },
+
+  /**
+   * Infamy: raised by killing agents and by failed thefts, decays by `decayPerHour` (lazily, from timestamps).
+   * Above `wanted` the agent is Wanted: the `wanted` title is forced and village shops and the inn refuse service.
+   */
+  infamy: { kill: 35, stealFailed: 10, wanted: 60, decayPerHour: 1, max: 500 },
+
+  /** PvP in lawless rooms: who may fight whom, and what a fallen agent leaves to its killer. */
+  pvp: { minLevel: 8, maxGap: 5, goldShare: 0.25 },
+
+  /** Theft (Rogues): chance = base + AGI * perAgi - target level * perTargetLevel, clamped; takes up to `maxShare` of the carried gold. */
+  steal: { base: 0.3, perAgi: 0.012, perTargetLevel: 0.02, min: 0.1, max: 0.85, maxShare: 0.1, minShare: 0.05, cooldownMs: 6 * HOUR },
+
+  /** Bounties: contributors kept per target, and how long the target's infamy must sit at zero before the pool is refunded. */
+  bounty: { maxContributors: 20, refundAfterMs: 48 * HOUR },
+
+  /** Guild coups: the leader's inactivity that lets an officer take over, the share of members whose votes depose. */
+  coup: { inactiveMs: 72 * HOUR, voteShare: 0.6 },
+
+  /** A withdrawal of at least `share` of a treasury worth at least `minValue` is announced as a looting. */
+  loot: { share: 0.5, minValue: 200 },
 } as const;
 
 /** AP cost per action (PLANEJAMENTO §11.4). Everything social is free. */
@@ -232,6 +275,12 @@ export function rogueChance(kind: 'trap' | 'lock', agi: number): number {
   const P = BALANCE.puzzle;
   const raw = kind === 'trap' ? P.trapBase + agi * P.trapPerAgi : P.lockBase + agi * P.lockPerAgi;
   return Math.min(P.chanceMax, Math.max(P.chanceMin, raw));
+}
+
+/** A Rogue's chance to pick a pocket, from its AGI and the target's level. */
+export function stealChance(agi: number, targetLevel: number): number {
+  const S = BALANCE.steal;
+  return Math.min(S.max, Math.max(S.min, S.base + agi * S.perAgi - targetLevel * S.perTargetLevel));
 }
 
 export function xpToNext(level: number): number {

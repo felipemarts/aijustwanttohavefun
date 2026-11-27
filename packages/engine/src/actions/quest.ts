@@ -8,6 +8,7 @@ import { dailyQuests, initialProgress, nextTutorial, questBlocker, questEvent, q
 import { route } from '../routes';
 import { emit, fail, markAgent, msg, tell, type Run } from '../run';
 import type { AgentState } from '../types';
+import { addHonor } from '../trust';
 import { questXpMult } from '../unlocks';
 import { normId, type HandlerMap } from './util';
 
@@ -33,6 +34,7 @@ function helpedNewbie(run: Run, a: AgentState): void {
   for (const b of partyHere(run, a)) {
     if (b.level < a.level + P.helpNewbieGap) continue;
     bump(run, b, 'newbies_helped');
+    addHonor(run, b, BALANCE.honor.newbie);
     questEvent(run, b, 'help_newbie');
     markAgent(run.s, b);
   }

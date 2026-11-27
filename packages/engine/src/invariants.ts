@@ -4,6 +4,7 @@ import type { Goods, Timer, WorldState } from './types';
 import { checkVillage } from './village-invariants';
 import { marketSlots } from './unlocks';
 import { spawnSlots } from './world';
+import { infamyNow, WANTED_TITLE } from './trust';
 
 const isNatural = (n: unknown): boolean => typeof n === 'number' && Number.isInteger(n) && n >= 0;
 
@@ -115,7 +116,51 @@ export function checkInvariants(s: WorldState, now: number): string[] {
   checkSocial(s, out);
   checkEconomy(s, out);
   checkEvents(s, now, out);
+  checkTrust(s, now, out);
   return out;
+}
+
+/** Honor, Infamy and Wanted, recent gives, bounties in escrow and guild coup votes (PLANEJAMENTO §7). */
+function checkTrust(s: WorldState, now: number, out: string[]): void {
+  const B = BALANCE;
+  const timers = new Set<string>();
+  for (const t of s.timers.toJSON()) {
+    if (t.kind === 'wanted') timers.add(`wanted|${t.agent}|${t.at}`);
+    if (t.kind === 'bounty') timers.add(`bounty|${t.target}|${t.at}`);
+  }
+  for (const a of s.agents.values()) {
+    const who = `agent ${a.id} (${a.name})`;
+    if (!Number.isInteger(a.honor) || a.honor < B.honor.min || a.honor > B.honor.max) out.push(`${who}: honor ${a.honor}`);
+    if (!(a.infamy >= 0 && a.infamy <= B.infamy.max) || !Number.isFinite(a.infamyAt)) out.push(`${who}: infamy ${a.infamy} at ${a.infamyAt}`);
+    const infamy = infamyNow(a, now);
+    if (a.wanted) {
+      if (a.title !== WANTED_TITLE || !a.titles.includes(WANTED_TITLE)) out.push(`${who}: wanted without the ${WANTED_TITLE} title shown`);
+      if (!timers.has(`wanted|${a.id}|${a.wanted.until}`)) out.push(`${who}: wanted until ${a.wanted.until} without a timer`);
+      if (a.wanted.until <= now) out.push(`${who}: still wanted after ${a.wanted.until}`);
+      if (!(infamy > B.infamy.wanted - 1e-6)) out.push(`${who}: wanted with infamy ${infamy}`);
+    } else {
+      if (a.titles.includes(WANTED_TITLE) || a.title === WANTED_TITLE) out.push(`${who}: ${WANTED_TITLE} title while not wanted`);
+      if (infamy > B.infamy.wanted + 1e-6) out.push(`${who}: infamy ${infamy} above the line but not wanted`);
+    }
+    if (a.fallen?.pvp && a.hp !== 0) out.push(`${who}: PvP fall with HP ${a.hp}`);
+    const gives = a.gives ?? [];
+    if (gives.length > B.give.kept || new Set(gives.map((g) => g.id)).size !== gives.length) out.push(`${who}: ${gives.length} gives on record`);
+    for (const g of gives) if (!s.agents.has(g.to) || !isNatural(g.value)) out.push(`${who}: bad give record ${JSON.stringify(g)}`);
+  }
+  for (const [target, b] of Object.entries(s.bounties)) {
+    const what = `bounty on ${target}`;
+    if (b.target !== target || !s.agents.has(target)) out.push(`${what}: unknown or mismatched target ${b.target}`);
+    if (!isNatural(b.total) || b.total <= 0) out.push(`${what}: total ${b.total}`);
+    if (b.by.reduce((n, x) => n + x.gold, 0) !== b.total) out.push(`${what}: contributions do not add up to ${b.total}`);
+    if (b.by.length > B.bounty.maxContributors || new Set(b.by.map((x) => x.id)).size !== b.by.length) out.push(`${what}: ${b.by.length} contributor lines`);
+    for (const x of b.by) if (!isNatural(x.gold) || x.gold <= 0) out.push(`${what}: contribution ${x.gold} by ${x.id}`);
+    if (!timers.has(`bounty|${target}|${b.due}`)) out.push(`${what}: no refund timer at ${b.due}`);
+  }
+  for (const g of s.guilds.values()) {
+    const what = `guild ${g.id} (${g.name})`;
+    if (new Set(g.coup).size !== g.coup.length) out.push(`${what}: duplicate coup vote`);
+    for (const id of g.coup) if (id === g.leader || !g.members.includes(id)) out.push(`${what}: coup vote by ${id}, not a plain member or officer`);
+  }
 }
 
 /** Puzzles, the world boss, escorts and the respawn index, against the timers that drive them. */

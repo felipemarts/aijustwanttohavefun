@@ -57,9 +57,11 @@ export function electionTick(run: Run): void {
 }
 
 function takeOffice(run: Run, a: AgentState, n: number): Mayor {
-  const m: Mayor = { id: a.id, name: a.name, since: run.now, election: n, prevTitle: a.title };
+  // A Wanted mayor keeps wearing `wanted` until its infamy fades; `mayor` shows after that.
+  const m: Mayor = { id: a.id, name: a.name, since: run.now, election: n, prevTitle: a.wanted ? a.wanted.prev : a.title };
   grantTitle(a, MAYOR_TITLE);
-  a.title = MAYOR_TITLE;
+  if (a.wanted) a.wanted.prev = MAYOR_TITLE;
+  else a.title = MAYOR_TITLE;
   markAgent(run.s, a);
   return m;
 }
@@ -68,7 +70,9 @@ function stepDown(run: Run, m: Mayor): void {
   const a = run.s.agents.get(m.id);
   if (!a) return;
   a.titles = a.titles.filter((t) => t !== MAYOR_TITLE);
-  if (a.title === MAYOR_TITLE) a.title = m.prevTitle && a.titles.includes(m.prevTitle) ? m.prevTitle : null;
+  const back = m.prevTitle && a.titles.includes(m.prevTitle) ? m.prevTitle : null;
+  if (a.title === MAYOR_TITLE) a.title = back;
+  if (a.wanted?.prev === MAYOR_TITLE) a.wanted.prev = back;
   markAgent(run.s, a);
 }
 

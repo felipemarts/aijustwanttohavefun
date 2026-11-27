@@ -7,6 +7,7 @@ import { goodsView, isEmpty, missingGoods, parseGoods, takeGoods } from '../good
 import { guildOf, markGuild } from '../guild';
 import { questEvent } from '../quests';
 import { emit, fail, markAgent, msg, tell, type Run } from '../run';
+import { addHonor, contributionHonor } from '../trust';
 import type { AgentState, Goods, Stack } from '../types';
 import { deliver, hallCost, hallOf, missingFor, noteContributor, progressOf, projectAt, projectStatus, splitOffer, valueOf } from '../village';
 import { cleanText, normId, type HandlerMap } from './util';
@@ -79,6 +80,7 @@ export const civicActions: HandlerMap = {
     // Counted before delivery, so the gift that completes the statue counts for its honoree.
     bump(run, a, 'contributions', value);
     if (first) bump(run, a, 'projects_contributed');
+    addHonor(run, a, contributionHonor(value));
     noteContributor(run.s, a);
     deliver(run, proj, a, given, bonus);
     questEvent(run, a, 'contribute', proj.id);

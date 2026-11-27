@@ -65,6 +65,7 @@ export function removeGuildMember(s: WorldState, g: Guild, a: AgentState): { lea
   a.guild = null;
   g.members = g.members.filter((id) => id !== a.id);
   g.officers = g.officers.filter((id) => id !== a.id);
+  g.coup = g.coup.filter((id) => id !== a.id);
   markGuild(s, g);
   if (!g.members.length) {
     s.guilds.delete(g.id);
@@ -74,7 +75,13 @@ export function removeGuildMember(s: WorldState, g: Guild, a: AgentState): { lea
     return { leader: null, dissolved: true };
   }
   if (g.leader !== a.id) return { leader: null, dissolved: false };
-  g.leader = g.officers[0] ?? g.members[0]!;
-  g.officers = g.officers.filter((id) => id !== g.leader);
+  setLeader(g, g.officers[0] ?? g.members[0]!);
   return { leader: g.leader, dissolved: false };
+}
+
+/** Hands the leadership over: the new leader stops being an officer and any coup vote is void. */
+export function setLeader(g: Guild, id: string): void {
+  g.leader = id;
+  g.officers = g.officers.filter((x) => x !== id);
+  g.coup = [];
 }
