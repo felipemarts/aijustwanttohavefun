@@ -786,7 +786,7 @@ export class MockCivic {
         bio: { untrusted_text: `${a.name} came to Mistvale looking for <i>adventure</i> & snacks.` },
         bio_lang: a.lang,
         claimed: h % 3 !== 0,
-        bot: true,
+        bot: h % 7 === 0,
         achievements: ACHS.filter((_, i) => (h >>> i) & 1).slice(0, 8),
         room,
         reputation: {
@@ -802,6 +802,7 @@ export class MockCivic {
           wanted: h % 13 === 0,
         },
         ...(guild ? { guild: { name: guild.name, rank: guild.leader === a.name ? 'leader' : guild.officers.includes(a.name) ? 'officer' : 'member', colors: guild.colors } } : {}),
+        ...(h % 4 === 0 ? { party: { n: 3, leader: pickN(1, 80)[0] ?? null, members: pickN(2, 90) } } : {}),
         friends: { n: 3 + (h % 9), names: pickN(5, 20) },
         best_friends: pickN(h % 3, 40),
         rivals: pickN(h % 2, 60),

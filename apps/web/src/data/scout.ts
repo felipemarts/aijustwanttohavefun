@@ -55,6 +55,66 @@ export function bigAhead(incs: readonly TimedIncrement[], D: number): Map<string
   return out;
 }
 
+/** Why the director follows someone (`ui.director.why.<reason>`): the kind of event giving them the most interest. */
+export type Reason = 'big' | 'fight' | 'danger' | 'talk' | 'fortune' | 'civic' | 'social' | 'work';
+
+const REASON_OF: Record<string, Reason> = {
+  attack: 'fight',
+  kill: 'fight',
+  duel: 'fight',
+  heal: 'fight',
+  pvp_kill: 'danger',
+  fallen: 'danger',
+  steal: 'danger',
+  steal_failed: 'danger',
+  betrayal: 'danger',
+  treasury_looted: 'danger',
+  guild_coup: 'danger',
+  revive: 'danger',
+  say: 'talk',
+  emote: 'talk',
+  rare_drop: 'fortune',
+  level_up: 'fortune',
+  achievement: 'fortune',
+  wish: 'fortune',
+  fountain_jackpot: 'fortune',
+  election_phase: 'civic',
+  election_result: 'civic',
+  run_for_mayor: 'civic',
+  vote: 'civic',
+  mayor_priority: 'civic',
+  mayor_tax: 'civic',
+  mayor_fund: 'civic',
+  mayor_embezzle: 'civic',
+  project_contribution: 'civic',
+  party_join: 'social',
+  trade: 'social',
+  market_trade: 'social',
+  guild_founded: 'social',
+  craft: 'work',
+  gather: 'work',
+};
+
+/**
+ * The reason to show for following `name` at display time D, from what the scout knows: a big moment just ahead,
+ * else the kind of event that gives them the most interest around D (as `interestAt` weighs it). Null with no data.
+ */
+export function reasonFor(incs: readonly TimedIncrement[], name: string, D: number): Reason | null {
+  if (bigAhead(incs, D).has(name)) return 'big';
+  const sums = new Map<Reason, number>();
+  for (const x of incs) {
+    if (x.n !== name) continue;
+    const reason = REASON_OF[x.e];
+    if (!reason) continue;
+    const w = interestAt([x], D).get(name) ?? 0;
+    sums.set(reason, (sums.get(reason) ?? 0) + w);
+  }
+  let best: Reason | null = null;
+  let bestV = 0;
+  for (const [r, v] of sums) if (v > bestV) [best, bestV] = [r, v];
+  return best;
+}
+
 export class Scout {
   private incs: TimedIncrement[] = [];
   private rooms = new Map<string, string>();

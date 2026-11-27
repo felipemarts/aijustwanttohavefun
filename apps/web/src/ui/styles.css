@@ -474,6 +474,218 @@ select:focus-visible {
   animation: chapter-text 500ms 120ms var(--ease) both;
 }
 
+/* ── Star card: the lower third of director mode ───────────────────────────── */
+.star-card {
+  position: absolute;
+  inset-inline: 0;
+  margin-inline: auto;
+  inset-block-end: calc(var(--ticker-h) + 14px);
+  inline-size: min(560px, calc(100% - 420px));
+  min-inline-size: 360px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  padding: 8px 12px 9px;
+  pointer-events: none;
+  animation: star-in 450ms var(--ease) both;
+  z-index: 4;
+}
+
+@keyframes star-in {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+    clip-path: inset(0 0 0 100%);
+  }
+  to {
+    transform: none;
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.star-portrait {
+  align-self: start;
+  padding: 4px 6px 0;
+  background: #2c2440;
+  box-shadow: 0 0 0 2px #8a6a2a;
+}
+
+.star-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-inline-size: 0;
+}
+
+.star-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.star-name {
+  font-variant-caps: all-small-caps;
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: 0.06em;
+  color: var(--amber);
+  text-shadow: 2px 2px 0 var(--ink);
+  margin-inline-end: 4px;
+}
+
+.star-title {
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* Why the director is here: a small tag at the end of the name line. */
+.star-why {
+  margin-inline-start: auto;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal);
+  padding: 1px 6px;
+  box-shadow: 0 0 0 1px #2f6f63;
+}
+
+.star-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 0;
+}
+
+.star-guild {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chip-ach {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #2f2614;
+  color: #f6d78c;
+  box-shadow: 0 0 0 1px #6a5020;
+}
+
+.star-now {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow: inset 3px 0 0 0 var(--amber);
+  animation: chapter-text 380ms var(--ease) both;
+}
+
+.star-now.tone-danger {
+  box-shadow: inset 3px 0 0 0 var(--red);
+  background: rgba(74, 32, 40, 0.55);
+}
+
+.star-now.tone-teal {
+  box-shadow: inset 3px 0 0 0 var(--teal);
+}
+
+.star-now.tone-plain {
+  box-shadow: inset 3px 0 0 0 #f0a050;
+}
+
+.star-now-text {
+  font-weight: 800;
+  font-size: 1.02rem;
+  color: var(--text);
+}
+
+.star-now.tone-danger .star-now-text {
+  color: #ffb3ad;
+}
+
+.star-now-quote {
+  flex-basis: 100%;
+  font-family: var(--serif);
+  font-style: italic;
+  color: #f6e7c4;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.star-recent {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.star-recent li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.star-bio {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 0.8rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1000px) {
+  .star-card {
+    inline-size: auto;
+    min-inline-size: 0;
+    inset-inline: 12px;
+    /* above the director button and the zoom buttons */
+    inset-block-end: calc(var(--ticker-h) + 124px);
+  }
+}
+
+/* Phones: name, labels and the now line only. */
+@media (max-width: 640px) {
+  .star-card {
+    grid-template-columns: 1fr;
+    inset-inline: 8px;
+    inset-block-end: calc(var(--ticker-h) + 124px);
+    padding: 6px 8px;
+  }
+  .star-portrait,
+  .star-recent,
+  .star-bio,
+  .star-title,
+  .chip-ach,
+  .star-why {
+    display: none;
+  }
+  .star-name {
+    font-size: 1.1rem;
+  }
+  .star-now-text {
+    font-size: 0.92rem;
+  }
+  .star-now-quote {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+}
+
 @keyframes chapter {
   from {
     transform: translateY(-24px);

@@ -21,7 +21,9 @@ function rank(g: Guild, id: string): 'leader' | 'officer' | 'member' {
 
 /**
  * What the profile page (`/a/:name`) adds to the public card: reputation, guild, friends, best friends and rivals,
- * the projects the agent built, its latest journal entries (agent text) and the highlights it appears in.
+ * the projects the agent built, its latest journal entries (agent text) and the highlights it appears in, and the
+ * party it is in (its size, leader and up to three other members: joining a party is a room event any spectator
+ * sees, and the members walk together on the map).
  */
 export async function profileExtras(s: WorldState, chronicle: Chronicle, a: AgentState, now: number) {
   const g = a.guild ? s.guilds.get(a.guild) : undefined;
@@ -33,11 +35,21 @@ export async function profileExtras(s: WorldState, chronicle: Chronicle, a: Agen
   const projects = Object.entries(s.village.projects)
     .flatMap(([id, st]) => ((own(st.by, a.id) ?? 0) > 0 ? [{ id, value: own(st.by, a.id)!, done: st.doneAt !== undefined }] : []))
     .sort((x, y) => y.value - x.value);
+  const party = a.party ? s.parties.get(a.party) : undefined;
   const journal = (await chronicle.journalOf(a.id)).map((j) => ({ ts: j.ts, text: j.text, lang: j.lang }));
   const highlights: Highlight[] = chronicle.recentHighlights(LIST, (h) => h.agents.includes(a.name));
   return {
     reputation: reputationOf(s, a, now),
     ...(g ? { guild: { name: g.name, rank: rank(g, a.id), colors: g.colors } } : {}),
+    ...(party
+      ? {
+          party: {
+            n: party.members.length,
+            leader: s.agents.get(party.leader)?.name ?? null,
+            members: names(s, party.members.filter((id) => id !== a.id)).slice(0, 3),
+          },
+        }
+      : {}),
     friends: { n: a.friends.length, names: names(s, a.friends) },
     best_friends: best,
     rivals: names(s, a.rivals),

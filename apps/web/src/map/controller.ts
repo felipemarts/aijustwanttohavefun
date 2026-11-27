@@ -3,6 +3,8 @@
  * writes it and registers its commands; React reads it through the hooks below.
  */
 import { useCallback, useSyncExternalStore } from 'react';
+import type { Reason } from '../data/scout';
+import type { Activity } from '../view/activity';
 import type { Caption } from './director';
 
 export type Panel = { kind: 'room'; id: string } | { kind: 'agent'; name: string } | null;
@@ -19,6 +21,9 @@ export type DirectorUi = {
   caption: Caption | null;
   seq: number;
 };
+
+/** The director's star for the star card: what they are doing now, their last actions, and why we follow them. */
+export type StarView = { star: string | null; now: Activity | null; recent: Activity[]; why: Reason | null };
 
 /** `?debug=1`: what the director is thinking (star, top interests, broadcast lag, rooms the scout holds). */
 export type DirectorDebug = {
@@ -66,6 +71,7 @@ class MapController {
     renderer: '',
   };
   directorDebug: DirectorDebug = { star: null, top: [], lagMs: 0, scoutRooms: 0 };
+  starView: StarView = { star: null, now: null, recent: [], why: null };
   commands: SceneCommands | null = null;
   /** A room to show as soon as the map is ready (`/?room=<id>` links). */
   pendingFocus: string | null = null;
@@ -144,6 +150,18 @@ class MapController {
     this.emit('director');
   }
 
+  setStarView(v: StarView) {
+    const a = this.starView;
+    if (
+      a.star === v.star &&
+      a.why === v.why &&
+      JSON.stringify([a.now, a.recent]) === JSON.stringify([v.now, v.recent])
+    )
+      return;
+    this.starView = v;
+    this.emit('starView');
+  }
+
   setDirectorDebug(d: DirectorDebug) {
     this.directorDebug = d;
     this.emit('directorDebug');
@@ -189,5 +207,12 @@ export function useDirectorDebug(): DirectorDebug {
   return useSyncExternalStore(
     useCallback((l: Listener) => controller.subscribe('directorDebug', l), []),
     () => controller.directorDebug,
+  );
+}
+
+export function useStarView(): StarView {
+  return useSyncExternalStore(
+    useCallback((l: Listener) => controller.subscribe('starView', l), []),
+    () => controller.starView,
   );
 }

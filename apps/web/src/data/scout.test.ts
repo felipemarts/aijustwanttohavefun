@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseIncrements } from './parse';
-import { bigAhead, FORESIGHT, interestAt, Scout, type TimedIncrement } from './scout';
+import { bigAhead, FORESIGHT, interestAt, reasonFor, Scout, type TimedIncrement } from './scout';
 
 const inc = (n: string, p: number, ts: number, r = 'square'): TimedIncrement => ({ n, r, p, e: 'kill', ts });
 
@@ -27,6 +27,19 @@ describe('bigAhead', () => {
     const b = bigAhead([inc('Pip', 16, 3000), inc('Pip', 12, 4000), inc('Bo', 9, 2000), inc('Cy', 20, 9000), inc('Di', 15, -1000)], 0);
     expect([...b.keys()]).toEqual(['Pip']);
     expect(b.get('Pip')!.p).toBe(16);
+  });
+});
+
+describe('reasonFor', () => {
+  const x = (e: string, p: number, ts: number): TimedIncrement => ({ n: 'Pip', r: 'a', p, e, ts });
+
+  it('a big moment ahead first, else the kind of event worth the most around the display time', () => {
+    expect(reasonFor([x('say', 3, -1000), x('fallen', 16, 4000)], 'Pip', 0)).toBe('big');
+    expect(reasonFor([x('attack', 4, -2000), x('kill', 6, 1000), x('say', 5, -1000)], 'Pip', 0)).toBe('fight');
+    expect(reasonFor([x('say', 5, -1000), x('say', 5, 2000), x('attack', 4, -60_000)], 'Pip', 0)).toBe('talk');
+    expect(reasonFor([x('wish', 2, 1000)], 'Pip', 0)).toBe('fortune');
+    expect(reasonFor([x('mystery', 9, 1000)], 'Pip', 0)).toBeNull();
+    expect(reasonFor([], 'Pip', 0)).toBeNull();
   });
 });
 

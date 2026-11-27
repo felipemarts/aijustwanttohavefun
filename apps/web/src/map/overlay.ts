@@ -56,8 +56,8 @@ export class Overlay {
     for (const l of this.labels.values()) l.used = false;
   }
 
-  /** Shows (or keeps) the label of an agent at a screen position. */
-  label(agent: string, nameLine: string, titleLine: string, sx: number, sy: number, highlight: boolean) {
+  /** Shows (or keeps) the label of an agent at a screen position; `big` for the director's star. */
+  label(agent: string, nameLine: string, titleLine: string, sx: number, sy: number, highlight: boolean, big = false) {
     let l = this.labels.get(agent);
     if (!l) {
       l = this.labelPool.pop() ?? this.newLabel();
@@ -75,6 +75,7 @@ export class Overlay {
     }
     l.used = true;
     l.box.visible = true;
+    l.box.scale.set(big ? 1.3 : 1);
     l.box.position.set(Math.round(sx), Math.round(sy));
   }
 

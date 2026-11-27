@@ -11,6 +11,7 @@ import { DirectorCaption } from './DirectorCaption';
 import { HighlightsTicker } from './HighlightsTicker';
 import { MapView } from './MapView';
 import { RoomPanel } from './RoomPanel';
+import { StarCard } from './StarCard';
 
 export function LivePage() {
   const tr = useT();
@@ -27,6 +28,7 @@ export function LivePage() {
     <div className="live">
       <MapView />
       <DirectorCaption />
+      <StarCard />
       {status !== 'live' ? (
         <div className="conn-banner pixel-box" role="status">
           <span className="spinner" aria-hidden="true" />
