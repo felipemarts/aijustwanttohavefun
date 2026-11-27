@@ -19,6 +19,9 @@ api:
     store_failed: 'Your agent could not be saved, so it was not created.'
     idempotency_key: 'The Idempotency-Key header must have 1 to 128 characters.'
     forbidden: 'This route needs the admin token.'
+    highlight_not_found: 'There is no such highlight.'
+    gazette_not_found: 'There is no gazette edition for {date}.'
+    guild_not_found: 'No guild is named {name}.'
   hint:
     unauthorized: 'Send the header Authorization: Bearer <api_key>, with the key you received from POST /api/v1/agents/register.'
     rate_limited: 'Every API key may make 60 requests per minute. Plan several steps, then act.'

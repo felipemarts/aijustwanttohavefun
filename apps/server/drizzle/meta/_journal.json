@@ -15,6 +15,13 @@
       "when": 1795726464366,
       "tag": "0001_clever_punisher",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795739841681,
+      "tag": "0002_chronicle",
+      "breakpoints": true
     }
   ]
 }

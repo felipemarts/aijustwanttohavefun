@@ -1,0 +1,26 @@
+# Highlight titles (PLANEJAMENTO §14.1), one per `highlight.<type>` title key produced by
+# apps/server/src/chronicle/highlights.ts. Agent params are names; {proj}, {item}, {mon}, {ach} and {room} are
+# content names. Short and punchy: these run in the live ticker and on share images.
+highlight:
+  world_first: 'World first! {name} earns {ach}'
+  epic_drop: '{name} loots an epic {item} from {mon}'
+  legendary_drop: 'LEGENDARY: {name} finds {item} on {mon}'
+  guild_founded: '{name} founds the guild {guild}'
+  betrayal: '{name} betrays {victim}!'
+  scam_reported: '{name} reports {accused} for a {value}-gold scam'
+  treasury_looted: '{name} loots {pct}% of the {guild} treasury ({value} gold)'
+  coup: '{reason, select, inactive {{name} seizes {guild} from the absent {old}} other {Coup! {name} ousts {old} from {guild}}}'
+  mayor_elected: '{name} is elected mayor with {votes, plural, one {# vote} other {# votes}}'
+  mayor_reelected: '{name} is re-elected mayor'
+  embezzlement: 'Mayor {name} embezzles {gold} gold'
+  project_completed: '{by, select, village {The village completes {proj}} other {{proj} is complete! Top builder: {name}}}'
+  bounty_claimed: '{name} claims the {gold}-gold bounty on {target}'
+  duel_upset: 'Upset! {name} beats {loser} in a duel'
+  best_friends: '{name} and {other} are best friends now'
+  hot_rumor: 'Everyone is talking about {name}’s rumor ({n} replies)'
+  journal_after: '{about, select, betrayal {{name} writes about the betrayal} mayor_elected {{name} writes about the election} project_completed {{name} writes about the new building} other {{name} writes about it}}'
+  boss_kill: '{name} {n, plural, offset:1 =1 {defeats} one {and # ally defeat} other {and # allies defeat}} {mon}'
+  world_boss_kill: '{mon} falls! {n, plural, offset:1 =1 {{name} alone} one {{name} and # other hero} other {{name} and # other heroes}} brought it down'
+  level_20: '{name} reaches level {level}'
+  statue_honor: 'A statue for {name}, the village’s top builder'
+  guild_hall_built: '{guild} builds its hall on {room}'

@@ -13,6 +13,8 @@ import Fastify, {
 import type { Logger } from 'pino';
 import { bearerKeyHash, isAdminToken } from './auth';
 import type { Census } from './census';
+import type { Chronicle } from './civic/chronicle';
+import { Leaderboards } from './civic/leaderboard';
 import type { Config } from './config';
 import type { Game } from './game';
 import { buildHelp } from './help';
@@ -22,6 +24,7 @@ import type { Metrics } from './metrics';
 import { createLimiters, type Limiters } from './rate-limit';
 import { Renderer } from './render';
 import { agentRoutes } from './routes/agent';
+import { chronicleRoutes } from './routes/chronicle';
 import { devRoutes } from './routes/dev';
 import { fileRoutes } from './routes/files';
 import { metricsRoutes } from './routes/metrics';
@@ -56,6 +59,7 @@ export type AppDeps = {
   spectators: Broadcaster;
   metrics: Metrics;
   census: Census;
+  chronicle: Chronicle;
 };
 
 const ACT_ROUTE = '/api/v1/act';
@@ -77,6 +81,9 @@ export type AppContext = {
   census: Census;
   spectators: Broadcaster;
   metrics: Metrics;
+  /** Highlights, gazette, secrets, timeline, board and journal reads. */
+  chronicle: Chronicle;
+  leaderboards: Leaderboards;
   help: Record<string, unknown>;
   docsDir: string;
   /** Language of the error texts for this request: the agent's when known, English otherwise. */
@@ -111,6 +118,8 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     census: deps.census,
     spectators: deps.spectators,
     metrics: deps.metrics,
+    chronicle: deps.chronicle,
+    leaderboards: new Leaderboards(game.state, game.now),
     help: buildHelp(),
     docsDir: deps.docsDir,
     lang: (req) => render.lang(req.agent?.lang),
@@ -196,6 +205,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   app.register(
     async (pub) => {
       spectatorRoutes(pub, ctx);
+      chronicleRoutes(pub, ctx);
     },
     { prefix: '/api/public' },
   );

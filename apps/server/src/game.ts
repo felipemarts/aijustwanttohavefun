@@ -32,6 +32,9 @@ export type RegisterSecrets = { keyHash: string; claimHash: string };
 export type RegisterOutcome = { ok: true; agent: AgentState } | { ok: false; error: ActionError };
 
 const TICK_MS = 1000;
+const DAY_MS = 24 * 3_600_000;
+/** The day timer fires this long after UTC midnight, so the new day has surely begun on every clock reading. */
+const DAY_SLACK_MS = 50;
 
 /** Ids are `a` + base-36 sequence (engine `registerAgent`). */
 function agentSeqOf(id: string): number {
@@ -56,6 +59,8 @@ export class Game {
   /** Registrations whose row is not stored yet: their snapshots must wait for the row (foreign key). */
   private pending = new Set<string>();
   private timer: NodeJS.Timeout | null = null;
+  private dayTimer: NodeJS.Timeout | null = null;
+  private dayListeners: ((now: number) => void)[] = [];
 
   private constructor(
     readonly state: WorldState,
@@ -95,6 +100,28 @@ export class Game {
       meta.eventSeq = Math.max(meta.eventSeq, loaded.maxEventId);
       this.state.dirty.add('meta');
     }
+  }
+
+  /** Called at every real-day rollover (UTC midnight) while the game runs: the gazette closes the day. */
+  onDayRollover(fn: (now: number) => void): void {
+    this.dayListeners.push(fn);
+  }
+
+  private scheduleDay(): void {
+    const now = this.now();
+    const wait = Math.floor(now / DAY_MS) * DAY_MS + DAY_MS + DAY_SLACK_MS - now;
+    this.dayTimer = setTimeout(() => {
+      const t = this.now();
+      for (const fn of this.dayListeners) {
+        try {
+          fn(t);
+        } catch (err) {
+          this.log.error({ err }, 'day rollover failed');
+        }
+      }
+      this.scheduleDay();
+    }, wait);
+    this.dayTimer.unref?.();
   }
 
   subscribe(c: EventConsumer): void {
@@ -212,10 +239,13 @@ export class Game {
         this.log.error({ err }, 'tick failed');
       }
     }, TICK_MS);
+    if (!this.dayTimer) this.scheduleDay();
   }
 
   stop(): void {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
+    if (this.dayTimer) clearTimeout(this.dayTimer);
+    this.dayTimer = null;
   }
 }

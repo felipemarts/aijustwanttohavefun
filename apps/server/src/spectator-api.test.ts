@@ -85,7 +85,7 @@ describe('GET /api/public/i18n/:lang', () => {
     expect(m['appearance.dye.d0']).toBeTypeOf('string');
     expect(m['dir.north']).toBeTypeOf('string');
     for (const k of Object.keys(m)) {
-      expect(k, k).toMatch(/^(ui|ev|dir|appearance)\.|^content\..+\.(name|desc)$|^content\.emote\./);
+      expect(k, k).toMatch(/^(ui|ev|dir|appearance|gazette|highlight)\.|^content\..+\.(name|desc)$|^content\.emote\./);
       expect(k).not.toMatch(/^content\.(quest|ach|item)\..+\.desc$/);
     }
     expect(Object.keys(m).some((k) => /^(api|err|hint|n)\./.test(k))).toBe(false);

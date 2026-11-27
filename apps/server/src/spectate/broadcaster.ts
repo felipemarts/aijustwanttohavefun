@@ -5,11 +5,13 @@ import {
   type AgentFull,
   type AgentPos,
   type GameEvent,
+  type Highlight,
   type MsgParams,
   type RoomFull,
   type SpectatorErrorCode,
   type SpectatorEvent,
   type SpectatorServerMsg,
+  type VillageDelta,
   type VillageFull,
   type WorldFull,
 } from '@ajwf/shared';
@@ -21,7 +23,7 @@ import type { Metrics } from '../metrics';
 import { CLOSE, SPECTATE } from './constants';
 import { DramaBoard } from './drama';
 import { RoomLogs } from './room-log';
-import { agentCard, agentPos, dayInfo, posKey, roomFull, roomInfos } from './views';
+import { agentCard, agentPos, dayInfo, liveRoomInfos, posKey, roomFull, villageMap, type VillageMap } from './views';
 import { isSpectatorVisible, toSpectatorEvent, type EventLookup } from './visibility';
 
 /** The part of a WebSocket the broadcaster uses; the real one is `ws`, tests use fakes. */
@@ -76,8 +78,31 @@ export class SpectatorConn {
   }
 }
 
-/** Public village-level events (projects, elections, the gazette). Few exist before the civilization milestone. */
-const VILLAGE_EVENT_TYPES = new Set(['day_phase', 'project_progress', 'project_completed', 'election_started', 'election_closed', 'mayor_elected', 'gazette']);
+/** Public village-level events (projects, halls, elections, the mayor's acts, the world boss warning). */
+const VILLAGE_EVENT_TYPES = new Set([
+  'day_phase',
+  'project_contribution',
+  'project_completed',
+  'project_available',
+  'guild_hall_built',
+  'guild_disbanded',
+  'statue_honor',
+  'election_phase',
+  'election_result',
+  'run_for_mayor',
+  'mayor_priority',
+  'mayor_tax',
+  'mayor_fund',
+  'mayor_embezzle',
+  'mayor_bounty',
+  'world_boss_soon',
+]);
+/** Events after which the village state (projects, buildings, mayor, election, treasury) may have changed. */
+const VILLAGE_STATE_TYPES = new Set([...VILLAGE_EVENT_TYPES, 'market_trade', 'vote', 'bounty_placed']);
+/** Population and online counts in `village` batches are refreshed at most this often. */
+const COUNTS_EVERY_MS = 5000;
+/** Highlights waiting for the next world batch, at most. */
+const MAX_PENDING_HIGHLIGHTS = 50;
 
 const topicsSchema = z.array(z.string().min(1).max(120)).min(1).max(SPECTATE.maxTopics);
 const clientMsgSchema = z.discriminatedUnion('op', [
@@ -139,6 +164,12 @@ export class Broadcaster implements EventConsumer {
   /** Full states built since the last flush, by topic name: many subscribers, one serialization. */
   private fullCache = new Map<string, Buffer>();
 
+  /** The village as last sent, and whether an event may have changed it since. */
+  private lastVillage: VillageMap;
+  private villageDirty = false;
+  private lastCounts = { population: -1, online: -1, at: -Infinity };
+  private pendingHighlights: Highlight[] = [];
+
   private dramaSentAt = -Infinity;
   private dramaWasEmpty = true;
   private lastSweep = -Infinity;
@@ -159,6 +190,46 @@ export class Broadcaster implements EventConsumer {
     const recent = [...this.state.agents.values()].filter((a) => a.status === 'active' && now - a.lastActiveAt <= SPECTATE.visibleMs);
     recent.sort((a, b) => a.lastActiveAt - b.lastActiveAt);
     for (const a of recent) this.visible.set(a.id, a.lastActiveAt);
+    this.lastVillage = villageMap(this.state, now);
+  }
+
+  /** A highlight was detected: it rides the next `world` batch (the ticker). */
+  pushHighlight(h: Highlight): void {
+    this.pendingHighlights.push(h);
+    if (this.pendingHighlights.length > MAX_PENDING_HIGHLIGHTS) this.pendingHighlights.shift();
+  }
+
+  /** What changed in the village since the last batch; null when nothing did. */
+  private villageDelta(now: number): VillageDelta | null {
+    const d: VillageDelta = {};
+    if (this.villageDirty) {
+      this.villageDirty = false;
+      const cur = villageMap(this.state, now);
+      const prev = this.lastVillage;
+      const before = new Map(prev.projects.map((p) => [p.id, JSON.stringify(p)]));
+      const changed = cur.projects.filter((p) => before.get(p.id) !== JSON.stringify(p));
+      if (changed.length) d.projects = changed;
+      if (JSON.stringify(cur.buildings) !== JSON.stringify(prev.buildings)) d.buildings = cur.buildings;
+      if (JSON.stringify(cur.halls) !== JSON.stringify(prev.halls)) d.halls = cur.halls;
+      if (cur.mayor !== prev.mayor) d.mayor = cur.mayor;
+      if (JSON.stringify(cur.election) !== JSON.stringify(prev.election)) d.election = cur.election;
+      if (cur.treasury !== prev.treasury) d.treasury = cur.treasury;
+      if (cur.taxRate !== prev.taxRate) d.taxRate = cur.taxRate;
+      if (cur.priority !== prev.priority) d.priority = cur.priority;
+      this.lastVillage = cur;
+    }
+    return Object.keys(d).length ? d : null;
+  }
+
+  /** Fresh head counts for the `village` topic, when they changed (checked every few seconds). */
+  private countsDelta(now: number): Pick<VillageDelta, 'population' | 'online'> | null {
+    if (now - this.lastCounts.at < COUNTS_EVERY_MS) return null;
+    const population = this.o.census.counts(now).population;
+    const online = this.o.census.online(now);
+    const prev = this.lastCounts;
+    this.lastCounts = { population, online, at: now };
+    if (population === prev.population && online === prev.online) return null;
+    return { population, online };
   }
 
   /** The one serializer of everything sent to spectators (a method, so tests can count calls). */
@@ -195,6 +266,7 @@ export class Broadcaster implements EventConsumer {
         if ((ev.drama ?? 0) >= SPECTATE.worldMinDrama) world?.events.push(se);
       } else if (ev.visibility === 'public') world?.events.push(se);
       if (village && (VILLAGE_EVENT_TYPES.has(ev.type) || (!ev.roomId && ev.visibility === 'public'))) village.events.push(se);
+      if (VILLAGE_STATE_TYPES.has(ev.type)) this.villageDirty = true;
 
       if (ev.actor) for (const t of this.agentTopics.get(ev.actor) ?? []) t.events.push(se);
       if (ev.target && ev.target !== ev.actor) for (const t of this.agentTopics.get(ev.target) ?? []) t.events.push(se);
@@ -223,8 +295,23 @@ export class Broadcaster implements EventConsumer {
     const now = this.now();
     if (now - this.lastSweep >= SPECTATE.visibleSweepMs) this.sweepVisible(now);
     this.collectPositions(now);
+    const world = this.topics.get('world');
+    const village = this.topics.get('village');
+    // Village changes and highlights wait for the world topic's own pace (at most 4 batches per second).
+    const worldReady = !world || now - world.lastSent >= SPECTATE.worldMinIntervalMs;
+    const delta = worldReady ? this.villageDelta(now) : null;
+    const counts = village ? this.countsDelta(now) : null;
+    const highlights = world && worldReady && this.pendingHighlights.length ? this.pendingHighlights : null;
+    if (!world) this.pendingHighlights = [];
+    const mapDelta: VillageDelta | null = delta && (delta.projects || delta.buildings || delta.halls) ? { ...(delta.projects ? { projects: delta.projects } : {}), ...(delta.buildings ? { buildings: delta.buildings } : {}), ...(delta.halls ? { halls: delta.halls } : {}) } : null;
+    const villageMsg: VillageDelta | null = delta || counts ? { ...delta, ...counts } : null;
     for (const t of this.topics.values()) {
-      const content = t.events.length > 0 || t.pos.size > 0 || t.gone.size > 0;
+      const extra: Partial<Extract<SpectatorServerMsg, { t: 'batch' }>> = {};
+      if (t.kind === 'world') {
+        if (mapDelta) extra.village = mapDelta;
+        if (highlights) extra.highlights = highlights;
+      } else if (t.kind === 'village' && villageMsg) extra.village = villageMsg;
+      const content = t.events.length > 0 || t.pos.size > 0 || t.gone.size > 0 || Object.keys(extra).length > 0;
       let drama: Record<string, number> | undefined;
       if (t.kind === 'world') {
         if (now - t.lastSent < SPECTATE.worldMinIntervalMs) continue;
@@ -240,6 +327,11 @@ export class Broadcaster implements EventConsumer {
       if (t.pos.size) msg.pos = [...t.pos.values()];
       if (t.gone.size) msg.gone = [...t.gone];
       if (drama) msg.drama = drama;
+      if (extra.village) msg.village = extra.village;
+      if (extra.highlights) {
+        msg.highlights = extra.highlights;
+        this.pendingHighlights = [];
+      }
       const buf = this.frame(msg);
       t.events = [];
       t.pos.clear();
@@ -330,7 +422,8 @@ export class Broadcaster implements EventConsumer {
       const a = this.state.agents.get(id);
       if (a?.status === 'active') agents.push(agentPos(a, now));
     }
-    return { now, rooms: roomInfos(this.state), agents, drama: this.drama.top(SPECTATE.dramaTopRooms, now), buildings: {}, projects: [], day: dayInfo(now) };
+    const v = villageMap(this.state, now);
+    return { now, rooms: liveRoomInfos(this.state), agents, drama: this.drama.top(SPECTATE.dramaTopRooms, now), buildings: v.buildings, projects: v.projects, halls: v.halls, day: dayInfo(now) };
   }
 
   /** `upTo` leaves out log events that are still waiting for the next batch (the subscriber gets them there). */
@@ -351,7 +444,21 @@ export class Broadcaster implements EventConsumer {
 
   villageFull(now = this.now()): VillageFull {
     const { population } = this.o.census.counts(now);
-    return { now, population, online: this.o.census.online(now), day: dayInfo(now), buildings: {}, projects: [] };
+    const v = villageMap(this.state, now);
+    return {
+      now,
+      population,
+      online: this.o.census.online(now),
+      day: dayInfo(now),
+      buildings: v.buildings,
+      projects: v.projects,
+      halls: v.halls,
+      mayor: v.mayor,
+      election: v.election,
+      treasury: v.treasury,
+      taxRate: v.taxRate,
+      priority: v.priority,
+    };
   }
 
   private fullData(t: TopicState, now: number): unknown {

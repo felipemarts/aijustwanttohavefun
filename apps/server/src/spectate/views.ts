@@ -1,5 +1,5 @@
-import { BALANCE, dayFraction, dayPhase, refreshResource, type AgentState, type WorldState } from '@ajwf/engine';
-import type { AgentCard, AgentPos, DayInfo, RoomFull, RoomInfo, RoomMonster, SpectatorEvent } from '@ajwf/shared';
+import { BALANCE, dayFraction, dayPhase, refreshResource, villageView, type AgentState, type WorldState } from '@ajwf/engine';
+import type { AgentCard, AgentPos, DayInfo, ElectionInfo, HallInfo, ProjectInfo, RoomFull, RoomInfo, RoomMonster, SpectatorEvent } from '@ajwf/shared';
 import { SPECTATE } from './constants';
 
 export function dayInfo(now: number): DayInfo {
@@ -41,6 +41,39 @@ export function agentCard(a: AgentState): AgentCard {
 
 const roomInfoCache = new WeakMap<WorldState['content'], RoomInfo[]>();
 
+/** The village as the map shows it: projects, buildings, guild halls, mayor and election. O(projects + plots). */
+export type VillageMap = {
+  projects: ProjectInfo[];
+  buildings: Record<string, string>;
+  halls: Record<string, HallInfo>;
+  mayor: string | null;
+  election: ElectionInfo;
+  treasury: number;
+  taxRate: number;
+  priority: string | null;
+};
+
+export function villageMap(s: WorldState, now: number): VillageMap {
+  const v = villageView(s, now);
+  const buildings: Record<string, string> = {};
+  const halls: Record<string, HallInfo> = {};
+  for (const [plot, b] of Object.entries(v.buildings)) {
+    if (b.kind === 'project') buildings[plot] = b.project;
+    else halls[plot] = { guild: b.name, colors: b.colors, at: b.at };
+  }
+  const e = v.election;
+  return {
+    projects: v.projects.map((p) => ({ id: p.id, plot: p.site, progress: p.progress, done: p.status === 'done', status: p.status, building: p.building })),
+    buildings,
+    halls,
+    mayor: v.mayor?.name ?? null,
+    election: { n: e.n, phase: e.phase, voteAt: e.voteAt, end: e.end, candidates: e.candidates.map((c) => c.name) },
+    treasury: v.treasury,
+    taxRate: v.taxRate,
+    priority: v.priority,
+  };
+}
+
 /** Static map data of every room (cached per content). */
 export function roomInfos(s: WorldState): RoomInfo[] {
   let list = roomInfoCache.get(s.content);
@@ -59,7 +92,20 @@ export function roomInfos(s: WorldState): RoomInfo[] {
 }
 
 export function roomInfo(s: WorldState, id: string): RoomInfo | undefined {
-  return roomInfos(s).find((r) => r.id === id);
+  const r = roomInfos(s).find((x) => x.id === id);
+  return r?.plot ? { ...r, building: buildingAt(s, id) } : r;
+}
+
+/** What stands on a plot: the finished project's building id, `guild_hall`, or null. */
+export function buildingAt(s: WorldState, plot: string): string | null {
+  if (s.village.halls[plot]) return 'guild_hall';
+  for (const p of s.content.projects.values()) if (p.site === plot && s.village.projects[p.id]?.doneAt !== undefined) return p.building;
+  return null;
+}
+
+/** Room infos with the live building of every plot. */
+export function liveRoomInfos(s: WorldState): RoomInfo[] {
+  return roomInfos(s).map((r) => (r.plot ? { ...r, building: buildingAt(s, r.id) } : r));
 }
 
 /** Monsters by kind, with the HP of wounded ones. Read-only: a monster nobody hit for a while counts as healed. */

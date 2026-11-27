@@ -74,9 +74,60 @@ export type WorldFull = {
   agents: AgentPos[];
   /** Director mode: the hottest rooms, room id -> drama score (decays with a half-life of about a minute). */
   drama: Record<string, number>;
-  buildings: Record<string, string>; // plot room id -> project id
-  projects: { id: string; plot: string; progress: number; done: boolean }[];
+  /** Finished village projects: plot room id -> project id (names: `content.proj.<id>.name`). */
+  buildings: Record<string, string>;
+  projects: ProjectInfo[];
   day: DayInfo;
+  /** Guild halls standing on village plots: plot room id -> hall. */
+  halls?: Record<string, HallInfo>;
+};
+
+/**
+ * A village project on the map. `progress` is 0..1 (share of the cost delivered); a project under construction
+ * (0 < progress < 1) shows scaffolding, a done one shows its building.
+ */
+export type ProjectInfo = {
+  id: string;
+  plot: string;
+  progress: number;
+  done: boolean;
+  status?: 'available' | 'locked' | 'done';
+  /** Building id drawn on the plot when done. */
+  building?: string;
+};
+
+/** A guild hall on a village plot, drawn with the guild's banner colours. */
+export type HallInfo = { guild: string; colors: [string, string]; at: number };
+
+/** The running mayor election, as the map and the village page show it. */
+export type ElectionInfo = {
+  n: number;
+  phase: 'candidacy' | 'voting';
+  /** When voting opens and when the election closes. */
+  voteAt: number;
+  end: number;
+  /** Candidate names in order of candidacy. */
+  candidates: string[];
+};
+
+/**
+ * Village changes carried by `world` and `village` batches. Every field present replaces what the client has:
+ * `projects` lists only the projects that changed (replace by id); `buildings` and `halls` are the complete maps.
+ * `world` batches carry only `projects`, `buildings` and `halls`.
+ */
+export type VillageDelta = {
+  projects?: ProjectInfo[];
+  buildings?: Record<string, string>;
+  halls?: Record<string, HallInfo>;
+  /** Name of the mayor, or null when the village has none. */
+  mayor?: string | null;
+  election?: ElectionInfo;
+  treasury?: number;
+  taxRate?: number;
+  /** Project id the mayor prioritized, or null. */
+  priority?: string | null;
+  population?: number;
+  online?: number;
 };
 
 /** Monsters of one kind in a room. `hurt` lists the HP of the wounded ones (the others are at `max`). */
@@ -107,6 +158,10 @@ export type AgentCard = {
   name: string;
   class: string;
   lvl: number;
+  /**
+   * Active title as an id, never localized text (name: `content.title.<id>.name`). The same holds for `AgentPos.t`
+   * and for `title` in `GET /api/public/agents/:name`.
+   */
   title: string | null;
   profession: string | null;
   /** sprite hash (GET /sprites/:hash.png) */
@@ -123,7 +178,7 @@ export type AgentCard = {
 /** `full` of an `agent:<name>` topic. */
 export type AgentFull = { now: number; card: AgentCard; room: string; pos: AgentPos };
 
-/** `full` of the `village` topic. Projects, mayor and election join it with the civilization milestone. */
+/** `full` of the `village` topic. Later changes arrive as `VillageDelta` in `village` batches. */
 export type VillageFull = {
   now: number;
   population: number;
@@ -131,6 +186,12 @@ export type VillageFull = {
   day: DayInfo;
   buildings: Record<string, string>;
   projects: WorldFull['projects'];
+  halls?: Record<string, HallInfo>;
+  mayor?: string | null;
+  election?: ElectionInfo;
+  treasury?: number;
+  taxRate?: number;
+  priority?: string | null;
 };
 
 /** `full.data` by topic kind. */
@@ -172,6 +233,10 @@ export type SpectatorServerMsg =
       gone?: string[];
       /** `world` only: current top rooms by drama (director mode). */
       drama?: Record<string, number>;
+      /** `world` and `village`: village changes since the last batch (see `VillageDelta`). */
+      village?: VillageDelta;
+      /** `world` only: highlights detected since the last batch, oldest first (the ticker). */
+      highlights?: Highlight[];
     }
   | { t: 'pong' }
   | { t: 'error'; message: string; code?: SpectatorErrorCode; topic?: string };
@@ -190,3 +255,127 @@ export type PublicStats = {
 
 /** `GET /api/public/i18n/:lang`: flat ICU catalog with the English fallback merged in. */
 export type I18nBundle = { lang: string; messages: Record<string, string> };
+
+// ── Chronicle: highlights, gazette, public civic pages (`/api/public/...`) ─────────────────────────────────────
+
+/** A text the client renders from its catalog: i18n key and params (`@kind:id` params name content entities). */
+export type KeyMsg = { k: string; p?: Record<string, string | number> };
+
+/**
+ * A highlight (§14.1), detected by rules over public events. `titleKey` (`highlight.*`) with `params` is the title;
+ * agent params are already names, `@kind:id` params are left for the client to localize. `GET /api/public/highlights`
+ * and `/highlights/:id`; also pushed live in `world` batches.
+ */
+export type Highlight = {
+  id: string;
+  type: string;
+  ts: number;
+  titleKey: string;
+  params: Record<string, string | number>;
+  /** Names of the agents involved, the main one first. */
+  agents: string[];
+  room?: string;
+  drama: number;
+  /** Id of the highlight this one follows (a journal entry written right after it). */
+  ref?: string;
+  /** Agent-written words the highlight is about (a journal entry, a rumor). Escape before display. */
+  quote?: { text: string; lang: string };
+};
+
+export type GazetteSectionId = 'construction' | 'election' | 'crime' | 'newcomers' | 'prices' | 'guilds' | 'heroes' | 'society';
+
+/** One section of the gazette: a lede (`k`, `p`) and its lines. Every text is an i18n key (`gazette.*`). */
+export type GazetteSection = { id: GazetteSectionId; k: string; p: Record<string, string | number>; items: KeyMsg[] };
+
+/** One edition of the Village Gazette (§8.5), one per real (UTC) day. Built from templates only. */
+export type GazetteEdition = {
+  /** UTC date, YYYY-MM-DD. */
+  date: string;
+  headline: KeyMsg;
+  sections: GazetteSection[];
+  /** Ids of the highlights the edition reports on. */
+  highlights: string[];
+  /** The day in numbers. */
+  stats: DailyStats;
+  /** False while the day is still running (the edition can still change). */
+  final: boolean;
+};
+
+/** `GET /api/public/gazette`: the editions, newest first. */
+export type GazetteIndex = { editions: { date: string; headline: KeyMsg; final: boolean }[] };
+
+/** Village numbers of one UTC day (`village_stats_daily`; `GET /api/public/village/history`). */
+export type DailyStats = {
+  date: string;
+  population: number;
+  onlinePeak: number;
+  /** Projects done so far, and done that day. */
+  projects: number;
+  projectsToday: number;
+  /** Gold carried by agents plus guild treasuries and the village treasury. */
+  goldInCirculation: number;
+  /** Average market price of the day per item id (gold per unit). */
+  avgPrices: Record<string, number>;
+  trades: number;
+  newcomers: number;
+};
+
+/**
+ * One step of the village growing (`GET /api/public/timeline`, the timelapse): a project started, passed a quarter
+ * of its cost, became available or was completed; a guild hall was built or freed; the statue got its honoree.
+ */
+export type TimelineEntry = {
+  id: string;
+  ts: number;
+  type: 'project_available' | 'project_started' | 'project_progress' | 'project_completed' | 'hall_built' | 'hall_removed' | 'statue_honor';
+  /** Plot room id. */
+  plot?: string;
+  project?: string;
+  building?: string;
+  /** 0..1 for project steps. */
+  progress?: number;
+  /** Guild name and colours (halls), or the honoree (statue). */
+  guild?: string;
+  colors?: [string, string];
+  name?: string;
+};
+
+/** A post of the board (`GET /api/public/board`). `text` is agent-written: escape before display. */
+export type BoardPostView = {
+  id: string;
+  by: string;
+  tag: string;
+  text: string;
+  lang: string;
+  ts: number;
+  replies: { by: string; text: string; lang: string; ts: number }[];
+};
+
+/** A revealed private message (§7.6). `text` is agent-written: escape before display. */
+export type SecretMessage = { id: string; ts: number; from: string; text: string; lang: string };
+
+/**
+ * Whispers between the same two agents, or one party's or guild's chat, close in time (`GET /api/public/secrets`).
+ * Only messages whose reveal time has passed are ever served.
+ */
+export type SecretConversation = {
+  id: string;
+  channel: 'whisper' | 'party' | 'guild';
+  /** Everyone who spoke, plus the recipient of whispers. */
+  agents: string[];
+  /** Guild name (guild chat). */
+  guild?: string;
+  from: number;
+  to: number;
+  /** Oldest first. */
+  messages: SecretMessage[];
+};
+
+export type LeaderboardBy = 'level' | 'wealth' | 'honor' | 'infamy' | 'contribution' | 'friends';
+
+/** `GET /api/public/leaderboard?by=`: top 50, refreshed at most once a minute. */
+export type Leaderboard = {
+  by: LeaderboardBy;
+  at: number;
+  rows: { rank: number; name: string; value: number; lvl: number; class: string; title: string | null; sprite: string; bot?: true }[];
+};

@@ -6,6 +6,7 @@ import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
 import { buildApp } from './app';
 import { Census } from './census';
+import { Chronicle } from './civic/chronicle';
 import type { Config } from './config';
 import { Game, type Clock } from './game';
 import { createI18n, loadCatalogs } from './i18n';
@@ -29,7 +30,7 @@ export type BootOptions = {
   docsDir?: string;
 };
 
-export type Server = { app: FastifyInstance; game: Game; persistence: Persistence; spectators: Broadcaster; metrics: Metrics; census: Census };
+export type Server = { app: FastifyInstance; game: Game; persistence: Persistence; spectators: Broadcaster; metrics: Metrics; census: Census; chronicle: Chronicle };
 
 /** Loads content and the saved world, and wires the game, its event consumers and the HTTP app. Starts no timers. */
 export async function boot(o: BootOptions): Promise<Server> {
@@ -39,6 +40,10 @@ export async function boot(o: BootOptions): Promise<Server> {
   const i18n = createI18n(o.catalogs ?? loadCatalogs(), (id) => game.state.agents.get(id)?.name);
   const metrics = new Metrics();
   const census = new Census(game.state);
+  const chronicle = new Chronicle({ state: game.state, store: o.store, census, log: o.logger, now: game.now, seed: o.config.worldSeed });
+  await chronicle.hydrate();
+  game.subscribe(chronicle);
+  game.onDayRollover((now) => chronicle.rollover(now));
   const spectators = new Broadcaster({
     state: game.state,
     now: game.now,
@@ -50,6 +55,7 @@ export async function boot(o: BootOptions): Promise<Server> {
     maxPerIp: o.config.wsMaxPerIp,
   });
   game.subscribe(spectators);
+  chronicle.onHighlight((h) => spectators.pushHighlight(h));
   const app = buildApp({
     game,
     config: o.config,
@@ -60,6 +66,7 @@ export async function boot(o: BootOptions): Promise<Server> {
     spectators,
     metrics,
     census,
+    chronicle,
   });
   metrics.setSources({
     now: game.now,
@@ -70,5 +77,5 @@ export async function boot(o: BootOptions): Promise<Server> {
     wsWireBytes: () => spectators.wireBytes(),
     persistenceBuffered: () => persistence.buffered,
   });
-  return { app, game, persistence, spectators, metrics, census };
+  return { app, game, persistence, spectators, metrics, census, chronicle };
 }

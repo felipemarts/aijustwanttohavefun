@@ -1,6 +1,6 @@
 import pg from 'pg';
 import { describe, expect, it } from 'vitest';
-import { makeServer } from '../test-helpers';
+import { makeServer, T0 } from '../test-helpers';
 import { PgStore } from './pg';
 
 const url = process.env.TEST_DATABASE_URL;
@@ -61,6 +61,65 @@ describe.skipIf(!url)('PgStore (TEST_DATABASE_URL)', () => {
       await second.persistence.stop();
     } finally {
       await store2.close();
+    }
+  });
+
+  it('stores and reads back the chronicle: highlights, gazettes, stats, board, journal, trades, timeline and secrets', async () => {
+    await resetDatabase(url!);
+    const store = await PgStore.open(url!);
+    try {
+      const s = await makeServer({ store });
+      const pip = await s.register('Pip');
+      const brasa = await s.register('Brasa');
+      expect((await s.act(pip.key, 'whisper', { to: 'Brasa', text: 'meet me at the well' })).json().ok).toBe(true);
+      expect((await s.act(brasa.key, 'board_post', { text: 'Rumor: the well is haunted', tag: 'rumor' })).json().ok).toBe(true);
+      s.clock.advance(4000);
+      expect((await s.act(pip.key, 'board_reply', { post: s.game.state.board[0]!.id, text: 'nonsense' })).json().ok).toBe(true);
+      expect((await s.act(pip.key, 'journal', { text: 'A quiet start.' })).json().ok).toBe(true);
+      const a = s.game.agentByName('Pip')!;
+      for (const dir of s.path(a.room, 'village.town_hall')) await s.act(pip.key, 'move', { dir });
+      const p = s.game.content.projects.get('bridge')!;
+      a.gold += p.cost.gold;
+      const items: Record<string, number> = {};
+      for (const x of p.cost.items) a.inv[x.item] = items[x.item] = x.qty;
+      expect((await s.act(pip.key, 'contribute', { project: 'bridge', gold: p.cost.gold, items })).json().ok).toBe(true);
+      // The day closes: its edition and stats row go to the store too.
+      s.clock.t = T0 + 86_400_000;
+      s.chronicle.rollover(s.clock.now());
+      await s.persistence.stop();
+      await s.chronicle.stop();
+
+      const hs = await store.listHighlights(null, 10);
+      expect(hs.map((h) => h.type)).toContain('project_completed');
+      expect(await store.getHighlight(hs[0]!.id)).toEqual(hs[0]);
+      expect(await store.listHighlights(Number(hs[0]!.id.slice(1)), 10)).toEqual(hs.slice(1));
+      const ed = await store.getGazette('2026-01-01');
+      expect(ed).toMatchObject({ date: '2026-01-01', final: true, headline: { k: expect.stringMatching(/^gazette\.headline\.project_completed\./) } });
+      expect(await store.listGazettes(5)).toEqual([{ date: '2026-01-01', headline: ed!.headline, final: true }]);
+      expect(await store.listDailyStats(5)).toEqual([expect.objectContaining({ date: '2026-01-01', population: 2, projectsToday: 1 })]);
+      const board = await store.listBoard({ tag: 'rumor', limit: 5 });
+      expect(board.posts).toEqual([expect.objectContaining({ tag: 'rumor', text: 'Rumor: the well is haunted', parentId: null })]);
+      expect(board.replies).toEqual([expect.objectContaining({ text: 'nonsense', parentId: board.posts[0]!.id })]);
+      expect(await store.journalOf(a.id, 5)).toEqual([expect.objectContaining({ text: 'A quiet start.' })]);
+      expect((await store.listTimeline()).map((e) => e.type)).toEqual(['project_completed', 'project_available']);
+      const counts = await store.eventCounts(T0);
+      expect(counts.whisper).toBeUndefined();
+      expect(counts.project_completed).toBe(1);
+      // Secrets: nothing before the reveal time, the whisper exactly at it.
+      const whisper = (await store.delayedEvents(10))[0]!;
+      expect(await store.revealedSecrets(whisper.revealAt! - 1, null, 10)).toEqual([]);
+      expect((await store.revealedSecrets(whisper.revealAt!, null, 10)).map((r) => r.id)).toEqual([whisper.id]);
+
+      // A second server over the same database pages secrets and highlights from it.
+      const second = await makeServer({ store });
+      second.clock.t = whisper.revealAt!;
+      const page = (await second.app.inject({ method: 'GET', url: '/api/public/secrets' })).json();
+      expect(page.conversations[0].messages[0].text).toBe('meet me at the well');
+      expect((await second.app.inject({ method: 'GET', url: '/api/public/gazette/2026-01-01' })).json().final).toBe(true);
+      await second.persistence.stop();
+      await second.chronicle.stop();
+    } finally {
+      await store.close();
     }
   });
 });

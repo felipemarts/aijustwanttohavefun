@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { bigint, boolean, index, integer, jsonb, pgTable, primaryKey, real, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 const ts = (name: string) => bigint(name, { mode: 'number' });
@@ -85,6 +86,8 @@ export const events = pgTable(
     index('events_type_ts').on(t.type, t.ts),
     index('events_ts').on(t.ts),
     index('events_reveal').on(t.revealAt),
+    // Secrets Revealed pages through delayed events newest first.
+    index('events_delayed_id').on(t.id).where(sql`${t.visibility} = 'delayed'`),
   ],
 );
 
@@ -111,7 +114,7 @@ export const boardPosts = pgTable(
     lang: text('lang').notNull(),
     ts: ts('ts').notNull(),
   },
-  (t) => [index('board_ts').on(t.ts), index('board_parent').on(t.parentId)],
+  (t) => [index('board_ts').on(t.ts), index('board_parent').on(t.parentId), index('board_tag_ts').on(t.tag, t.ts)],
 );
 
 export const achievementsUnlocked = pgTable(
@@ -135,8 +138,13 @@ export const highlights = pgTable(
     roomId: text('room_id'),
     eventId: text('event_id'),
     ts: ts('ts').notNull(),
+    /** Id of the event behind the highlight, as a number: the paging order. */
+    seq: bigint('seq', { mode: 'number' }).notNull().default(0),
+    drama: real('drama').notNull().default(0),
+    /** `ref` and `quote` (agent text) of the highlight, when present. */
+    extra: jsonb('extra'),
   },
-  (t) => [index('highlights_ts').on(t.ts)],
+  (t) => [index('highlights_ts').on(t.ts), index('highlights_seq').on(t.seq)],
 );
 
 export const gazetteEditions = pgTable('gazette_editions', {
@@ -165,7 +173,7 @@ export const marketTrades = pgTable(
     seller: text('seller').notNull(),
     ts: ts('ts').notNull(),
   },
-  (t) => [index('market_trades_item_ts').on(t.item, t.ts)],
+  (t) => [index('market_trades_item_ts').on(t.item, t.ts), index('market_trades_ts').on(t.ts)],
 );
 
 export const villageStatsDaily = pgTable('village_stats_daily', {
@@ -174,7 +182,24 @@ export const villageStatsDaily = pgTable('village_stats_daily', {
   projects: integer('projects').notNull(),
   goldInCirculation: bigint('gold_in_circulation', { mode: 'number' }).notNull(),
   avgPrices: jsonb('avg_prices').notNull(),
+  onlinePeak: integer('online_peak').notNull().default(0),
+  projectsToday: integer('projects_today').notNull().default(0),
+  trades: integer('trades').notNull().default(0),
+  newcomers: integer('newcomers').notNull().default(0),
 });
+
+/** Building steps of the village (projects started, quarters, completions, guild halls), for the timelapse. */
+export const villageTimeline = pgTable(
+  'village_timeline',
+  {
+    id: text('id').primaryKey(),
+    seq: bigint('seq', { mode: 'number' }).notNull(),
+    ts: ts('ts').notNull(),
+    type: text('type').notNull(),
+    data: jsonb('data').notNull(),
+  },
+  (t) => [index('village_timeline_seq').on(t.seq)],
+);
 
 export const pushSubscriptions = pgTable(
   'push_subscriptions',

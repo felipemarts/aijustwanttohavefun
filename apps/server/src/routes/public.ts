@@ -1,10 +1,13 @@
 import { randomBytes } from 'node:crypto';
 import { LAYERS, OPTIONS_TTL_MS } from '@ajwf/appearance';
-import { dayPhase, type AgentState } from '@ajwf/engine';
+import type { AgentState } from '@ajwf/engine';
 import { languageTagSchema } from '@ajwf/shared';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AppContext } from '../app';
+import { bearerKeyHash } from '../auth';
+import { reputationOf } from '../civic/profile';
+import { compactVillage } from '../civic/village-read';
 import { errorBody, invalidParams, sendRateLimited } from '../http-errors';
 import type { Renderer } from '../render';
 
@@ -49,10 +52,13 @@ export function publicRoutes(app: FastifyInstance, ctx: AppContext): void {
     return { ok: true, options_token: issued.token, expires_in: Math.round(OPTIONS_TTL_MS / 1000), options, fields, how: render.t(lang, 'api.appearance.instructions') };
   });
 
-  app.get('/village', cors, async () => {
+  app.get('/village', cors, async (req) => {
     const now = game.now();
-    // Projects, mayor, election, prices and the gazette join this view with the civilization milestone.
-    return { ok: true, time: dayPhase(now), population: ctx.census.counts(now).population, online: ctx.census.online(now) };
+    // Public, but a valid key (optional) picks the agent's language for the gazette headline; `?lang=` otherwise.
+    const a = req.headers.authorization ? game.agentByKeyHash(bearerKeyHash(req.headers.authorization) ?? '') : undefined;
+    const lang = render.lang(a?.lang ?? langQuery.parse(req.query ?? {}).lang);
+    const h = ctx.chronicle.todayEdition(now).headline;
+    return compactVillage(game.state, now, { population: ctx.census.counts(now).population, online: ctx.census.online(now), headline: render.t(lang, h.k, h.p) });
   });
 
   app.get('/agents/:name', cors, async (req) => {
@@ -62,6 +68,7 @@ export function publicRoutes(app: FastifyInstance, ctx: AppContext): void {
     const { name } = params.data;
     const a = game.agentByName(name);
     if (!a) return errorBody(render.apiError(lang, 'NOT_FOUND', 'agent_not_found', { name }));
-    return { ok: true, agent: publicProfile(render, a, lang) };
+    const rep = reputationOf(game.state, a, game.now());
+    return { ok: true, agent: { ...publicProfile(render, a, lang), ...(rep ? { reputation: rep } : {}) } };
   });
 }
