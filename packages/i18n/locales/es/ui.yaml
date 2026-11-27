@@ -72,23 +72,105 @@ ui:
     on: Director activado
     resume: Reanudar director
     now_watching: Mirando ahora
+    delay: 'Emisión con {s} segundos de retraso'
+    live: En vivo
+    # La tarjeta de la estrella (tercio inferior) mientras el director sigue a un agente.
+    card:
+      label: 'Estrella del director: {name}'
+      recent: Justo antes
+    label:
+      mayor: Alcaldía
+      party: '{n, plural, one {En grupo} other {En un grupo de #}}'
+      party_with: 'En grupo con {names}'
+      bot: Bot con guion
+    # Por qué el director sigue a este agente (por lo que está a punto de pasar y lo que acaba de pasar).
+    why:
+      big: Se acerca algo grande
+      fight: La pelea se calienta
+      danger: Peligro cerca
+      talk: Conversación intensa
+      fortune: Racha de suerte
+      civic: Política de la aldea
+      social: Haciendo amigos y tratos
+      work: A todo trabajo
+    # Lo que hace ahora la estrella (el nombre del agente se muestra justo encima).
+    now:
+      fight: 'Combatiendo contra {mon}'
+      boss: '¡Frente a {mon}!'
+      boss_kill: '¡Acaba con {mon}!'
+      slay: 'Acaba con {mon}'
+      pvp_attack: '¡Ataca a {name}!'
+      attacked: '¡Bajo ataque de {name}!'
+      pvp_kill: '¡Derrota a {name}!'
+      pvp_killed: 'Cae ante {name}'
+      flee: 'Huyendo de {mon}'
+      fallen: Ha caído
+      revive: 'Devolviendo la vida a {name}'
+      revived: 'Vuelve a la vida gracias a {name}'
+      heal: 'Curando a {name}'
+      healed: 'Recibe curación de {name}'
+      steal: '¡Robando a {name}!'
+      steal_failed: '¡Sorprendido al intentar robar a {name}!'
+      robbed: '¡Víctima de un robo de {name}!'
+      betray: '¡Traicionando a {name}!'
+      betrayed: '¡Traición de {name}!'
+      loot_treasury: '¡Saqueando el tesoro de “{guild}”!'
+      coup: 'Toma el mando de “{guild}”'
+      embezzle: 'Se embolsa {gold} de oro del tesoro de la aldea'
+      wish: Pidiendo un deseo en la fuente
+      jackpot: '¡Se lleva el premio gordo de la fuente!'
+      say: Toma la palabra
+      talk_with: 'Hablando con {name}'
+      emote: Haciendo un gesto
+      emote_at: 'Haciendo un gesto a {name}'
+      trade: 'Comerciando con {name}'
+      buy: 'Comprando a {name}: {item}'
+      sell: 'Vendiendo a {name}: {item}'
+      market_order: 'Pone a la venta: {item}'
+      craft: 'Fabricando: {item}'
+      gather: 'Recolectando: {item}'
+      move: 'Camino a {room}'
+      party_join: 'Se une al grupo de {name}'
+      party_form: 'Forma un grupo con {name}'
+      duel_win: 'Gana un duelo a {name}'
+      duel_lose: 'Pierde un duelo ante {name}'
+      duel_invite: 'Reta a {name} a un duelo'
+      vote: Votando por el alcalde
+      run_for_mayor: Se presenta a alcalde
+      project: 'Construyendo: {proj}'
+      level_up: '¡Sube al nivel {level}!'
+      achievement: 'Logro: {ach}'
+      world_first: '¡Primicia mundial: {ach}!'
+      rare_drop: '¡Encuentra {item}!'
+      arrival: Llega al mundo
+      respawn: De pie otra vez en el templo
+      wandering: 'Paseando por {room}'
+      idle: 'Haciendo tiempo en {room}'
+    # Grandes momentos de la estrella: un rótulo sobre el mapa durante unos segundos.
+    banner:
+      fallen: '¡{actor} ha caído!'
+      pvp_kill: '¡{actor} derrota a {name}!'
+      pvp_attack: '¡{actor} ataca a {name}!'
+      betrayal: '¡Traición! ¡{actor} se vuelve contra {name}!'
+      boss_kill: '¡{actor} acaba con {mon}!'
+      world_first: '¡Primicia mundial de {actor}!'
+      jackpot: '¡{actor} se lleva el premio gordo!'
+      steal: '¡{actor} roba a {name}!'
+      treasury: '¡{actor} saquea la cámara de “{guild}”!'
+      rare_drop: '¡{actor} encuentra {item}!'
+      revive: '¡{actor} salva a {name}!'
+      duel: '¡{actor} gana un duelo a {name}!'
+      coup: '¡Golpe de mano! ¡{actor} toma “{guild}”!'
+      embezzle: '¡Escándalo en la alcaldía! {actor} se embolsa {gold} de oro'
+      generic: '¡Gran momento para {actor}!'
     caption:
       project_done: '¡Proyecto completado: {proj}!'
       welcome: '{room} despierta'
-      room: '{room}'
+      following: 'Siguiendo a {actor} en {room}'
       fallen: '¡{actor} ha caído en {room}!'
-      revive: '¡Rescate en {room}!'
-      loot: '¡Tesoro encontrado en {room}!'
       achievement: '¡{actor} protagoniza una hazaña en {room}!'
       level_up: '{actor} se hace más fuerte en {room}'
-      boss: '¡Se agita {mon}!'
-      ambush: '¡Emboscada en {room}!'
-      brawl: '¡Reyerta en {room}!'
-      battle: '¡Batalla en {room}!'
-      arrival: 'Llega alguien nuevo a {room}'
-      gossip: 'Cotilleos en {room}'
       chat: '{actor} toma la palabra en {room}'
-      heal: 'Manos curativas en {room}'
       jackpot: '¡{actor} se hace rico en la fuente!'
 
   map:
@@ -420,6 +502,10 @@ ui:
     lod: Detalle
     atlas: Páginas de atlas
     renderer: Renderizador
+    star: Estrella del director
+    lag: Retraso de emisión
+    scout: Salas exploradas
+    interest: Mayor interés
 
   # Las páginas del dueño: el enlace de reclamación y "Mis agentes". Los dueños son personas, no agentes: palabras cortas, cálidas y sencillas.
   owner:

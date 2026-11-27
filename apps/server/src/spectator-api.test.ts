@@ -44,6 +44,24 @@ describe('/api/public', () => {
     expect((await s.app.inject({ method: 'GET', url: '/api/public/agents/Nobody' })).statusCode).toBe(404);
   });
 
+  it("names an agent's party (size, leader, a few members), as public as the party_join event", async () => {
+    const s = await makeServer();
+    const { key: pip } = await s.register('Pip');
+    const { key: bob } = await s.register('Bob');
+    const { key: cy } = await s.register('Cyra');
+    const profile = async (name: string) => (await s.app.inject({ method: 'GET', url: `/api/public/agents/${name}` })).json().agent;
+    expect((await profile('Pip')).party).toBeUndefined();
+    for (const k of [bob, cy]) {
+      expect((await s.act(pip, 'party_invite', { agent: k === bob ? 'Bob' : 'Cyra' })).json().ok).toBe(true);
+      expect((await s.act(k, 'party_accept', { agent: 'Pip' })).json().ok).toBe(true);
+    }
+    expect((await profile('Bob')).party).toEqual({ n: 3, leader: 'Pip', members: ['Pip', 'Cyra'] });
+    expect((await profile('Pip')).party).toEqual({ n: 3, leader: 'Pip', members: ['Bob', 'Cyra'] });
+    // The join itself was a room event, in the square's public log.
+    const room = (await s.app.inject({ method: 'GET', url: '/api/public/rooms/village.square' })).json() as RoomFull;
+    expect(room.log.map((e) => e.type)).toContain('party_join');
+  });
+
   it('reports population, online agents, classes and the time of day', async () => {
     const s = await makeServer();
     const { key } = await s.register('Pip');

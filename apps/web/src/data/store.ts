@@ -17,6 +17,8 @@ import {
   type RoomExtras,
   type WorldState,
 } from './reducers';
+import { DelayLine } from './delay';
+import { Scout } from './scout';
 import type { ConnStatus, DataSource } from './source';
 import { phaseOf } from '../map/daylight';
 
@@ -42,21 +44,37 @@ export class LiveStore {
   };
   private now: () => number;
   private villageSnap: VillageSnapshot = emptyVillage();
+  /** Director mode: the undelayed planner, and the broadcast delay in front of the store. */
+  readonly scout = new Scout();
+  private delay = new DelayLine<unknown>();
+  private autoPump: boolean;
+  private pumpTimer: ReturnType<typeof setInterval> | null = null;
+  /** The delay was dropped because the tab went hidden; it builds again when the tab comes back. */
+  private suspended = false;
+  /** Topics pushed to the source now, and since when (local time) each has been held. */
+  private topicSince = new Map<string, number>();
+  private disposeVisibility: (() => void) | null = null;
 
-  constructor(now: () => number = () => performance.now()) {
+  constructor(now: () => number = () => performance.now(), opts: { autoPump?: boolean } = {}) {
     this.now = now;
+    this.autoPump = opts.autoPump ?? typeof window !== 'undefined';
   }
 
   start(source: DataSource) {
     this.source = source;
     source.connect({
-      message: (m) => this.handle(m),
+      message: (m) => this.receive(m),
       status: (s) => {
         this.status = s;
         this.emit('status');
       },
     });
     this.pushTopics();
+    if (typeof document !== 'undefined') {
+      const onVis = () => this.setHidden(document.visibilityState === 'hidden');
+      document.addEventListener('visibilitychange', onVis);
+      this.disposeVisibility = () => document.removeEventListener('visibilitychange', onVis);
+    }
     // Population and online come with `village` batches; the ticker is seeded once with the latest highlights so it
     // is not empty until the next big moment.
     void source.getJson('/api/public/highlights?limit=8').then((body) => {
@@ -68,8 +86,86 @@ export class LiveStore {
   }
 
   stop() {
+    this.setDelay(false);
+    this.disposeVisibility?.();
+    this.disposeVisibility = null;
     this.source?.close();
     this.source = null;
+  }
+
+  /**
+   * Every message from the source: the scout sees it at once, the store when the broadcast delay releases it (at once
+   * when there is no delay). A new connection (`hello`) applies everything held and builds the lag again from zero,
+   * so the fresh full states that follow it are never queued behind, or mixed with, the old connection's batches.
+   */
+  receive(raw: unknown) {
+    const now = this.now();
+    this.scout.ingest(raw, now);
+    if (this.delay.active && raw && typeof raw === 'object' && (raw as { t?: unknown }).t === 'hello') {
+      for (const m of this.delay.restart(now)) this.handle(m);
+      this.handle(raw);
+      return;
+    }
+    for (const m of this.delay.push(raw, now)) this.handle(m);
+  }
+
+  /** Applies the messages the delay has released by now (a timer calls it; tests call it by hand). */
+  pumpDelay() {
+    for (const m of this.delay.release(this.now())) this.handle(m);
+  }
+
+  /**
+   * Director mode on: build the broadcast delay gradually. Off: apply everything held at once and go live, so manual
+   * browsing behaves as without a delay.
+   */
+  setDelay(on: boolean) {
+    this.suspended = false;
+    if (on === this.delay.active) return;
+    if (on) {
+      this.delay.start(this.now());
+      if (this.autoPump && !this.pumpTimer) this.pumpTimer = setInterval(() => this.pumpDelay(), 100);
+    } else {
+      if (this.pumpTimer) clearInterval(this.pumpTimer);
+      this.pumpTimer = null;
+      for (const m of this.delay.stop()) this.handle(m);
+    }
+    this.emit('delay');
+  }
+
+  /**
+   * A hidden tab: timers are throttled there, so instead of releasing a burst later, apply everything now and stop
+   * delaying; the lag builds again from zero when the tab is visible.
+   */
+  setHidden(hidden: boolean) {
+    if (hidden && this.delay.active) {
+      this.setDelay(false);
+      this.suspended = true;
+    } else if (!hidden && this.suspended) this.setDelay(true);
+  }
+
+  get delaying(): boolean {
+    return this.delay.active;
+  }
+
+  /** How far behind real time the screen is, ms (0 when live). */
+  lagMs(): number {
+    return this.delay.lag(this.now());
+  }
+
+  /** Server time of what the screen shows: real time minus the lag while delaying (the display clock). */
+  displayNow(): number {
+    return this.now() + this.state.clockSkew;
+  }
+
+  /** Local time now (the store's clock). */
+  localNow(): number {
+    return this.now();
+  }
+
+  /** A topic held since before the lag: its messages are already in the delay line for what the screen shows next. */
+  isBuffered(topic: string): boolean {
+    const since = this.topicSince.get(topic);
+    return since !== undefined && since <= this.now() - this.lagMs();
   }
 
   /** Applies one server message. Never throws. */
@@ -166,7 +262,8 @@ export class LiveStore {
   }
 
   private pushTopics() {
-    const order = ['panel', 'follow', 'director', 'viewport'];
+    // The scout's early subscriptions come before the viewport: in director mode they are what the camera shows next.
+    const order = ['panel', 'follow', 'director', 'scout', 'viewport'];
     const out: string[] = [...BASE_TOPICS];
     for (const h of [...order, ...this.holders.keys()]) {
       for (const t of this.holders.get(h) ?? []) {
@@ -174,6 +271,9 @@ export class LiveStore {
         if (!out.includes(t)) out.push(t);
       }
     }
+    const now = this.now();
+    for (const t of out) if (!this.topicSince.has(t)) this.topicSince.set(t, now);
+    for (const t of [...this.topicSince.keys()]) if (!out.includes(t)) this.topicSince.delete(t);
     this.source?.setTopics(out);
   }
 

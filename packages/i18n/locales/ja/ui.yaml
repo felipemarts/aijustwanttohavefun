@@ -72,23 +72,105 @@ ui:
     on: ディレクターON
     resume: ディレクターを再開
     now_watching: 注目中
+    delay: '{s}秒遅れで放送中'
+    live: ライブ
+    # The star card (lower third) while the director follows an agent.
+    card:
+      label: 'ディレクター注目：{name}'
+      recent: 直前の出来事
+    label:
+      mayor: 村長
+      party: '{n, plural, other {#人パーティ所属}}'
+      party_with: '{names}とパーティ中'
+      bot: スクリプトボット
+    # Why the director follows this agent (from what is about to happen and what just happened).
+    why:
+      big: 大事件の予感
+      fight: 戦いが白熱
+      danger: 危険が迫る
+      talk: 会話に没頭中
+      fortune: 幸運が続いている
+      civic: 村の政治が動く
+      social: 友だち作りと取引
+      work: 仕事に精を出す
+    # What the star is doing now (the agent's name is shown just above).
+    now:
+      fight: '{mon}と交戦中'
+      boss: '{mon}と対決！'
+      boss_kill: '{mon}を討ち取った！'
+      slay: '{mon}を倒した'
+      pvp_attack: '{name}に襲いかかった！'
+      attacked: '{name}に襲われている！'
+      pvp_kill: '{name}を撃破！'
+      pvp_killed: '{name}に倒された'
+      flee: '{mon}から逃走中'
+      fallen: 倒れてしまった
+      revive: '{name}を蘇生中'
+      revived: '{name}に蘇生された'
+      heal: '{name}を回復中'
+      healed: '{name}に回復してもらった'
+      steal: '{name}から盗みを働いている！'
+      steal_failed: '{name}から盗もうとして見つかった！'
+      robbed: '{name}に盗まれた！'
+      betray: '{name}を裏切った！'
+      betrayed: '{name}に裏切られた！'
+      loot_treasury: '「{guild}」の金庫を荒らしている！'
+      coup: '「{guild}」の指導権を奪取'
+      embezzle: '村の金庫から{gold}ゴールドを懐に入れた'
+      wish: 噴水で願いごとをしている
+      jackpot: 噴水で大当たり！
+      say: 何か言い始めた
+      talk_with: '{name}と会話中'
+      emote: 身ぶりを見せている
+      emote_at: '{name}に身ぶりを送っている'
+      trade: '{name}と取引中'
+      buy: '{name}から{item}を購入中'
+      sell: '{name}に{item}を売却中'
+      market_order: '{item}を出品中'
+      craft: '{item}を製作中'
+      gather: '{item}を採集中'
+      move: '{room}へ移動中'
+      party_join: '{name}のパーティに加入中'
+      party_form: '{name}とパーティを結成中'
+      duel_win: '{name}との決闘に勝利'
+      duel_lose: '{name}との決闘に敗北'
+      duel_invite: '{name}に決闘を申し込んだ'
+      vote: 村長選挙で投票中
+      run_for_mayor: 村長選に立候補中
+      project: '{proj}を建設中'
+      level_up: 'レベル{level}に到達！'
+      achievement: '{ach}を獲得'
+      world_first: '世界初：{ach}！'
+      rare_drop: '{item}を発見！'
+      arrival: 世界に到着
+      respawn: 神殿で復活
+      wandering: '{room}をさまよい中'
+      idle: '{room}でぼんやり中'
+    # Big moments of the star: a banner over the map for a few seconds.
+    banner:
+      fallen: '{actor}、倒れる！'
+      pvp_kill: '{actor}が{name}を撃破！'
+      pvp_attack: '{actor}が{name}に襲いかかる！'
+      betrayal: '裏切り！{actor}が{name}に牙をむく！'
+      boss_kill: '{actor}が{mon}を討ち取った！'
+      world_first: '{actor}が世界初の快挙！'
+      jackpot: '{actor}が大当たり！'
+      steal: '{actor}が{name}から強奪！'
+      treasury: '{actor}が「{guild}」の金庫を荒らした！'
+      rare_drop: '{actor}が{item}を発見！'
+      revive: '{actor}が{name}を救う！'
+      duel: '{actor}が{name}との決闘に勝利！'
+      coup: 'クーデター！{actor}が「{guild}」を掌握！'
+      embezzle: '村長{actor}が{gold}ゴールドを懐に！'
+      generic: '{actor}に大きな見せ場！'
     caption:
       project_done: '{proj}が完成！'
       welcome: '{room}が目を覚ます'
-      room: '{room}'
+      following: '{room}で{actor}を追跡中'
       fallen: '{room}で{actor}が倒れた！'
-      revive: '{room}で救出劇！'
-      loot: '{room}で財宝発見！'
       achievement: '{room}で{actor}が快挙を達成！'
       level_up: '{room}で{actor}が成長'
-      boss: '{mon}が目を覚ます！'
-      ambush: '{room}で待ち伏せ！'
-      brawl: '{room}で大乱闘！'
-      battle: '{room}で戦闘！'
-      arrival: '{room}に新入りが到着'
-      gossip: '{room}でうわさ話'
       chat: '{room}で{actor}が話し始めた'
-      heal: '{room}で癒やしの手'
       jackpot: '{actor}が噴水で大儲け！'
 
   map:
@@ -420,6 +502,10 @@ ui:
     lod: 詳細度
     atlas: アトラスページ
     renderer: レンダラー
+    star: ディレクターの注目
+    lag: 放送の遅れ
+    scout: 偵察中の部屋
+    interest: 最注目
 
   owner:
     kicker: マイエージェント

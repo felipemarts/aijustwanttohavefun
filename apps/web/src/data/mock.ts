@@ -3,7 +3,19 @@
  * server (`hello`, `full`, `batch`). Agents wander, chat in several languages, fight the monsters of their room,
  * level up, fall in lawless zones and get back up. It is the `?mock=1` demo and the fixture of the smoke tests.
  */
-import type { AgentPos, DayPhase, RoomInfo, SpectatorEvent, WorldFull } from '@ajwf/shared';
+import {
+  type AgentPos,
+  type DayPhase,
+  eventPoints,
+  INTEREST,
+  type InterestIncrement,
+  type RoomInfo,
+  roundPoints,
+  SayTracker,
+  selectIncrements,
+  type SpectatorEvent,
+  type WorldFull,
+} from '@ajwf/shared';
 import { hash32, rng } from '../util/rng';
 import { MockCivic } from './mockCivic';
 import { drawMockSheet } from './mockSprites';
@@ -159,6 +171,16 @@ const PHRASES: Record<string, string[]> = {
     'Méfiez-vous des voleurs.',
   ],
 };
+/** Wishes thrown into the fountain (mock data: what agents might write). */
+const WISHES: [string, string][] = [
+  ['en', 'I wish the bridge gets built before winter.'],
+  ['en', 'Let my next drop be legendary, please.'],
+  ['pt-BR', 'Quero ser prefeito um dia!'],
+  ['es', 'Que nadie me robe otra vez.'],
+  ['fr', 'Je souhaite un ami fidèle.'],
+  ['en', 'More snacks at the tavern. That is all.'],
+];
+
 const LANG_WEIGHTS: [string, number][] = [
   ['en', 0.45],
   ['pt-BR', 0.18],
@@ -180,6 +202,8 @@ type MockAgent = {
 };
 
 const MON_MAX_PER_ROOM = 6;
+/** The square, where the fountain is. */
+const SQUARE = 'village.square';
 
 export class MockSource implements DataSource {
   readonly kind = 'mock' as const;
@@ -203,6 +227,10 @@ export class MockSource implements DataSource {
   private pendingEvents: SpectatorEvent[] = [];
   private pendingPos = new Map<string, AgentPos>();
   private pendingGone: string[] = [];
+  /** Interest increments for the next world batch (director mode), scored like the server does. */
+  private pendingInterest: InterestIncrement[] = [];
+  private says = new SayTracker();
+  private lastPruneAt = 0;
   private nextArrival = 0;
   private readonly opts: Required<Omit<MockOptions, 'phase' | 'now' | 'builtAll'>>;
   private spriteCache = new Map<string, HTMLCanvasElement>();
@@ -494,6 +522,11 @@ export class MockSource implements DataSource {
       a.nextAt = this.now + 3000 + this.rand() * 9000;
       return;
     }
+    // Now and then something with another agent: a wish at the fountain, a theft, a PvP attack, a trade.
+    if (this.rand() < (room.id === SQUARE ? 0.3 : 0.06) && this.spice(a, room)) {
+      a.nextAt = this.now + 3000 + this.rand() * 5000;
+      return;
+    }
     if (usable.length && roll < 0.4) {
       a.fight = { mon: this.pick(usable)!, hits: 2 + Math.floor(this.rand() * 3) };
       this.setPos(a, p.r, 'f');
@@ -526,6 +559,40 @@ export class MockSource implements DataSource {
         });
     } else this.say(a);
     a.nextAt = this.now + 2500 + this.rand() * 8000;
+  }
+
+  /** Events between agents, for director mode's star card (wishes, PvP, theft, betrayal, trades). */
+  private spice(a: MockAgent, room: StaticRoom): boolean {
+    const p = a.pos;
+    const others = this.inRoom(room.id).filter((x) => x !== a && !x.fallenUntil && !x.stress);
+    const b = this.pick(others);
+    const r = this.rand();
+    // Villagers walk over to the fountain on the square to make a wish.
+    if (room.zone === 'village' && room.id !== SQUARE && r < 0.12 && this.roomById.has(SQUARE)) {
+      this.setPos(a, SQUARE, '');
+      this.emit({ type: 'move', room: SQUARE, actor: p.n, k: 'ev.move', p: { actor: p.n, room: `@room:${SQUARE}`, dir: '@dir:north' } });
+      return true;
+    }
+    if (room.id === SQUARE && r < 0.5) {
+      const [lang, text] = this.pick(WISHES)!;
+      this.emit({ type: 'wish', room: room.id, actor: p.n, lang, text, drama: 1 });
+      if (this.rand() < 0.08) this.emit({ type: 'fountain_jackpot', room: room.id, actor: p.n, drama: 8 });
+      return true;
+    }
+    if (!b) return false;
+    const vs = { room: room.id, actor: p.n, target: b.pos.n, tk: 'agent' as const };
+    if (r < 0.55) {
+      const dmg = 5 + Math.floor(this.rand() * 20);
+      this.emit({ type: 'attack', ...vs, k: 'ev.pvp_attack', p: { actor: p.n, name: b.pos.n, dmg }, drama: 3 });
+    } else if (r < 0.75) {
+      if (this.rand() < 0.3) this.emit({ type: 'steal_failed', ...vs, k: 'ev.steal_failed', p: { actor: p.n, name: b.pos.n }, drama: 4 });
+      else this.emit({ type: 'steal', ...vs, k: 'ev.steal', p: { actor: p.n, name: b.pos.n, gold: 5 + Math.floor(this.rand() * 60) }, drama: 5 });
+    } else if (r < 0.8) {
+      this.emit({ type: 'betrayal', ...vs, k: 'ev.betrayal', p: { actor: p.n, name: b.pos.n }, drama: 15 });
+    } else {
+      this.emit({ type: 'trade', ...vs, k: 'ev.trade', p: { actor: p.n, name: b.pos.n }, drama: 1 });
+    }
+    return true;
   }
 
   private fightRound(a: MockAgent, room: StaticRoom) {
@@ -675,6 +742,7 @@ export class MockSource implements DataSource {
   private emit(e: Omit<SpectatorEvent, 'id' | 'ts'>) {
     const ev: SpectatorEvent = { id: String(this.seq++), ts: this.now, ...e };
     this.pendingEvents.push(ev);
+    this.score(ev);
     if (ev.room) {
       const log = this.logs.get(ev.room) ?? [];
       log.push(ev);
@@ -684,10 +752,35 @@ export class MockSource implements DataSource {
     }
   }
 
+  /** The server's scoring, on the mock's events (every mock event is spectator-visible). */
+  private score(ev: SpectatorEvent) {
+    const actor = ev.actor ? this.agents.get(ev.actor) : undefined;
+    const target = ev.tk === 'agent' && ev.target && ev.target !== ev.actor ? this.agents.get(ev.target) : undefined;
+    const conversation = ev.type === 'say' && !!actor && !!ev.room && this.says.spoke(ev.room, actor.pos.n, ev.ts);
+    const input = {
+      type: ev.type,
+      drama: ev.drama,
+      boss: ev.type === 'kill' && !!ev.target && !!this.world.monsters[ev.target]?.boss,
+      vsAgent: !!target,
+      conversation,
+    };
+    for (const [a, share] of [[actor, 1], [target, INTEREST.targetShare]] as const) {
+      if (!a) continue;
+      const p = roundPoints(eventPoints({ ...input, bot: !!a.pos.f?.includes('b') }) * share);
+      if (p >= INTEREST.minPoints) this.pendingInterest.push({ n: a.pos.n, r: ev.room ?? a.pos.r, p, e: ev.type });
+    }
+  }
+
   private flush() {
     const events = this.pendingEvents;
     const pos = [...this.pendingPos.values()];
     const gone = this.pendingGone;
+    const interest = selectIncrements(this.pendingInterest);
+    this.pendingInterest = [];
+    if (this.now - this.lastPruneAt > 30_000) {
+      this.lastPruneAt = this.now;
+      this.says.prune(this.now);
+    }
     this.pendingEvents = [];
     this.pendingPos.clear();
     this.pendingGone = [];
@@ -715,6 +808,7 @@ export class MockSource implements DataSource {
           drama: this.topDrama(),
           ...(map && Object.keys(map).length ? { village: map } : {}),
           ...(highlights.length ? { highlights } : {}),
+          ...(interest.length ? { interest } : {}),
         });
       } else if (topic === 'village') {
         const v = { ...(delta ?? {}), ...(countsDue ? this.counts() : {}) };

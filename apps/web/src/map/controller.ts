@@ -3,11 +3,35 @@
  * writes it and registers its commands; React reads it through the hooks below.
  */
 import { useCallback, useSyncExternalStore } from 'react';
+import type { Reason } from '../data/scout';
+import type { Activity } from '../view/activity';
 import type { Caption } from './director';
 
 export type Panel = { kind: 'room'; id: string } | { kind: 'agent'; name: string } | null;
 
-export type DirectorUi = { enabled: boolean; room: string | null; caption: Caption | null; seq: number };
+/**
+ * Director state shown by React. `star` is the agent the camera follows (null during a special moment or before one is
+ * chosen); `seq` changes only on a new shot (a change of star or a special moment), so the caption slides in again
+ * only then, while refreshes of the same shot keep it in place.
+ */
+export type DirectorUi = {
+  enabled: boolean;
+  star: string | null;
+  room: string | null;
+  caption: Caption | null;
+  seq: number;
+};
+
+/** The director's star for the star card: what they are doing now, their last actions, and why we follow them. */
+export type StarView = { star: string | null; now: Activity | null; recent: Activity[]; why: Reason | null };
+
+/** `?debug=1`: what the director is thinking (star, top interests, broadcast lag, rooms the scout holds). */
+export type DirectorDebug = {
+  star: string | null;
+  top: [string, number][];
+  lagMs: number;
+  scoutRooms: number;
+};
 
 export type SceneStats = {
   fps: number;
@@ -32,7 +56,7 @@ type Listener = () => void;
 
 class MapController {
   panel: Panel = null;
-  director: DirectorUi = { enabled: true, room: null, caption: null, seq: 0 };
+  director: DirectorUi = { enabled: true, star: null, room: null, caption: null, seq: 0 };
   follow: string | null = null;
   stats: SceneStats = {
     fps: 0,
@@ -46,6 +70,8 @@ class MapController {
     atlasPages: 0,
     renderer: '',
   };
+  directorDebug: DirectorDebug = { star: null, top: [], lagMs: 0, scoutRooms: 0 };
+  starView: StarView = { star: null, now: null, recent: [], why: null };
   commands: SceneCommands | null = null;
   /** A room to show as soon as the map is ready (`/?room=<id>` links). */
   pendingFocus: string | null = null;
@@ -108,16 +134,37 @@ class MapController {
     this.emit('director');
   }
 
-  setDirectorRoom(room: string, caption: Caption | null) {
-    this.director = { ...this.director, room, caption, seq: this.director.seq + 1 };
+  /** A new shot: a change of star, or a special moment (`star` null). */
+  setDirectorShot(star: string | null, room: string, caption: Caption | null) {
+    this.director = { ...this.director, star, room, caption, seq: this.director.seq + 1 };
     this.emit('director');
   }
 
-  setCaption(caption: Caption) {
-    const c = this.director.caption;
-    if (c && c.key === caption.key && JSON.stringify(c.params) === JSON.stringify(caption.params)) return;
-    this.director = { ...this.director, caption };
+  /** The same shot, refreshed: the star changed room or did something notable. */
+  updateDirectorShot(room: string, caption: Caption) {
+    const d = this.director;
+    const c = d.caption;
+    if (d.room === room && c && c.key === caption.key && JSON.stringify(c.params) === JSON.stringify(caption.params))
+      return;
+    this.director = { ...d, room, caption };
     this.emit('director');
+  }
+
+  setStarView(v: StarView) {
+    const a = this.starView;
+    if (
+      a.star === v.star &&
+      a.why === v.why &&
+      JSON.stringify([a.now, a.recent]) === JSON.stringify([v.now, v.recent])
+    )
+      return;
+    this.starView = v;
+    this.emit('starView');
+  }
+
+  setDirectorDebug(d: DirectorDebug) {
+    this.directorDebug = d;
+    this.emit('directorDebug');
   }
 
   setStats(s: SceneStats) {
@@ -153,5 +200,19 @@ export function useStats(): SceneStats {
   return useSyncExternalStore(
     useCallback((l: Listener) => controller.subscribe('stats', l), []),
     () => controller.stats,
+  );
+}
+
+export function useDirectorDebug(): DirectorDebug {
+  return useSyncExternalStore(
+    useCallback((l: Listener) => controller.subscribe('directorDebug', l), []),
+    () => controller.directorDebug,
+  );
+}
+
+export function useStarView(): StarView {
+  return useSyncExternalStore(
+    useCallback((l: Listener) => controller.subscribe('starView', l), []),
+    () => controller.starView,
   );
 }

@@ -479,6 +479,8 @@ export type FullProfile = {
   achievements: string[];
   reputation: Reputation | null;
   guild: { name: string; rank: 'leader' | 'officer' | 'member'; colors: [string, string] } | null;
+  /** The party the agent is in: size, leader and up to three other members. */
+  party: { n: number; leader: string | null; members: string[] } | null;
   friends: { n: number; names: string[] };
   bestFriends: string[];
   rivals: string[];
@@ -538,6 +540,10 @@ export function parseFullProfile(body: unknown): FullProfile | null {
           colors: [safeColor(gc[0], '#d9534f'), safeColor(gc[1], '#f2b84b')],
         }
       : null,
+    party:
+      isObj(a.party) && isNum(a.party.n)
+        ? { n: a.party.n, leader: strOrNull(a.party.leader), members: strings(a.party.members).slice(0, 3) }
+        : null,
     friends: isObj(a.friends) ? { n: num(a.friends.n), names: strings(a.friends.names) } : { n: 0, names: [] },
     bestFriends: strings(a.best_friends),
     rivals: strings(a.rivals),

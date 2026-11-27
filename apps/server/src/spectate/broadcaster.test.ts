@@ -437,4 +437,84 @@ describe('spectator broadcast', () => {
     s.spectators.housekeeping();
     expect(busy.sock.terminated).toBe(true);
   });
+
+  describe('interest increments (director mode)', () => {
+    const interestOf = (sock: FakeSocket) => batches(sock, 'world').flatMap((b) => b.interest ?? []);
+
+    async function watching() {
+      const t = await twoAgents();
+      const v = viewer(t.s);
+      v.sub('world');
+      t.s.clock.advance(SPECTATE.batchMs);
+      t.s.spectators.flush();
+      v.sock.clear();
+      return { ...t, v };
+    }
+
+    it('scores only spectator-visible events: a whisper, party chat or private event gives nothing', async () => {
+      const { s, pip, brasa, ids, v } = await watching();
+      expect((await s.act(pip.key, 'whisper', { to: 'Brasa', text: 'psst' })).json().ok).toBe(true);
+      s.game.publish([
+        event(s, { type: 'party_say', actor: ids.pip, roomId: 'village.square', visibility: 'delayed', payload: { text: 'x' }, drama: 9 }),
+        event(s, { type: 'fallen', actor: ids.brasa, roomId: 'village.square', visibility: 'private', payload: {}, drama: 9 }),
+      ]);
+      s.clock.advance(SPECTATE.batchMs);
+      s.spectators.flush();
+      expect(interestOf(v.sock)).toEqual([]);
+      // A say is visible: it scores 2 + its drama of 1, and Brasa answering Pip within 20 s is a conversation (+2).
+      s.clock.advance(5000);
+      expect((await s.act(pip.key, 'say', { text: 'hello' })).json().ok).toBe(true);
+      s.clock.advance(5000);
+      expect((await s.act(brasa.key, 'say', { text: 'hi back' })).json().ok).toBe(true);
+      s.clock.advance(SPECTATE.batchMs);
+      s.spectators.flush();
+      expect(interestOf(v.sock)).toEqual([
+        { n: 'Pip', r: 'village.square', p: 3, e: 'say' },
+        { n: 'Brasa', r: 'village.square', p: 5, e: 'say' },
+      ]);
+    });
+
+    it('gives the actor the points and a target agent half; drops small ones; marks bots down', async () => {
+      const { s, ids, v } = await watching();
+      s.game.state.agents.get(ids.brasa)!.bot = true;
+      s.game.publish([
+        event(s, { type: 'attack', actor: ids.pip, target: ids.brasa, roomId: 'village.square', drama: 2, payload: {} }),
+        event(s, { type: 'move', actor: ids.pip, roomId: 'village.square', payload: {} }),
+        event(s, { type: 'kill', actor: ids.brasa, roomId: 'village.square', drama: 10, visibility: 'public', payload: { mon: 'wolf', boss: true } }),
+      ]);
+      s.clock.advance(SPECTATE.batchMs);
+      s.spectators.flush();
+      expect(interestOf(v.sock)).toEqual([
+        // A PvP attack: 8 + 2 drama to Pip; half of it to Brasa, a scripted bot: 5 x 0.4.
+        { n: 'Pip', r: 'village.square', p: 10, e: 'attack' },
+        { n: 'Brasa', r: 'village.square', p: 2, e: 'attack' },
+        // The move (0.5) is below the floor. A boss kill by a bot: (10 + 10) x 0.4.
+        { n: 'Brasa', r: 'village.square', p: 8, e: 'kill' },
+      ]);
+    });
+
+    it('stays small in a busy world: at most a dozen increments per batch', async () => {
+      const { s, ids, v } = await watching();
+      // A busy quarter second: 200 visible events from 40 agents across two rooms.
+      const types = ['attack', 'kill', 'say', 'heal', 'level_up', 'gather', 'fallen', 'rare_drop'];
+      const agents = s.game.state.agents;
+      const pip = agents.get(ids.pip)!;
+      for (let i = 0; i < 40; i++) agents.set(`fake${i}`, { ...pip, id: `fake${i}`, name: `Wanderer_${String(i).padStart(2, '0')}` });
+      const evs: GameEvent[] = [];
+      for (let i = 0; i < 200; i++)
+        evs.push(event(s, { type: types[i % types.length]!, actor: `fake${i % 40}`, roomId: i % 2 ? 'village.tavern' : 'village.square', drama: i % 5, payload: {} }));
+      s.game.publish(evs);
+      s.clock.advance(SPECTATE.batchMs);
+      s.spectators.flush();
+      const sent = batches(v.sock, 'world').filter((b) => b.interest?.length);
+      expect(sent.length).toBe(1);
+      const field = sent[0]!.interest!;
+      expect(field.length).toBe(12);
+      for (const x of field) expect(x.p).toBeGreaterThanOrEqual(2);
+      const bytes = Buffer.byteLength(JSON.stringify({ interest: field }), 'utf8');
+      console.info(`[interest] ${field.length} increments, ${bytes} bytes in the world batch`);
+      expect(bytes).toBeLessThan(1000);
+      for (let i = 0; i < 40; i++) agents.delete(`fake${i}`);
+    });
+  });
 });

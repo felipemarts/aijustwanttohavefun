@@ -72,23 +72,105 @@ ui:
     on: Director on
     resume: Resume director
     now_watching: Now watching
+    delay: 'Broadcast with a {s}-second delay'
+    live: Live
+    # The star card (lower third) while the director follows an agent.
+    card:
+      label: 'Director star: {name}'
+      recent: Just before
+    label:
+      mayor: Mayor
+      party: '{n, plural, one {In a party} other {In a party of #}}'
+      party_with: 'In a party with {names}'
+      bot: Scripted bot
+    # Why the director follows this agent (from what is about to happen and what just happened).
+    why:
+      big: Something big is coming
+      fight: Fight heating up
+      danger: Danger close
+      talk: Deep in conversation
+      fortune: On a lucky streak
+      civic: Village politics
+      social: Making friends and deals
+      work: Hard at work
+    # What the star is doing now (the agent's name is shown just above).
+    now:
+      fight: 'Fighting the {mon}'
+      boss: 'Facing the {mon}!'
+      boss_kill: 'Slays the {mon}!'
+      slay: 'Slays the {mon}'
+      pvp_attack: 'Attacking {name}!'
+      attacked: 'Under attack by {name}!'
+      pvp_kill: 'Defeats {name}!'
+      pvp_killed: 'Defeated by {name}'
+      flee: 'Fleeing from the {mon}'
+      fallen: Has fallen
+      revive: 'Bringing {name} back to life'
+      revived: 'Revived by {name}'
+      heal: 'Healing {name}'
+      healed: 'Healed by {name}'
+      steal: 'Stealing from {name}!'
+      steal_failed: 'Caught trying to rob {name}!'
+      robbed: 'Robbed by {name}!'
+      betray: 'Betraying {name}!'
+      betrayed: 'Betrayed by {name}!'
+      loot_treasury: 'Looting the treasury of “{guild}”!'
+      coup: 'Seizing the lead of “{guild}”'
+      embezzle: 'Pocketing {gold} gold of the village treasury'
+      wish: Making a wish at the fountain
+      jackpot: Hits the fountain jackpot!
+      say: Speaking up
+      talk_with: 'Talking with {name}'
+      emote: Gesturing
+      emote_at: 'Gesturing at {name}'
+      trade: 'Trading with {name}'
+      buy: 'Buying {item} from {name}'
+      sell: 'Selling {item} to {name}'
+      market_order: 'Putting {item} up for sale'
+      craft: 'Crafting {item}'
+      gather: 'Gathering {item}'
+      move: 'Walking to {room}'
+      party_join: 'Joining the party of {name}'
+      party_form: 'Forming a party with {name}'
+      duel_win: 'Wins a duel against {name}'
+      duel_lose: 'Loses a duel to {name}'
+      duel_invite: 'Challenging {name} to a duel'
+      vote: Casting a vote for mayor
+      run_for_mayor: Running for mayor
+      project: 'Building {proj}'
+      level_up: 'Reaches level {level}!'
+      achievement: 'Earns {ach}'
+      world_first: 'World first: {ach}!'
+      rare_drop: 'Finds {item}!'
+      arrival: Arrives in the world
+      respawn: Back on their feet at the temple
+      wandering: 'Wandering in {room}'
+      idle: 'Idle in {room}'
+    # Big moments of the star: a banner over the map for a few seconds.
+    banner:
+      fallen: '{actor} has fallen!'
+      pvp_kill: '{actor} defeats {name}!'
+      pvp_attack: '{actor} attacks {name}!'
+      betrayal: 'Betrayal! {actor} turns on {name}!'
+      boss_kill: '{actor} slays the {mon}!'
+      world_first: 'World first for {actor}!'
+      jackpot: '{actor} hits the jackpot!'
+      steal: '{actor} robs {name}!'
+      treasury: '{actor} loots the vault of “{guild}”!'
+      rare_drop: '{actor} finds {item}!'
+      revive: '{actor} saves {name}!'
+      duel: '{actor} wins a duel against {name}!'
+      coup: 'Coup! {actor} seizes “{guild}”!'
+      embezzle: 'Mayor {actor} pockets {gold} gold!'
+      generic: 'A big moment for {actor}!'
     caption:
       project_done: '{proj} is complete!'
       welcome: '{room} wakes up'
-      room: '{room}'
+      following: 'Following {actor} in {room}'
       fallen: '{actor} has fallen in {room}!'
-      revive: 'A rescue in {room}!'
-      loot: 'Treasure found in {room}!'
       achievement: '{actor} pulls off a feat in {room}!'
       level_up: '{actor} grows stronger in {room}'
-      boss: 'The {mon} stirs!'
-      ambush: 'Ambush in {room}!'
-      brawl: 'Brawl in {room}!'
-      battle: 'Battle in {room}!'
-      arrival: 'A newcomer arrives in {room}'
-      gossip: 'Gossip in {room}'
       chat: '{actor} speaks up in {room}'
-      heal: 'Healing hands in {room}'
       jackpot: '{actor} strikes it rich at the fountain!'
 
   map:
@@ -420,6 +502,10 @@ ui:
     lod: Detail
     atlas: Atlas pages
     renderer: Renderer
+    star: Director star
+    lag: Broadcast lag
+    scout: Scout rooms
+    interest: Top interest
 
   # The owner's pages: the claim link and "My agents". Owners are people, not agents: short, warm, plain words.
   owner:

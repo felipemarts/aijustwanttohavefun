@@ -1,6 +1,12 @@
 import type { AgentState, WorldState } from '@ajwf/engine';
 import {
+  eventPoints,
+  INTEREST,
+  type InterestIncrement,
   normalizeName,
+  roundPoints,
+  SayTracker,
+  selectIncrements,
   SPECTATE_PROTOCOL_VERSION,
   type AgentFull,
   type AgentPos,
@@ -103,6 +109,8 @@ const VILLAGE_STATE_TYPES = new Set([...VILLAGE_EVENT_TYPES, 'market_trade', 'vo
 const COUNTS_EVERY_MS = 5000;
 /** Highlights waiting for the next world batch, at most. */
 const MAX_PENDING_HIGHLIGHTS = 50;
+/** Interest increments waiting for the next world batch, at most (only the largest are sent anyway). */
+const MAX_PENDING_INTEREST = 200;
 
 const topicsSchema = z.array(z.string().min(1).max(120)).min(1).max(SPECTATE.maxTopics);
 const clientMsgSchema = z.discriminatedUnion('op', [
@@ -169,6 +177,9 @@ export class Broadcaster implements EventConsumer {
   private villageDirty = false;
   private lastCounts = { population: -1, online: -1, at: -Infinity };
   private pendingHighlights: Highlight[] = [];
+  /** Interest increments since the last world batch (director mode), and who spoke where (conversations). */
+  private pendingInterest: InterestIncrement[] = [];
+  private says = new SayTracker();
 
   private dramaSentAt = -Infinity;
   private dramaWasEmpty = true;
@@ -262,6 +273,7 @@ export class Broadcaster implements EventConsumer {
         this.dirty.add(ev.actor);
       }
       if (ev.target && this.state.agents.has(ev.target)) this.dirty.add(ev.target);
+      this.score(ev, !!world);
 
       if (ev.roomId) {
         this.logs.push(ev.roomId, se);
@@ -275,6 +287,32 @@ export class Broadcaster implements EventConsumer {
       if (ev.actor) for (const t of this.agentTopics.get(ev.actor) ?? []) t.events.push(se);
       if (ev.target && ev.target !== ev.actor) for (const t of this.agentTopics.get(ev.target) ?? []) t.events.push(se);
     }
+  }
+
+  /**
+   * Interest of a spectator-visible event (the caller checked visibility): points to its actor, a share to a target
+   * agent. Queued for the next world batch when someone follows the world.
+   */
+  private score(ev: GameEvent, queue: boolean): void {
+    const actor = ev.actor ? this.state.agents.get(ev.actor) : undefined;
+    const target = ev.target && ev.target !== ev.actor ? this.state.agents.get(ev.target) : undefined;
+    // Talk is tracked even when nobody watches, so the first say after a viewer arrives is scored right.
+    const conversation = ev.type === 'say' && !!actor && !!ev.roomId && this.says.spoke(ev.roomId, actor.id, ev.ts);
+    if (!queue || (!actor && !target)) return;
+    const input = {
+      type: ev.type,
+      drama: ev.drama,
+      boss: ev.payload.boss === true,
+      worldFirst: ev.payload.world_first === true,
+      vsAgent: !!target,
+      conversation,
+    };
+    for (const [a, share] of [[actor, 1], [target, INTEREST.targetShare]] as const) {
+      if (!a) continue;
+      const p = roundPoints(eventPoints({ ...input, bot: a.bot }) * share);
+      if (p >= INTEREST.minPoints) this.pendingInterest.push({ n: a.name, r: ev.roomId ?? a.room, p, e: ev.type });
+    }
+    if (this.pendingInterest.length > MAX_PENDING_INTEREST) this.pendingInterest = selectIncrements(this.pendingInterest, MAX_PENDING_INTEREST);
   }
 
   /** The agent acted or called the API: it is on the map (again). */
@@ -307,6 +345,8 @@ export class Broadcaster implements EventConsumer {
     const counts = village ? this.countsDelta(now) : null;
     const highlights = world && worldReady && this.pendingHighlights.length ? this.pendingHighlights : null;
     if (!world) this.pendingHighlights = [];
+    const interest = world && worldReady && this.pendingInterest.length ? selectIncrements(this.pendingInterest) : null;
+    if (!world) this.pendingInterest = [];
     const mapDelta: VillageDelta | null = delta && (delta.projects || delta.buildings || delta.halls) ? { ...(delta.projects ? { projects: delta.projects } : {}), ...(delta.buildings ? { buildings: delta.buildings } : {}), ...(delta.halls ? { halls: delta.halls } : {}) } : null;
     const villageMsg: VillageDelta | null = delta || counts ? { ...delta, ...counts } : null;
     for (const t of this.topics.values()) {
@@ -314,6 +354,7 @@ export class Broadcaster implements EventConsumer {
       if (t.kind === 'world') {
         if (mapDelta) extra.village = mapDelta;
         if (highlights) extra.highlights = highlights;
+        if (interest?.length) extra.interest = interest;
       } else if (t.kind === 'village' && villageMsg) extra.village = villageMsg;
       const content = t.events.length > 0 || t.pos.size > 0 || t.gone.size > 0 || Object.keys(extra).length > 0;
       let drama: Record<string, number> | undefined;
@@ -335,6 +376,10 @@ export class Broadcaster implements EventConsumer {
       if (extra.highlights) {
         msg.highlights = extra.highlights;
         this.pendingHighlights = [];
+      }
+      if (t.kind === 'world' && interest) {
+        if (extra.interest) msg.interest = extra.interest;
+        this.pendingInterest = [];
       }
       const buf = this.frame(msg);
       t.events = [];
@@ -691,6 +736,7 @@ export class Broadcaster implements EventConsumer {
   /** Liveness: pings (a socket that missed the previous pong is dropped) and connections that follow nothing. */
   housekeeping(now = this.now()): void {
     this.lastHousekeeping = now;
+    this.says.prune(now);
     const ping = now - this.lastPing >= SPECTATE.pingMs;
     if (ping) this.lastPing = now;
     for (const c of this.conns) {

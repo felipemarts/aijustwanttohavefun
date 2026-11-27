@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { config } from '../config';
+import { BROADCAST_DELAY } from '../data/delay';
 import { useStatus } from '../data/store';
 import { useT } from '../i18n/store';
 import { controller, useDirector, usePanel } from '../map/controller';
@@ -10,6 +11,7 @@ import { DirectorCaption } from './DirectorCaption';
 import { HighlightsTicker } from './HighlightsTicker';
 import { MapView } from './MapView';
 import { RoomPanel } from './RoomPanel';
+import { StarCard } from './StarCard';
 
 export function LivePage() {
   const tr = useT();
@@ -26,6 +28,7 @@ export function LivePage() {
     <div className="live">
       <MapView />
       <DirectorCaption />
+      <StarCard />
       {status !== 'live' ? (
         <div className="conn-banner pixel-box" role="status">
           <span className="spinner" aria-hidden="true" />
@@ -33,15 +36,23 @@ export function LivePage() {
         </div>
       ) : null}
       <div className="map-controls">
-        <button
-          type="button"
-          className={`btn director-toggle ${director.enabled ? 'is-on' : ''}`}
-          aria-pressed={director.enabled}
-          onClick={() => (director.enabled ? controller.pauseDirector() : controller.resumeDirector())}
-        >
-          <span className="dir-dot" aria-hidden="true" />
-          {director.enabled ? tr.t('ui.director.on') : tr.t('ui.director.resume')}
-        </button>
+        <div className="director-control">
+          <button
+            type="button"
+            className={`btn director-toggle ${director.enabled ? 'is-on' : ''}`}
+            aria-pressed={director.enabled}
+            onClick={() => (director.enabled ? controller.pauseDirector() : controller.resumeDirector())}
+          >
+            <span className="dir-dot" aria-hidden="true" />
+            {director.enabled ? tr.t('ui.director.on') : tr.t('ui.director.resume')}
+          </button>
+          {/* Director mode plays the world with a delay (it looks ahead to choose whom to follow); manual is live. */}
+          <span className={`broadcast-tag ${director.enabled ? 'is-delayed' : 'is-live'}`}>
+            {director.enabled
+              ? tr.t('ui.director.delay', { s: Math.round(BROADCAST_DELAY.maxMs / 1000) })
+              : tr.t('ui.director.live')}
+          </span>
+        </div>
         <div className="zoom-buttons">
           <button
             type="button"

@@ -1,10 +1,11 @@
 import { useT } from '../i18n/store';
-import { useStats } from '../map/controller';
+import { useDirectorDebug, useStats } from '../map/controller';
 
-/** `?debug=1`: frame rate and scene counters, to measure the stress mode. */
+/** `?debug=1`: frame rate and scene counters, to measure the stress mode, and what the director is thinking. */
 export function DebugHud() {
   const tr = useT();
   const s = useStats();
+  const d = useDirectorDebug();
   const rows: [string, string | number][] = [
     ['ui.debug.fps', s.fps],
     ['ui.debug.frame', `${s.frameMs} ms`],
@@ -14,6 +15,10 @@ export function DebugHud() {
     ['ui.debug.lod', `${s.lod} @ ${s.scale}`],
     ['ui.debug.atlas', s.atlasPages],
     ['ui.debug.renderer', s.renderer],
+    ['ui.debug.star', d.star ?? '-'],
+    ['ui.debug.lag', `${(d.lagMs / 1000).toFixed(1)} s`],
+    ['ui.debug.scout', d.scoutRooms],
+    ['ui.debug.interest', d.top.map(([n, v]) => `${n} ${v.toFixed(1)}`).join(', ') || '-'],
   ];
   return (
     <div className="debug-hud pixel-box" data-testid="debug-hud">

@@ -8,3 +8,4 @@ export * from './protocol';
 export * from './rng';
 export * from './own';
 export * from './signature';
+export * from './interest';

@@ -6,13 +6,16 @@ import type { DayPhase, RoomInfo, SpectatorEvent } from '@ajwf/shared';
 // The production CSP has no 'unsafe-eval': Pixi's shader and uniform code must not use `new Function`.
 import 'pixi.js/unsafe-eval';
 import { Application, BitmapFont, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
+import { config } from '../config';
 import { drawMockSheet } from '../data/mockSprites';
 import type { Changes } from '../data/reducers';
 import { dayFractionAt, dramaSnapshot } from '../data/reducers';
+import { bigAhead, interestAt, type Reason, reasonFor } from '../data/scout';
 import type { DataSource } from '../data/source';
 import type { StaticWorld } from '../data/staticWorld';
 import type { LiveStore } from '../data/store';
 import { i18n } from '../i18n/store';
+import { type Activity, bigMoment, starNow } from '../view/activity';
 import { hash32 } from '../util/rng';
 import { AgentLayer } from './agents';
 import { type Baked, bakeMap } from './art/bake';
@@ -22,7 +25,17 @@ import { SpriteAtlas } from './atlas';
 import { Camera } from './camera';
 import { controller } from './controller';
 import { gradeAt, phaseMid } from './daylight';
-import { captionFor, type DirectorMemory, directorStep, initialDirector } from './director';
+import {
+  type Cut,
+  DIRECTOR,
+  type DirectorMemory,
+  type DirectorWorld,
+  directorStep,
+  initialDirector,
+  resumedDirector,
+  starCaption,
+  startMoment,
+} from './director';
 import { Effects } from './effects';
 import { monsterSpot, npcSpot, roomPx, TILE, worldBounds } from './geometry';
 import { attachInput } from './input';
@@ -42,9 +55,14 @@ export type SceneOptions = {
 };
 
 const LABEL_FONT = 'ajwf-label';
+/** Id of the scene in charge of the shared state (store delay, topics, map commands); see `destroy`. */
+let activeScene = 0;
+let sceneSeq = 0;
 let fontInstalled = false;
 const START_ROOM = 'village.square';
 const MON_CAP = 3;
+/** Rooms the director's scout subscribes to ahead of time, beyond the room on screen. */
+const SCOUT_ROOMS = 4;
 
 type MonsterView = {
   room: string;
@@ -87,7 +105,26 @@ type SiteView = {
   w: number;
   h: number;
 };
-type Banner = { box: Container; x: number; y: number; t0: number; dur: number };
+/** A ribbon banner over the map. `follow`: anchored above that agent (the director's star) instead of a fixed point. */
+type Banner = { box: Container; x: number; y: number; t0: number; dur: number; follow?: string };
+type BannerTone = 'gold' | 'danger' | 'teal';
+/** Band, light top edge, dark bottom edge and tails of a banner, by tone. */
+const BANNER_COLORS: Record<BannerTone, [number, number, number, number]> = {
+  gold: [0xf2b84b, 0xffe08a, 0xd99a2b, 0xb9842a],
+  danger: [0xe0605a, 0xf29a8a, 0xb0403c, 0x8c3030],
+  teal: [0x5fc9b5, 0x9fe8d8, 0x3f9a8a, 0x2f7a6c],
+};
+const BANNER_TONE: Record<string, BannerTone> = {
+  revive: 'teal',
+  world_first: 'gold',
+  jackpot: 'gold',
+  boss_kill: 'gold',
+  rare_drop: 'gold',
+  duel: 'gold',
+  generic: 'gold',
+};
+/** Colours of the star's spotlight and of the link to the other party, by tone of what they are doing. */
+const TONE_COLOR: Record<string, number> = { danger: 0xe0605a, teal: 0x5fc9b5, gold: 0xf2b84b, plain: 0xf0a050 };
 type LightView = {
   sprite: Sprite;
   pane: Sprite | null;
@@ -114,6 +151,7 @@ const LIGHT_TINT: Record<A.LightKind, number> = {
 export class MapScene {
   readonly app = new Application();
   readonly camera: Camera;
+  private readonly id = ++sceneSeq;
   private world = new Container({ isRenderGroup: true });
   private ground = new Container();
   private sitesLayer = new Container();
@@ -141,10 +179,23 @@ export class MapScene {
   private lights: LightView[] = [];
   private motes: MoteView[] = [];
   private roomOutline = new Graphics();
+  /** The director's star: a soft ring under them, and a link to whoever their current action involves. */
+  private spot = new Graphics();
+  private link = new Graphics();
+  /** Spectator events about the star (as shown, so delayed in director mode), newest last. */
+  private starEvents: SpectatorEvent[] = [];
+  private starOf = '';
+  private starWhy: Reason | null = null;
+  private starActivity: Activity | null = null;
+  private starBanner: { banner: Banner; points: number } | null = null;
+  private pendingBanner: { key: string; params: Record<string, string | number>; points: number; at: number } | null = null;
+  /** Until when the camera pushes in on the star (a big moment). */
+  private pushUntil = 0;
+  private bosses = new Set<string>();
   private arrow!: Sprite;
   private director: DirectorMemory = initialDirector();
+  private directorOn = controller.director.enabled;
   private lastDirectorAt = 0;
-  private lastCaptionAt = 0;
   private lastTopicsAt = 0;
   private lastStatsAt = 0;
   private lastGlintAt = 0;
@@ -167,6 +218,8 @@ export class MapScene {
     private readonly opts: SceneOptions,
   ) {
     this.camera = new Camera(window.devicePixelRatio || 1);
+    // The newest scene is in charge, even while an older one is still finishing its start.
+    activeScene = this.id;
   }
 
   static async create(host: HTMLElement, opts: SceneOptions): Promise<MapScene> {
@@ -230,7 +283,13 @@ export class MapScene {
     this.arrow = new Sprite(this.tex.fx.arrow);
     this.arrow.anchor.set(0.5, 1);
     this.arrow.visible = false;
-    this.marks.addChild(this.roomOutline, this.arrow);
+    this.marks.addChild(this.roomOutline, this.arrow, this.link);
+    this.shadows.addChild(this.spot);
+    this.bosses = new Set(
+      Object.values(this.opts.world.monsters)
+        .filter((m) => m.boss)
+        .map((m) => m.id),
+    );
 
     this.agents = new AgentLayer(
       this.entities,
@@ -267,7 +326,11 @@ export class MapScene {
     );
     this.disposers.push(this.opts.store.onChanges((ch) => this.onChanges(ch)));
     this.disposers.push(controller.subscribe('panel', () => this.onPanel()));
-    controller.commands = {
+    this.disposers.push(controller.subscribe('director', () => this.onDirector()));
+    // Director mode plays the world with a broadcast delay; manual browsing is live.
+    if (activeScene === this.id) this.opts.store.setDelay(this.directorOn);
+    if (activeScene === this.id)
+      controller.commands = {
       zoom: (dir) => {
         controller.pauseDirector();
         this.camera.stepZoom(dir);
@@ -298,7 +361,15 @@ export class MapScene {
     this.destroyed = true;
     for (const d of this.disposers) d();
     this.disposers = [];
-    if (controller.commands) controller.commands = null;
+    // A remount (StrictMode, back navigation) may destroy the old scene after the new one started: only the scene in
+    // charge hands back the shared state (the broadcast delay, the scout's topics, the map commands).
+    if (activeScene === this.id) {
+      activeScene = 0;
+      this.opts.store.setDelay(false);
+      this.opts.store.setTopics('scout', []);
+      controller.setStarView({ star: null, now: null, recent: [], why: null });
+      controller.commands = null;
+    }
     try {
       this.app.destroy({ removeView: true, releaseGlobalResources: true }, { children: true });
     } catch {
@@ -545,50 +616,86 @@ export class MapScene {
   /** The finished project's moment: dust, confetti, a banner with its name, and the director cuts to it. */
   private celebrate(v: SiteView, project: string, now: number) {
     this.effects.celebrate(v.cx, v.cy, Math.min(v.w, 140), Math.min(v.h, 90), now);
-    const tr = i18n.tr;
-    const label = tr.t('ui.map.project_done', { proj: `@proj:${project}` });
+    const box = this.makeBanner(i18n.tr.t('ui.map.project_done', { proj: `@proj:${project}` }), 'gold');
+    this.banners.push({ box, x: v.cx, y: v.cy - Math.min(v.h, 90) - 14, t0: now, dur: 5200 });
+    if (controller.director.enabled && !controller.follow) {
+      this.camera.moveTo(v.cx, v.cy - 20, Math.max(this.directorScale(), 2), this.opts.reducedMotion ? 0 : 1100);
+      // The project's moment holds the camera; then the director goes back to its star.
+      this.director = startMoment(this.director, now, DIRECTOR.projectMs);
+      this.opts.store.setTopics('director', [`room:${v.room}`]);
+      controller.setDirectorShot(null, v.room, {
+        key: 'ui.director.caption.project_done',
+        params: { proj: `@proj:${project}` },
+      });
+    }
+  }
+
+  /** The ribbon of the finished-project moment, in a tone; `size` is the font size. */
+  private makeBanner(label: string, tone: BannerTone, size = 15): Container {
+    const [band, top, bottom, tail] = BANNER_COLORS[tone];
     const box = new Container();
     const text = new Text({
       text: label,
-      style: { fontFamily: UI_FONT, fontSize: 15, fontWeight: '800', fill: 0x241a2e, letterSpacing: 0.5 },
+      style: { fontFamily: UI_FONT, fontSize: size, fontWeight: '800', fill: 0x241a2e, letterSpacing: 0.5 },
     });
     text.resolution = Math.min(window.devicePixelRatio || 1, 3);
     const w = Math.ceil(text.width) + 28;
-    const h = 24;
+    const h = Math.round(size * 1.6);
     const g = new Graphics();
     const INK = 0x241a2e;
     // ribbon tails with a notch, then the band, a 1 px ink outline and a lighter top edge
     g.rect(-w / 2 - 14, -h / 2 + 5, 18, h - 2).fill(INK);
-    g.rect(-w / 2 - 13, -h / 2 + 6, 16, h - 4).fill(0xb9842a);
+    g.rect(-w / 2 - 13, -h / 2 + 6, 16, h - 4).fill(tail);
     g.rect(-w / 2 - 13, -2, 4, 4).fill(INK);
     g.rect(w / 2 - 4, -h / 2 + 5, 18, h - 2).fill(INK);
-    g.rect(w / 2 - 3, -h / 2 + 6, 16, h - 4).fill(0xb9842a);
+    g.rect(w / 2 - 3, -h / 2 + 6, 16, h - 4).fill(tail);
     g.rect(w / 2 + 9, -2, 4, 4).fill(INK);
     g.rect(-w / 2, -h / 2, w, h).fill(INK);
-    g.rect(-w / 2 + 1, -h / 2 + 1, w - 2, h - 2).fill(0xf2b84b);
-    g.rect(-w / 2 + 1, -h / 2 + 1, w - 2, 2).fill(0xffe08a);
-    g.rect(-w / 2 + 1, h / 2 - 3, w - 2, 2).fill(0xd99a2b);
+    g.rect(-w / 2 + 1, -h / 2 + 1, w - 2, h - 2).fill(band);
+    g.rect(-w / 2 + 1, -h / 2 + 1, w - 2, 2).fill(top);
+    g.rect(-w / 2 + 1, h / 2 - 3, w - 2, 2).fill(bottom);
     text.anchor.set(0.5);
     text.position.set(0, 1);
     box.addChild(g, text);
     this.bannerLayer.addChild(box);
-    this.banners.push({ box, x: v.cx, y: v.cy - Math.min(v.h, 90) - 14, t0: now, dur: 5200 });
-    if (controller.director.enabled && !controller.follow) {
-      this.camera.moveTo(v.cx, v.cy - 20, Math.max(this.directorScale(), 2), this.opts.reducedMotion ? 0 : 1100);
-      this.director = { room: v.room, prev: this.director.room, since: now, peak: 0, lastRiseAt: now };
-      this.opts.store.setTopics('director', [`room:${v.room}`]);
-      controller.setDirectorRoom(v.room, { key: 'ui.director.caption.project_done', params: { proj: `@proj:${project}` } });
-      this.lastCaptionAt = now;
+    return box;
+  }
+
+  /**
+   * A big moment of the star: a wide banner above them for about 4 s and a brief push-in. One at a time: a bigger
+   * moment replaces the one showing, a smaller one waits for it (only the biggest waiting one is kept).
+   */
+  private starMoment(m: { key: string; params: Record<string, string | number>; points: number }, now: number) {
+    const cur = this.starBanner;
+    if (cur && this.banners.includes(cur.banner) && now - cur.banner.t0 < cur.banner.dur) {
+      if (m.points <= cur.points) {
+        if (!this.pendingBanner || m.points > this.pendingBanner.points) this.pendingBanner = { ...m, at: now };
+        return;
+      }
+      cur.banner.dur = 0;
     }
+    const box = this.makeBanner(i18n.tr.t(`ui.director.banner.${m.key}`, m.params), BANNER_TONE[m.key] ?? 'danger', 26);
+    const banner: Banner = { box, x: this.camera.x, y: this.camera.y, t0: now, dur: 4000, follow: this.director.star ?? undefined };
+    this.banners.push(banner);
+    this.starBanner = { banner, points: m.points };
+    if (!this.opts.reducedMotion) this.pushUntil = now + 1800;
   }
 
   private updateBanners(now: number) {
     let w = 0;
     for (const b of this.banners) {
-      const f = (now - b.t0) / b.dur;
+      const f = b.dur > 0 ? (now - b.t0) / b.dur : 1;
       if (f >= 1) {
         b.box.destroy({ children: true });
+        if (this.starBanner?.banner === b) this.starBanner = null;
         continue;
+      }
+      if (b.follow) {
+        const head = this.agents.head(b.follow, now, this.tmp);
+        if (head) {
+          b.x = head.x;
+          b.y = head.y - 34;
+        }
       }
       const p = this.camera.toScreen(b.x, b.y);
       const pop = this.opts.reducedMotion ? 1 : f < 0.08 ? f / 0.08 : 1;
@@ -599,6 +706,12 @@ export class MapScene {
       this.banners[w++] = b;
     }
     this.banners.length = w;
+    // A waiting star banner follows the one that just ended, if it is still fresh.
+    if (!this.starBanner && this.pendingBanner) {
+      const m = this.pendingBanner;
+      this.pendingBanner = null;
+      if (now - m.at < 3000 && this.directorStar()) this.starMoment(m, now);
+    }
   }
 
   /** The statue on the square: the honoree's sprite cast in bronze on the plinth (a cloaked figure until known). */
@@ -643,9 +756,9 @@ export class MapScene {
     if (room) {
       const r = roomPx(room);
       this.camera.moveTo(r.x + r.w / 2, r.y + r.h / 2 + 6, s, 0);
-      // The postcard: start on the square with the director already "there".
-      this.director = { room: room.id, prev: null, since: performance.now(), peak: 0, lastRiseAt: 0 };
-      controller.setDirectorRoom(room.id, {
+      // The postcard: start on the square for a moment, then the director picks a star.
+      this.director = startMoment(initialDirector(), performance.now(), DIRECTOR.welcomeMs);
+      controller.setDirectorShot(null, room.id, {
         key: 'ui.director.caption.welcome',
         params: { room: `@room:${room.id}` },
       });
@@ -676,6 +789,7 @@ export class MapScene {
     if (ch.rooms) this.rebuildWorld();
     if (ch.rooms || ch.village) this.syncSites(ch.completed);
     for (const ev of ch.events) if (ev.type === 'arrival' && ev.actor) this.pendingArrivals.add(ev.actor);
+    this.starEventsIn(ch.events);
     if (ch.agents) this.syncAgents();
     for (const room of ch.extras) this.applyExtras(room);
     const now = performance.now();
@@ -725,6 +839,7 @@ export class MapScene {
     const tr = i18n.tr;
     switch (ev.type) {
       case 'say':
+      case 'wish':
         if (ev.actor && typeof ev.text === 'string' && this.agents.views.has(ev.actor))
           this.overlay.say(ev.actor, ev.text, ev.lang ?? null, now);
         return;
@@ -871,13 +986,22 @@ export class MapScene {
     const cam = this.camera;
     const store = this.opts.store;
 
-    // Follow keeps the camera on the agent.
-    if (controller.follow) {
-      const p = this.agents.head(controller.follow, now, this.tmp);
+    // Follow keeps the camera on the agent; the director's star gets the same tracking.
+    const star = this.directorStar();
+    const tracked = controller.follow ?? star;
+    if (tracked) {
+      const p = this.agents.head(tracked, now, this.tmp);
       if (p) {
         const k = Math.min(1, (dt / 1000) * 4);
+        // The star sits a little higher, clear of the star card at the bottom of the screen.
+        const lift = star && !controller.follow ? (cam.viewH * 0.1) / cam.scale : 0;
         cam.x += (p.x - cam.x) * k;
-        cam.y += (p.y + 24 - cam.y) * k;
+        cam.y += (p.y + 24 + lift - cam.y) * k;
+        if (star && !controller.follow && !cam.moving) {
+          // A big moment pushes in briefly; then back to the director's framing.
+          const want = this.directorScale() * (now < this.pushUntil ? 1.3 : 1);
+          cam.scale += (want - cam.scale) * Math.min(1, (dt / 1000) * 3);
+        }
         cam.clamp();
       }
     }
@@ -909,6 +1033,7 @@ export class MapScene {
     this.glowLevel = g.glow;
 
     const visible = this.agents.update(now, view, this.lod, s);
+    this.drawSpotlight(now, star);
     this.updateMonsters(now, view);
     this.updateLights(now, view);
     this.effects.update(now);
@@ -1082,12 +1207,18 @@ export class MapScene {
       }
       const cands: LabelCandidate[] = [];
       const panel = controller.panel;
+      const star = this.directorStar();
       for (const v of this.agents.views.values()) {
         if (!v.visible || v.fadeOutAt) continue;
         const p = this.agents.positionAt(v, now, this.tmp);
         if (p.x < view.x + 30 || p.x > view.x + view.w - 30) continue;
         let priority = 0;
-        if (controller.follow === v.name || (panel?.kind === 'agent' && panel.name === v.name)) priority = 3;
+        if (
+          controller.follow === v.name ||
+          star === v.name ||
+          (panel?.kind === 'agent' && panel.name === v.name)
+        )
+          priority = 3;
         else if (this.overlay.hasBubble(v.name)) priority = 2;
         else if (v.pos.f?.includes('f')) priority = 1;
         cands.push({ name: v.name, x: p.x, y: p.y, priority });
@@ -1110,63 +1241,214 @@ export class MapScene {
           this.labelCache.set(key, line);
         }
         const title = v.pos.t ? tr.name('title', v.pos.t) : '';
-        this.overlay.label(v.name, line, title, at.x, at.y, c.priority === 3);
+        this.overlay.label(v.name, line, title, at.x, at.y, c.priority === 3, v.name === star);
       }
     }
     this.overlay.endLabels();
   }
 
+  /** The agent the director is following right now, if it is on and not holding a special moment. */
+  private directorStar(): string | null {
+    if (!controller.director.enabled || controller.follow || this.director.moment) return null;
+    return this.director.star;
+  }
+
+  /** Resuming the director picks a star right away, avoiding the one shown before the pause. */
+  private onDirector() {
+    const on = controller.director.enabled;
+    if (on === this.directorOn) return;
+    this.directorOn = on;
+    // Pausing goes live at once (everything held is applied); resuming builds the delay again from zero.
+    this.opts.store.setDelay(on);
+    if (!on) {
+      this.opts.store.setTopics('scout', []);
+      // The star card and spotlight belong to the director.
+      controller.setStarView({ star: null, now: null, recent: [], why: null });
+      this.starOf = '';
+    }
+    if (!on || !this.ready) return;
+    const now0 = performance.now();
+    this.director = resumedDirector(this.director, now0);
+    this.lastDirectorAt = now0;
+    this.directorTick(now0);
+  }
+
+  /**
+   * The world as the screen shows it (delayed while the director is on), plus what the scout foresees for that
+   * display time from the undelayed increments.
+   */
+  private directorWorld(now: number): DirectorWorld {
+    const store = this.opts.store;
+    const s = store.state;
+    const display = store.displayNow();
+    const incs = store.scout.increments();
+    return {
+      now,
+      nowTs: display,
+      drama: dramaSnapshot(s, now),
+      agents: s.agents,
+      logs: s.roomLogs,
+      foresight: store.scout.ready
+        ? {
+            interest: interestAt(incs, display),
+            big: bigAhead(incs, display),
+            buffered: (room) => store.isBuffered(`room:${room}`),
+          }
+        : undefined,
+    };
+  }
+
   private directorTick(now: number) {
     const store = this.opts.store;
-    const d = controller.director;
-    if (!d.enabled || controller.follow) {
-      return;
-    }
-    const drama = dramaSnapshot(store.state, now);
-    const population: Record<string, number> = {};
-    for (const a of store.state.agents.values()) population[a.r] = (population[a.r] ?? 0) + 1;
-    const { mem, cut } = directorStep(this.director, drama, now, population);
+    if (!controller.director.enabled || controller.follow) return;
+    const w = this.directorWorld(now);
+    const { mem, cut } = directorStep(this.director, w);
     this.director = mem;
-    const rooms = this.rooms();
-    const bosses = new Set(
-      Object.values(this.opts.world.monsters)
-        .filter((m) => m.boss)
-        .map((m) => m.id),
+    // The scout subscribes early to the rooms of the agents most interesting right now: what is subscribed now is
+    // on screen after the lag, when the camera may want it.
+    const held = new Set(mem.room ? [mem.room] : []);
+    const scoutRooms = store.scout.leaderRooms(now, SCOUT_ROOMS, held);
+    store.setTopics(
+      'scout',
+      scoutRooms.map((r) => `room:${r}`),
     );
-    const zones = this.opts.world.zones;
-    const capOf = (roomId: string) => {
-      const room = rooms.find((r) => r.id === roomId);
-      const lawless = !!room && (zones[room.zone]?.law === 'lawless' || room.flags.includes('lawless'));
-      const log = store.state.roomLogs.get(roomId) ?? [];
-      const nowTs = now + store.state.clockSkew;
-      return captionFor(roomId, log, nowTs, { lawless, bosses });
-    };
+    if (config.debug) {
+      const top = [...(w.foresight?.interest ?? new Map<string, number>())].sort((a, b) => b[1] - a[1]).slice(0, 5);
+      controller.setDirectorDebug({ star: mem.star, top, lagMs: store.lagMs(), scoutRooms: scoutRooms.length });
+    }
+    // A special moment keeps its own camera, topic and caption.
+    if (mem.moment || !mem.star || !mem.room) return;
+    const caption = starCaption(mem.star, mem.room, w.logs.get(mem.room) ?? [], w.nowTs);
+    store.setTopics('director', [`room:${mem.room}`]);
     if (cut) {
-      const room = rooms.find((r) => r.id === cut);
-      if (room) {
-        const r = roomPx(room);
-        this.camera.moveTo(
-          r.x + r.w / 2,
-          r.y + r.h / 2 + 6,
-          this.directorScale(),
-          this.opts.reducedMotion ? 0 : 1300,
-        );
-        store.setTopics('director', [`room:${cut}`]);
-        controller.setDirectorRoom(cut, capOf(cut));
-        this.lastCaptionAt = now;
-      }
+      this.glideTo(cut);
+      controller.setDirectorShot(cut.star, cut.room, caption);
+    } else controller.updateDirectorShot(mem.room, caption);
+    if (this.starOf !== mem.star) this.newStar(mem.star, w);
+    // The reason follows the scout: "something big is coming" until it has happened, then what keeps them interesting.
+    else if (w.foresight) this.starWhy = reasonFor(store.scout.increments(), mem.star, w.nowTs) ?? this.starWhy;
+    this.updateStarView();
+  }
+
+  /** A new star: gather what they did lately from the logs, and why the director chose them. */
+  private newStar(name: string, w: DirectorWorld) {
+    this.starOf = name;
+    this.pendingBanner = null;
+    this.starActivity = null;
+    const seen = new Set<string>();
+    const evs: SpectatorEvent[] = [];
+    for (const log of w.logs.values())
+      for (const ev of log)
+        if ((ev.actor === name || ev.target === name || ev.p?.leader === name) && w.nowTs - ev.ts < 120_000 && !seen.has(ev.id)) {
+          seen.add(ev.id);
+          evs.push(ev);
+        }
+    this.starEvents = evs.sort((a, b) => a.ts - b.ts).slice(-60);
+    this.starWhy = w.foresight ? reasonFor(this.opts.store.scout.increments(), name, w.nowTs) : null;
+  }
+
+  /** Events as they reach the screen: the star's go to their ring, and a big one gets a banner. */
+  private starEventsIn(events: readonly SpectatorEvent[]) {
+    const star = this.directorStar();
+    if (!star || star !== this.starOf) return;
+    let changed = false;
+    const now = performance.now();
+    const pos = this.opts.store.state.agents.get(star);
+    for (const ev of events) {
+      if (ev.actor !== star && ev.target !== star && ev.p?.leader !== star) continue;
+      this.starEvents.push(ev);
+      changed = true;
+      const m = bigMoment(ev, star, { bosses: this.bosses, bot: !!pos?.f?.includes('b') });
+      if (m) this.starMoment(m, now);
+    }
+    if (!changed) return;
+    if (this.starEvents.length > 80) this.starEvents.splice(0, this.starEvents.length - 60);
+    this.updateStarView();
+  }
+
+  /** The star card's data: what the star is doing now, their last actions, and why we are here. */
+  private updateStarView() {
+    const star = this.directorStar();
+    const pos = star ? this.opts.store.state.agents.get(star) : undefined;
+    if (!star || !pos) {
+      controller.setStarView({ star: null, now: null, recent: [], why: null });
       return;
     }
-    if (mem.room && now - this.lastCaptionAt > 2500) {
-      this.lastCaptionAt = now;
-      const cap = capOf(mem.room);
-      // Keep the welcome caption until something actually happens on the square.
-      if (
-        cap.key !== 'ui.director.caption.room' ||
-        controller.director.caption?.key !== 'ui.director.caption.welcome'
-      )
-        controller.setCaption(cap);
+    // The star's own events plus their room's (another agent answering makes a conversation).
+    const byId = new Map<string, SpectatorEvent>();
+    for (const ev of this.opts.store.state.roomLogs.get(pos.r) ?? []) if (ev.type === 'say') byId.set(ev.id, ev);
+    for (const ev of this.starEvents) byId.set(ev.id, ev);
+    const events = [...byId.values()].sort((a, b) => a.ts - b.ts);
+    const { now, recent } = starNow(star, events, this.opts.store.displayNow(), {
+      bosses: this.bosses,
+      room: pos.r,
+      fallen: !!pos.f?.includes('d'),
+    });
+    this.starActivity = now;
+    controller.setStarView({ star, now, recent, why: this.starWhy });
+  }
+
+  /** A soft ring under the star, and a line to the other party of what they are doing (a ring under it too). */
+  private drawSpotlight(now: number, star: string | null) {
+    const spot = this.spot;
+    const link = this.link;
+    spot.clear();
+    link.clear();
+    if (!star || this.lod === 'dot') return;
+    const v = this.agents.views.get(star);
+    if (!v || !v.visible) return;
+    const p = this.agents.positionAt(v, now, { x: 0, y: 0 });
+    const act = this.starActivity;
+    const color = TONE_COLOR[act?.tone ?? 'gold'] ?? 0xf2b84b;
+    const pulse = this.opts.reducedMotion ? 0 : Math.sin(now / 300) * 1.5;
+    spot.ellipse(p.x, p.y, 16 + pulse, 6 + pulse / 3).fill({ color, alpha: 0.18 });
+    spot.ellipse(p.x, p.y, 12, 4.5).fill({ color, alpha: 0.28 });
+    spot.ellipse(p.x, p.y, 14 + pulse, 5.5 + pulse / 3).stroke({ color, alpha: 0.8, width: 1 });
+    // Only a fresh action links the two.
+    const t = act?.target;
+    if (!t || this.opts.store.displayNow() - act.ts > 15_000) return;
+    let q: { x: number; y: number } | null = null;
+    if (t.kind === 'agent') {
+      const o = this.agents.views.get(t.id);
+      if (o?.visible) q = this.agents.positionAt(o, now, { x: 0, y: 0 });
+    } else {
+      const m = this.monsters.find((x) => x.room === v.pos.r && x.kind === t.id && x.alive && x.hiddenUntil < now);
+      if (m) q = { x: m.x, y: m.y };
     }
+    if (!q) return;
+    link.ellipse(q.x, q.y, 12, 4.5).stroke({ color, alpha: 0.9, width: 1 });
+    // a thin dashed line between the two, at waist height
+    const ax = p.x;
+    const ay = p.y - 10;
+    const bx = q.x;
+    const by = q.y - 10;
+    const len = Math.hypot(bx - ax, by - ay);
+    const n = Math.max(1, Math.floor(len / 6));
+    for (let i = 0; i < n; i += 2) {
+      const f0 = i / n;
+      const f1 = Math.min(1, (i + 1) / n);
+      link.moveTo(ax + (bx - ax) * f0, ay + (by - ay) * f0).lineTo(ax + (bx - ax) * f1, ay + (by - ay) * f1);
+    }
+    link.stroke({ color, alpha: 0.85, width: 1 });
+  }
+
+  /** The cut to a new star: an eased move onto them, after which the frame keeps tracking them. */
+  private glideTo(cut: Cut) {
+    const now = performance.now();
+    const p = this.agents.head(cut.star, now, { x: 0, y: 0 });
+    let x: number;
+    let y: number;
+    if (p) {
+      x = p.x;
+      y = p.y + 24 + (this.camera.viewH * 0.1) / this.directorScale();
+    } else {
+      const room = this.rooms().find((r) => r.id === cut.room);
+      if (!room) return;
+      const r = roomPx(room);
+      x = r.x + r.w / 2;
+      y = r.y + r.h / 2 + 6;
+    }
+    this.camera.moveTo(x, y, this.directorScale(), this.opts.reducedMotion ? 0 : 1300);
   }
 
   private updateViewportTopics(view: { x: number; y: number; w: number; h: number }) {
