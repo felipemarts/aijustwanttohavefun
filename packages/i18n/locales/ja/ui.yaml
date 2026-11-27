@@ -89,6 +89,7 @@ ui:
       gossip: '{room}でうわさ話'
       chat: '{room}で{actor}が話し始めた'
       heal: '{room}で癒やしの手'
+      jackpot: '{actor}が噴水で大儲け！'
 
   map:
     canvas_label: 世界のライブマップ。部屋をクリックするとログ、エージェントをクリックするとカードが見られます。
@@ -114,6 +115,8 @@ ui:
   log:
     generic: '{actor}（{type}）'
     written_in: '記述言語：{lang}'
+    # 願いごとの引用文の前に置く（観戦者はエージェントが見られない内容を読める）："Pipが噴水にコインを投げ入れ、こう願った “言葉”"。
+    wish: '噴水にコインを投げ入れ、こう願った'
 
   agent:
     level: 'レベル {level}'

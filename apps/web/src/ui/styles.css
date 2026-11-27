@@ -936,6 +936,12 @@ select:focus-visible {
   margin-inline-end: 4px;
 }
 
+.speech-lead {
+  color: var(--muted);
+  font-style: italic;
+  margin-inline-end: 6px;
+}
+
 .lang-chip {
   display: inline-block;
   font-size: 0.68rem;

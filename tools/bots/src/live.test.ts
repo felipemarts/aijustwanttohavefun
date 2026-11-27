@@ -1,13 +1,13 @@
 import { loadContent } from '@ajwf/content/node';
 import { applyAction, createWorld, registerAgent, type WorldState } from '@ajwf/engine';
 import { randomAppearance } from '@ajwf/appearance';
-import { checkAgentName, containsBlockedWord, createRng, isActionName, LANGUAGES, sanitizeAgentText } from '@ajwf/shared';
+import { checkAgentName, containsBlockedWord, createRng, isActionName, LANGUAGES, MAX_WISH_LEN, sanitizeAgentText } from '@ajwf/shared';
 import { describe, expect, it } from 'vitest';
 import { createClient, type FetchLike } from '@ajwf/sdk';
 import { REGISTER_CONCURRENCY, registerBots } from './live-runner';
 import { fantasyName, nameGenerator } from './names';
 import { RatePacer, Stopper, TokenBucket, percentile } from './pacing';
-import { CHAT_LINES, decidePersonality, EMOTES, newMemory, PERSONALITIES } from './personality';
+import { CHAT_LINES, decidePersonality, EMOTES, newMemory, PERSONALITIES, WISH_LINES } from './personality';
 import { viewFromApi, viewFromWorld } from './view';
 
 const content = loadContent();
@@ -46,6 +46,16 @@ describe('chat lines', () => {
       }
     }
     for (const e of EMOTES) expect(content.emotes.has(e), e).toBe(true);
+  });
+
+  it('wishes exist for every launch language, pass the filters unchanged and fit a wish', () => {
+    for (const lang of LANGUAGES) {
+      expect(WISH_LINES[lang].length).toBeGreaterThan(2);
+      for (const line of WISH_LINES[lang]) {
+        expect(containsBlockedWord(line.toLowerCase()), line).toBe(false);
+        expect(sanitizeAgentText(line, MAX_WISH_LEN).text).toBe(line);
+      }
+    }
   });
 });
 
@@ -89,6 +99,37 @@ describe('personalities', () => {
     expect([...seen].some((x) => x === 'chatterbox:say' || x === 'chatterbox:emote')).toBe(true);
     expect(seen.has('gatherer:move') || seen.has('gatherer:gather')).toBe(true);
     expect(seen.has('wanderer:move')).toBe(true);
+  });
+
+  it('at the fountain with gold to spare, a bot now and then makes a short wish in its language, at most once a minute', () => {
+    const { s, id } = world();
+    s.agents.get(id)!.gold = 100;
+    const view = viewFromWorld(s, id, { now: NOW, rng: createRng(1) });
+    expect(view.obs.room.flags).toContain('fountain');
+    const rng = createRng(3);
+    const mem = newMemory();
+    const wishes: { at: number; gold: number; text: string }[] = [];
+    for (let i = 0; i < 2_000; i++) {
+      const step = decidePersonality('fighter', view, { c: content, rng, now: NOW + i * 5_000, lang: 'fr', mem });
+      if ('action' in step && step.action === 'wish') wishes.push({ at: NOW + i * 5_000, ...(step.params as { gold: number; text: string }) });
+    }
+    expect(wishes.length).toBeGreaterThan(5);
+    for (const w of wishes) {
+      expect(w.gold).toBeGreaterThanOrEqual(1);
+      expect(w.gold).toBeLessThanOrEqual(3);
+      expect(WISH_LINES.fr).toContain(w.text);
+    }
+    for (let i = 1; i < wishes.length; i++) expect(wishes[i]!.at - wishes[i - 1]!.at).toBeGreaterThanOrEqual(60_000);
+    // Short of gold, or away from the fountain: no wish.
+    const poor = { ...view, obs: { ...view.obs, you: { ...view.obs.you, gold: 19 } } };
+    const away = { ...view, obs: { ...view.obs, room: { ...view.obs.room, flags: ['safe'] } } };
+    for (const v of [poor, away]) {
+      const m = newMemory();
+      for (let i = 0; i < 500; i++) {
+        const step = decidePersonality('fighter', v, { c: content, rng, now: NOW + i * 5_000, lang: 'en', mem: m });
+        expect('action' in step && step.action === 'wish').toBe(false);
+      }
+    }
   });
 
   it('a gatherer gathers where resources are left', () => {

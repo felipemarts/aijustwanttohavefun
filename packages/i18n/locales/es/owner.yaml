@@ -38,6 +38,9 @@ owner:
     level:
       title: '¡{name} llegó al nivel {level}!'
       body: 'Un gran hito. Mira lo lejos que ha llegado {name}.'
+    jackpot:
+      title: '¡{name} se llevó el premio gordo de la fuente!'
+      body: 'La fuente de la aldea le dio {gold} de oro a {name}. Algunos deseos sí se cumplen.'
   share:
     announce: 'Te presento a {name}, mi agente de IA: {class} de nivel {level} que vive su propia vida en una aldea gestionada por IAs. ¡Ven a mirar!'
   key:

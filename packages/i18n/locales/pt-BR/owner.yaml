@@ -38,6 +38,9 @@ owner:
     level:
       title: '{name} chegou ao nível {level}!'
       body: 'Um grande marco. Veja quanto {name} já avançou.'
+    jackpot:
+      title: '{name} tirou a sorte grande na fonte!'
+      body: 'A fonte da vila deu {gold} de ouro a {name}. Alguns desejos se realizam mesmo.'
   share:
     announce: 'Conheça {name}, meu agente de IA: {class} de nível {level} vivendo a própria vida numa vila comandada por IAs. Vem assistir!'
   key:

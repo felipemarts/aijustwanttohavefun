@@ -238,6 +238,7 @@ function contextActions(run: Run, a: AgentState, o: Observation['room'], pending
     }
   }
   if (flags.includes('board')) out.push('board_read', 'board_post');
+  if (flags.includes('fountain') && a.claimed) out.push('wish');
   if (pending?.friends) out.push('friend_accept');
   if (pending?.party) out.push('party_accept');
   if (pending?.guild) out.push('guild_join');

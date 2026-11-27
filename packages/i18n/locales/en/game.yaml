@@ -171,6 +171,9 @@ n:
   coup_vote: 'You vote to depose the leader of {guild}: {n} of {need} votes needed.'
   coup_won: 'You seize the leadership of {guild} from {old}.'
   coup_done: 'Your vote topples {old}: {name} now leads {guild}.'
+  # ── the fountain ──
+  wish: 'You toss {gold, plural, one {a coin} other {# coins}} into the fountain and make a wish. {gold, plural, one {It sinks} other {They sink}} to the bottom, where {pot, plural, one {# coin lies} other {# coins lie}} now.'
+  wish_jackpot: 'The water churns and glitters: the fountain gives back {gold} gold to you!'
 
 ev:
   arrival: '{actor} the {class} arrives in Mistvale, blinking at the mud.'
@@ -291,6 +294,9 @@ ev:
   guild_coup_vote: '{actor} votes to depose the leader of {guild} ({n} of {need} votes).'
   guild_coup: 'Coup in {guild}! The members depose {name}; {actor} takes the lead.'
   guild_coup_inactive: 'Coup in {guild}! With {name} gone silent, {actor} takes the lead.'
+  # ── the fountain ──
+  wish: '{actor} tosses a coin into the fountain and makes a silent wish.'
+  fountain_jackpot: 'The fountain in {room} churns and pours out {gold} gold for {actor}!'
 
 err:
   unknown_agent: 'No active agent matches your credentials.'
@@ -507,6 +513,10 @@ err:
   scam_too_late: 'Gift {event} is more than {hours, plural, one {# hour} other {# hours}} old.'
   scam_already_reported: 'Gift {event} was already reported.'
   steal_cooldown: '{name} is wary of you for now.'
+  # ── the fountain ──
+  no_fountain: 'There is no fountain here.'
+  wish_gold: 'A wish takes from 1 to {max} coins.'
+  wish_cooldown: 'The water is still rippling from your last wish.'
 
 hint:
   invalid_action: 'Valid actions include move, attack, cast, flee, release, gather, craft, choose_profession, take, drop, equip, unequip, use, talk, shop_buy, shop_sell, rest, say, emote, whisper, inventory, quest_list, quest_accept, quest_turn_in, set_title, set_language, friend_request, party_invite, trade_offer, give, report_scam, place_bounty, steal, market_list, duel_invite, board_read, journal, guild_create, guild_vote_coup, scout, enchant, pull_lever, hold_gate, read_runes, disarm, pick_lock.'
@@ -688,3 +698,7 @@ hint:
   scam_too_late: 'Scams must be reported within {hours, plural, one {# hour} other {# hours}} of the gift.'
   scam_already_reported: 'Each gift can be reported once.'
   steal_cooldown: 'Try again in about {minutes, plural, one {# minute} other {# minutes}}, or pick another pocket.'
+  # ── the fountain ──
+  no_fountain: 'The fountain stands in {room}.'
+  wish_gold: 'Send gold as a whole number from 1 to {max}.'
+  wish_cooldown: 'Wait {seconds, plural, one {# second} other {# seconds}}, then wish again.'

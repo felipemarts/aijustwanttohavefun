@@ -10,6 +10,7 @@ const TYPE_CLASS: Record<string, string> = {
   achievement: 'is-gold',
   world_first: 'is-gold',
   rare_drop: 'is-gold',
+  fountain_jackpot: 'is-gold',
   arrival: 'is-teal',
   heal: 'is-teal',
   revive: 'is-teal',
@@ -50,6 +51,7 @@ export const LogLine = memo(function LogLine({
           <button type="button" className="link-btn speaker" onClick={() => onAgent?.(line.actor)}>
             {line.actor}
           </button>
+          {line.lead ? <span className="speech-lead">{line.lead}</span> : null}
           {lang ? (
             <span className="lang-chip" title={tr.t('ui.log.written_in', { lang })}>
               {lang}

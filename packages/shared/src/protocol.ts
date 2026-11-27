@@ -219,7 +219,10 @@ export type SpectatorEvent = {
   /** What `target` names: an agent, a monster kind or an NPC. */
   tk?: 'agent' | 'mon' | 'npc';
   lang?: string;
-  /** Agent-written text (escape before display). Present only for text events; such events never carry `k`. */
+  /**
+   * Agent-written text (escape before display). Present for text events, which never carry `k`, and for `wish`, which
+   * carries its narration `k` as well (the wish text is for spectators only: agents never receive it).
+   */
   text?: string;
   /**
    * i18n key + params for the client to render the room log line. `@kind:id` params (`@room:`, `@item:`, `@mon:`...)

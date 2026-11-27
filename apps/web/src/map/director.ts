@@ -120,6 +120,7 @@ const WEIGHT: Record<string, number> = {
   fallen: 9,
   world_first: 9,
   boss_kill: 9,
+  fountain_jackpot: 9,
   revive: 7,
   rare_drop: 7,
   achievement: 6,
@@ -360,6 +361,7 @@ const STAR_CAPTION: Record<string, string> = {
   world_first: 'ui.director.caption.achievement',
   level_up: 'ui.director.caption.level_up',
   say: 'ui.director.caption.chat',
+  fountain_jackpot: 'ui.director.caption.jackpot',
 };
 
 /**

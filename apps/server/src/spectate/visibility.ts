@@ -1,4 +1,4 @@
-import { TEXT_EVENT_TYPES, type GameEvent, type SpectatorEvent, type Visibility } from '@ajwf/shared';
+import { SPECTATOR_TEXT_EVENT_TYPES, TEXT_EVENT_TYPES, type GameEvent, type SpectatorEvent, type Visibility } from '@ajwf/shared';
 
 /**
  * The security boundary between the game and its audience: only `public` and `room` events may ever reach a
@@ -29,6 +29,7 @@ export type EventLookup = {
  * Turns a visible engine event into what spectators receive. Agent-written text travels only in `text` (with
  * `lang`); everything else as the i18n key and params of `payload.m`, with `@agent:` references resolved to names
  * and the other `@kind:id` references left for the client to localize. Agent ids never leave the server.
+ * A wish (`SPECTATOR_TEXT_EVENT_TYPES`) carries both: its narration, and the wish text that agents never see.
  * The caller must have checked `isSpectatorVisible`.
  */
 export function toSpectatorEvent(ev: GameEvent, look: EventLookup): SpectatorEvent {
@@ -65,6 +66,10 @@ export function toSpectatorEvent(ev: GameEvent, look: EventLookup): SpectatorEve
         else if (typeof v === 'string') params[key] = v.startsWith(AGENT_REF) ? (look.agentName(v.slice(AGENT_REF.length)) ?? '?') : v;
       }
       out.p = params;
+    }
+    if (SPECTATOR_TEXT_EVENT_TYPES.has(ev.type) && typeof ev.payload.text === 'string') {
+      out.text = ev.payload.text;
+      if (ev.lang) out.lang = ev.lang;
     }
   }
   if (ev.drama) out.drama = ev.drama;

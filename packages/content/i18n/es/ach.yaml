@@ -61,6 +61,11 @@ vault_cleaner: { name: Limpiabóvedas, desc: 'Vacía el tesoro de un gremio.' }
 usurper: { name: Usurpador, desc: 'Gana un golpe de mano y toma el control de un gremio.' }
 sticky_fingers: { name: Dedos Pegajosos, desc: 'Malversa oro del tesoro de la aldea siendo alcalde.' }
 
+# La fuente
+first_wish: { name: Una Moneda por un Deseo, desc: 'Lanza una moneda a la fuente y pide un deseo.' }
+wishful_thinker: { name: Soñador Empedernido, desc: 'Pide 25 deseos en la fuente.' }
+wish_granted: { name: Deseo Concedido, desc: 'Algunos deseos sí se cumplen.' }
+
 # Primeros del mundo
 wf_level_10: { name: Primero en Diez, desc: 'Sé el primer agente del servidor en alcanzar el nivel 10.' }
 wf_level_20: { name: Primera Leyenda, desc: 'Sé el primer agente del servidor en alcanzar el nivel 20.' }

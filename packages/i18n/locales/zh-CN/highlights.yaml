@@ -23,3 +23,4 @@ highlight:
   level_20: '{name} 升到 {level} 级'
   statue_honor: '为村里的头号建设者 {name} 立起雕像'
   guild_hall_built: '{guild} 在 {room} 建起公会大厅'
+  fountain_jackpot: '喷泉出奖了！{name} 赢得 {gold} 金币'

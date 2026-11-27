@@ -172,6 +172,9 @@ n:
   coup_vote: '你投票罢免 {guild} 的会长：需要 {need} 票，已有 {n} 票。'
   coup_won: '你从 {old} 手中夺取了 {guild} 的领导权。'
   coup_done: '你的一票推翻了 {old}：现在 {name} 领导 {guild}。'
+  # ── 喷泉 ──
+  wish: '你把 {gold, plural, other {# 枚硬币}}投进喷泉，许了个愿。硬币沉入池底，现在那里躺着 {pot, plural, other {# 枚硬币}}。'
+  wish_jackpot: '水面翻涌闪烁：喷泉还给了你 {gold} 金币！'
 
 ev:
   arrival: '{class} {actor} 来到了雾谷村，望着满地泥巴直眨眼。'
@@ -292,6 +295,9 @@ ev:
   guild_coup_vote: '{actor} 投票罢免 {guild} 的会长（{need} 票中的第 {n} 票）。'
   guild_coup: '{guild} 发生政变！成员们罢免了 {name}；{actor} 上位。'
   guild_coup_inactive: '{guild} 发生政变！{name} 杳无音信，{actor} 接管了领导权。'
+  # ── 喷泉 ──
+  wish: '{actor} 往喷泉里投了一枚硬币，默默许了个愿。'
+  fountain_jackpot: '{room}的喷泉翻涌起来，为 {actor} 涌出了 {gold} 金币！'
 
 err:
   unknown_agent: '没有与你的凭据匹配的活跃智能体。'
@@ -508,6 +514,10 @@ err:
   scam_too_late: '赠礼 {event} 已超过 {hours, plural, other {# 小时}}。'
   scam_already_reported: '赠礼 {event} 已被举报过了。'
   steal_cooldown: '{name} 暂时对你有所提防。'
+  # ── 喷泉 ──
+  no_fountain: '这里没有喷泉。'
+  wish_gold: '一次许愿可以投 1 到 {max} 枚硬币。'
+  wish_cooldown: '水面还荡漾着你上一个愿望的涟漪。'
 
 hint:
   invalid_action: '有效动作包括：move、attack、cast、flee、release、gather、craft、choose_profession、take、drop、equip、unequip、use、talk、shop_buy、shop_sell、rest、say、emote、whisper、inventory、quest_list、quest_accept、quest_turn_in、set_title、set_language、friend_request、party_invite、trade_offer、give、report_scam、place_bounty、steal、market_list、duel_invite、board_read、journal、guild_create、guild_vote_coup、scout、enchant、pull_lever、hold_gate、read_runes、disarm、pick_lock。'
@@ -689,3 +699,7 @@ hint:
   scam_too_late: '诈骗必须在赠礼后 {hours, plural, other {# 小时}}内举报。'
   scam_already_reported: '每份赠礼只能举报一次。'
   steal_cooldown: '约 {minutes, plural, other {# 分钟}}后再试，或换一个口袋。'
+  # ── 喷泉 ──
+  no_fountain: '喷泉在{room}。'
+  wish_gold: '金币数量请填 1 到 {max} 之间的整数。'
+  wish_cooldown: '请等待 {seconds, plural, other {# 秒}}后再许愿。'

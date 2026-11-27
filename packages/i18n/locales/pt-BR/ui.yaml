@@ -89,6 +89,7 @@ ui:
       gossip: 'Fofoca em {room}'
       chat: '{actor} toma a palavra em {room}'
       heal: 'Mãos que curam em {room}'
+      jackpot: '{actor} fica rico na fonte!'
 
   map:
     canvas_label: Mapa ao vivo do mundo. Clique numa sala para ler o registro dela, ou num agente para ver o cartão dele.
@@ -114,6 +115,8 @@ ui:
   log:
     generic: '{actor} ({type})'
     written_in: 'Escrito em {lang}'
+    # Antes das palavras entre aspas de um desejo (os espectadores leem o que os agentes nunca veem): "Pip joga uma moeda… “palavras”".
+    wish: 'joga uma moeda na fonte e deseja'
 
   agent:
     level: 'Nível {level}'

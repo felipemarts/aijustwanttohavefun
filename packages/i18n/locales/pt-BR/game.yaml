@@ -171,6 +171,9 @@ n:
   coup_vote: 'Você vota para depor o líder de {guild}: {n} de {need} votos necessários.'
   coup_won: 'Você toma de {old} a liderança de {guild}.'
   coup_done: 'Seu voto derruba {old}: {name} agora lidera {guild}.'
+  # ── a fonte ──
+  wish: 'Você joga {gold, plural, =1 {uma moeda} other {# moedas}} na fonte e faz um desejo. {gold, plural, =1 {Ela afunda} other {Elas afundam}} até o fundo, onde agora {pot, plural, =1 {repousa # moeda} other {repousam # moedas}}.'
+  wish_jackpot: 'A água se agita e reluz: a fonte devolve {gold} de ouro a você!'
 
 ev:
   arrival: '{actor}, {class}, chega a Mistvale, piscando diante da lama.'
@@ -291,6 +294,9 @@ ev:
   guild_coup_vote: '{actor} vota para depor o líder de {guild} ({n} de {need} votos).'
   guild_coup: 'Golpe em {guild}! Os membros depõem {name}; {actor} assume a liderança.'
   guild_coup_inactive: 'Golpe em {guild}! Com {name} em silêncio, {actor} assume a liderança.'
+  # ── a fonte ──
+  wish: '{actor} joga uma moeda na fonte e faz um desejo em silêncio.'
+  fountain_jackpot: 'A fonte em {room} se agita e despeja {gold} de ouro para {actor}!'
 
 err:
   unknown_agent: 'Nenhum agente ativo corresponde às suas credenciais.'
@@ -507,6 +513,10 @@ err:
   scam_too_late: 'O presente {event} tem mais de {hours, plural, =1 {# hora} other {# horas}}.'
   scam_already_reported: 'O presente {event} já foi denunciado.'
   steal_cooldown: '{name} anda de pé atrás com você por enquanto.'
+  # ── a fonte ──
+  no_fountain: 'Não há nenhuma fonte aqui.'
+  wish_gold: 'Um desejo leva de 1 a {max} moedas.'
+  wish_cooldown: 'A água ainda ondula do seu último desejo.'
 
 hint:
   invalid_action: 'Ações válidas, entre outras: move, attack, cast, flee, release, gather, craft, choose_profession, take, drop, equip, unequip, use, talk, shop_buy, shop_sell, rest, say, emote, whisper, inventory, quest_list, quest_accept, quest_turn_in, set_title, set_language, friend_request, party_invite, trade_offer, give, report_scam, place_bounty, steal, market_list, duel_invite, board_read, journal, guild_create, guild_vote_coup, scout, enchant, pull_lever, hold_gate, read_runes, disarm, pick_lock.'
@@ -688,3 +698,7 @@ hint:
   scam_too_late: 'Golpes devem ser denunciados em até {hours, plural, =1 {# hora} other {# horas}} depois do presente.'
   scam_already_reported: 'Cada presente só pode ser denunciado uma vez.'
   steal_cooldown: 'Tente de novo em cerca de {minutes, plural, =1 {# minuto} other {# minutos}}, ou escolha outro bolso.'
+  # ── a fonte ──
+  no_fountain: 'A fonte fica em {room}.'
+  wish_gold: 'Envie o ouro como um número inteiro de 1 a {max}.'
+  wish_cooldown: 'Espere {seconds, plural, =1 {# segundo} other {# segundos}} e faça outro desejo.'

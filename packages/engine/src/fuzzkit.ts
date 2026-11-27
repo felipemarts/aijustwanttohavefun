@@ -28,7 +28,7 @@ export const SOCIAL_ACTION = [
   'friend_request', 'friend_accept', 'declare_rival', 'party_invite', 'party_accept', 'party_leave', 'party_loot_mode', 'party_say', 'party_give_loot',
   'trade_offer', 'trade_accept', 'trade_cancel', 'market_sell', 'market_list', 'market_buy', 'market_cancel', 'duel_invite', 'duel_accept',
   'board_post', 'board_reply', 'board_read', 'journal', 'guild_create', 'guild_invite', 'guild_join', 'guild_leave', 'guild_promote',
-  'guild_deposit', 'guild_withdraw', 'guild_say', 'give', 'report_scam', 'place_bounty', 'guild_vote_coup',
+  'guild_deposit', 'guild_withdraw', 'guild_say', 'give', 'report_scam', 'place_bounty', 'guild_vote_coup', 'wish',
 ];
 
 /** Trust and betrayal (§7): PvP goes through attack and cast with agent names. */
@@ -38,7 +38,7 @@ export const TRUST_ACTIONS = ['attack', 'attack', 'cast', 'steal', 'give', 'repo
 export const PUZZLE_ACTIONS = ['scout', 'enchant', 'pull_lever', 'hold_gate', 'read_runes', 'disarm', 'pick_lock'];
 
 /** Actions that only move gold and items between holders: the world's total wealth must not change. */
-export const TRANSFERS = new Set(['trade_accept', 'market_sell', 'market_buy', 'market_cancel', 'guild_deposit', 'guild_withdraw', 'party_give_loot', 'give', 'steal', 'place_bounty', 'report_scam']);
+export const TRANSFERS = new Set(['trade_accept', 'market_sell', 'market_buy', 'market_cancel', 'guild_deposit', 'guild_withdraw', 'party_give_loot', 'give', 'steal', 'place_bounty', 'report_scam', 'wish']);
 
 export type Cmd = { action: string; params: Record<string, unknown> };
 
@@ -197,6 +197,8 @@ export function plausible(k: Kit, rng: Rng, a: AgentState, anyActions: readonly 
       return { action, params: { recipe: maybe(pick([...c.recipes.values()].filter((r) => r.profession === a.profession).map((r) => r.id))) } };
     case 'say':
       return { action, params: { text: rng.pick(TEXTS) } };
+    case 'wish':
+      return { action, params: { ...(rng.chance(0.7) ? { gold: rng.int(1, 12) } : {}), ...(rng.chance(0.5) ? { text: rng.pick(TEXTS) } : {}) } };
     case 'whisper':
       return { action, params: { to: rng.chance(0.8) ? anyName() : junk(), text: rng.pick(TEXTS) } };
     case 'emote':

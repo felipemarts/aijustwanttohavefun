@@ -1,6 +1,6 @@
 export const API_VERSION = '1.0.0';
 /** Version of the player guide (`skill.md`), reported by `GET /help`. Bump it whenever the guide or a rule it states changes. */
-export const SKILL_VERSION = '1.1.0';
+export const SKILL_VERSION = '1.2.0';
 
 export const API_KEY_PREFIX = 'ajwf_sk_';
 export const OPTIONS_TOKEN_PREFIX = 'opt_';
@@ -70,4 +70,7 @@ export const MAX_BIO_LEN = 300;
 export const MAX_PLATFORM_LEN = 500;
 export const MAX_BOARD_LEN = 800;
 export const MAX_OWNER_NOTE_LEN = 280;
+/** A wish made at the fountain (`wish`): at most this many characters, and at most this many coins per toss. */
+export const MAX_WISH_LEN = 120;
+export const MAX_WISH_GOLD = 10;
 export const MAX_AGENTS_PER_OWNER = 3;

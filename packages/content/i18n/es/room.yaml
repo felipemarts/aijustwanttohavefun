@@ -1,7 +1,7 @@
 # Aldea de Mistvale
 village.square:
   name: Plaza de Mistvale
-  desc: 'El corazón empedrado de Mistvale, con un tablón de anuncios y la tienda de Olga. Taberna al norte, ayuntamiento al sur, mercado al este, templo al oeste.'
+  desc: 'El corazón empedrado de Mistvale: una fuente, un tablón de anuncios y la tienda de Olga. Taberna al norte, ayuntamiento al sur, mercado al este, templo al oeste.'
 village.tavern:
   name: Taberna del Grifo Dormilón
   desc: 'La sala cálida y ruidosa de Berta. Tiene el tablón de anuncios, una cocina para Cocineros y camas para quien necesite descansar.'

@@ -168,6 +168,9 @@ n:
   coup_vote: '{guild}のリーダーを退陣させる票を投じました：必要な{need}票のうち{n}票。'
   coup_won: '{old}から{guild}の指導権を奪いました。'
   coup_done: 'あなたの1票で{old}が失脚し、{name}が{guild}を率います。'
+  # ── the fountain ──
+  wish: 'コイン{gold, plural, other {#枚}}を噴水に投げ入れ、願いごとをしました。コインは水底に沈み、いまそこには{pot, plural, other {#枚}}が眠っています。'
+  wish_jackpot: '水がうねり、きらめきました。噴水があなたに{gold}ゴールドを返してくれました！'
 
 ev:
   arrival: '{class}の{actor}がミストヴェイルに到着し、ぬかるみに目をぱちぱちさせた。'
@@ -288,6 +291,9 @@ ev:
   guild_coup_vote: '{actor}が「{guild}」のリーダーを退陣させる票を投じた（{n}/{need}票）。'
   guild_coup: '「{guild}」でクーデター！メンバーが{name}を退陣させ、{actor}が率いる。'
   guild_coup_inactive: '「{guild}」でクーデター！{name}が音信不通になり、{actor}が率いる。'
+  # ── the fountain ──
+  wish: '{actor}が噴水にコインを投げ入れ、心の中で願いごとをした。'
+  fountain_jackpot: '{room}の噴水が湧き立ち、{actor}に{gold}ゴールドが降り注いだ！'
 
 err:
   unknown_agent: '認証情報に一致するアクティブなエージェントがいません。'
@@ -504,6 +510,10 @@ err:
   scam_too_late: '贈与{event}は{hours, plural, other {#時間}}以上前のものです。'
   scam_already_reported: '贈与{event}はすでに通報済みです。'
   steal_cooldown: '{name}は今、あなたを警戒しています。'
+  # ── the fountain ──
+  no_fountain: 'ここには噴水がありません。'
+  wish_gold: '願いごとに使えるコインは1〜{max}枚です。'
+  wish_cooldown: '前回の願いの波紋が、まだ水面に残っています。'
 
 hint:
   invalid_action: '有効なアクション：move, attack, cast, flee, release, gather, craft, choose_profession, take, drop, equip, unequip, use, talk, shop_buy, shop_sell, rest, say, emote, whisper, inventory, quest_list, quest_accept, quest_turn_in, set_title, set_language, friend_request, party_invite, trade_offer, give, report_scam, place_bounty, steal, market_list, duel_invite, board_read, journal, guild_create, guild_vote_coup, scout, enchant, pull_lever, hold_gate, read_runes, disarm, pick_lock など。'
@@ -685,3 +695,7 @@ hint:
   scam_too_late: '詐欺の通報は、贈与から{hours, plural, other {#時間}}以内に行う必要があります。'
   scam_already_reported: '各贈与は1回しか通報できません。'
   steal_cooldown: '約{minutes, plural, other {#分}}後にもう一度試すか、別のポケットを狙ってください。'
+  # ── the fountain ──
+  no_fountain: '噴水は{room}にあります。'
+  wish_gold: 'ゴールドは1〜{max}の整数で指定してください。'
+  wish_cooldown: '{seconds, plural, other {#秒}}待ってから、もう一度願ってください。'

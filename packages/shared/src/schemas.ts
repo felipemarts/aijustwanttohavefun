@@ -9,6 +9,8 @@ import {
   MAX_OWNER_NOTE_LEN,
   MAX_PLATFORM_LEN,
   MAX_SAY_LEN,
+  MAX_WISH_GOLD,
+  MAX_WISH_LEN,
   PROFESSIONS,
 } from './constants';
 
@@ -158,6 +160,7 @@ export const actionParamSchemas = {
   journal: z.object({ text: text(MAX_JOURNAL_LEN) }),
   set_title: z.object({ title: id.nullable() }),
   set_language: z.object({ language: languageTagSchema }),
+  wish: z.object({ gold: z.number().int().min(1).max(MAX_WISH_GOLD).default(1), text: text(MAX_WISH_LEN).optional() }),
   inventory: z.object({}),
 } as const;
 

@@ -134,8 +134,8 @@ const str = (v: unknown) => (typeof v === 'string' ? v : '');
 
 /**
  * The moments worth a notification (§14.2), from public game events: a rare achievement (world first or one that
- * grants a title), elected mayor, a betrayal committed or suffered, killed by a boss or by another agent, and levels
- * 10 and 20. Pure: returns `[agent id, moment]` pairs for agents that have an owner.
+ * grants a title), elected mayor, a betrayal committed or suffered, killed by a boss or by another agent, levels
+ * 10 and 20, and the fountain's jackpot. Pure: returns `[agent id, moment]` pairs for agents that have an owner.
  */
 export function momentsOf(ev: GameEvent, s: WorldState, owned: (agentId: string) => boolean): Moment[] {
   const out: Moment[] = [];
@@ -171,6 +171,9 @@ export function momentsOf(ev: GameEvent, s: WorldState, owned: (agentId: string)
       if (level === 10 || level === 20) add(ev.actor, 'level', { level });
       break;
     }
+    case 'fountain_jackpot':
+      add(ev.actor, 'jackpot', { gold: typeof p.gold === 'number' ? p.gold : 0 });
+      break;
   }
   return out;
 }

@@ -84,6 +84,20 @@ describe('agent text', () => {
     expect(html).toContain('lang="en"');
   });
 
+  it('a wish shows its words, quoted, after what the agent did; a silent one is a plain line', () => {
+    const tr = new Translator('en', en);
+    const ev = { id: '3', ts: 0, type: 'wish', actor: 'Pip', lang: 'en', k: 'ev.wish', p: { actor: 'Pip' }, text: '<b>gold</b> for me' };
+    expect(formatEvent(tr, ev)).toMatchObject({ kind: 'speech', actor: 'Pip', text: ev.text, lead: 'tosses a coin into the fountain and wishes' });
+    const html = renderToStaticMarkup(createElement(LogLine, { ev, tr, time: '12:00' }));
+    expect(html).toContain('tosses a coin into the fountain and wishes');
+    expect(html).toContain('&lt;b&gt;gold&lt;/b&gt; for me');
+    expect(html).not.toContain('<b>');
+    const silent = formatEvent(tr, { id: '4', ts: 0, type: 'wish', actor: 'Pip', k: 'ev.wish', p: { actor: 'Pip' } });
+    expect(silent).toEqual({ kind: 'line', id: '4', ts: 0, type: 'wish', text: 'Pip tosses a coin into the fountain and makes a silent wish.' });
+    const jackpot = formatEvent(tr, { id: '5', ts: 0, type: 'fountain_jackpot', actor: 'Pip', k: 'ev.fountain_jackpot', p: { actor: 'Pip', gold: 527, room: '@room:village.square' } });
+    expect(jackpot.kind === 'line' && jackpot.text).toBe(`The fountain in ${en['content.room.village.square.name']} churns and pours out 527 gold for Pip!`);
+  });
+
   it('drops language tags that are not language tags', () => {
     const tr = new Translator('en', en);
     const html = renderToStaticMarkup(

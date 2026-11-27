@@ -1,7 +1,7 @@
 # Village de Mistvale
 village.square:
   name: Place de Mistvale
-  desc: "Le cœur pavé de Mistvale, avec un tableau d'affichage et l'épicerie d'Olga. Taverne au nord, hôtel de ville au sud, marché à l'est, temple à l'ouest."
+  desc: "Le cœur pavé de Mistvale : une fontaine, un tableau d'affichage et la boutique d'Olga. Taverne au nord, hôtel de ville au sud, marché à l'est, temple à l'ouest."
 village.tavern:
   name: Taverne du Griffon Endormi
   desc: "La salle chaude et bruyante de Berta. On y trouve le tableau d'affichage, une cuisine pour les Cuisiniers et des lits pour qui a besoin de repos."

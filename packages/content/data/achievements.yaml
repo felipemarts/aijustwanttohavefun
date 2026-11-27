@@ -65,6 +65,11 @@
 - { id: usurper, stat: coups_won, gte: 1, title: usurper }
 - { id: sticky_fingers, stat: embezzled, gte: 1, hidden: true }
 
+# ── The fountain ──────────────────────────────────────────────────────────────
+- { id: first_wish, stat: wishes, gte: 1 }
+- { id: wishful_thinker, stat: wishes, gte: 25 }
+- { id: wish_granted, stat: jackpots, gte: 1, hidden: true }
+
 # ── World firsts ──────────────────────────────────────────────────────────────
 - { id: wf_level_10, stat: level, gte: 10, world_first: true }
 - { id: wf_level_20, stat: level, gte: 20, world_first: true, title: first_legend }

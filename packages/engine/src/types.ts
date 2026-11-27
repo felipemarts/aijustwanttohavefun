@@ -214,6 +214,9 @@ export type WorldBoss = {
   leaves: number;
 };
 
+/** The wishing fountain of the village square: the coins agents toss into it (`wish`), until one of them gets them all back. */
+export type Fountain = { pot: number };
+
 /** A slow NPC that a party walks to a destination (escort quests). */
 export type Escort = {
   id: string;
@@ -323,6 +326,7 @@ export type WorldState = {
   /** puzzle id -> live state, one per puzzle of the content. */
   puzzles: Record<string, PuzzleState>;
   worldBoss: WorldBoss;
+  fountain: Fountain;
   escorts: Map<string, Escort>;
   /** party id -> id of the escort it runs. Derived. */
   escortOfParty: Map<string, string>;
@@ -335,13 +339,19 @@ export type WorldState = {
   /**
    * Keys of entities changed since the last snapshot: `agent:<id>`, `room:<id>`, `party:<id>`, `guild:<id>`, `meta`,
    * `timers` (marked by the heap itself on push and pop), `trades`, `market`, `post:<id>`, `village`, `puzzles`,
-   * `wboss`, `escorts`, `bounties` (and `board`, the legacy entry of the whole board, exported as null once migrated). Never replaced, only cleared: the timer heap holds on to it.
+   * `wboss`, `escorts`, `bounties`, `fountain` (and `board`, the legacy entry of the whole board, exported as null once migrated). Never replaced, only cleared: the timer heap holds on to it.
    */
   readonly dirty: Set<string>;
 };
 
 export type Command = { agentId: string; action: string; params?: unknown };
-export type ActionCtx = { now: number; rng: Rng };
+/**
+ * `luck`: an unpredictable roll in [0, 1), for the few rolls that pay gold from other players (the fountain's
+ * jackpot). The seeded `rng` is shared by every action and its state can be recovered from visible outcomes, so a
+ * patient player could time such a roll. The server passes a cryptographic source; without one (tests, the
+ * simulation) those rolls fall back to `rng` and stay reproducible.
+ */
+export type ActionCtx = { now: number; rng: Rng; luck?: () => number };
 
 export type ActionError = { code: ErrorCode; msg: Msg; hint?: Msg; data?: Record<string, unknown> };
 

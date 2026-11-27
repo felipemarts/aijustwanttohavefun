@@ -12,6 +12,8 @@ export type Run = {
   c: Content;
   now: number;
   rng: Rng;
+  /** See `ActionCtx.luck`. */
+  luck?: () => number;
   events: GameEvent[];
   /** The agent whose action is being applied; null during ticks. */
   actor: AgentState | null;
@@ -21,8 +23,8 @@ export type Run = {
   data: Record<string, unknown>;
 };
 
-export function newRun(s: WorldState, now: number, rng: Rng, actor: AgentState | null = null): Run {
-  return { s, c: s.content, now, rng, events: [], actor, narr: [], data: {} };
+export function newRun(s: WorldState, now: number, rng: Rng, actor: AgentState | null = null, luck?: () => number): Run {
+  return { s, c: s.content, now, rng, ...(luck ? { luck } : {}), events: [], actor, narr: [], data: {} };
 }
 
 /** Builds a narration fragment. Keys passed here are checked against the English catalog by the i18n tests. */

@@ -33,6 +33,7 @@ describe('highlight rules', () => {
         'duel_upset',
         'embezzlement',
         'epic_drop',
+        'fountain_jackpot',
         'guild_founded',
         'guild_hall_built',
         'hot_rumor',
@@ -54,6 +55,13 @@ describe('highlight rules', () => {
     expect(h).toMatchObject({ type: 'world_first', titleKey: 'highlight.world_first', params: { name: 'Pip', ach: '@ach:wf_boss' }, agents: ['Pip'], drama: 8, room: 'village.square' });
     expect(highlightSeq(h.id)).toBe(seq);
     none(ev('achievement', { actor: 'a1', data: { ach: 'first_blood', world_first: false } }));
+  });
+
+  it('fountain_jackpot: the winner and the gold, at the drama of the event', () => {
+    const h = one(ev('fountain_jackpot', { actor: 'a2', drama: 9, data: { gold: 527 } }));
+    expect(h).toMatchObject({ type: 'fountain_jackpot', titleKey: 'highlight.fountain_jackpot', params: { name: 'Brasa', gold: 527 }, agents: ['Brasa'], drama: 9, room: 'village.square' });
+    // An ordinary wish is no highlight.
+    none(ev('wish', { actor: 'a2', visibility: 'room', drama: 1, data: { text: 'gold please' } }));
   });
 
   it('epic_drop and legendary_drop: by rarity', () => {

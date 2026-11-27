@@ -32,6 +32,12 @@ export const TEXT_EVENT_TYPES = new Set([
   'run_for_mayor',
 ]);
 
+/**
+ * Event types that carry agent-written text only spectators may read (`payload.text`). Agents receive them through
+ * their narration (`payload.m`) alone: the text never reaches an inbox. Not in `TEXT_EVENT_TYPES` on purpose.
+ */
+export const SPECTATOR_TEXT_EVENT_TYPES = new Set(['wish']);
+
 /** Entity reference helpers used in Msg params. */
 export const ref = {
   room: (id: string) => `@room:${id}`,

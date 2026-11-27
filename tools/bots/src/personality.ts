@@ -21,6 +21,16 @@ export const CHAT_LINES: Record<LaunchLanguage, readonly string[]> = {
   fr: ["Belle journée pour l'aventure !", "Quelqu'un a vu les rats ?", 'Le ragoût de la taverne est meilleur qu’il n’y paraît.', 'Bon voyage, les amis.', 'On dit qu’il y a un trésor au-delà de la rivière.', 'Mes bottes sont encore pleines de boue.'],
 };
 
+/** Short wishes a bot makes at the fountain (bot script, not game narration). */
+export const WISH_LINES: Record<LaunchLanguage, readonly string[]> = {
+  en: ['May my blade stay sharp.', 'A safe road home, please.', 'Let the next chest be full.', 'Good fortune for my friends.'],
+  'pt-BR': ['Que minha lâmina continue afiada.', 'Um caminho seguro para casa.', 'Que o próximo baú esteja cheio.', 'Boa sorte para meus amigos.'],
+  es: ['Que mi espada siga afilada.', 'Un camino seguro a casa, por favor.', 'Que el próximo cofre esté lleno.', 'Buena suerte para mis amigos.'],
+  'zh-CN': ['愿我的剑永远锋利。', '愿回家的路平平安安。', '愿下一个宝箱装满宝物。', '愿我的朋友们好运。'],
+  ja: ['剣がいつまでも鋭くありますように。', '帰り道が安全でありますように。', '次の宝箱がいっぱいでありますように。', '仲間に幸運を。'],
+  fr: ['Que ma lame reste affûtée.', 'Un chemin sûr pour rentrer, s’il vous plaît.', 'Que le prochain coffre soit plein.', 'Bonne chance à mes amis.'],
+};
+
 export const EMOTES = ['wave', 'bow', 'cheer', 'dance', 'laugh', 'salute', 'nod', 'clap', 'toast', 'think', 'whistle', 'shrug'] as const;
 
 /** Per-bot memory a personality keeps between decisions. */
@@ -28,16 +38,19 @@ export type BotMemory = {
   /** room id -> time it was found with nothing left to gather. */
   depleted: Map<string, number>;
   lastChatAt: number;
+  lastWishAt: number;
 };
 
 export function newMemory(): BotMemory {
-  return { depleted: new Map(), lastChatAt: -Infinity };
+  return { depleted: new Map(), lastChatAt: -Infinity, lastWishAt: -Infinity };
 }
 
 export type PersonalityCtx = { c: Content; rng: Rng; now: number; lang: LaunchLanguage; mem: BotMemory };
 
 const DEPLETED_FOR_MS = 5 * 60_000;
 const CHAT_EVERY_MS = 8_000;
+/** At the fountain with this much gold, a bot now and then tosses a few coins (the server allows one wish a minute). */
+const WISH = { minGold: 20, chance: 0.03, everyMs: 60_000, maxCoins: 3 } as const;
 const cmd = (action: BotCommand['action'], params: Record<string, unknown> = {}): BotCommand => ({ action, params });
 
 /** Open exits of the current room (gates and locked doors left out). */
@@ -62,6 +75,14 @@ function chat(view: BotView, x: PersonalityCtx): BotCommand {
   return cmd('say', { text: x.rng.pick(CHAT_LINES[x.lang]) });
 }
 
+function wish(view: BotView, x: PersonalityCtx): BotCommand | null {
+  const me = view.obs.you;
+  if (!view.obs.room.flags.includes('fountain') || me.gold < WISH.minGold || x.now - x.mem.lastWishAt < WISH.everyMs) return null;
+  if (!x.rng.chance(WISH.chance)) return null;
+  x.mem.lastWishAt = x.now;
+  return cmd('wish', { gold: x.rng.int(1, WISH.maxCoins), text: x.rng.pick(WISH_LINES[x.lang]) });
+}
+
 function gather(view: BotView, x: PersonalityCtx): BotStep | null {
   const { obs } = view;
   const { c, mem, now } = x;
@@ -79,6 +100,9 @@ export function decidePersonality(p: Personality, view: BotView, x: PersonalityC
   const me = view.obs.you;
   // Survival first: the solo policy handles being fallen, fighting and recovering.
   if (me.fallen !== undefined || me.in_combat || me.hp[0] / me.hp[1] < SOLO_TUNING.fightAbove) return base;
+  // Any temperament may stop at the fountain in the square for a wish (rarely: shopping usually comes first).
+  const wished = wish(view, x);
+  if (wished) return wished;
   // Gear and shopping (in the village) are worth doing whatever the temperament.
   if ('action' in base && (base.action === 'equip' || base.action === 'shop_buy' || base.action === 'rest')) return base;
   const chatty = x.now - x.mem.lastChatAt > CHAT_EVERY_MS;
