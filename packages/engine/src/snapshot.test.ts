@@ -231,6 +231,70 @@ describe('snapshots', () => {
     expect(s.meta.partySeq).toBe(0);
   });
 
+  it('the timers entry is exported only when a timer was pushed or popped since the last export', () => {
+    const k = playedWorld();
+    exportDirty(k.s);
+    const timersIn = (snap: Snapshot) => snap.world.some((e) => e.key === 'timers');
+    // Nothing due: the heap is untouched and stays out of the snapshot.
+    const next = k.s.timers.peek()!.at;
+    tick(k.s, { now: next - 1, rng: k.rng });
+    expect(timersIn(exportDirty(k.s))).toBe(false);
+    // A timer fires: the heap changed.
+    tick(k.s, { now: next, rng: k.rng });
+    const fired = exportDirty(k.s);
+    expect(timersIn(fired)).toBe(true);
+    expect(JSON.stringify(fired.world.find((e) => e.key === 'timers')!.data)).toBe(JSON.stringify(k.s.timers.toJSON()));
+    // An action that schedules nothing leaves it out; one that pushes a timer (a trade offer expiring) brings it in.
+    const a = k.s.agents.get(k.s.byName.get('warri')!)!;
+    const b = k.s.agents.get(k.s.byName.get('healer')!)!;
+    k.place(a, b.room);
+    exportDirty(k.s);
+    expect(applyAction(k.s, { agentId: a.id, action: 'emote', params: { emote: 'wave' } }, k.ctx()).result.ok).toBe(true);
+    expect(timersIn(exportDirty(k.s))).toBe(false);
+    applyAction(k.s, { agentId: a.id, action: 'trade_offer', params: { to: 'Healer', give: { gold: 1 }, want: {} } }, k.ctx());
+    expect(timersIn(exportDirty(k.s))).toBe(true);
+    // A restored world starts clean.
+    const restored = restoreWorld(k.c, persist(k.s), k.now);
+    expect(exportDirty(restored)).toEqual({ agents: [], world: [] });
+  });
+
+  it('a store fed only by exportDirty holds the same world as exportAll', () => {
+    const store = new Map<string, string>();
+    const save = (snap: Snapshot) => {
+      for (const a of snap.agents) store.set(`agent:${a.id}`, JSON.stringify(a));
+      for (const e of snap.world) store.set(e.key, JSON.stringify(e.data));
+    };
+    const k = makeKit(9);
+    save(exportDirty(k.s));
+    const rng = createRng(77);
+    const agents = ['Pip', 'Bob', 'Cleo', 'Dax'].map((n, i) => k.add(n, (['warrior', 'mage', 'cleric', 'rogue'] as const)[i]!, { room: 'forest.edge', level: 4 }));
+    const actions: [string, (n: string) => Record<string, unknown>][] = [
+      ['attack', () => ({ target: 'slime' })],
+      ['say', () => ({ text: 'hi' })],
+      ['move', () => ({ dir: rng.pick(['north', 'south', 'east', 'west']) })],
+      ['gather', () => ({ resource: 'wood' })],
+      ['trade_offer', (n) => ({ to: n, give: { gold: 1 }, want: {} })],
+      ['friend_request', (n) => ({ agent: n })],
+    ];
+    for (let i = 0; i < 400; i++) {
+      const a = rng.pick(agents);
+      const [action, params] = rng.pick(actions);
+      k.now += rng.int(1, 120) * 1000;
+      tick(k.s, k.ctx());
+      applyAction(k.s, { agentId: a.id, action, params: params(rng.pick(agents.filter((x) => x !== a)).name) }, k.ctx());
+      if (i % 7 === 0) save(exportDirty(k.s));
+    }
+    save(exportDirty(k.s));
+    const all = exportAll(k.s);
+    for (const a of all.agents) expect(store.get(`agent:${a.id}`), a.name).toBe(JSON.stringify(a));
+    // Emitting an event does not mark `meta`: the server takes the event sequence back from the stored events.
+    const noSeq = (json: string | undefined) => JSON.stringify({ ...(JSON.parse(json ?? 'null') as object), eventSeq: 0 });
+    for (const e of all.world) {
+      if (e.key === 'meta') expect(noSeq(store.get(e.key))).toBe(noSeq(JSON.stringify(e.data)));
+      else expect(store.get(e.key), e.key).toBe(JSON.stringify(e.data));
+    }
+  });
+
   it('exportDirty returns only what changed and clears the set', () => {
     const k = makeKit();
     exportDirty(k.s);

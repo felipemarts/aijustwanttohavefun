@@ -70,7 +70,11 @@ export const BALANCE = {
     reviveHp: 0.35,
   },
 
-  rest: { baseCost: 6, costPerLevel: 4 },
+  /**
+   * Tavern rest price, the game's upkeep: base + perLevel x level + steep x (level - steepFrom)^2 above steepFrom.
+   * A gold sink that grows with level, where wealth piles up (level 5: 26, 10: 46, 15: 116, 20: 286 gold).
+   */
+  rest: { baseCost: 6, costPerLevel: 4, steepFrom: 10, steepCost: 2 },
 
   chat: { sayCooldownMs: 3000 },
 
@@ -155,8 +159,11 @@ export const BALANCE = {
     chanceMax: 0.95,
     /** A failed lock pick: wait this long before trying again. */
     lockFailCooldownMs: 30_000,
-    /** The winch on the far side raises a gate for this long. */
-    winchMs: 20_000,
+    /**
+     * The winch on the far side raises a gate for this long. Generous, like the puzzle timings in content: the Warrior
+     * left behind may only wake up minutes after a party mate turned the winch.
+     */
+    winchMs: 10 * MIN,
     /** Party gates: members needed (counting both sides of the gate) and distinct classes among them. */
     partyMin: 3,
     partyClasses: 2,
@@ -285,6 +292,12 @@ export function rogueChance(kind: 'trap' | 'lock', agi: number): number {
 export function stealChance(agi: number, targetLevel: number): number {
   const S = BALANCE.steal;
   return Math.min(S.max, Math.max(S.min, S.base + agi * S.perAgi - targetLevel * S.perTargetLevel));
+}
+
+/** What a night at the tavern costs at this level (see BALANCE.rest). */
+export function restPrice(level: number): number {
+  const R = BALANCE.rest;
+  return R.baseCost + level * R.costPerLevel + R.steepCost * Math.max(0, level - R.steepFrom) ** 2;
 }
 
 export function xpToNext(level: number): number {

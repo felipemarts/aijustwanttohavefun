@@ -290,7 +290,8 @@ export type WorldState = {
   rooms: Map<string, RoomState>;
   /** room id -> ids of the agents standing there */
   roomAgents: Map<string, Set<string>>;
-  timers: TimerHeap;
+  /** Never replaced (it marks `timers` in `dirty` itself): use `replace` to swap its content. */
+  readonly timers: TimerHeap;
   inboxes: Map<string, Inbox>;
   parties: Map<string, Party>;
   guilds: Map<string, Guild>;
@@ -322,9 +323,10 @@ export type WorldState = {
   bounties: Record<string, Bounty>;
   /**
    * Keys of entities changed since the last snapshot: `agent:<id>`, `room:<id>`, `party:<id>`, `guild:<id>`, `meta`,
-   * `timers`, `trades`, `market`, `board`, `village`, `puzzles`, `wboss`, `escorts`, `bounties`.
+   * `timers` (marked by the heap itself on push and pop), `trades`, `market`, `board`, `village`, `puzzles`, `wboss`,
+   * `escorts`, `bounties`. Never replaced, only cleared: the timer heap holds on to it.
    */
-  dirty: Set<string>;
+  readonly dirty: Set<string>;
 };
 
 export type Command = { agentId: string; action: string; params?: unknown };

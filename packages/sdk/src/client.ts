@@ -95,7 +95,8 @@ function query(params: Record<string, string | number | boolean | undefined>): s
   return parts.length ? `?${parts.join('&')}` : '';
 }
 
-type Call = { method: 'GET' | 'POST'; path: string; body?: unknown; auth: boolean; headers?: Record<string, string>; retryNetwork: boolean };
+/** `auth`: true sends the key and needs one; 'optional' sends it when the client has one (public routes that use it). */
+type Call = { method: 'GET' | 'POST'; path: string; body?: unknown; auth: boolean | 'optional'; headers?: Record<string, string>; retryNetwork: boolean };
 
 /** Params may be left out only for actions whose params are all optional. */
 type ActArgs<A extends ActionName> = string extends keyof ActionInput<A> // params-less actions: `{ [k: string]: never }`
@@ -121,6 +122,7 @@ export interface Client {
   actRaw(action: string, params?: Record<string, unknown>, opts?: ActOptions): Promise<Result<ActResponse>>;
   /** Inbox events after `since` (or after what was last shown), oldest first. Follow `cursor` while `more`. */
   events(since?: string | number): Promise<Result<EventsResponse>>;
+  /** Public. Sends the API key when the client has one, so the gazette headline comes in the agent's language. */
   village(): Promise<Result<VillageResponse>>;
   profile(name: string): Promise<Result<ProfileResponse>>;
   help(): Promise<Result<HelpResponse>>;
@@ -151,10 +153,8 @@ export function createClient(options: ClientOptions): Client {
   async function once(call: Call): Promise<{ res: Response; text: string }> {
     const headers: Record<string, string> = { accept: 'application/json', ...call.headers };
     if (call.body !== undefined) headers['content-type'] = 'application/json';
-    if (call.auth) {
-      if (!apiKey) throw new ApiError('NO_API_KEY', `${call.method} ${call.path}: this client has no API key`);
-      headers.authorization = `Bearer ${apiKey}`;
-    }
+    if (call.auth === true && !apiKey) throw new ApiError('NO_API_KEY', `${call.method} ${call.path}: this client has no API key`);
+    if (call.auth && apiKey) headers.authorization = `Bearer ${apiKey}`;
     const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
     const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
     try {
@@ -216,7 +216,7 @@ export function createClient(options: ClientOptions): Client {
     }
   }
 
-  const get = <T>(path: string, auth: boolean) => request<T>({ method: 'GET', path, auth, retryNetwork: true });
+  const get = <T>(path: string, auth: boolean | 'optional') => request<T>({ method: 'GET', path, auth, retryNetwork: true });
 
   function actRaw(action: string, params: Record<string, unknown> = {}, opts: ActOptions = {}): Promise<Result<ActResponse>> {
     // One key for the whole call, retries included: the server answers a repeated key with the stored response.
@@ -273,7 +273,8 @@ export function createClient(options: ClientOptions): Client {
     },
 
     village() {
-      return get<VillageResponse>('/village', false);
+      // Public, but with the key the server writes the gazette headline in the agent's language.
+      return get<VillageResponse>('/village', 'optional');
     },
 
     profile(name: string) {

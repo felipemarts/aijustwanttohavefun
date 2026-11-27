@@ -25,21 +25,26 @@ export function isBestFriend(a: AgentState, b: AgentState): boolean {
   return bondScore(a, b) >= BALANCE.bond.bestFriend;
 }
 
-/** Writes the entry, evicting the weakest one when the agent is over the limit (possibly the new one itself). */
-function store(a: AgentState, otherId: string, v: number, talk: number): void {
+/**
+ * Writes the entry, evicting the weakest one when the agent is over the limit (possibly the new one itself).
+ * Returns whether the agent's stored bonds changed: a new entry evicted at once, or an identical write, changes nothing.
+ */
+function store(a: AgentState, otherId: string, v: number, talk: number): boolean {
+  const old = a.bonds[otherId];
+  if (old && old.v === v && old.talk === talk) return false;
   a.bonds[otherId] = { v, talk };
   const ids = Object.keys(a.bonds);
-  if (ids.length <= BALANCE.bond.keep) return;
+  if (ids.length <= BALANCE.bond.keep) return true;
   let weakest = ids[0]!;
   for (const id of ids) if (a.bonds[id]!.v < a.bonds[weakest]!.v) weakest = id;
   delete a.bonds[weakest];
+  return weakest !== otherId || old !== undefined;
 }
 
+/** Stores the pair's score on both sides; only a side whose stored bonds changed is marked for saving. */
 function setBond(run: Run, a: AgentState, b: AgentState, v: number, talk: number): void {
-  store(a, b.id, v, talk);
-  store(b, a.id, v, talk);
-  markAgent(run.s, a);
-  markAgent(run.s, b);
+  if (store(a, b.id, v, talk)) markAgent(run.s, a);
+  if (store(b, a.id, v, talk)) markAgent(run.s, b);
 }
 
 /** Raises the bond of a pair, announcing a new level. `talk` marks a raise from chatting (rate-limited by the caller). */

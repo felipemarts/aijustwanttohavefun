@@ -86,7 +86,6 @@ function winch(run: Run, a: AgentState, pz: Puzzle, st: PuzzleState): void {
   const ms = BALANCE.puzzle.winchMs;
   st.winch = run.now + ms;
   run.s.timers.push({ at: st.winch, kind: 'puzzle', id: pz.id });
-  run.s.dirty.add('timers');
   const p = { puzzle: puzzleRef(pz.id), seconds: ms / 1000 };
   tell(run, 'n.winch', p);
   emit(run, 'winch', { room: pz.room, actor: a.id, to: 'room', m: msg('ev.winch', p), data: { puzzle: pz.id } });
@@ -220,7 +219,6 @@ export const utilityActions: HandlerMap = {
     delete a.cooldowns[key];
     st.ready = run.now + pz.reset_sec * 1000;
     run.s.timers.push({ at: st.ready, kind: 'puzzle', id: pz.id });
-    run.s.dirty.add('timers');
     tell(run, 'n.lock_picked', { puzzle: puzzleRef(pz.id) });
     emit(run, 'lock_picked', { room: a.room, actor: a.id, to: 'room', drama: 2, m: msg('ev.lock_picked', { actor: a.name, puzzle: puzzleRef(pz.id) }), data: { puzzle: pz.id } });
     for (const s of pz.loot) {

@@ -4,7 +4,6 @@ import { grantTitle } from './agent';
 import { BALANCE } from './balance';
 import { emit, markAgent, msg, type Run } from './run';
 import type { AgentState, Goods, Stack, WorldState } from './types';
-import { TimerHeap } from './heap';
 import { isProjectDone } from './unlocks';
 import { electionDue, VILLAGE_ID, type PlaqueLine, type ProjectState } from './village-state';
 
@@ -203,7 +202,7 @@ export function restoreVillage(s: WorldState): void {
   const timers = s.timers.toJSON();
   const mine = timers.filter((t) => t.kind === 'election');
   if (mine.length !== 1 || mine[0]!.at !== due) {
-    s.timers = new TimerHeap([...timers.filter((t) => t.kind !== 'election'), { at: due, kind: 'election' }]);
+    s.timers.replace([...timers.filter((t) => t.kind !== 'election'), { at: due, kind: 'election' }]);
   }
 }
 

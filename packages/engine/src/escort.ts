@@ -49,7 +49,6 @@ export function escortCheck(run: Run, a: AgentState, q: Quest): void {
 
 function stallTimer(s: WorldState, e: Escort): void {
   s.timers.push({ at: e.at + BALANCE.escort.stallMs, kind: 'escort', id: e.id });
-  s.dirty.add('timers');
 }
 
 /** After the quest is accepted: the party's escort starts, or the agent joins the one already under way. */

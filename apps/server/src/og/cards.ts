@@ -41,7 +41,7 @@ function fitScale(font: BitmapFont, s: string, maxWidth: number, scales: number[
 }
 
 /** One line, cut with an ellipsis when it would overflow. */
-function oneLine(font: BitmapFont, s: string, scale: number, maxWidth: number): string {
+export function oneLine(font: BitmapFont, s: string, scale: number, maxWidth: number): string {
   return wrapText(font, s, scale, maxWidth, 1)[0] ?? '';
 }
 
@@ -62,20 +62,36 @@ function footer(r: Raster, font: BitmapFont, d: { footer: string; site: string }
   r.text(font, site, CARD_W - MARGIN - siteW, y, 2, colors[1]);
 }
 
+/** Scale of the line under the name (level and class) and of the stat labels. */
+export const LINE_SCALE = 3;
+export const LABEL_SCALE = 2;
+const STAT_GAP = 20;
+
+/**
+ * Where the agent card's text goes, from the portrait's size: the text column's x and width, and each stat box's
+ * width. Text wider than its room is cut with an ellipsis (`oneLine`), never drawn past it.
+ */
+export function agentLayout(portrait: { width: number; height: number }, stats: number) {
+  const scale = Math.floor(Math.min(320 / portrait.width, 400 / portrait.height));
+  const pw = portrait.width * scale;
+  const ph = portrait.height * scale;
+  const panel = { x: MARGIN, y: 64, w: pw + 60, h: ph + 60 };
+  const x = panel.x + panel.w + 50;
+  const maxW = CARD_W - MARGIN - x;
+  const n = Math.max(1, stats);
+  const boxW = Math.floor((maxW - STAT_GAP * (n - 1)) / n);
+  return { scale, pw, ph, panel, x, maxW, boxW, labelW: boxW - 24 };
+}
+
 function agentCard(font: BitmapFont, d: AgentCardData): Raster {
   const r = new Raster(CARD_W, CARD_H, BG);
   frame(r);
   // Portrait panel on the left, sprite scaled with nearest neighbour.
-  const scale = Math.floor(Math.min(320 / d.portrait.width, 400 / d.portrait.height));
-  const pw = d.portrait.width * scale;
-  const ph = d.portrait.height * scale;
-  const panel = { x: MARGIN, y: 64, w: pw + 60, h: ph + 60 };
+  const { scale, pw, panel, x, maxW, boxW } = agentLayout(d.portrait, d.stats.length);
   r.rect(panel.x, panel.y, panel.w, panel.h, PANEL);
   r.rect(panel.x + 30, panel.y + panel.h - 54, pw, 24, [36, 30, 50]);
   r.blit(d.portrait.rgba, d.portrait.width, d.portrait.height, panel.x + 30, panel.y + 30, scale);
 
-  const x = panel.x + panel.w + 50;
-  const maxW = CARD_W - MARGIN - x;
   let y = 80;
   const nameScale = fitScale(font, d.name, maxW, [6, 5, 4, 3]);
   r.text(font, oneLine(font, d.name, nameScale, maxW), x, y, nameScale, INK);
@@ -84,18 +100,15 @@ function agentCard(font: BitmapFont, d: AgentCardData): Raster {
     r.text(font, oneLine(font, d.title, 3, maxW), x, y, 3, GOLD);
     y += lineHeight(3) + 14;
   }
-  r.text(font, oneLine(font, d.line, 3, maxW), x, y, 3, MUTED);
-  y += lineHeight(3) + 40;
+  r.text(font, oneLine(font, d.line, LINE_SCALE, maxW), x, y, LINE_SCALE, MUTED);
+  y += lineHeight(LINE_SCALE) + 40;
 
-  const n = Math.max(1, d.stats.length);
-  const gap = 20;
-  const boxW = Math.floor((maxW - gap * (n - 1)) / n);
   d.stats.forEach((st, i) => {
-    const bx = x + i * (boxW + gap);
+    const bx = x + i * (boxW + STAT_GAP);
     r.rect(bx, y, boxW, 120, PANEL);
     const vs = fitScale(font, st.value, boxW - 24, [4, 3, 2]);
     r.text(font, oneLine(font, st.value, vs, boxW - 24), bx + 12, y + 14, vs, INK);
-    r.text(font, oneLine(font, st.label, 2, boxW - 24), bx + 12, y + 120 - 14 - lineHeight(2), 2, MUTED);
+    r.text(font, oneLine(font, st.label, LABEL_SCALE, boxW - 24), bx + 12, y + 120 - 14 - lineHeight(LABEL_SCALE), LABEL_SCALE, MUTED);
   });
   footer(r, font, d);
   return r;

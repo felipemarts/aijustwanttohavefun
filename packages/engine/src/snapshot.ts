@@ -1,6 +1,5 @@
 import type { Content } from '@ajwf/content';
 import { BALANCE } from './balance';
-import { TimerHeap } from './heap';
 import { indexGuild } from './guild';
 import { indexOrder } from './market';
 import { indexEscort } from './escort';
@@ -83,7 +82,7 @@ export function restoreWorld(content: Content, snap: Snapshot, now: number): Wor
     if (t.kind === 'puzzle') return content.puzzles.has(t.id);
     return t.kind !== 'wboss';
   });
-  s.timers = new TimerHeap(timers);
+  s.timers.replace(timers);
 
   for (const room of content.rooms.values()) {
     const saved = world.get(`room:${room.id}`) as Partial<RoomState> | undefined;

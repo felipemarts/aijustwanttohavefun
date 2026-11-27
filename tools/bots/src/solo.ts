@@ -8,7 +8,7 @@
  * `personality.ts` wrap this policy and reuse the helpers at the bottom.
  */
 import type { Content, Item } from '@ajwf/content';
-import { BALANCE, type ActionCtx, type WorldState } from '@ajwf/engine';
+import { BALANCE, restPrice, type ActionCtx, type WorldState } from '@ajwf/engine';
 import type { ActionName } from '@ajwf/shared';
 import { viewFromWorld, type BotView, type InventoryView } from './view';
 
@@ -81,7 +81,7 @@ export function decideSolo(view: SoloView, c: Content): BotStep {
   const gear = betterGear(c, inv, me.lvl);
   if (gear) return cmd('equip', { item: gear });
 
-  const restPrice = BALANCE.rest.baseCost + me.lvl * BALANCE.rest.costPerLevel;
+  const restCost = restPrice(me.lvl);
   if (hpShare < T.fightAbove) {
     // A healer heals itself; others eat when nothing is wasted, then go to the tavern or wait.
     const heal = usableSkill(c, inv, me.mp[0], 'heal');
@@ -91,7 +91,7 @@ export function decideSolo(view: SoloView, c: Content): BotStep {
     // Badly hurt, already in the village (hysteresis: once on the way, keep going), or with AP to burn: waiting
     // would only waste the AP that cannot pile up past the maximum.
     const walk = hpShare < T.recoverBelow || obs.room.zone === 'village' || me.ap[0] >= T.apRich;
-    if (walk && me.gold >= restPrice) {
+    if (walk && me.gold >= restCost) {
       if (obs.room.flags.includes('tavern')) return cmd('rest');
       const dir = stepToward(c, obs.room.id, (r) => r.flags.includes('tavern'));
       if (dir && me.ap[0] >= 1) return cmd('move', { dir });
@@ -101,13 +101,13 @@ export function decideSolo(view: SoloView, c: Content): BotStep {
   }
 
   // Rest is free of AP: top up when passing through the tavern anyway.
-  if (obs.room.flags.includes('tavern') && hpShare < 0.95 && me.gold >= restPrice) return cmd('rest');
+  if (obs.room.flags.includes('tavern') && hpShare < 0.95 && me.gold >= restCost) return cmd('rest');
 
   // Shopping, when in the village with gold to spare.
   const potions = POTIONS.reduce((n, id) => n + (inv.items[id] ?? 0), 0);
   const sells = (npc: string) => c.shops.get(c.npcs.get(npc)?.shop ?? '')?.sells.find((e) => e.item === POTIONS[0]);
   const potionPrice = Math.min(...[...c.npcs.keys()].map((id) => sells(id)?.price ?? Infinity));
-  if (potions < T.potions && me.gold >= potionPrice + T.restReserve * restPrice && obs.room.zone === 'village') {
+  if (potions < T.potions && me.gold >= potionPrice + T.restReserve * restCost && obs.room.zone === 'village') {
     const seller = obs.room.npcs.find((n) => sells(n.id));
     if (seller) return cmd('shop_buy', { npc: seller.id, item: POTIONS[0] });
     const dir = stepToward(c, obs.room.id, (r) => (c.npcsByRoom.get(r.id) ?? []).some((n) => sells(n.id)), 3);

@@ -32,7 +32,7 @@ berta:
   desc: "A big-hearted innkeeper with a booming laugh and an ear for every rumor in town."
   greet: "Sit down, you look half dead! I have food and a bed, and the notice board is by the door. Stay and chat a while. Good company earns you a Camaraderie XP bonus."
   topic:
-    rest: "Use the \"rest\" action here to restore your HP and MP for a little gold. Linger and talk with the others and you earn a Camaraderie XP bonus, and it is bigger in my tavern than anywhere else."
+    rest: "Use the \"rest\" action here to restore your HP and MP for gold. The price grows with your level, and steeply past level 10: veterans pay for the upkeep of their fine gear. Linger and talk with the others and you earn a Camaraderie XP bonus, and it is bigger in my tavern than anywhere else."
     rumors: "Read the notice board with \"board_read\" and add to it with \"board_post\". Rumors can be false and nobody checks. And mind your whispers: they are private now, but 24 hours later they show up on the Secrets Revealed page."
     cook: "Cooks use my kitchen. You need game meat, herbs and pots from a Blacksmith. Your food gives buffs that last an hour, and your coal keeps the Blacksmiths in business."
 sister_ilse:

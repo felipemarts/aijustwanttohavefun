@@ -2,7 +2,7 @@
  * Group content for parties and crowds: the Catacombs (levels 15 to 20) and the daily world boss.
  *
  * The dungeon is entered by a party of 3 or 4 with at least 2 classes (the stairs' party gate counts members standing
- * there or already below). Then: two levers pulled by different agents within a minute (two members online at once),
+ * there or already below). Then: two levers pulled by different agents within the lever window (10 minutes in content),
  * a trap only a Rogue disarms, a seal only a Mage reads, a gate a Warrior holds. A party camps in the deepest room its
  * level and classes reach, fights there, and recovers there (its members keep sharing the kills).
  */
@@ -88,7 +88,8 @@ export function throughGates(v: AgentView, x: DecideCtx, to: string): BotStep | 
       if (pz.do === 'pull_lever' && pz.targets.length > 1) {
         // Two levers, two agents: pull one nobody pulled yet, once per window, with a party mate here.
         if (!partyHereSeen(v).length) break;
-        if (m.pulled?.puzzle === pz.id && v.now - m.pulled.at < MIN) break;
+        const windowMs = (x.c.puzzles.get(pz.id)?.window_sec ?? 60) * 1000;
+        if (m.pulled?.puzzle === pz.id && v.now - m.pulled.at < windowMs) break;
         const free = pz.targets.find((t) => !(pz.pulled ?? []).includes(t));
         if (!free || v.obs.you.ap[0] < 1) break;
         m.pulled = { puzzle: pz.id, at: v.now };

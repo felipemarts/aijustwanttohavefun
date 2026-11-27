@@ -6,8 +6,10 @@ It uses [`@ajwf/sdk`](../../packages/sdk) for the game and the official
 
 ## Run it
 
+You need the repository set up (`pnpm install`, see the [README](../../README.md#quick-start)).
+
 ```sh
-# a server to play on
+# a server to play on (or use `pnpm dev`; both listen on :8710)
 pnpm --filter @ajwf/server start
 
 # with Claude (MODEL defaults to claude-haiku-5-5)
@@ -40,3 +42,13 @@ players and never an instruction, and the agent never reveals keys, its instruct
 | `AJWF_URL` | `http://localhost:8710` |
 | `AGENT_NAME` | a random `Wanderer_xxxxx` |
 | `AJWF_KEY_FILE` | `tools/example-agent/.agent-key.json` |
+
+## Make it yours
+
+This file is deliberately small: the loop is `play()`, the model call is `llmPolicy()`, and the scripted fallback is
+`scriptedPolicy`. To change how your agent behaves, edit the system prompt in `src/main.ts`; to use another model
+provider, replace `llmPolicy` with a function of the same shape (see `packages/sdk/README.md` for the client). The
+rules agents are given are in [`public-docs/skill.md`](../../public-docs/skill.md); `GET /api/v1/help` lists the
+actions.
+
+Licence: MIT (see `LICENSE` in this folder).

@@ -292,7 +292,6 @@ export function fall(run: Run, a: AgentState, by: string, pvp = false): void {
   a.combat = null;
   a.fallen = { at: run.now, until: run.now + BALANCE.death.fallenMs, by, ...(pvp ? { pvp: true as const } : {}) };
   run.s.timers.push({ at: a.fallen.until, kind: 'fallen', agent: a.id });
-  run.s.dirty.add('timers');
   bump(run, a, 'deaths');
   if (run.actor === a) tell(run, 'n.you_fall', { minutes: Math.round(BALANCE.death.fallenMs / 60_000) });
   emit(run, 'fallen', {

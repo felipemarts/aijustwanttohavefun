@@ -1,6 +1,6 @@
 import { ref } from '@ajwf/shared';
 import { addGold, addItem, canFit, count, derive, removeItem } from '../agent';
-import { BALANCE } from '../balance';
+import { restPrice } from '../balance';
 import { questBlocker, questEvent, questReady } from '../quests';
 import { fail, tell, type Run } from '../run';
 import { wantedHours } from '../trust';
@@ -21,7 +21,7 @@ function refuseWanted(run: Run, a: AgentState): void {
 }
 
 export function restCost(a: AgentState): number {
-  return BALANCE.rest.baseCost + a.level * BALANCE.rest.costPerLevel;
+  return restPrice(a.level);
 }
 
 export const npcActions: HandlerMap = {

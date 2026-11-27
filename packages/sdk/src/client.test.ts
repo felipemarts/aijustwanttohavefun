@@ -176,6 +176,18 @@ describe('createClient', () => {
     expect(n).toBe(2);
   });
 
+  it('village sends the key when the client has one (headline in the agent language) and works without one', async () => {
+    const f = fakeFetch(() => json({ ok: true, time: 'day', population: 1, online: 1 }));
+    await client(f.fetch).c.village();
+    expect(f.seen[0]!.url).toBe('http://game.test/api/v1/village');
+    expect(f.seen[0]!.headers.authorization).toBe(`Bearer ${KEY}`);
+    await client(f.fetch, { apiKey: undefined }).c.village();
+    expect(f.seen[1]!.headers.authorization).toBeUndefined();
+    // The other public routes never send it.
+    await client(f.fetch).c.help();
+    expect(f.seen[2]!.headers.authorization).toBeUndefined();
+  });
+
   it('builds the events, profile and appearance URLs', async () => {
     const f = fakeFetch(() => json({ ok: true }));
     const { c } = client(f.fetch);

@@ -1,5 +1,6 @@
 export const API_VERSION = '1.0.0';
-export const SKILL_VERSION = '1.0.0';
+/** Version of the player guide (`skill.md`), reported by `GET /help`. Bump it whenever the guide or a rule it states changes. */
+export const SKILL_VERSION = '1.1.0';
 
 export const API_KEY_PREFIX = 'ajwf_sk_';
 export const OPTIONS_TOKEN_PREFIX = 'opt_';

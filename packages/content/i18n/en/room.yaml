@@ -170,7 +170,7 @@ ruins.catacomb_stairs:
 # Catacombs of the Hollow Regent
 dungeon.antechamber:
   name: Antechamber
-  desc: "A cold hall with a sun lever and a moon lever. Two different agents must pull them within a minute to open the way south."
+  desc: "A cold hall with a sun lever and a moon lever. Two different agents must pull them within 10 minutes of each other to open the way south."
 dungeon.lever_hall:
   name: Lever Hall
   desc: "The hall behind the lever door, watched by crypt guards. An old locked chest waits for a Rogue."

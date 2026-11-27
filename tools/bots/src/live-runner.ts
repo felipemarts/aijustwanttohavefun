@@ -206,12 +206,12 @@ async function registerBot(
   nextName: () => string,
   rng: Rng,
   lang: LaunchLanguage,
-  bucket: TokenBucket,
+  pace: () => Promise<void>,
   sleep: (ms: number) => Promise<void>,
   stopped: () => boolean,
 ) {
   for (let attempt = 0; attempt < 12 && !stopped(); attempt++) {
-    await bucket.take();
+    await pace();
     const name = nextName();
     try {
       const r = await base.register({ name, class: rng.pick(CLASSES), language: lang, appearance: 'surprise_me', bot: true, claimed: true });
@@ -230,6 +230,41 @@ async function registerBot(
 }
 
 export type LiveSummary = { registered: number; seconds: number; total: Stats; lines: string[] };
+
+/** Without the admin token: ten at a time, under the server's per-IP limit. With it: as fast as the server answers. */
+export const REGISTER_CONCURRENCY = { paced: 10, admin: 16 } as const;
+
+export type Registered = { index: number; name: string; key: string; rng: Rng; lang: LaunchLanguage; personality: Personality };
+
+/**
+ * Registers `count` bots, `concurrency` requests in flight at a time. Without the admin token the server limits every
+ * unauthenticated route, registration included, to 120 requests per minute per IP: past a first burst, register a
+ * little under 2 per second. A valid admin token exempts registration from that limit, so then nothing is paced and
+ * the only bound is the concurrency. Each bot's seed, language and personality depend only on `rng` and its index.
+ */
+export async function registerBots(base: Client, count: number, o: { admin: boolean; rng: Rng; stopper: Stopper; concurrency?: number }): Promise<Registered[]> {
+  const { stopper, rng } = o;
+  const regBucket = new TokenBucket(100, 110, stopper.sleep, Date.now, () => stopper.isStopped);
+  const pace = o.admin ? () => Promise.resolve() : () => regBucket.take();
+  const concurrency = Math.max(1, o.concurrency ?? (o.admin ? REGISTER_CONCURRENCY.admin : REGISTER_CONCURRENCY.paced));
+  const nextName = nameGenerator(createRng(rng.int(0, 2 ** 31)));
+  // Drawn up front, in index order, so the same seed gives the same bots whatever order the answers come in.
+  const plans = Array.from({ length: count }, (_, i) => {
+    const botRng = createRng(rng.int(0, 2 ** 31) ^ i);
+    return { index: i, rng: botRng, lang: botRng.pick(LANGUAGES), personality: botRng.pick(PERSONALITIES) };
+  });
+  const out: Registered[] = [];
+  let next = 0;
+  const worker = async () => {
+    while (next < plans.length && !stopper.isStopped) {
+      const plan = plans[next++]!;
+      const reg = await registerBot(base, nextName, plan.rng, plan.lang, pace, stopper.sleep, () => stopper.isStopped);
+      if (reg) out.push({ ...plan, ...reg });
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(concurrency, count) }, worker));
+  return out.sort((a, b) => a.index - b.index);
+}
 
 export async function runLiveBots(content: Content, o: LiveOptions): Promise<LiveSummary> {
   const log = o.log ?? console.log;
@@ -250,23 +285,9 @@ export async function runLiveBots(content: Content, o: LiveOptions): Promise<Liv
   const base = createClient({ baseUrl: o.url, adminToken: o.adminToken, fetch: o.fetch, onResponse, sleep: stopper.sleep });
   const shared: Shared = { content, pacer: new RatePacer(o.rate, stopper.sleep), stopper, maxWaitMs: o.maxWaitMs ?? 15_000, stats: () => interval };
 
-  // Registration, ten at a time. The server limits every unauthenticated route, registration included and even with
-  // the admin token, to 120 requests per minute per IP: past a first burst, register a little under 2 per second.
-  const regBucket = new TokenBucket(100, 110, stopper.sleep, Date.now, () => stopper.isStopped);
-  const nextName = nameGenerator(createRng(rng.int(0, 2 ** 31)));
-  const bots: LiveBot[] = [];
   const started = Date.now();
-  for (let i = 0; i < o.count && !stopper.isStopped; i += 10) {
-    const batch = Array.from({ length: Math.min(10, o.count - i) }, (_, j) => {
-      const botRng = createRng(rng.int(0, 2 ** 31) ^ (i + j));
-      const lang = botRng.pick(LANGUAGES);
-      const personality = botRng.pick(PERSONALITIES);
-      return registerBot(base, nextName, botRng, lang, regBucket, stopper.sleep, () => stopper.isStopped).then((reg) =>
-        reg ? new LiveBot(reg.name, personality, lang, base.withApiKey(reg.key), botRng, shared) : null,
-      );
-    });
-    for (const bot of await Promise.all(batch)) if (bot) bots.push(bot);
-  }
+  const registered = await registerBots(base, o.count, { admin: !!o.adminToken, rng, stopper });
+  const bots = registered.map((r) => new LiveBot(r.name, r.personality, r.lang, base.withApiKey(r.key), r.rng, shared));
   const mix = PERSONALITIES.map((p) => `${p}:${bots.filter((b) => b.personality === p).length}`).join(' ');
   const langs = LANGUAGES.map((l) => `${l}:${bots.filter((b) => b.lang === l).length}`).join(' ');
   say(`registered ${bots.length}/${o.count} bots in ${((Date.now() - started) / 1000).toFixed(1)} s (${mix}; ${langs}; http ${fmt(interval.http)})`);

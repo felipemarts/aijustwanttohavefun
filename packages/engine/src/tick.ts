@@ -17,9 +17,7 @@ import { worldBossTimer } from './worldboss';
  */
 export function tick(s: WorldState, ctx: { now: number; rng: Rng }): GameEvent[] {
   const run = newRun(s, ctx.now, ctx.rng);
-  let popped = false;
   for (let t = s.timers.popDue(ctx.now); t; t = s.timers.popDue(ctx.now)) {
-    popped = true;
     switch (t.kind) {
       case 'respawn': {
         const pending = s.respawns.get(t.room);
@@ -60,6 +58,5 @@ export function tick(s: WorldState, ctx: { now: number; rng: Rng }): GameEvent[]
         break;
     }
   }
-  if (popped) s.dirty.add('timers');
   return run.events;
 }

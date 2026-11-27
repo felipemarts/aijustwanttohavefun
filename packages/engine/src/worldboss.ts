@@ -38,7 +38,6 @@ export function pushTimers(s: WorldState, now: number): void {
   if (wb.announced !== wb.next) s.timers.push({ at: Math.max(now, wb.next - worldBossLeadMs(s)), kind: 'wboss', step: 'announce' });
   s.timers.push({ at: wb.next, kind: 'wboss', step: 'spawn' });
   if (wb.uid) s.timers.push({ at: wb.leaves, kind: 'wboss', step: 'leave' });
-  s.dirty.add('timers');
   s.dirty.add('wboss');
 }
 

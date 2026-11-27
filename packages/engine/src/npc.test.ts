@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { derive } from './agent';
-import { BALANCE } from './balance';
+import { BALANCE, restPrice } from './balance';
 import { errCode, errKey, keys, makeKit, narr } from './testkit';
 
 describe('talk', () => {
@@ -22,7 +22,7 @@ describe('talk', () => {
     const k = makeKit();
     const a = k.add('Pip', 'warrior', { room: 'village.tavern', level: 4 });
     const r = k.ok(a, 'talk', { npc: 'berta' });
-    expect((r.result.ok && (r.result.data?.npc as Record<string, unknown>).rest_cost)).toBe(BALANCE.rest.baseCost + 4 * BALANCE.rest.costPerLevel);
+    expect((r.result.ok && (r.result.data?.npc as Record<string, unknown>).rest_cost)).toBe(restPrice(4));
   });
 
   it('errors: npc elsewhere, unknown topic', () => {
@@ -94,7 +94,7 @@ describe('rest', () => {
     a.mp = 1;
     const gold = a.gold;
     const r = k.ok(a, 'rest');
-    const cost = BALANCE.rest.baseCost + 3 * BALANCE.rest.costPerLevel;
+    const cost = restPrice(3);
     expect(narr(r, 'n.rest')).toEqual({ gold: cost });
     expect(a.gold).toBe(gold - cost);
     expect(a.hp).toBe(k.maxHp(a));
@@ -113,6 +113,22 @@ describe('rest', () => {
     a.gold = 100;
     k.ok(a, 'rest');
     expect(errKey(k.act(a, 'rest'))).toBe('err.already_rested');
-    expect(a.gold).toBe(100 - (BALANCE.rest.baseCost + BALANCE.rest.costPerLevel));
+    expect(a.gold).toBe(100 - restPrice(1));
+  });
+
+  it('rest costs more with level, much more above the steep threshold (a gold sink where wealth piles up)', () => {
+    const R = BALANCE.rest;
+    expect(restPrice(5)).toBe(R.baseCost + 5 * R.costPerLevel);
+    expect(restPrice(R.steepFrom)).toBe(R.baseCost + R.steepFrom * R.costPerLevel);
+    for (let l = 1; l < 20; l++) expect(restPrice(l + 1)).toBeGreaterThan(restPrice(l));
+    // Above the threshold each level adds more than the one before.
+    for (let l = R.steepFrom + 1; l < 20; l++) expect(restPrice(l + 1) - restPrice(l)).toBeGreaterThan(restPrice(l) - restPrice(l - 1));
+    expect(restPrice(20)).toBeGreaterThanOrEqual(3 * restPrice(10));
+    const k = makeKit();
+    const a = k.add('Vet', 'warrior', { room: 'village.tavern', level: 20 });
+    a.hp = 5;
+    a.gold = restPrice(20);
+    k.ok(a, 'rest');
+    expect(a.gold).toBe(0);
   });
 });

@@ -4,7 +4,7 @@
  * when it has nothing to do right now, so profiles compose them as an ordered list of preferences.
  */
 import type { Content, Item, Quest } from '@ajwf/content';
-import { BALANCE, realDay, route } from '@ajwf/engine';
+import { BALANCE, realDay, restPrice, route } from '@ajwf/engine';
 import { hashString, type ActionName } from '@ajwf/shared';
 import { CHAT_LINES, EMOTES } from '../personality';
 import { bestHeal, betterGear, decideSolo, SOLO_TUNING, usableSkill, type BotCommand, type BotStep } from '../solo';
@@ -391,13 +391,13 @@ export function keepSupplied(v: AgentView, x: DecideCtx): BotStep | null {
   const gear = betterGear(x.c, v.inv, v.obs.you.lvl);
   if (gear) return cmd('equip', { item: gear });
   if (!inVillage(v) || isWantedMe(v)) return null;
-  const restPrice = BALANCE.rest.baseCost + v.obs.you.lvl * BALANCE.rest.costPerLevel;
+  const restCost = restPrice(v.obs.you.lvl);
   const me = v.obs.you;
-  if (v.obs.room.flags.includes('tavern') && (me.hp[0] < me.hp[1] * 0.9 || me.mp[0] < me.mp[1] * 0.5) && me.gold >= restPrice) return cmd('rest');
+  if (v.obs.room.flags.includes('tavern') && (me.hp[0] < me.hp[1] * 0.9 || me.mp[0] < me.mp[1] * 0.5) && me.gold >= restCost) return cmd('rest');
   const toBuy = gearToBuy(v, x.c);
   if (toBuy) return buyFromShop(v, x, toBuy);
   const potions = have(v, POTION) + have(v, 'health_potion') + have(v, 'greater_potion');
-  if (potions < SOLO_TUNING.potions && me.gold >= 25 + 3 * restPrice) return buyFromShop(v, x, POTION);
+  if (potions < SOLO_TUNING.potions && me.gold >= 25 + 3 * restCost) return buyFromShop(v, x, POTION);
   return null;
 }
 

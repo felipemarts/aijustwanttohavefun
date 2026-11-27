@@ -5,12 +5,16 @@ live runner that plays against a real server over HTTP through `@ajwf/sdk`.
 
 ## Live bots
 
-Start a server that knows an admin token, then point the bots at it:
+Start a server that knows an admin token, then point the bots at it (`pnpm dev` works too: it starts the same
+server, and its web app shows the bots at <http://localhost:5710>):
 
 ```sh
 ADMIN_TOKEN=dev-admin pnpm --filter @ajwf/server start
 pnpm bots --count 50 --rate 20 --duration 60 --admin-token dev-admin
 ```
+
+The runner reads only its flags and the environment variables in the table, not `.env`: pass the admin token with
+`--admin-token` or `ADMIN_TOKEN=dev-admin pnpm bots`.
 
 | Flag | Env | Default | Meaning |
 |---|---|---|---|
@@ -64,7 +68,7 @@ pnpm sim --bots 200 --days 4 --mix social=1,fighter=1 --seed 3
 | `--cadence id:min:actions:w,...` | see below | Behaviour model buckets |
 | `--session N` | per bucket | Max actions per session for every bucket |
 | `--think a-b` | 3-8 | Seconds between two actions of a session |
-| `--out FILE` | `reports/sim-<bots>b-<seed>-<limit>.json` | Report path (`tools/bots/reports/` is gitignored) |
+| `--out FILE` | `reports/sim-[<scenario>-]<bots>b-<seed>-<limit>.json` | Report path (`tools/bots/reports/` is gitignored) |
 | `--scenario NAME` | none | `civilization` or `pacing` presets (explicit flags still apply) |
 | `--gazette` | off | Print every Village Gazette edition in full (always on for `civilization`) |
 | `--quiet` | off | No daily progress line |
@@ -129,11 +133,23 @@ traders also sell with pay-first deals and deliver.
   here).
 - `samples`: the hourly time series (gold, levels by group, monsters alive, resources left, parties).
 
-The CI version is `src/sim.test.ts`: 110 bots for 5 simulated days (no invariant broken, groups at least 1.8x faster
-than solo, every profile progresses, traitors betray, scam and get bounties, no PvP or theft below level 8) and 70
-bots for 7.05 days (projects completed, one full election, 7 gazette editions); deterministic for a seed.
+The CI versions are `src/sim.test.ts`: 64 bots for 3.5 simulated days (no invariant broken, under 3% of actions
+refused, groups at least 1.8x faster than solo, every profile progresses, traitors betray, scam and get bounties, no
+PvP or theft below level 8), and `src/sim.civilization.test.ts`: 30 slower bots for 7.05 days (one full election, 7
+gazette editions, the village makes progress; the full `--scenario civilization` run is the one that completes
+projects). Both are deterministic for a seed.
 
-## Other scripts
+## Other files
 
-- `solo.ts`: the solo policy. It decides from a `BotView` (`view.ts`), built from the engine (`viewFromWorld`) or
-  from API answers (`viewFromApi` with `/look` or `/act` plus `/me`).
+- `solo.ts`: the solo policy (used by the engine's level 1 to 5 acceptance test and by every profile when fallen,
+  fighting or hurt). It decides from a `BotView` (`view.ts`), built from the engine (`viewFromWorld`) or from API
+  answers (`viewFromApi` with `/look` or `/act` plus `/me`).
+- `live.ts` and `live-runner.ts`: the `pnpm bots` command and the HTTP runner. `personality.ts` holds the live
+  personalities and their chat lines per language, `names.ts` the name generator, `pacing.ts` the interruptible waits (Ctrl+C).
+- `profiles/`: the simulation's decision functions (`fighter`, `explorer`, `social`, `trader`, `politician`, `traitor`,
+  and the shared `common.ts`, `trust.ts` and `dungeon.ts`).
+- `sim/`: the simulation itself: `runner.ts` (the world, the clock and the scheduler), `metrics.ts` (the report) and
+  `format.ts` (what is printed).
+- `sim-cli.ts`: the `pnpm sim` command.
+
+Licence: AGPL-3.0, like the rest of the core (the bots are not part of the MIT packages).

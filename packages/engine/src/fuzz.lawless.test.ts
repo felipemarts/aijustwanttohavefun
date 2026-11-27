@@ -94,7 +94,7 @@ describe('fuzz: lawless', () => {
     }
     // A clean slate of timers for those rooms: no monster ever comes back there.
     const timers = k.s.timers.toJSON().filter((t) => !(t.kind === 'respawn' && LAWLESS.includes(t.room)));
-    k.s.timers = new (k.s.timers.constructor as new (t: typeof timers) => typeof k.s.timers)(timers);
+    k.s.timers.replace(timers);
 
     const agents: AgentState[] = [];
     for (let i = 0; i < 24; i++) {

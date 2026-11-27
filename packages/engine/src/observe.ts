@@ -108,11 +108,18 @@ export type Observation = {
   world_boss?: { id: string; room: string; in?: number; up?: true };
 };
 
-const RANK: Record<Relation, number> = { party: 0, friend: 1, guild: 2, rival: 3 };
-
-/** Other agents in the room, most relevant first: party, friends, guild mates, rivals, then everyone else. */
-function seenAgents(s: WorldState, a: AgentState): { list: SeenAgent[]; others: number } {
+/**
+ * Other agents in the room, most relevant first: party, friends, guild mates, rivals, then everyone else.
+ *
+ * Bounded work whatever the crowd: the related agents are found by walking the viewer's own lists (party, friends,
+ * guild, rivals: each capped by BALANCE) and checking each against the room set; the remaining slots go to the first
+ * strangers of the room set, and the walk stops once the list is full. The count of the rest is the set's size.
+ * Within one kind of relation, agents come in the order of the viewer's list (party join order, friendship order...).
+ */
+export function seenAgents(s: WorldState, a: AgentState): { list: SeenAgent[]; others: number } {
   const ids = s.roomAgents.get(a.room);
+  if (!ids) return { list: [], others: 0 };
+  const total = ids.size - (ids.has(a.id) ? 1 : 0);
   const friends = new Set(a.friends);
   const rivals = new Set(a.rivals);
   const relOf = (b: AgentState): Relation | undefined => {
@@ -122,37 +129,40 @@ function seenAgents(s: WorldState, a: AgentState): { list: SeenAgent[]; others: 
     if (rivals.has(b.id)) return 'rival';
     return undefined;
   };
-  // Buckets by relevance, filled in one pass; strangers stop being collected once the list is full.
-  const buckets: AgentState[][] = [[], [], [], [], []];
-  let total = 0;
-  let strangers = 0;
-  for (const id of ids ?? []) {
-    if (id === a.id) continue;
-    total++;
-    const b = s.agents.get(id)!;
-    const rel = relOf(b);
-    if (rel) buckets[RANK[rel]]!.push(b);
-    else if (strangers++ < MAX_AGENTS_LISTED) buckets[4]!.push(b);
+  const picked = new Set<string>([a.id]);
+  const shown: AgentState[] = [];
+  const take = (id: string): void => {
+    if (shown.length >= MAX_AGENTS_LISTED || picked.has(id) || !ids.has(id)) return;
+    picked.add(id);
+    shown.push(s.agents.get(id)!);
+  };
+  // In relevance order, so an agent both friend and guild mate is taken (and labelled) as a friend.
+  for (const id of partyOf(s, a)?.members ?? []) take(id);
+  for (const id of a.friends) take(id);
+  for (const id of guildOf(s, a)?.members ?? []) take(id);
+  for (const id of a.rivals) take(id);
+  if (shown.length < MAX_AGENTS_LISTED) {
+    for (const id of ids) {
+      if (shown.length >= MAX_AGENTS_LISTED) break;
+      if (!picked.has(id)) take(id);
+    }
   }
-  const list = buckets
-    .flat()
-    .slice(0, MAX_AGENTS_LISTED)
-    .map((b): SeenAgent => {
-      const rel = relOf(b);
-      const bond = bondLevel(bondScore(a, b));
-      return {
-        name: b.name,
-        class: b.cls,
-        lvl: b.level,
-        ...(b.title ? { title: b.title } : {}),
-        appearance: b.appearance,
-        lookHash: b.lookHash,
-        ...(b.fallen ? { fallen: true as const } : {}),
-        ...(bond ? { bond } : {}),
-        ...(rel ? { rel } : {}),
-        ...(b.wanted ? { wanted: true as const } : {}),
-      };
-    });
+  const list = shown.map((b): SeenAgent => {
+    const rel = relOf(b);
+    const bond = bondLevel(bondScore(a, b));
+    return {
+      name: b.name,
+      class: b.cls,
+      lvl: b.level,
+      ...(b.title ? { title: b.title } : {}),
+      appearance: b.appearance,
+      lookHash: b.lookHash,
+      ...(b.fallen ? { fallen: true as const } : {}),
+      ...(bond ? { bond } : {}),
+      ...(rel ? { rel } : {}),
+      ...(b.wanted ? { wanted: true as const } : {}),
+    };
+  });
   return { list, others: total - list.length };
 }
 

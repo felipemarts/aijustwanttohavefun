@@ -90,7 +90,6 @@ export function puzzleBlock(run: Run, a: AgentState, id: string): Block | null {
 export function openPuzzle(run: Run, pz: Puzzle, st: PuzzleState, ms: number): void {
   st.open = Math.max(st.open, run.now + ms);
   run.s.timers.push({ at: st.open, kind: 'puzzle', id: pz.id });
-  run.s.dirty.add('timers');
   run.s.dirty.add('puzzles');
 }
 

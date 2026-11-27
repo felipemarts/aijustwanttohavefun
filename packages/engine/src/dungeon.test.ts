@@ -99,7 +99,13 @@ function descend(k: Kit, party: AgentState[]): Stuck {
     }
     moveAll(k, party, dir);
   }
-  // The gate hall: the Warrior holds the portcullis, the others pass, the winch brings him through.
+  // The gate hall: the Warrior holds the portcullis, the others pass, the winch brings him through. The winch of an
+  // earlier pass may still hold the portcullis up (BALANCE.puzzle.winchMs): then everyone just walks through.
+  const war0 = by(party, 'warrior');
+  if (war0 && !observe(k.s, war0.id, k.ctx()).room.locked?.west) {
+    moveAll(k, party, 'west');
+    return null;
+  }
   const stuck = solveHere(k, party);
   if (stuck) {
     for (const a of party) expect(errKeys(k.act(a, 'move', { dir: 'west' }))?.msg).toBe('err.gate_puzzle');

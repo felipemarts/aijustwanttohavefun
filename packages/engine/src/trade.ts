@@ -29,7 +29,7 @@ export function openTrade(run: Run, from: string, to: string, give: Goods, want:
   s.trades.set(t.id, t);
   indexTrade(s, t);
   s.timers.push({ at: t.expires, kind: 'trade', id: t.id });
-  for (const key of ['trades', 'timers', 'meta']) s.dirty.add(key);
+  for (const key of ['trades', 'meta']) s.dirty.add(key);
   return t;
 }
 

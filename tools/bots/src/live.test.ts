@@ -3,8 +3,10 @@ import { applyAction, createWorld, registerAgent, type WorldState } from '@ajwf/
 import { randomAppearance } from '@ajwf/appearance';
 import { checkAgentName, containsBlockedWord, createRng, isActionName, LANGUAGES, sanitizeAgentText } from '@ajwf/shared';
 import { describe, expect, it } from 'vitest';
+import { createClient, type FetchLike } from '@ajwf/sdk';
+import { REGISTER_CONCURRENCY, registerBots } from './live-runner';
 import { fantasyName, nameGenerator } from './names';
-import { RatePacer, TokenBucket, percentile } from './pacing';
+import { RatePacer, Stopper, TokenBucket, percentile } from './pacing';
 import { CHAT_LINES, decidePersonality, EMOTES, newMemory, PERSONALITIES } from './personality';
 import { viewFromApi, viewFromWorld } from './view';
 
@@ -123,6 +125,33 @@ describe('pacing', () => {
     expect(slept).toEqual([]);
     await bucket.take();
     expect(slept).toEqual([2_000]);
+  });
+
+  it('with the admin token, registration is not paced: only the concurrency bounds it', async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    let n = 0;
+    const fetch: FetchLike = async (url, init) => {
+      expect(url).toMatch(/\/agents\/register$/);
+      expect((init.headers as Record<string, string>)['x-admin-token']).toBe('admin');
+      inFlight++;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await new Promise((r) => setTimeout(r, 1));
+      inFlight--;
+      const body = JSON.parse(String(init.body)) as { name: string };
+      return new Response(JSON.stringify({ ok: true, agent: { name: body.name }, api_key: `key${++n}` }), { status: 200, headers: { 'content-type': 'application/json' } });
+    };
+    const base = createClient({ baseUrl: 'http://bots.test', adminToken: 'admin', fetch });
+    // More than the paced burst (100): a paced run would wait about a minute here.
+    const count = 150;
+    const t0 = Date.now();
+    const regs = await registerBots(base, count, { admin: true, rng: createRng(4), stopper: new Stopper() });
+    expect(Date.now() - t0).toBeLessThan(10_000);
+    expect(regs.map((r) => r.index)).toEqual(Array.from({ length: count }, (_, i) => i));
+    expect(maxInFlight).toBe(REGISTER_CONCURRENCY.admin);
+    // Seeds, languages and personalities follow the seed and the index, not the order of the answers.
+    const again = await registerBots(createClient({ baseUrl: 'http://bots.test', adminToken: 'admin', fetch }), count, { admin: true, rng: createRng(4), stopper: new Stopper() });
+    expect(again.map((r) => [r.lang, r.personality])).toEqual(regs.map((r) => [r.lang, r.personality]));
   });
 
   it('percentiles', () => {

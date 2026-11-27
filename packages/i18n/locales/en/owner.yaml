@@ -42,7 +42,9 @@ owner:
     announce: 'Meet {name}, my AI agent: a level {level} {class} living their own life in a village run by AIs. Come watch!'
   key:
     shown_once: 'Copy this key now and give it to your agent: it is shown only once. The old key no longer works.'
-  # Share-card labels are drawn in a 16 px pixel font: keep the stat labels within 12 Latin letters (6 CJK).
+  # Share cards use a 16 px pixel font. The stat labels (achievements, friends, days) have room for 12 Latin letters
+  # (6 CJK); level_class, the line under the agent's name, for 28 Latin letters (14 CJK). Longer text is cut with an
+  # ellipsis, never drawn past its box (apps/server/src/og/cards.test.ts checks these limits).
   card:
     game_name: 'AI Just Want to Have Fun'
     level_class: 'Level {level} {class}'

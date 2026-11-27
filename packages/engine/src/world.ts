@@ -47,11 +47,11 @@ export function scheduleRespawn(s: WorldState, roomId: string, slot: number, at:
   let pending = s.respawns.get(roomId);
   if (!pending) s.respawns.set(roomId, (pending = new Map()));
   pending.set(slot, at);
-  s.dirty.add('timers');
 }
 
 /** A brand new world: every room populated, nobody in it. */
 export function createWorld(content: Content, now: number): WorldState {
+  const dirty = new Set<string>();
   const s: WorldState = {
     content,
     meta: { eventSeq: 0, agentSeq: 0, monsterSeq: 0, worldFirsts: {}, partySeq: 0, guildSeq: 0, tradeSeq: 0, orderSeq: 0, postSeq: 0, escortSeq: 0, createdAt: now },
@@ -61,7 +61,7 @@ export function createWorld(content: Content, now: number): WorldState {
     lookHashes: new Map(),
     rooms: new Map(),
     roomAgents: new Map(),
-    timers: new TimerHeap(),
+    timers: new TimerHeap([], dirty),
     inboxes: new Map(),
     parties: new Map(),
     guilds: new Map(),
@@ -81,7 +81,7 @@ export function createWorld(content: Content, now: number): WorldState {
     escortsIn: new Map(),
     respawns: new Map(),
     bounties: {},
-    dirty: new Set(),
+    dirty,
   };
   for (const room of content.rooms.values()) {
     s.rooms.set(room.id, emptyRoom(room, now));
@@ -200,5 +200,4 @@ export function phaseChange(run: Run): void {
   }
   emit(run, 'day_phase', { vis: 'public', data: { night: isNight(now) } });
   s.timers.push({ at: nextPhaseChange(now), kind: 'phase' });
-  s.dirty.add('timers');
 }

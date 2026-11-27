@@ -147,12 +147,30 @@ describe('bonds', () => {
     expect(Object.keys(a.bonds)).toHaveLength(BALANCE.bond.keep);
     expect(a.bonds[others[0]!.id]).toBeUndefined();
     expect(bondScore(a, others[0]!)).toBe(2);
-    // A new weakest bond is not even stored on the crowded side.
+    // A new weakest bond is not even stored on the crowded side, which then has nothing new to save.
     const z = k.add('Zed', 'rogue');
+    k.s.dirty.clear();
     raiseBond(run, a, z, 1);
     expect(a.bonds[z.id]).toBeUndefined();
     expect(bondScore(a, z)).toBe(1);
+    expect([...k.s.dirty]).toEqual([`agent:${z.id}`]);
     expect(checkInvariants(k.s, k.now)).toEqual([]);
+  });
+
+  it('chat in a crowded room bonds the speaker with the latest speakers only, never with every listener', () => {
+    const k = makeKit();
+    const room = 'village.tavern';
+    const crowd = Array.from({ length: 200 }, (_, i) => k.add(`Crowd${i}`, 'mage', { room }));
+    const dirtyAgents = () => [...k.s.dirty].filter((d) => d.startsWith('agent:')).length;
+    let worst = 0;
+    for (let i = 0; i < 400; i++) {
+      k.now += BALANCE.chat.sayCooldownMs;
+      k.s.dirty.clear();
+      k.ok(crowd[(i * 7) % crowd.length]!, 'say', { text: 'hello all' });
+      worst = Math.max(worst, dirtyAgents());
+    }
+    // The speaker, plus at most the other speakers the room remembers: never the 199 listeners.
+    expect(worst).toBeLessThanOrEqual(1 + BALANCE.camaraderie.speakersKept);
   });
 
   it('talking in the same room counts once per pair every few minutes', () => {

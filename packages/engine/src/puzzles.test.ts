@@ -18,28 +18,32 @@ function crew(k: Kit, room: string): { war: AgentState; mage: AgentState; rogue:
 
 const blocked = (k: Kit, a: AgentState, dir: string) => errKey(k.act(a, 'move', { dir }));
 
+/** A puzzle's tuning from content: every duration in these tests comes from here or from BALANCE. */
+const puzzle = (k: Kit, id: string) => k.c.puzzles.get(id)!;
+
 describe('levers', () => {
   it('open the way when two different agents pull both levers within the window, then close again', () => {
     const k = makeKit();
     const { war, mage, rogue, cleric } = crew(k, 'dungeon.antechamber');
+    const lev = puzzle(k, 'dungeon_levers');
     for (const a of [war, mage, rogue]) a.quests.c_dungeon_1 = { steps: [0, 0], at: k.now };
     expect(blocked(k, war, 'south')).toBe('err.gate_puzzle');
     const first = k.ok(war, 'pull_lever', { target: 'sun_lever' });
-    expect(narr(first, 'n.lever_pulled')).toEqual({ target: 'sun_lever', left: 1, seconds: 60 });
+    expect(narr(first, 'n.lever_pulled')).toEqual({ target: 'sun_lever', left: 1, seconds: lev.window_sec });
     expect(observe(k.s, mage.id, k.ctx()).room.puzzles![0]).toMatchObject({ id: 'dungeon_levers', do: 'pull_lever', pulled: ['sun_lever'] });
-    k.advance(30 * SEC);
+    k.advance((lev.window_sec / 2) * SEC);
     const second = k.ok(mage, 'pull_lever', { target: 'moon_lever' });
-    expect(narr(second, 'n.puzzle_solved')).toEqual({ puzzle: '@puzzle:dungeon_levers', seconds: 180 });
+    expect(narr(second, 'n.puzzle_solved')).toEqual({ puzzle: '@puzzle:dungeon_levers', seconds: lev.open_sec });
     expect(second.events.map((e) => e.type)).toContain('puzzle_solved');
     // Both pullers and the party members standing with them get the credit and the quest step.
     for (const a of [war, mage, rogue, cleric]) expect(a.stats.puzzles_solved).toBe(1);
     for (const a of [war, mage, rogue]) expect(a.quests.c_dungeon_1!.steps).toEqual([1, 0]);
     expect(observe(k.s, cleric.id, k.ctx()).room.locked).toBeUndefined();
-    expect(observe(k.s, cleric.id, k.ctx()).room.puzzles![0]!.open).toBeGreaterThan(170);
+    expect(observe(k.s, cleric.id, k.ctx()).room.puzzles![0]!.open).toBe(lev.open_sec);
     k.ok(cleric, 'move', { dir: 'south' });
     expect(errKeys(k.act(rogue, 'pull_lever', { target: 'sun_lever' }))).toMatchObject({ code: 'CONFLICT', msg: 'err.puzzle_open' });
     // The way closes after open_sec and the puzzle can be solved again.
-    const closing = k.advance(180 * SEC);
+    const closing = k.advance(lev.open_sec * SEC);
     expect(closing.map((e) => e.type)).toContain('puzzle_closed');
     expect(blocked(k, rogue, 'south')).toBe('err.gate_puzzle');
     expect(observe(k.s, rogue.id, k.ctx()).room.locked).toEqual({ south: 'puzzle' });
@@ -52,6 +56,7 @@ describe('levers', () => {
   it('are not solvable by one agent alone, nor by pulls further apart than the window', () => {
     const k = makeKit();
     const { war, mage } = crew(k, 'dungeon.antechamber');
+    const lev = puzzle(k, 'dungeon_levers');
     k.ok(war, 'pull_lever', { target: 'sun_lever' });
     const twice = errKeys(k.act(war, 'pull_lever', { target: 'moon_lever' }));
     expect(twice).toMatchObject({ code: 'NOT_ALLOWED', msg: 'err.lever_same_agent', hint: 'hint.lever_same_agent', p: { target: 'moon_lever', other: 'sun_lever' } });
@@ -59,7 +64,7 @@ describe('levers', () => {
     k.ok(war, 'pull_lever', { target: 'sun_lever' });
     expect(blocked(k, war, 'south')).toBe('err.gate_puzzle');
     // Too late: the sun lever's pull has expired, so the moon lever starts a new window.
-    k.advance(61 * SEC);
+    k.advance((lev.window_sec + 1) * SEC);
     const late = k.ok(mage, 'pull_lever', { target: 'moon_lever' });
     expect(keys(late)).toContain('n.lever_pulled');
     expect(blocked(k, mage, 'south')).toBe('err.gate_puzzle');
@@ -92,15 +97,16 @@ describe('trap', () => {
     k.rng = scriptedRng([0.999]);
     const hp = rogue.hp;
     const miss = k.ok(rogue, 'disarm', { target: 'blade_trap' });
-    expect(narr(miss, 'n.trap_failed')).toEqual({ puzzle: '@puzzle:dungeon_trap', dmg: 90 });
-    expect(rogue.hp).toBe(hp - 90);
+    const dmg = puzzle(k, 'dungeon_trap').damage;
+    expect(narr(miss, 'n.trap_failed')).toEqual({ puzzle: '@puzzle:dungeon_trap', dmg });
+    expect(rogue.hp).toBe(hp - dmg);
     expect(blocked(k, mage, 'south')).toBe('err.gate_puzzle');
 
     k.rng = scriptedRng([0]);
     expect(keys(k.ok(rogue, 'disarm', { target: 'blade_trap' }))).toContain('n.puzzle_solved');
     expect(rogue.stats.traps_disarmed).toBe(1);
     k.ok(mage, 'move', { dir: 'south' });
-    k.advance(600 * SEC);
+    k.advance(puzzle(k, 'dungeon_trap').open_sec * SEC);
     expect(blocked(k, war, 'south')).toBe('err.gate_puzzle');
     expect(checkInvariants(k.s, k.now)).toEqual([]);
   });
@@ -108,7 +114,7 @@ describe('trap', () => {
   it('a failure can fell the Rogue, and the chance follows AGI without ever being certain or hopeless', () => {
     const k = makeKit();
     const { rogue } = crew(k, 'dungeon.trapped_corridor');
-    rogue.hp = 50;
+    rogue.hp = puzzle(k, 'dungeon_trap').damage - 1;
     k.rng = scriptedRng([0.999]);
     k.ok(rogue, 'disarm', { target: 'blade_trap' });
     expect(rogue.fallen).not.toBeNull();
@@ -132,7 +138,7 @@ describe('seal', () => {
     expect(keys(k.ok(mage, 'read_runes', { target: 'rune_seal' }))).toContain('n.puzzle_solved');
     expect(mage.stats.seals_opened).toBe(1);
     k.ok(war, 'move', { dir: 'west' });
-    k.advance(600 * SEC);
+    k.advance(puzzle(k, 'dungeon_seal').open_sec * SEC);
     expect(blocked(k, rogue, 'west')).toBe('err.gate_puzzle');
   });
 });
@@ -144,7 +150,7 @@ describe('gate', () => {
     expect(errKeys(k.act(mage, 'hold_gate', { target: 'portcullis' }))).toMatchObject({ code: 'CLASS_REQUIRED', p: { class: '@class:warrior' } });
     expect(blocked(k, mage, 'west')).toBe('err.gate_puzzle');
     const hold = k.ok(war, 'hold_gate', { target: 'portcullis' });
-    expect(narr(hold, 'n.gate_held')).toEqual({ puzzle: '@puzzle:dungeon_gate', seconds: 90 });
+    expect(narr(hold, 'n.gate_held')).toEqual({ puzzle: '@puzzle:dungeon_gate', seconds: puzzle(k, 'dungeon_gate').open_sec });
     expect(war.stats.gates_held).toBe(1);
     expect(observe(k.s, mage.id, k.ctx()).room.puzzles![0]).toMatchObject({ id: 'dungeon_gate', held: 'Brak' });
     // The holder cannot pass, and refusing does not let go.
@@ -156,13 +162,13 @@ describe('gate', () => {
     expect(observe(k.s, mage.id, k.ctx()).room.puzzles).toContainEqual({ id: 'dungeon_gate', do: 'pull_lever', targets: ['winch'] });
     expect(observe(k.s, mage.id, k.ctx()).actions).toContain('pull_lever');
     const crank = k.ok(mage, 'pull_lever', { target: 'winch' });
-    expect(narr(crank, 'n.winch')).toEqual({ puzzle: '@puzzle:dungeon_gate', seconds: 20 });
+    expect(narr(crank, 'n.winch')).toEqual({ puzzle: '@puzzle:dungeon_gate', seconds: BALANCE.puzzle.winchMs / 1000 });
     const moved = k.ok(war, 'move', { dir: 'west' });
     expect(keys(moved)).toContain('n.gate_released');
     expect(war.room).toBe('dungeon.boss_lair');
     expect(k.s.puzzles.dungeon_gate!.hold).toBeNull();
     // Once the winch drops, the gate is shut from both sides of the story.
-    k.advance(21 * SEC);
+    k.advance(BALANCE.puzzle.winchMs + SEC);
     k.place(rogue, 'dungeon.gate_hall');
     expect(blocked(k, rogue, 'west')).toBe('err.gate_puzzle');
     expect(checkInvariants(k.s, k.now)).toEqual([]);
@@ -189,7 +195,7 @@ describe('gate', () => {
     war.hp = k.maxHp(war);
     expect(blocked(k, mage, 'west')).toBeNull();
     k.place(mage, 'dungeon.gate_hall');
-    k.advance(90 * SEC);
+    k.advance(puzzle(k, 'dungeon_gate').open_sec * SEC);
     expect(blocked(k, mage, 'west')).toBe('err.gate_puzzle');
     expect(checkInvariants(k.s, k.now)).toEqual([]);
   });
@@ -223,9 +229,10 @@ describe('lock', () => {
     expect(rogue.inv).toMatchObject({ greater_potion: 2, ancient_relic: 2, silver_ore: 3 });
     expect(rogue.stats.locks_picked).toBe(1);
     expect(rogue.stats.puzzles_solved).toBe(1);
-    expect(errKeys(k.act(rogue, 'pick_lock', { target: 'old_chest' }))).toMatchObject({ code: 'NOT_AVAILABLE_HERE', msg: 'err.lock_empty', p: { minutes: 60 } });
-    expect(observe(k.s, rogue.id, k.ctx()).room.puzzles).toContainEqual(expect.objectContaining({ id: 'dungeon_chest', do: 'pick_lock', cls: 'rogue', wait: 3599 }));
-    k.advance(3600 * SEC);
+    const reset = puzzle(k, 'dungeon_chest').reset_sec;
+    expect(errKeys(k.act(rogue, 'pick_lock', { target: 'old_chest' }))).toMatchObject({ code: 'NOT_AVAILABLE_HERE', msg: 'err.lock_empty', p: { minutes: Math.ceil(reset / 60) } });
+    expect(observe(k.s, rogue.id, k.ctx()).room.puzzles).toContainEqual(expect.objectContaining({ id: 'dungeon_chest', do: 'pick_lock', cls: 'rogue', wait: reset - 1 }));
+    k.advance(reset * SEC);
     expect(k.s.puzzles.dungeon_chest!.ready).toBe(0);
     k.ok(rogue, 'pick_lock', { target: 'old_chest' });
     expect(rogue.inv.greater_potion).toBe(4);
@@ -286,7 +293,7 @@ describe('boss gate', () => {
     k.ok(a, 'move', { dir: 'north' });
     k.ok(a, 'move', { dir: 'south' });
     // Bosses keep their respawn time, crowd or not.
-    k.advance(7200 * SEC);
+    k.advance(k.c.monsters.get('the_hollow_regent')!.respawn_sec * SEC);
     expect(blocked(k, a, 'north')).toBe('err.gate_boss');
   });
 });
@@ -318,7 +325,7 @@ describe('class utilities', () => {
     expect(observe(k.s, mage.id, k.ctx()).actions).toContain('enchant');
     const atk = derive(k.c, war, k.now).atk;
     const r = k.ok(mage, 'enchant', { target: 'Brak' });
-    expect(narr(r, 'n.enchant')).toEqual({ name: 'Brak', item: '@item:rusty_sword', atk: BALANCE.enchant.atk, minutes: 120 });
+    expect(narr(r, 'n.enchant')).toEqual({ name: 'Brak', item: '@item:rusty_sword', atk: BALANCE.enchant.atk, minutes: BALANCE.enchant.durationMs / MIN });
     expect(mage.inv.crystal).toBe(1);
     expect(derive(k.c, war, k.now).atk).toBe(atk + BALANCE.enchant.atk);
     expect(mage.bonds[war.id]!.v).toBe(BALANCE.bond.enchant);
@@ -326,7 +333,7 @@ describe('class utilities', () => {
     expect(ev).toMatchObject({ visibility: 'room', roomId: 'village.square', actor: mage.id, target: war.id });
     k.ok(mage, 'enchant', {});
     expect(mage.inv.crystal).toBeUndefined();
-    k.advance(2 * 60 * MIN);
+    k.advance(BALANCE.enchant.durationMs);
     k.refresh(war);
     expect(derive(k.c, war, k.now).atk).toBe(atk);
     war.equip.weapon = null;

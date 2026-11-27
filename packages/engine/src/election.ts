@@ -20,7 +20,6 @@ export function isMayor(s: WorldState, a: AgentState): boolean {
 /** Puts the election timer on the heap for the next phase change. */
 export function scheduleElection(s: WorldState): void {
   s.timers.push({ at: electionDue(s.village.election), kind: 'election' });
-  s.dirty.add('timers');
 }
 
 /** The `election` timer fired: open the voting, or close the election and start the next cycle. */

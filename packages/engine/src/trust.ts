@@ -70,7 +70,6 @@ export function raiseInfamy(run: Run, a: AgentState, n: number): void {
   else becomeWanted(run, a, until);
   // Only the timer at `wanted.until` acts; earlier ones are stale and do nothing.
   run.s.timers.push({ at: until, kind: 'wanted', agent: a.id });
-  run.s.dirty.add('timers');
 }
 
 function becomeWanted(run: Run, a: AgentState, until: number): void {
@@ -130,7 +129,6 @@ function scheduleRefund(run: Run, b: Bounty, due: number): void {
   if (b.due === due) return;
   b.due = due;
   run.s.timers.push({ at: due, kind: 'bounty', target: b.target });
-  run.s.dirty.add('timers');
 }
 
 /** Whether `payer` can add to the bounty on this agent: a new contributor needs a free line. */
