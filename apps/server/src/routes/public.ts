@@ -39,7 +39,7 @@ export function publicRoutes(app: FastifyInstance, ctx: AppContext): void {
 
   app.get('/appearance/options', cors, async (req, reply) => {
     const now = game.now();
-    const limit = ctx.limiters.options.take(req.ip, now);
+    const limit = ctx.limiters.options.take(req.clientIp, now);
     if (!limit.ok) return sendRateLimited(reply, render, 'en', limit.retryAfterSec);
     const lang = render.lang(langQuery.parse(req.query ?? {}).lang);
     const issued = ctx.options.issue(now, randomBytes(18).toString('base64url'));

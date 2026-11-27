@@ -1,3 +1,4 @@
+import { hasOwnKey } from '@ajwf/shared';
 import type { Content } from '@ajwf/content';
 import { BALANCE } from './balance';
 
@@ -18,7 +19,7 @@ function bfs(c: Content, from: string, to: string, throughGates: boolean): strin
     if (!room) continue;
     for (const [dir, next] of Object.entries(room.exits)) {
       if (prev.has(next) || !c.rooms.has(next)) continue;
-      if (!throughGates && room.gates[dir]) continue;
+      if (!throughGates && hasOwnKey(room.gates, dir)) continue;
       prev.set(next, { room: cur, dir });
       queue.push(next);
     }

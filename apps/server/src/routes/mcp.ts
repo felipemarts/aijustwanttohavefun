@@ -17,8 +17,9 @@ function rpcError(reply: FastifyReply, status: number, code: number, message: st
 
 /**
  * The agent API as a `fetch` that never leaves the process: each call is a Fastify `inject` into `/api/v1`, from
- * the MCP caller's address, so authentication, rate limits, idempotency and rendering are exactly those of REST.
- * Only the headers the SDK client sets are sent (no forwarded-for, no admin token).
+ * the MCP caller's address (`req.clientIp`, as the socket address of the injected request), so authentication, rate
+ * limits, idempotency and rendering are exactly those of REST. Only the headers the SDK client sets are sent (no
+ * forwarded-for, no client-IP header, no admin token), so the injected request's client IP is that address.
  */
 export function inProcessFetch(app: FastifyInstance, ip: string): FetchLike {
   return async (input, init) => {
@@ -94,7 +95,7 @@ export function mcpRoutes(app: FastifyInstance, ctx: AppContext, root: FastifyIn
     const isCall = typeof body === 'object' && body !== null && (body as { method?: unknown }).method === 'tools/call';
     const keyed = key !== undefined && !!game.agentByKeyHash(bearerKeyHash(header) ?? '');
     if (!(isCall && keyed)) {
-      const t = limiters.mcp.take(req.ip, game.now());
+      const t = limiters.mcp.take(req.clientIp, game.now());
       if (!t.ok) {
         reply.header('retry-after', String(t.retryAfterSec));
         return rpcError(reply, 429, -32000, `Rate limited: retry after ${t.retryAfterSec} s`);
@@ -110,7 +111,7 @@ export function mcpRoutes(app: FastifyInstance, ctx: AppContext, root: FastifyIn
     const build = () =>
       createVillageServer({
         // No retries: a 429 goes back to the model as a tool error with the wait, instead of holding the request.
-        api: { baseUrl: 'http://in-process', apiKey: key, fetch: inProcessFetch(root, req.ip), retries: 0 },
+        api: { baseUrl: 'http://in-process', apiKey: key, fetch: inProcessFetch(root, req.clientIp), retries: 0 },
         publicUrl,
         mode: 'http',
       });

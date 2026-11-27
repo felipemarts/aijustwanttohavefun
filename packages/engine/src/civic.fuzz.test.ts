@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { createRng, type ClassId, type GameEvent, type Rng } from '@ajwf/shared';
-import { touch } from './agent';
 import { applyAction } from './apply';
+import { expectSameWorld, settle, worldBytes } from './fuzzkit';
 import { checkInvariants } from './invariants';
 import { observe } from './observe';
 import { deactivateAgent } from './register';
-import { newRun } from './run';
 import { HOUR, makeKit, SEC, worldWealth, type Kit } from './testkit';
 import { tick } from './tick';
 import type { AgentState, ApplyResult, WorldState } from './types';
@@ -213,21 +212,22 @@ describe('civic fuzz', () => {
 
       const cmd = command(k, rng, a);
       const what = () => `step ${step}: ${a.name} ${cmd.action} ${JSON.stringify(cmd.params)}`;
-      touch(newRun(k.s, k.now, k.rng, a), a, false);
-      const before = JSON.stringify([a, k.s.village, a.guild ? k.s.guilds.get(a.guild) : null]);
+      flows(settle(k, a), acc);
+      const before = worldBytes(k.s);
       let r: ApplyResult;
       try {
         r = applyAction(k.s, { agentId: a.id, ...cmd }, k.ctx());
       } catch (e) {
         throw new Error(`${what()} threw ${(e as Error).stack}`, { cause: e });
       }
+      if (r.internal !== undefined) throw new Error(`${what()}: internal error ${(r.internal as Error).stack}`);
       if (r.result.ok) ok[cmd.action] = (ok[cmd.action] ?? 0) + 1;
       else {
         errors[r.result.error.msg.k] = (errors[r.result.error.msg.k] ?? 0) + 1;
-        if (r.events.length === 0) {
-          expect(JSON.stringify([a, k.s.village, a.guild ? k.s.guilds.get(a.guild) : null]), what()).toBe(before);
-          unchanged++;
-        }
+        // A refusal leaves the whole persisted world byte for byte as it was.
+        expect(r.events, what()).toEqual([]);
+        expectSameWorld(k.s, before, what());
+        unchanged++;
       }
       flows(r.events, acc);
       wealth = worldWealth(k.s);

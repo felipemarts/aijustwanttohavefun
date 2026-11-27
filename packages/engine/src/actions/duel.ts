@@ -1,3 +1,4 @@
+import { own } from '@ajwf/shared';
 import { bump, touch } from '../agent';
 import { BALANCE } from '../balance';
 import { fightDuel } from '../duel';
@@ -31,7 +32,7 @@ export const duelActions: HandlerMap = {
 
   duel_accept(run, a, p) {
     const b = duelOpponent(run, a, p.agent);
-    if ((a.duelInvites[b.id] ?? 0) <= run.now) fail('TARGET_NOT_FOUND', 'no_duel_invite', { name: b.name });
+    if (!((own(a.duelInvites, b.id) ?? 0) > run.now)) fail('TARGET_NOT_FOUND', 'no_duel_invite', { name: b.name });
     touch(run, b);
     delete a.duelInvites[b.id];
     const out = fightDuel(run, b, a);

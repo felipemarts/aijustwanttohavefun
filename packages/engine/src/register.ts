@@ -1,6 +1,8 @@
 import { appearanceHash, type Appearance } from '@ajwf/appearance';
 import { checkAgentName, maskBlockedWords, MAX_BIO_LEN, sanitizeAgentText, type ClassId, type Rng } from '@ajwf/shared';
-import { derive } from './agent';
+import { capacity, derive, slotsUsed } from './agent';
+import { stockAdd, stockTake } from './ledger';
+import { returnOrders } from './market';
 import { BALANCE } from './balance';
 import { removeMember } from './party';
 import { emit, inboxRemove, markAgent, msg, newRun } from './run';
@@ -116,7 +118,7 @@ export function registerAgent(s: WorldState, input: RegisterInput, ctx: { now: n
   for (const st of cls.starter) {
     const item = s.content.items.get(st.item)!;
     if (item.type === 'weapon' && !a.equip.weapon) a.equip.weapon = item.id;
-    else a.inv[item.id] = (a.inv[item.id] ?? 0) + st.qty;
+    else stockAdd(a.inv, item.id, st.qty, 'starter kit');
   }
   const d = derive(s.content, a, ctx.now);
   a.hp = d.maxHp;
@@ -153,7 +155,8 @@ const countLook = (s: WorldState, hash: string, by: 1 | -1): void => {
  * Removes an agent from the indexes when it is retired or banned: the room index and the look count (a restored
  * world counts only active agents, so this keeps the live world equal to its snapshot). Its snapshot stays, and so
  * does its name in the name indexes. It also leaves its party, which only makes sense with members who can still
- * act; guild membership, trades and market orders stay (other agents re-check them when they act).
+ * act, and its market orders are cancelled, the items back in its bags (see `returnOrders`); guild membership and
+ * trades stay (other agents re-check them when they act).
  */
 export function deactivateAgent(s: WorldState, agentId: string, status: 'retired' | 'banned'): void {
   const a = s.agents.get(agentId);
@@ -164,6 +167,7 @@ export function deactivateAgent(s: WorldState, agentId: string, status: 'retired
   }
   a.status = status;
   removeMember(s, a);
+  returnOrders(s, a);
   markAgent(s, a);
 }
 
@@ -180,9 +184,28 @@ export function reactivateAgent(s: WorldState, agentId: string): boolean {
   a.status = 'active';
   a.combat = null;
   s.roomAgents.get(a.room)!.add(a.id);
+  spillOverflow(s, a);
   countLook(s, a.lookHash, 1);
   markAgent(s, a);
   return true;
+}
+
+/**
+ * Market orders cancelled while the agent was away came back to its bags over capacity: what does not fit any more
+ * is set down where it stands (whole stacks, the latest in the bag first), so the bag holds again.
+ */
+function spillOverflow(s: WorldState, a: AgentState): void {
+  const cap = capacity(s.content, a);
+  const ground = s.rooms.get(a.room)?.ground;
+  if (!ground) return;
+  const ids = Object.keys(a.inv);
+  while (slotsUsed(s.content, a.inv) > cap && ids.length) {
+    const id = ids.pop()!;
+    const qty = a.inv[id]!;
+    stockTake(a.inv, id, qty, `inventory of ${a.id}`);
+    stockAdd(ground, id, qty, `ground of ${a.room}`);
+    s.dirty.add(`room:${a.room}`);
+  }
 }
 
 /**

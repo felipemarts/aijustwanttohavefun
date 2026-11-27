@@ -130,11 +130,11 @@ export function ownerRoutes(app: FastifyInstance, ctx: AppContext): void {
 
   // Per-IP limits: everything here, logins, and the claim token routes (strict: tokens are not guessable anyway).
   app.addHook('onRequest', async (req, reply) => {
-    const t = ctx.limiters.owner.take(req.ip, game.now());
+    const t = ctx.limiters.owner.take(req.clientIp, game.now());
     if (!t.ok) return sendRateLimited(reply, render, 'en', t.retryAfterSec);
   });
   const limitWith = (limiter: { take(k: string, now: number): { ok: true } | { ok: false; retryAfterSec: number } }) => async (req: FastifyRequest, reply: FastifyReply) => {
-    const t = limiter.take(req.ip, game.now());
+    const t = limiter.take(req.clientIp, game.now());
     if (!t.ok) return sendRateLimited(reply, render, 'en', t.retryAfterSec);
   };
   const claimLimit = { onRequest: limitWith(ctx.limiters.claim) };

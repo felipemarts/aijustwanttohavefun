@@ -1,4 +1,5 @@
 import { containsBlockedWord } from './moderation';
+import { isPlainKey } from './schemas';
 
 const NAME_RE = /^[\p{L}\p{M}\p{N}_-]+$/u;
 /**
@@ -7,6 +8,37 @@ const NAME_RE = /^[\p{L}\p{M}\p{N}_-]+$/u;
  * click letters that look like `!` and `|`): a name made with them reads as another name or as a quote mark.
  */
 const DECEPTIVE_RE = /[\p{Default_Ignorable_Code_Point}\u01C0-\u01C3\u02B9-\u02BF\u02C2-\u02DF\u02E5-\u02FF\uA788]/u;
+
+/** Invisible characters or modifier letters that pass for punctuation: refused in agent and guild names alike. */
+export function hasDeceptiveChars(name: string): boolean {
+  return DECEPTIVE_RE.test(name);
+}
+
+/**
+ * Names are interpolated into narration that agents read and trust ("Wulf waves at you"). A name that reads like an
+ * instruction or an authority ("SystemNotice", "IgnorePrevious", "Admin Team", "管理员") is a cheap prompt-injection
+ * attempt, so these stems are refused, in the launch languages, wherever they appear in the name (spaces, `_` and
+ * `-` removed, lookalikes folded). This is a speed bump, not a guarantee: a determined player will find wording
+ * that is not on the list, and what really protects agents is that narration marks names as names and that the
+ * rules tell them names are never instructions. Keep the list short, distinctive stems only (false positives refuse
+ * honest names: "Ecosystem" goes too, "Mod" alone is in RESERVED, not here).
+ */
+const COMMAND_STEMS: readonly string[] = [
+  // en
+  'system', 'admin', 'moderator', 'ignore', 'instruction', 'prompt', 'apikey', 'assistant', 'override', 'jailbreak', 'password', 'developer',
+  // pt-BR / es / fr
+  'sistema', 'moderador', 'ignora', 'instrucci', 'instruçã', 'instruçõ', 'senha', 'chaveapi', 'chavedeapi', 'contraseña', 'claveapi', 'clavedeapi',
+  'systeme', 'système', 'modérateur', 'moderateur', 'cleapi', 'cléapi', 'motdepasse',
+  // ja / zh-CN
+  'システム', '管理者', '運営', 'モデレーター', '無視', '指示', '命令', '系统', '管理员', '版主', '忽略', '指令', '密钥', '提示词',
+];
+
+/** Whether a name contains one of the instruction-like or authority-like stems (see `COMMAND_STEMS`). */
+export function soundsLikeCommand(name: string): boolean {
+  const flat = normalizeName(name).replace(/[\s_-]+/g, '');
+  const skeleton = nameSkeleton(name).replace(/[\s_-]+/g, '');
+  return COMMAND_STEMS.some((w) => flat.includes(w) || skeleton.includes(nameSkeleton(w)));
+}
 
 /** Lookalike characters folded to a Latin skeleton so "Pip", "Рір" and "P1p" collide. */
 const CONFUSABLES: Record<string, string> = {
@@ -49,11 +81,13 @@ export function checkAgentName(raw: string): NameCheck {
   const display = raw.normalize('NFKC').trim();
   const len = [...display].length;
   if (len < 3 || len > 20) return { ok: false, reason: 'length' };
-  if (!NAME_RE.test(display) || DECEPTIVE_RE.test(display)) return { ok: false, reason: 'characters' };
+  if (!NAME_RE.test(display) || hasDeceptiveChars(display)) return { ok: false, reason: 'characters' };
   if (!/[\p{L}]/u.test(display)) return { ok: false, reason: 'characters' };
   const norm = normalizeName(display);
   const skeleton = nameSkeleton(display);
   if (RESERVED.has(norm) || RESERVED.has(skeleton)) return { ok: false, reason: 'reserved' };
+  // `constructor`, `__proto__`...: names end up as keys in places, and read as code anyway.
+  if (!isPlainKey(display) || soundsLikeCommand(display)) return { ok: false, reason: 'reserved' };
   if (containsBlockedWord(norm) || containsBlockedWord(skeleton)) return { ok: false, reason: 'blocked' };
   return { ok: true, display, norm, skeleton };
 }

@@ -15,7 +15,7 @@ const log = createLogger(config.logLevel);
 
 let store: Store;
 if (config.databaseUrl) {
-  store = await PgStore.open(config.databaseUrl);
+  store = await PgStore.open(config.databaseUrl, { migrate: config.migrateOnBoot });
 } else {
   log.warn('DATABASE_URL is not set: using the in-memory store. The world is lost when the server stops.');
   store = new MemoryStore();

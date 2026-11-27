@@ -1,6 +1,6 @@
 import type { Skill } from '@ajwf/content';
-import { ref } from '@ajwf/shared';
-import { addBuff, bump, derive, standUp, touch, wakeAtTemple } from '../agent';
+import { own, ref } from '@ajwf/shared';
+import { addBuff, bump, derive, hpNow, standUp, touch, wakeAtTemple } from '../agent';
 import { BALANCE } from '../balance';
 import { raiseBond } from '../bond';
 import { findMonster, retaliate, strike } from '../combat';
@@ -20,9 +20,9 @@ function readySkill(run: Run, a: AgentState, raw: string): Skill {
   if (!skill) fail('TARGET_NOT_FOUND', 'skill_unknown', { skill: raw });
   if (skill.class !== a.cls) fail('CLASS_REQUIRED', 'skill_class', { skill: ref.skill(skill.id), class: ref.cls(skill.class) });
   if (a.level < skill.level) fail('LEVEL_REQUIRED', 'skill_level', { skill: ref.skill(skill.id), level: skill.level });
-  const readyAt = a.cooldowns[`skill:${skill.id}`] ?? 0;
+  const readyAt = own(a.cooldowns, `skill:${skill.id}`) ?? 0;
   if (readyAt > run.now) fail('COOLDOWN', 'skill_cooldown', { skill: ref.skill(skill.id), seconds: Math.ceil((readyAt - run.now) / 1000) });
-  if (a.mp < skill.mp) fail('NOT_ENOUGH_MP', 'no_mp', { need: skill.mp, have: Math.floor(a.mp) });
+  if (!(a.mp >= skill.mp)) fail('NOT_ENOUGH_MP', 'no_mp', { need: skill.mp, have: Math.floor(a.mp) });
   return skill;
 }
 
@@ -54,8 +54,8 @@ function castSkill(run: Run, a: AgentState, rawSkill: string, target: string | u
     case 'aoe': {
       const room = roomState(run.s, a.room);
       if (!room.monsters.length) fail('TARGET_NOT_FOUND', 'no_monsters_here');
-      for (const m of room.monsters) refreshMonster(run.s, m, run.now);
       const first: MonsterInst = target ? findMonster(run, a, target) : (room.monsters.find((m) => m.uid === a.combat?.mon) ?? room.monsters[0]!);
+      for (const m of room.monsters) refreshMonster(run.s, m, run.now);
       pay(run, a, skill);
       tell(run, 'n.cast', { skill: sref });
       let firstAlive = true;
@@ -66,7 +66,7 @@ function castSkill(run: Run, a: AgentState, rawSkill: string, target: string | u
       // Only the monster the mage was facing answers the blast.
       if (firstAlive && !a.fallen) retaliate(run, a, first);
       else if (!a.fallen) {
-        const next = roomState(run.s, a.room).monsters.find((m) => m.threat[a.id] !== undefined);
+        const next = roomState(run.s, a.room).monsters.find((m) => own(m.threat, a.id) !== undefined);
         if (next) retaliate(run, a, next);
       }
       return;
@@ -75,7 +75,7 @@ function castSkill(run: Run, a: AgentState, rawSkill: string, target: string | u
       const m = findMonster(run, a, target);
       pay(run, a, skill);
       m.taunt = { by: a.id, until: run.now + TAUNT_MS };
-      m.threat[a.id] = m.threat[a.id] ?? 0;
+      m.threat[a.id] = own(m.threat, a.id) ?? 0;
       m.lastHit = run.now;
       a.combat = { mon: m.uid, until: run.now + BALANCE.combat.engageMs };
       bump(run, a, 'taunts');
@@ -87,9 +87,10 @@ function castSkill(run: Run, a: AgentState, rawSkill: string, target: string | u
     case 'heal': {
       const b = target ? agentHere(run, a, target) : a;
       if (b.fallen) fail('NOT_ALLOWED', 'target_fallen', { name: b.name });
-      if (b !== a) touch(run, b);
       const max = derive(run.c, b, run.now).maxHp;
-      if (b.hp >= max) fail('NOT_ALLOWED', 'full_health', { name: b.name });
+      // Checked on what `touch` would make of the target, which is brought up to date only once the heal goes ahead.
+      if (!(hpNow(run, b) < max)) fail('NOT_ALLOWED', 'full_health', { name: b.name });
+      if (b !== a) touch(run, b);
       pay(run, a, skill);
       const amount = Math.min(max - b.hp, Math.round(derive(run.c, a, run.now).int * skill.power * run.rng.range(0.9, 1.1) + a.level * 2));
       b.hp += amount;

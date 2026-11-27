@@ -42,6 +42,22 @@ export function agentHere(run: Run, a: AgentState, name: string): AgentState {
   return b;
 }
 
+/**
+ * A whole-number parameter (quantity, price, gold) of at least `min`. The schemas already bound every one of them;
+ * this second check keeps the engine sound for any caller that skips them (`applyParsed`), so a float, NaN or
+ * Infinity never reaches a balance.
+ */
+export function wholeNumber(v: number, field: string, min: number): number {
+  if (!(Number.isSafeInteger(v) && v >= min)) fail('INVALID_PARAMS', 'bad_number', { field, min });
+  return v;
+}
+
+/** A value of a closed list (enum param); refused otherwise, like the schema would. */
+export function oneOf<T extends string>(v: unknown, list: readonly T[], action: ActionName, field: string): T {
+  if (!(list as readonly unknown[]).includes(v)) fail('INVALID_PARAMS', 'invalid_params', { action, field });
+  return v as T;
+}
+
 /** Cleans free text written by an agent: invisible characters, links, secrets and blocked words. */
 export function cleanText(raw: string, max: number, multiline = false): string {
   const res = sanitizeAgentText(raw, max, { multiline });

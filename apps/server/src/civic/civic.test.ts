@@ -457,6 +457,57 @@ describe('spectator protocol additions', () => {
   });
 });
 
+describe('secret ballot', () => {
+  it('while the polls are open, no endpoint, spectator message or gazette carries a candidate total; the result does', async () => {
+    const s = await makeServer();
+    const cands = ['Pip', 'Brasa'];
+    const ckeys: string[] = [];
+    for (const n of cands) {
+      const key = (await s.register(n)).key;
+      ckeys.push(key);
+      s.game.agentByName(n)!.level = BALANCE.election.runLevel;
+      await walk(s, key, n, 'village.town_hall');
+      expect((await s.act(key, 'run_for_mayor', { platform: `${n} for mayor.` })).json().ok).toBe(true);
+    }
+    const voters: string[] = [];
+    for (const n of ['Vic', 'Val', 'Vex']) {
+      const key = (await s.register(n)).key;
+      voters.push(key);
+      s.game.agentByName(n)!.level = BALANCE.election.voteLevel;
+      await walk(s, key, n, 'village.town_hall');
+    }
+    const sock = viewer(s, 'world', 'village', 'room:village.town_hall');
+    advance(s, s.game.state.village.election.voteAt - s.clock.now());
+    for (const [i, cand] of ['Pip', 'Pip', 'Brasa'].entries()) expect((await s.act(voters[i]!, 'vote', { candidate: cand })).json().ok).toBe(true);
+    s.clock.advance(300);
+    s.spectators.flush();
+
+    // The agent API and the public page: the turnout, the candidates, no totals.
+    const compact = (await s.get(ckeys[0]!, '/api/v1/village')).json();
+    expect(compact.election).toMatchObject({ phase: 'voting', voters: 3 });
+    expect(compact.election.candidates.map((c: { name: string }) => c.name)).toEqual(['Pip', 'Brasa']);
+    for (const c of compact.election.candidates) expect(c).not.toHaveProperty('votes');
+    const page = (await pub(s, '/village')).json();
+    expect(page.election).toMatchObject({ phase: 'voting', voters: 3 });
+    expect(page.election.candidates.map((c: { name: string }) => c.name)).toEqual(['Pip', 'Brasa']);
+    for (const c of page.election.candidates) expect(c).not.toHaveProperty('votes');
+    // Spectators: neither the village state nor the vote events say who got the ballots.
+    expect(sock.text()).not.toMatch(/"votes"/);
+    expect(sock.msgs().filter((m) => m.t === 'batch').flatMap((m) => (m as Batch).events ?? []).filter((e) => e.type === 'vote')).not.toHaveLength(0);
+    // The gazette of the day reports the turnout, never a front-runner.
+    const date = new Date(s.clock.now()).toISOString().slice(0, 10);
+    const ed = (await pub(s, `/gazette/${date}?lang=en`)).json() as GazetteEdition;
+    const items = ed.sections.find((x) => x.id === 'election')!.items.map((i) => i.k.split('.')[2]);
+    expect(items).toContain('election_voting');
+    expect(JSON.stringify(ed)).not.toMatch(/election_leader/);
+
+    // Closed: the totals are published.
+    advance(s, s.game.state.village.election.end - s.clock.now());
+    const after = (await pub(s, '/village')).json();
+    expect(after.lastElection).toMatchObject({ n: 1, winner: 'Pip', votes: [{ name: 'Pip', votes: 2 }, { name: 'Brasa', votes: 1 }] });
+  });
+});
+
 describe('a small story', () => {
   it('a project completed, a guild founded and an election held: highlights, the gazette and the timeline', async () => {
     const s = await makeServer();

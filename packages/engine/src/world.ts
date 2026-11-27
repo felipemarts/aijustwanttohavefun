@@ -1,4 +1,5 @@
 import type { Content, Room } from '@ajwf/content';
+import { own } from '@ajwf/shared';
 import { isNight, nextDayFraction, BALANCE } from './balance';
 import { TimerHeap } from './heap';
 import { emit, markRoom, type Run } from './run';
@@ -9,7 +10,7 @@ import { electionDue, newVillage } from './village-state';
 export type SpawnSlot = { kind: string; night: boolean };
 
 /** World entries that are not per room, party or guild (see snapshot.ts). */
-export const WORLD_KEYS = ['meta', 'timers', 'trades', 'market', 'board', 'village', 'puzzles', 'wboss', 'escorts', 'bounties'] as const;
+export const WORLD_KEYS = ['meta', 'timers', 'trades', 'market', 'village', 'puzzles', 'wboss', 'escorts', 'bounties'] as const;
 
 const spawnCache = new WeakMap<Content, Map<string, SpawnSlot[]>>();
 
@@ -73,6 +74,7 @@ export function createWorld(content: Content, now: number): WorldState {
     ordersOf: new Map(),
     ordersByItem: new Map(),
     board: [],
+    boardBytes: 0,
     village: newVillage(now),
     puzzles: Object.fromEntries([...content.puzzles.keys()].map((id) => [id, freshPuzzle()])),
     worldBoss: { next: 0, announced: 0, uid: null, leaves: 0 },
@@ -154,25 +156,37 @@ export function relocate(s: WorldState, a: AgentState, to: string, now: number):
   agentsIn(s, to).add(a.id);
 }
 
-/** Current stock of a resource node, regenerated lazily from the last update. */
-export function refreshResource(s: WorldState, roomId: string, itemId: string, now: number): { qty: number; max: number } | null {
+/** What a resource node holds now, regenerated lazily from its last update, without writing it back. */
+export function peekResource(s: WorldState, roomId: string, itemId: string, now: number): { qty: number; at: number; max: number } | null {
   const def = s.content.rooms.get(roomId)?.resources.find((r) => r.id === itemId);
-  const node = s.rooms.get(roomId)?.resources[itemId];
+  const node = own(s.rooms.get(roomId)?.resources, itemId);
   if (!def || !node) return null;
-  if (node.qty < def.max) {
-    const grown = Math.floor(((now - node.at) * def.regen_per_hour) / 3_600_000);
-    if (grown > 0) {
-      node.qty = Math.min(def.max, node.qty + grown);
-      // Keep the fraction of time that did not yet yield a unit.
-      node.at = node.qty >= def.max ? now : node.at + Math.floor((grown * 3_600_000) / def.regen_per_hour);
-    }
-  } else node.at = now;
-  return { qty: node.qty, max: def.max };
+  if (!(node.qty < def.max)) return { qty: node.qty, at: now, max: def.max };
+  const grown = Math.floor(((now - node.at) * def.regen_per_hour) / 3_600_000);
+  if (!(grown > 0)) return { qty: node.qty, at: node.at, max: def.max };
+  const qty = Math.min(def.max, node.qty + grown);
+  // Keep the fraction of time that did not yet yield a unit.
+  return { qty, at: qty >= def.max ? now : node.at + Math.floor((grown * 3_600_000) / def.regen_per_hour), max: def.max };
+}
+
+/** Current stock of a resource node, regenerated lazily from the last update (written back). */
+export function refreshResource(s: WorldState, roomId: string, itemId: string, now: number): { qty: number; max: number } | null {
+  const seen = peekResource(s, roomId, itemId, now);
+  const node = own(s.rooms.get(roomId)?.resources, itemId);
+  if (!seen || !node) return null;
+  node.qty = seen.qty;
+  node.at = seen.at;
+  return { qty: seen.qty, max: seen.max };
+}
+
+/** Whether `refreshMonster` would reset this monster now. */
+export function monsterForgets(m: MonsterInst, now: number): boolean {
+  return !!m.lastHit && now - m.lastHit > BALANCE.combat.monsterResetMs;
 }
 
 /** A monster nobody hit for a while forgets its attackers and heals back. */
 export function refreshMonster(s: WorldState, m: MonsterInst, now: number): void {
-  if (m.lastHit && now - m.lastHit > BALANCE.combat.monsterResetMs) {
+  if (monsterForgets(m, now)) {
     m.hp = s.content.monsters.get(m.kind)!.hp;
     m.threat = {};
     m.taunt = null;

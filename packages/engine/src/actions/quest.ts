@@ -1,5 +1,5 @@
 import type { Quest } from '@ajwf/content';
-import { ref } from '@ajwf/shared';
+import { hasOwnKey, ref } from '@ajwf/shared';
 import { addGold, addItem, bump, canFit, count, gainXp, hasAll, removeItem } from '../agent';
 import { BALANCE } from '../balance';
 import { escortCheck, escortJoin } from '../escort';
@@ -56,11 +56,11 @@ export const questActions: HandlerMap = {
     run.data.quests = {
       active,
       here,
-      daily: dailyQuests(run.s, run.now, a.level).map((id) => ({ id, giver: run.c.quests.get(id)!.giver, done: a.questsDone[id] !== undefined && questBlocker(run, a, run.c.quests.get(id)!) === 'done' })),
-      ...(next && !a.quests[next.id] ? { next: { id: next.id, giver: next.giver, room: run.c.npcs.get(next.giver)!.room } } : {}),
+      daily: dailyQuests(run.s, run.now, a.level).map((id) => ({ id, giver: run.c.quests.get(id)!.giver, done: hasOwnKey(a.questsDone, id) && questBlocker(run, a, run.c.quests.get(id)!) === 'done' })),
+      ...(next && !hasOwnKey(a.quests, next.id) ? { next: { id: next.id, giver: next.giver, room: run.c.npcs.get(next.giver)!.room } } : {}),
     };
     tell(run, 'n.quest_list', { active: active.length, here: here.length });
-    if (next && !a.quests[next.id]) tell(run, 'n.quest_next', { quest: ref.quest(next.id), npc: ref.npc(next.giver), room: ref.room(run.c.npcs.get(next.giver)!.room) });
+    if (next && !hasOwnKey(a.quests, next.id)) tell(run, 'n.quest_next', { quest: ref.quest(next.id), npc: ref.npc(next.giver), room: ref.room(run.c.npcs.get(next.giver)!.room) });
   },
 
   quest_accept(run, a, p) {
@@ -86,14 +86,14 @@ export const questActions: HandlerMap = {
 
   quest_turn_in(run, a, p) {
     const q = questById(run, p.quest);
-    if (!a.quests[q.id]) fail('TARGET_NOT_FOUND', 'quest_not_active', { quest: ref.quest(q.id) });
+    if (!hasOwnKey(a.quests, q.id)) fail('TARGET_NOT_FOUND', 'quest_not_active', { quest: ref.quest(q.id) });
     needGiverHere(run, a, q);
     if (!questReady(a, q)) {
       run.data.quest = questView(a, q);
       fail('NOT_ALLOWED', 'quest_incomplete', { quest: ref.quest(q.id) });
     }
     if (!hasAll(a, q.consume)) {
-      const missing = q.consume.filter((s) => count(a, s.item) < s.qty).map((s) => `${s.item} x${s.qty - count(a, s.item)}`);
+      const missing = q.consume.filter((s) => !(count(a, s.item) >= s.qty)).map((s) => `${s.item} x${s.qty - count(a, s.item)}`);
       fail('MISSING_ITEMS', 'quest_items', { quest: ref.quest(q.id), missing: missing.join(', ') });
     }
     if (!canFit(run.c, a, q.rewards.items, q.consume)) fail('INVENTORY_FULL', 'inventory_full');

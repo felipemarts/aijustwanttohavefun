@@ -1,5 +1,6 @@
-import { ref } from '@ajwf/shared';
-import { addGold, bump, canFit, derive } from '../agent';
+import { own, ref } from '@ajwf/shared';
+import { addGold, bump, canFit, derive, takeGold } from '../agent';
+import { covers, debitTreasury } from '../ledger';
 import { BALANCE, isNight, stealChance } from '../balance';
 import { raiseBond } from '../bond';
 import { isMayor } from '../election';
@@ -9,7 +10,7 @@ import { emit, fail, markAgent, msg, tell, type Run } from '../run';
 import { addBounty, addHonor, bountyHasRoom, infamyNow, raiseInfamy } from '../trust';
 import type { AgentState } from '../types';
 import { VILLAGE_ID } from '../village-state';
-import { agentByName, agentHere, type HandlerMap } from './util';
+import { agentByName, agentHere, wholeNumber, type HandlerMap } from './util';
 
 /**
  * Trust actions (PLANEJAMENTO §7): gifts on trust and scam reports, bounties, and theft. PvP itself goes through
@@ -107,24 +108,26 @@ export const trustActions: HandlerMap = {
 
   place_bounty(run, a, p) {
     const b = bountyTarget(run, a, p.agent, a.id);
-    if (a.gold < p.gold) fail('NOT_ENOUGH_GOLD', 'no_gold', { need: p.gold, have: a.gold });
-    a.gold -= p.gold;
-    const pool = addBounty(run, b, { id: a.id, name: a.name }, p.gold);
+    const gold = wholeNumber(p.gold, 'gold', 1);
+    if (!covers(a.gold, gold)) fail('NOT_ENOUGH_GOLD', 'no_gold', { need: gold, have: a.gold });
+    takeGold(a, gold);
+    const pool = addBounty(run, b, { id: a.id, name: a.name }, gold);
     bump(run, a, 'bounties_placed');
-    tell(run, 'n.place_bounty', { name: b.name, gold: p.gold, total: pool.total });
-    announceBounty(run, a, b, a.name, p.gold, pool.total);
+    tell(run, 'n.place_bounty', { name: b.name, gold, total: pool.total });
+    announceBounty(run, a, b, a.name, gold, pool.total);
   },
 
   mayor_bounty(run, a, p) {
     if (!isMayor(run.s, a)) fail('NOT_ALLOWED', 'not_mayor', { name: run.s.village.mayor?.name ?? '' });
     const b = bountyTarget(run, a, p.agent, VILLAGE_ID);
     const v = run.s.village;
-    if (v.treasury < p.gold) fail('NOT_ENOUGH_GOLD', 'treasury_lacks', { need: p.gold, have: v.treasury });
-    v.treasury -= p.gold;
+    const gold = wholeNumber(p.gold, 'gold', 1);
+    if (!covers(v.treasury, gold)) fail('NOT_ENOUGH_GOLD', 'treasury_lacks', { need: gold, have: v.treasury });
+    debitTreasury(v, gold, 'village treasury');
     run.s.dirty.add('village');
-    const pool = addBounty(run, b, { id: VILLAGE_ID, name: null }, p.gold);
-    tell(run, 'n.mayor_bounty', { name: b.name, gold: p.gold, total: pool.total, left: v.treasury });
-    announceBounty(run, a, b, VILLAGE_ID, p.gold, pool.total);
+    const pool = addBounty(run, b, { id: VILLAGE_ID, name: null }, gold);
+    tell(run, 'n.mayor_bounty', { name: b.name, gold, total: pool.total, left: v.treasury });
+    announceBounty(run, a, b, VILLAGE_ID, gold, pool.total);
   },
 
   steal(run, a, p) {
@@ -133,16 +136,16 @@ export const trustActions: HandlerMap = {
     // Newcomers are protected from theft exactly as from PvP.
     checkPvpPair(run, a, b, canStealHere(run, a), true);
     const key = `steal:${b.id}`;
-    const ready = a.cooldowns[key] ?? 0;
+    const ready = own(a.cooldowns, key) ?? 0;
     if (ready > run.now) fail('COOLDOWN', 'steal_cooldown', { name: b.name, minutes: Math.ceil((ready - run.now) / 60_000) });
     const S = BALANCE.steal;
     // Expired per-target cooldowns are dropped, so the list stays as short as the targets of the last hours.
-    for (const k of Object.keys(a.cooldowns)) if (k.startsWith('steal:') && a.cooldowns[k]! <= run.now) delete a.cooldowns[k];
+    for (const [k, at] of Object.entries(a.cooldowns)) if (k.startsWith('steal:') && at <= run.now) delete a.cooldowns[k];
     a.cooldowns[key] = run.now + S.cooldownMs;
     const chance = stealChance(derive(run.c, a, run.now).agi, b.level);
     if (run.rng.chance(chance)) {
       const gold = Math.floor(b.gold * S.maxShare * run.rng.range(S.minShare / S.maxShare, 1));
-      b.gold -= gold;
+      takeGold(b, gold);
       addGold(run, a, gold);
       markAgent(run.s, b);
       bump(run, a, 'steals');

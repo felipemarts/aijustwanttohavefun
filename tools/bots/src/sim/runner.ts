@@ -307,6 +307,11 @@ export class Simulation {
     } catch (e) {
       throw new Error(`exception in ${decision.action} ${JSON.stringify(decision.params)} by ${bot.name} (${bot.profile}) at action ${this.actions}: ${(e as Error).message}`, { cause: e });
     }
+    // The engine turns an unexpected exception into an INTERNAL refusal: in a simulation that is a bug to report.
+    if (r.internal !== undefined) {
+      const e = r.internal as Error;
+      throw new Error(`internal error in ${decision.action} ${JSON.stringify(decision.params)} by ${bot.name} (${bot.profile}) at action ${this.actions}: ${e.message}`, { cause: e });
+    }
     this.actions++;
     bot.sessionActions++;
     const res = r.result;

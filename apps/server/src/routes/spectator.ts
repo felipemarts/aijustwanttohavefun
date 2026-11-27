@@ -43,7 +43,7 @@ export function spectatorRoutes(app: FastifyInstance, ctx: AppContext): void {
     reply.code(404).send(errorBody(render.apiError('en', 'NOT_FOUND', slug, params)));
 
   app.addHook('onRequest', async (req, reply) => {
-    const t = ctx.limiters.publicRead.take(req.ip, game.now());
+    const t = ctx.limiters.publicRead.take(req.clientIp, game.now());
     if (!t.ok) return sendRateLimited(reply, render, 'en', t.retryAfterSec);
   });
 

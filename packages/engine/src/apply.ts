@@ -21,6 +21,7 @@ import { utilityActions } from './actions/utility';
 import { workActions } from './actions/work';
 import { fail, GameError, markAgent, msg, newRun, type Run } from './run';
 import type { ActionCtx, AgentState, ApplyResult, Command, WorldState } from './types';
+import { covers } from './ledger';
 
 /** Every action the engine currently implements. Later milestones add their modules here. */
 export const HANDLERS: HandlerMap = {
@@ -68,7 +69,7 @@ function guard(run: Run, a: AgentState, action: ActionName): void {
   if (a.mutedUntil > run.now && TEXT_ACTIONS.has(action)) fail('MUTED', 'muted', { minutes: Math.ceil((a.mutedUntil - run.now) / 60_000) });
   if (a.combat && NOT_IN_COMBAT.has(action)) fail('IN_COMBAT', 'in_combat', { action });
   const cost = apCost(action);
-  if (a.ap < cost) {
+  if (!covers(a.ap, cost)) {
     const wait = Math.ceil((BALANCE.ap.regenMs - (run.now - a.apAt)) / 60_000);
     fail('NOT_ENOUGH_AP', 'no_ap', { need: cost, have: a.ap, minutes: Math.max(1, wait) });
   }
@@ -99,20 +100,43 @@ export function applyAction(s: WorldState, cmd: Command, ctx: ActionCtx): ApplyR
       events: [],
     };
   }
+  return applyParsed(s, a, action, parsed.data, ctx);
+}
 
+/**
+ * Runs a handler on params that already passed the action's schema. `applyAction` is the only production caller;
+ * the fuzzers call it directly with hostile params, to prove that the engine holds even without the boundary
+ * checks of the schemas (prototype names, number ranges).
+ *
+ * Errors: a `GameError` (from `fail`) is a normal refusal. Any other exception is a bug: it becomes an `INTERNAL`
+ * refusal and is handed back in `internal` for the server to log and count, instead of escaping. Handlers check
+ * everything before they change anything (and the gold and item primitives of ledger.ts check their amounts before
+ * they move), so a refusal leaves the world as it was; the fuzzers assert that the serialized world is unchanged
+ * after every refusal, INTERNAL ones included. A general rollback (copying what a handler may touch) would cost
+ * more than the whole action at the target load, so the guarantee is by construction and by test, not by undo.
+ */
+export function applyParsed(s: WorldState, a: AgentState, action: ActionName, params: unknown, ctx: ActionCtx): ApplyResult {
   const run = newRun(s, ctx.now, ctx.rng, a);
   try {
     touch(run, a);
     guard(run, a, action);
-    (HANDLERS[action] as Handler<ActionName>)(run, a, parsed.data as never);
+    (HANDLERS[action] as Handler<ActionName>)(run, a, params as never);
     a.ap -= apCost(action);
     a.lastActiveAt = ctx.now;
     markAgent(s, a);
     const hasData = Object.keys(run.data).length > 0;
     return { result: { ok: true, action, narration: run.narr, ...(hasData ? { data: run.data } : {}) }, events: run.events };
   } catch (e) {
-    if (!(e instanceof GameError)) throw e;
     markAgent(s, a);
+    if (!(e instanceof GameError)) {
+      return {
+        result: { ok: false, action, error: { code: 'INTERNAL', msg: msg('err.internal'), hint: msg('hint.internal') } },
+        // Normally only the events of `touch` (waking at the temple). Anything a buggy handler emitted before throwing
+        // already reached inboxes, so it is published too rather than leaving inboxes and the log out of step.
+        events: run.events,
+        internal: e,
+      };
+    }
     const hasData = Object.keys(run.data).length > 0;
     return {
       result: {

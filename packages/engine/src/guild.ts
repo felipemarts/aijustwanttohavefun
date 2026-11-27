@@ -1,4 +1,4 @@
-import { checkAgentName, containsBlockedWord, nameSkeleton, normalizeName } from '@ajwf/shared';
+import { checkAgentName, containsBlockedWord, hasDeceptiveChars, nameSkeleton, normalizeName, soundsLikeCommand } from '@ajwf/shared';
 import { BALANCE } from './balance';
 import { freeHall } from './village';
 import type { AgentState, Guild, WorldState } from './types';
@@ -6,19 +6,32 @@ import type { AgentState, Guild, WorldState } from './types';
 /** Letters of any alphabet, digits, `_` and `-`, in words separated by single spaces. */
 const GUILD_NAME_RE = /^[\p{L}\p{M}\p{N}_-]+(?: [\p{L}\p{M}\p{N}_-]+)*$/u;
 
-export type GuildNameCheck = { ok: true; display: string; norm: string; skeleton: string } | { ok: false; reason: 'length' | 'characters' | 'reserved' | 'taken' };
+export type GuildNameCheck =
+  | { ok: true; display: string; norm: string; skeleton: string }
+  | { ok: false; reason: 'length' | 'characters' | 'words' | 'reserved' | 'taken' };
 
-/** Validates a guild name like an agent name (lookalikes collide, reserved and blocked words refused), spaces allowed. */
+/**
+ * Validates a guild name like an agent name (the same character rules, lookalikes collide, reserved, blocked and
+ * instruction-like words refused), with up to `nameMaxWords` words separated by single spaces. Checked when a guild
+ * is founded only: guilds of older snapshots keep their names.
+ */
 export function checkGuildName(s: WorldState, raw: string): GuildNameCheck {
+  const G = BALANCE.guild;
   const display = raw.normalize('NFKC').trim();
   const len = [...display].length;
-  if (len < BALANCE.guild.nameMin || len > BALANCE.guild.nameMax) return { ok: false, reason: 'length' };
-  if (!GUILD_NAME_RE.test(display) || !/\p{L}/u.test(display)) return { ok: false, reason: 'characters' };
+  if (len < G.nameMin || len > G.nameMax) return { ok: false, reason: 'length' };
+  if (!GUILD_NAME_RE.test(display) || hasDeceptiveChars(display) || !/\p{L}/u.test(display)) return { ok: false, reason: 'characters' };
+  if (display.split(' ').length > G.nameMaxWords) return { ok: false, reason: 'words' };
   const norm = normalizeName(display);
   const skeleton = nameSkeleton(display).replace(/ /g, '');
   // The agent-name rules know the reserved words ("Admin", "Staff"); probe them with the spaces removed.
   const probe = checkAgentName(display.replace(/ /g, ''));
-  if ((!probe.ok && (probe.reason === 'reserved' || probe.reason === 'blocked')) || containsBlockedWord(norm) || containsBlockedWord(skeleton)) {
+  if (
+    (!probe.ok && (probe.reason === 'reserved' || probe.reason === 'blocked')) ||
+    soundsLikeCommand(display) ||
+    containsBlockedWord(norm) ||
+    containsBlockedWord(skeleton)
+  ) {
     return { ok: false, reason: 'reserved' };
   }
   if (s.guildNames.has(norm) || s.guildSkeletons.has(skeleton)) return { ok: false, reason: 'taken' };

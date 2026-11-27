@@ -1,6 +1,7 @@
 import type { Project } from '@ajwf/content';
-import { MAX_PLATFORM_LEN, normalizeName, ref } from '@ajwf/shared';
+import { hasOwnKey, MAX_PLATFORM_LEN, normalizeName, own, ref } from '@ajwf/shared';
 import { addGold, bump } from '../agent';
+import { covers, debitTreasury, stockTake } from '../ledger';
 import { BALANCE } from '../balance';
 import { isMayor } from '../election';
 import { goodsView, isEmpty, missingGoods, parseGoods, takeGoods } from '../goods';
@@ -10,7 +11,7 @@ import { emit, fail, markAgent, msg, tell, type Run } from '../run';
 import { addHonor, contributionHonor } from '../trust';
 import type { AgentState, Goods, Stack } from '../types';
 import { deliver, hallCost, hallOf, missingFor, noteContributor, progressOf, projectAt, projectStatus, splitOffer, valueOf } from '../village';
-import { cleanText, normId, type HandlerMap } from './util';
+import { cleanText, normId, wholeNumber, type HandlerMap } from './util';
 
 /** A project by id ("bridge", "River Bridge" folded); refused when unknown. */
 function projectById(run: Run, raw: string): Project {
@@ -54,7 +55,7 @@ export const civicActions: HandlerMap = {
     }
     const offer = parseGoods(run, p);
     if (isEmpty(offer)) fail('INVALID_PARAMS', 'goods_empty');
-    if (a.gold < offer.gold) fail('NOT_ENOUGH_GOLD', 'no_gold', { need: offer.gold, have: a.gold });
+    if (!covers(a.gold, offer.gold)) fail('NOT_ENOUGH_GOLD', 'no_gold', { need: offer.gold, have: a.gold });
     const lacks = missingGoods(a, offer);
     if (lacks.length) fail('MISSING_ITEMS', 'goods_missing', { missing: lacks.join(', ') });
 
@@ -73,7 +74,7 @@ export const civicActions: HandlerMap = {
     if (isEmpty(given)) fail('CONFLICT', 'project_not_needed', { proj: ref.proj(proj.id), missing: listGoods(need) });
 
     takeGoods(a, given);
-    const first = run.s.village.projects[proj.id]?.by[a.id] === undefined;
+    const first = !hasOwnKey(own(run.s.village.projects, proj.id)?.by, a.id);
     const value = valueOf(run.c, given);
     const kept: Stack[] = offer.items.map((x) => ({ item: x.item, qty: x.qty - (given.items.find((y) => y.item === x.item)?.qty ?? 0) })).filter((x) => x.qty > 0);
     const keptGold = offer.gold - given.gold;
@@ -95,7 +96,7 @@ export const civicActions: HandlerMap = {
 
     // Honour, not spam: big gifts are always public; small ones at most once per agent per interval.
     const V = BALANCE.village;
-    const loud = value >= V.announceValue || (a.cooldowns.contrib_ev ?? 0) <= run.now;
+    const loud = value >= V.announceValue || (own(a.cooldowns, 'contrib_ev') ?? 0) <= run.now;
     if (loud) a.cooldowns.contrib_ev = run.now + V.announceEveryMs;
     emit(run, 'project_contribution', {
       room: a.room,
@@ -126,7 +127,7 @@ export const civicActions: HandlerMap = {
     const e = run.s.village.election;
     if (e.phase !== 'voting') fail('NOT_ALLOWED', 'vote_not_open', { hours: Math.max(1, Math.ceil((e.voteAt - run.now) / 3_600_000)) });
     if (a.level < E.voteLevel) fail('LEVEL_REQUIRED', 'vote_level', { level: E.voteLevel });
-    const already = e.votes[a.id];
+    const already = own(e.votes, a.id);
     if (already) fail('CONFLICT', 'already_voted', { name: e.candidates.find((c) => c.id === already)?.name ?? '' });
     const id = run.s.byName.get(normalizeName(p.candidate));
     const cand = id ? e.candidates.find((c) => c.id === id) : undefined;
@@ -134,12 +135,13 @@ export const civicActions: HandlerMap = {
     if (run.s.agents.get(cand.id)?.status !== 'active') fail('NOT_ALLOWED', 'candidate_gone', { name: cand.name });
     if (cand.id === a.id) fail('NOT_ALLOWED', 'vote_self');
     e.votes[a.id] = cand.id;
-    e.tally[cand.id] = (e.tally[cand.id] ?? 0) + 1;
+    e.tally[cand.id] = (own(e.tally, cand.id) ?? 0) + 1;
     run.s.dirty.add('village');
     bump(run, a, 'votes');
     questEvent(run, a, 'vote');
     tell(run, 'n.vote', { name: cand.name });
-    // The ballot is secret: the event says that the agent voted, not for whom. Totals are public (village view).
+    // The ballot is secret: the event says that the agent voted, not for whom. Totals are sealed until the election
+    // closes (village view: only the turnout).
     emit(run, 'vote', { room: a.room, actor: a.id, to: 'room', drama: 1, m: msg('ev.vote', { actor: a.name }), data: { election: e.n } });
   },
 
@@ -186,10 +188,11 @@ export const civicActions: HandlerMap = {
     mayorOnly(run, a);
     const proj = availableProject(run, p.project);
     const v = run.s.village;
-    if (v.treasury < p.gold) fail('NOT_ENOUGH_GOLD', 'treasury_lacks', { need: p.gold, have: v.treasury });
-    const gold = Math.min(p.gold, missingFor(run.s, proj).gold);
-    if (gold <= 0) fail('CONFLICT', 'project_no_gold_needed', { proj: ref.proj(proj.id) });
-    v.treasury -= gold;
+    const asked = wholeNumber(p.gold, 'gold', 1);
+    if (!covers(v.treasury, asked)) fail('NOT_ENOUGH_GOLD', 'treasury_lacks', { need: asked, have: v.treasury });
+    const gold = Math.min(asked, missingFor(run.s, proj).gold);
+    if (!(gold > 0)) fail('CONFLICT', 'project_no_gold_needed', { proj: ref.proj(proj.id) });
+    debitTreasury(v, gold, 'village treasury');
     deliver(run, proj, null, { gold, items: [] }, { gold: 0, items: [] });
     const progress = progressOf(run.s, proj);
     tell(run, 'n.mayor_fund', { proj: ref.proj(proj.id), gold, left: v.treasury, pct: Math.round(progress * 100) });
@@ -211,20 +214,21 @@ export const civicActions: HandlerMap = {
     const taken = v.embezzled.election === n ? v.embezzled.gold : 0;
     // Up to a share of what the treasury would hold had nothing been taken this week: splitting it up gains nothing.
     const cap = Math.max(0, Math.floor((v.treasury + taken) * BALANCE.village.embezzleShare) - taken);
-    if (p.gold > cap) fail('NOT_ALLOWED', 'embezzle_cap', { max: cap, pct: pct(BALANCE.village.embezzleShare) });
-    v.treasury -= p.gold;
-    v.embezzled = { election: n, gold: taken + p.gold };
-    addGold(run, a, p.gold);
+    const gold = wholeNumber(p.gold, 'gold', 1);
+    if (!(gold <= cap)) fail('NOT_ALLOWED', 'embezzle_cap', { max: cap, pct: pct(BALANCE.village.embezzleShare) });
+    debitTreasury(v, gold, 'village treasury');
+    v.embezzled = { election: n, gold: taken + gold };
+    addGold(run, a, gold);
     run.s.dirty.add('village');
-    bump(run, a, 'embezzled', p.gold);
-    tell(run, 'n.mayor_embezzle', { gold: p.gold, left: v.treasury });
+    bump(run, a, 'embezzled', gold);
+    tell(run, 'n.mayor_embezzle', { gold, left: v.treasury });
     emit(run, 'mayor_embezzle', {
       room: a.room,
       actor: a.id,
       vis: 'public',
       drama: 8,
-      m: msg('ev.mayor_embezzle', { actor: a.name, gold: p.gold }),
-      data: { gold: p.gold, treasury: v.treasury, week: taken + p.gold },
+      m: msg('ev.mayor_embezzle', { actor: a.name, gold }),
+      data: { gold, treasury: v.treasury, week: taken + gold },
     });
   },
 
@@ -239,22 +243,18 @@ export const civicActions: HandlerMap = {
     const site = projectAt(run.c, plot);
     if (site) fail('NOT_ALLOWED', 'plot_reserved', { room: ref.room(plot), proj: ref.proj(site.id) });
     const v = run.s.village;
-    const there = v.halls[plot];
+    const there = own(v.halls, plot);
     if (there) fail('CONFLICT', 'plot_taken', { room: ref.room(plot), guild: run.s.guilds.get(there.guild)?.name ?? '?' });
-    const own = hallOf(run.s, g.id);
-    if (own) fail('CONFLICT', 'guild_has_hall', { room: ref.room(own) });
+    const ours = hallOf(run.s, g.id);
+    if (ours) fail('CONFLICT', 'guild_has_hall', { room: ref.room(ours) });
     const cost = hallCost();
     const lacks: string[] = [];
-    if (g.treasury < cost.gold) lacks.push(`gold x${cost.gold - g.treasury}`);
-    for (const x of cost.items) if ((g.vault[x.item] ?? 0) < x.qty) lacks.push(`${x.item} x${x.qty - (g.vault[x.item] ?? 0)}`);
+    if (!covers(g.treasury, cost.gold)) lacks.push(`gold x${cost.gold - g.treasury}`);
+    for (const x of cost.items) if (!covers(own(g.vault, x.item) ?? 0, x.qty)) lacks.push(`${x.item} x${x.qty - (own(g.vault, x.item) ?? 0)}`);
     if (lacks.length) fail('MISSING_ITEMS', 'hall_cost', { guild: g.name, missing: lacks.join(', ') });
     // The cost is a sink: it leaves the economy and becomes a building.
-    g.treasury -= cost.gold;
-    for (const x of cost.items) {
-      const left = g.vault[x.item]! - x.qty;
-      if (left > 0) g.vault[x.item] = left;
-      else delete g.vault[x.item];
-    }
+    debitTreasury(g, cost.gold, `treasury of ${g.id}`);
+    for (const x of cost.items) stockTake(g.vault, x.item, x.qty, `vault of ${g.id}`);
     v.halls[plot] = { guild: g.id, at: run.now };
     markGuild(run.s, g);
     run.s.dirty.add('village');

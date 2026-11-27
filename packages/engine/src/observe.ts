@@ -1,5 +1,7 @@
+import { own } from '@ajwf/shared';
 import type { Appearance } from '@ajwf/appearance';
 import type { ActionName, GameEvent, LootMode } from '@ajwf/shared';
+import { liveFriendRequests } from './actions/friends';
 import { capacity, derive, shownHp, slotsUsed, touch } from './agent';
 import { BALANCE, dayPhase, isNight, realDay, xpToNext } from './balance';
 import { bondLevel, bondScore, type BondLevel } from './bond';
@@ -173,10 +175,10 @@ function pendingFor(s: WorldState, a: AgentState, now: number): Pending | undefi
     const b = s.agents.get(id);
     return b?.status === 'active' ? b.name : undefined;
   };
-  const live = (inv: Record<string, number>) => Object.keys(inv).filter((id) => inv[id]! > now);
+  const live = (inv: Record<string, number>) => Object.entries(inv).flatMap(([id, until]) => (until > now ? [id] : []));
   const names = (ids: string[]) => ids.map(name).filter((n): n is string => !!n);
   const out: Pending = {};
-  const friends = names(Object.keys(a.friendReqs));
+  const friends = names(Object.keys(liveFriendRequests(a, now)));
   if (friends.length) out.friends = friends;
   const party = names(live(a.partyInvites));
   if (party.length) out.party = party;
@@ -221,7 +223,7 @@ function contextActions(run: Run, a: AgentState, o: Observation['room'], pending
       if (mine && !out.includes(pz.do)) out.push(pz.do);
     }
     if (a.cls === 'rogue') out.push('scout');
-    if (a.cls === 'mage' && (a.inv[BALANCE.enchant.item] ?? 0) > 0) out.push('enchant');
+    if (a.cls === 'mage' && (own(a.inv, BALANCE.enchant.item) ?? 0) > 0) out.push('enchant');
     out.push(...civic);
   }
   if (o.agents.length) {
@@ -340,7 +342,7 @@ export function observe(s: WorldState, agentId: string, ctx: { now: number; rng:
 
   const next = nextTutorial(run, a);
   if (next) {
-    const active = a.quests[next.id];
+    const active = own(a.quests, next.id);
     const giverRoom = c.npcs.get(next.giver)!.room;
     const state = active ? (questReady(a, next) ? 'ready' : 'active') : 'offer';
     // The way to the giver, when there is something to do there (taking or handing in the quest).

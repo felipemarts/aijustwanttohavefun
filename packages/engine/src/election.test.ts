@@ -3,7 +3,7 @@ import { BALANCE } from './balance';
 import { advanceTo, build, citizen, DAY, elect } from './civic-testkit';
 import { checkInvariants } from './invariants';
 import { observe } from './observe';
-import { deactivateAgent } from './register';
+import { deactivateAgent, reactivateAgent } from './register';
 import { dataOf, errKey, HOUR, makeKit, narr, T0, worldWealth, type Kit } from './testkit';
 import type { AgentState } from './types';
 import { villageView } from './village-view';
@@ -67,8 +67,11 @@ describe('election cycle', () => {
     k.ok(ann, 'vote', { candidate: 'Ben' });
     expect(voters[0]!.stats.votes).toBe(1);
     expect(voters[0]!.achievements.voter).toBeDefined();
-    // Live totals in the read model.
-    expect(villageView(k.s, k.now).election.candidates.map((c) => [c.name, c.votes])).toEqual([['Ann', 2], ['Ben', 1]]);
+    // Secret ballot: the read model shows the turnout, never a candidate's total while the polls are open.
+    const live = villageView(k.s, k.now).election;
+    expect(live.voters).toBe(3);
+    expect(live.candidates.map((c) => c.name)).toEqual(['Ann', 'Ben']);
+    for (const c of live.candidates) expect(c).not.toHaveProperty('votes');
     expect(checkInvariants(k.s, k.now)).toEqual([]);
 
     // Closing.
@@ -176,6 +179,72 @@ describe('election cycle', () => {
       { id: ann.id, name: 'Ann', votes: 2 },
       { id: ben.id, name: 'Ben', votes: 1 },
     ]);
+  });
+
+  it.each(['retired', 'banned'] as const)('ballots of voters %s before the close are not counted, and can flip the result', (status) => {
+    const E = BALANCE.election;
+    const k = makeKit();
+    const ann = citizen(k, 'Ann', E.runLevel);
+    const ben = citizen(k, 'Ben', E.runLevel);
+    k.ok(ann, 'run_for_mayor', { platform: 'Vote Ann.' });
+    k.ok(ben, 'run_for_mayor', { platform: 'Vote Ben.' });
+    advanceTo(k, k.s.village.election.voteAt);
+    // Three throwaway agents vote Ann and leave; Ben has three voters, one of whom leaves too.
+    const sock = ['Sock1', 'Sock2', 'Sock3'].map((n) => citizen(k, n, E.voteLevel));
+    const fans = ['Fan1', 'Fan2', 'Fan3'].map((n) => citizen(k, n, E.voteLevel));
+    for (const a of sock) k.ok(a, 'vote', { candidate: 'Ann' });
+    for (const a of fans) k.ok(a, 'vote', { candidate: 'Ben' });
+    // Counting every ballot, Ann would win the 3-3 tie (earliest candidacy).
+    for (const a of [...sock, fans[2]!]) deactivateAgent(k.s, a.id, status);
+    expect(villageView(k.s, k.now).election.voters).toBe(6);
+    const closing = k.advance(k.s.village.election.end - k.now);
+    const result = closing.find((e) => e.type === 'election_result')!;
+    expect(k.s.village.mayor?.id).toBe(ben.id);
+    expect(result).toMatchObject({ actor: ben.id, payload: { winner: 'Ben', winnerId: ben.id, voters: 2 } });
+    expect(result.payload.votes).toEqual([{ id: ann.id, name: 'Ann', votes: 0 }, { id: ben.id, name: 'Ben', votes: 2 }]);
+    expect(result.payload.m).toMatchObject({ k: 'ev.election_won', p: { votes: 2 } });
+    expect(k.s.village.history.at(-1)!.votes).toEqual(result.payload.votes);
+    expect(villageView(k.s, k.now).lastElection).toMatchObject({ winner: 'Ben', votes: result.payload.votes });
+    // Only the counted voters share the win.
+    expect(fans.map((a) => a.stats.votes_for_winner)).toEqual([1, 1, undefined]);
+    expect(checkInvariants(k.s, k.now)).toEqual([]);
+  });
+
+  it('a banned voter whose ban is lifted before the close counts again', () => {
+    const E = BALANCE.election;
+    const k = makeKit();
+    const ann = citizen(k, 'Ann', E.runLevel);
+    k.ok(ann, 'run_for_mayor', { platform: 'Vote Ann.' });
+    advanceTo(k, k.s.village.election.voteAt);
+    const vic = citizen(k, 'Vic', E.voteLevel);
+    k.ok(vic, 'vote', { candidate: 'Ann' });
+    deactivateAgent(k.s, vic.id, 'banned');
+    expect(reactivateAgent(k.s, vic.id)).toBe(true);
+    const result = k.advance(k.s.village.election.end - k.now).find((e) => e.type === 'election_result')!;
+    expect(result.payload).toMatchObject({ winner: 'Ann', voters: 1, votes: [{ name: 'Ann', votes: 1 }] });
+    expect(vic.stats.votes_for_winner).toBe(1);
+  });
+
+  it('a retired candidate with the most votes does not win; the record keeps the votes cast for it', () => {
+    const E = BALANCE.election;
+    const k = makeKit();
+    const ann = citizen(k, 'Ann', E.runLevel);
+    const ben = citizen(k, 'Ben', E.runLevel);
+    k.ok(ann, 'run_for_mayor', { platform: 'Vote Ann.' });
+    k.ok(ben, 'run_for_mayor', { platform: 'Vote Ben.' });
+    advanceTo(k, k.s.village.election.voteAt);
+    const [v1, v2, v3] = ['Vic', 'Val', 'Vex'].map((n) => citizen(k, n, E.voteLevel));
+    k.ok(v1!, 'vote', { candidate: 'Ann' });
+    k.ok(v2!, 'vote', { candidate: 'Ann' });
+    k.ok(v3!, 'vote', { candidate: 'Ben' });
+    deactivateAgent(k.s, ann.id, 'retired');
+    expect(villageView(k.s, k.now).election.candidates.find((c) => c.name === 'Ann')!.active).toBe(false);
+    const result = k.advance(k.s.village.election.end - k.now).find((e) => e.type === 'election_result')!;
+    expect(k.s.village.mayor?.id).toBe(ben.id);
+    expect(result.payload).toMatchObject({ winner: 'Ben', voters: 3, votes: [{ name: 'Ann', votes: 2 }, { name: 'Ben', votes: 1 }] });
+    expect(ann.titles).not.toContain('mayor');
+    expect(v1!.stats.votes_for_winner).toBeUndefined();
+    expect(v3!.stats.votes_for_winner).toBe(1);
   });
 
   it('a world stopped for weeks catches up without replaying every missed phase change', () => {

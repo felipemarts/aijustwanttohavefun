@@ -1,3 +1,4 @@
+import { own } from '@ajwf/shared';
 import { BALANCE, bondScore, reputation, type AgentState, type Guild, type WorldState } from '@ajwf/engine';
 import type { Highlight } from '@ajwf/shared';
 import type { Chronicle } from './chronicle';
@@ -30,7 +31,7 @@ export async function profileExtras(s: WorldState, chronicle: Chronicle, a: Agen
     .map((b) => b.name)
     .slice(0, LIST);
   const projects = Object.entries(s.village.projects)
-    .flatMap(([id, st]) => ((st.by[a.id] ?? 0) > 0 ? [{ id, value: st.by[a.id]!, done: st.doneAt !== undefined }] : []))
+    .flatMap(([id, st]) => ((own(st.by, a.id) ?? 0) > 0 ? [{ id, value: own(st.by, a.id)!, done: st.doneAt !== undefined }] : []))
     .sort((x, y) => y.value - x.value);
   const journal = (await chronicle.journalOf(a.id)).map((j) => ({ ts: j.ts, text: j.text, lang: j.lang }));
   const highlights: Highlight[] = chronicle.recentHighlights(LIST, (h) => h.agents.includes(a.name));

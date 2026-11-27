@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { removeBoardPost } from './actions/board';
 import { checkInvariants } from './invariants';
+import { exportDirty } from './snapshot';
 import { deactivateAgent, nameAvailable, reactivateAgent } from './register';
 import { exportAll, restoreWorld, type Snapshot } from './snapshot';
 import { dataOf, HOUR, makeKit, type Kit } from './testkit';
@@ -107,7 +108,9 @@ describe('removeBoardPost', () => {
     expect(removed?.post.replies).toHaveLength(3);
     expect(removed?.reply).toBeUndefined();
     expect(k.s.board.map((p) => p.id)).toEqual([second]);
-    expect(k.s.dirty.has('board')).toBe(true);
+    // Its own snapshot entry goes: exported as null, which the store deletes.
+    expect(k.s.dirty.has(`post:${first}`)).toBe(true);
+    expect(exportDirty(k.s).world.find((e) => e.key === `post:${first}`)).toEqual({ key: `post:${first}`, data: null });
     expect(k.s.meta.postSeq).toBe(seq);
     expect(a.stats.board_posts).toBe(1);
     sound(k);
@@ -128,7 +131,7 @@ describe('removeBoardPost', () => {
     expect(removed?.post.id).toBe(first);
     const post = k.s.board.find((p) => p.id === first)!;
     expect(post.replies.map((r) => r.text)).toEqual(['how cursed?', 'pass']);
-    expect(k.s.dirty.has('board')).toBe(true);
+    expect([...k.s.dirty]).toEqual([`post:${first}`]);
     sound(k);
     // A freed reply slot can be used again.
     k.ok(b, 'board_reply', { post: first, text: 'still there?' });

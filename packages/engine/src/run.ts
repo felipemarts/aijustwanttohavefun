@@ -1,6 +1,6 @@
 import type { Content } from '@ajwf/content';
 import type { ErrorCode, GameEvent, Msg, MsgParams, Rng, Visibility } from '@ajwf/shared';
-import type { AgentState, Inbox, WorldState } from './types';
+import type { AgentState, Inbox, Ring, WorldState } from './types';
 import { BALANCE } from './balance';
 
 /**
@@ -95,14 +95,18 @@ export function emit(run: Run, type: string, o: EmitOpts = {}): GameEvent {
   return ev;
 }
 
-/** Per-agent ring buffer of the latest events that concern the agent (`GET /events`). */
-export function inboxPush(s: WorldState, agentId: string, ev: GameEvent): void {
-  let box = s.inboxes.get(agentId);
-  if (!box) {
-    box = { buf: [], head: 0, size: 0 };
-    s.inboxes.set(agentId, box);
-  }
-  const cap = BALANCE.inbox.size;
+/**
+ * Events addressed to one agent that it has to act on or answer: kept, for the agent they are about (actor or
+ * target), in the inbox's priority ring, which room events (emotes, chatter, fights) never enter. Inside that ring,
+ * one counterpart holds at most `BALANCE.inbox.prioritySender` events: a single agent cycling offers and
+ * cancellations replaces its own older events, never someone else's.
+ */
+export const PRIORITY_EVENTS: ReadonlySet<string> = new Set([
+  'whisper', 'trade_offer', 'trade_cancel', 'trade', 'friend_request', 'friend', 'party_invite', 'guild_invite', 'duel_invite',
+  'market_sold', 'give', 'bounty_placed', 'scam_reported', 'quest_ready', 'loot_share',
+]);
+
+function ringPush(box: Ring, cap: number, ev: GameEvent): void {
   if (box.size < cap) {
     box.buf[(box.head + box.size) % cap] = ev;
     box.size++;
@@ -112,30 +116,69 @@ export function inboxPush(s: WorldState, agentId: string, ev: GameEvent): void {
   }
 }
 
+function ringItems(box: Ring, cap: number): GameEvent[] {
+  const out: GameEvent[] = [];
+  for (let i = 0; i < box.size; i++) {
+    const ev = box.buf[(box.head + i) % cap];
+    if (ev) out.push(ev);
+  }
+  return out;
+}
+
+const emptyRing = (): Ring => ({ buf: [], head: 0, size: 0 });
+
+/** Per-agent ring buffers of the latest events that concern the agent (`GET /events`). */
+export function inboxPush(s: WorldState, agentId: string, ev: GameEvent): void {
+  let box = s.inboxes.get(agentId);
+  if (!box) {
+    box = { ...emptyRing(), pri: emptyRing() };
+    s.inboxes.set(agentId, box);
+  }
+  if (PRIORITY_EVENTS.has(ev.type) && (ev.target === agentId || ev.actor === agentId)) priorityPush(box, agentId, ev);
+  else ringPush(box, BALANCE.inbox.size, ev);
+}
+
+/** The other side of an addressed event, seen from its recipient. */
+const counterpart = (ev: GameEvent, agentId: string): string => (ev.actor === agentId ? (ev.target ?? '') : (ev.actor ?? ''));
+
+function priorityPush(box: Inbox, agentId: string, ev: GameEvent): void {
+  const I = BALANCE.inbox;
+  const who = counterpart(ev, agentId);
+  const items = ringItems(box.pri, I.prioritySize);
+  const mine = items.filter((x) => counterpart(x, agentId) === who);
+  if (mine.length >= I.prioritySender) {
+    // Bounded by the ring's size: rebuild it without this counterpart's oldest event.
+    const kept = items.filter((x) => x !== mine[0]);
+    kept.push(ev);
+    box.pri = { buf: kept, head: 0, size: kept.length };
+    return;
+  }
+  ringPush(box.pri, I.prioritySize, ev);
+}
+
 /** Drops the events matching `drop` from an agent's inbox, keeping the order of the rest. */
 export function inboxRemove(s: WorldState, agentId: string, drop: (ev: GameEvent) => boolean): void {
   const box = s.inboxes.get(agentId);
   if (!box) return;
-  const cap = BALANCE.inbox.size;
-  const kept: GameEvent[] = [];
-  for (let i = 0; i < box.size; i++) {
-    const ev = box.buf[(box.head + i) % cap];
-    if (ev && !drop(ev)) kept.push(ev);
-  }
-  box.buf = kept;
-  box.head = 0;
-  box.size = kept.length;
+  const keep = (ring: Ring, cap: number): Ring => {
+    const kept = ringItems(ring, cap).filter((ev) => !drop(ev));
+    return { buf: kept, head: 0, size: kept.length };
+  };
+  s.inboxes.set(agentId, { ...keep(box, BALANCE.inbox.size), pri: keep(box.pri, BALANCE.inbox.prioritySize) });
 }
 
-/** Events in the inbox with id greater than `cursor`, oldest first. */
+/** Events in the inbox with id greater than `cursor`, oldest first (both rings merged by id). */
 export function inboxSince(s: WorldState, agentId: string, cursor: number, limit = 50): GameEvent[] {
   const box: Inbox | undefined = s.inboxes.get(agentId);
   if (!box) return [];
+  const a = ringItems(box, BALANCE.inbox.size).filter((ev) => Number(ev.id) > cursor);
+  const b = ringItems(box.pri, BALANCE.inbox.prioritySize).filter((ev) => Number(ev.id) > cursor);
   const out: GameEvent[] = [];
-  const cap = BALANCE.inbox.size;
-  for (let i = 0; i < box.size && out.length < limit; i++) {
-    const ev = box.buf[(box.head + i) % cap];
-    if (ev && Number(ev.id) > cursor) out.push(ev);
+  let i = 0;
+  let j = 0;
+  while (out.length < limit && (i < a.length || j < b.length)) {
+    if (j >= b.length || (i < a.length && Number(a[i]!.id) < Number(b[j]!.id))) out.push(a[i++]!);
+    else out.push(b[j++]!);
   }
   return out;
 }

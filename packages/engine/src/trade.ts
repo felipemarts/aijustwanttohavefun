@@ -28,9 +28,20 @@ export function openTrade(run: Run, from: string, to: string, give: Goods, want:
   const t: Trade = { id: `t${(++s.meta.tradeSeq).toString(36)}`, from, to, give, want, expires: run.now + BALANCE.trade.ttlMs };
   s.trades.set(t.id, t);
   indexTrade(s, t);
-  s.timers.push({ at: t.expires, kind: 'trade', id: t.id });
   for (const key of ['trades', 'meta']) s.dirty.add(key);
   return t;
+}
+
+/**
+ * Clears expired offers out of the state (they are already refused on access). Trades need no timers: they all
+ * live `ttlMs`, so `s.trades`, in insertion order, is also in order of expiry, and the sweep stops at the first live
+ * one. A cancelled or accepted trade is simply gone: nothing of it waits on the heap. Cost: the expired offers.
+ */
+export function sweepTrades(s: WorldState, now: number): void {
+  for (const t of s.trades.values()) {
+    if (t.expires > now) break;
+    closeTrade(s, t.id);
+  }
 }
 
 export function closeTrade(s: WorldState, id: string): void {

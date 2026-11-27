@@ -1,5 +1,5 @@
 import type { Content, Puzzle } from '@ajwf/content';
-import { ref, type ActionName, type ClassId } from '@ajwf/shared';
+import { type ActionName, type ClassId, own, ref } from '@ajwf/shared';
 import { bump } from './agent';
 import type { Block } from './gates';
 import { markParty, partyHere, partyOf } from './party';
@@ -25,12 +25,12 @@ const FRESH: PuzzleState = Object.freeze(freshPuzzle()) as PuzzleState;
 
 /** The live state of a puzzle, for reading. */
 export function peekPuzzle(s: WorldState, id: string): PuzzleState {
-  return s.puzzles[id] ?? FRESH;
+  return own(s.puzzles, id) ?? FRESH;
 }
 
 /** The live state of a puzzle, for changing it (created when the content gained the puzzle after a snapshot). */
 export function puzzleState(s: WorldState, id: string): PuzzleState {
-  let st = s.puzzles[id];
+  let st = own(s.puzzles, id);
   if (!st) s.puzzles[id] = st = freshPuzzle();
   s.dirty.add('puzzles');
   return st;
@@ -127,7 +127,7 @@ export function puzzleLootReceiver(run: Run, a: AgentState): AgentState {
 export function puzzleTimer(run: Run, id: string): void {
   const { s, now } = run;
   const pz = s.content.puzzles.get(id);
-  const st = s.puzzles[id];
+  const st = own(s.puzzles, id);
   if (!pz || !st) return;
   if (pz.type === 'lock') {
     if (st.ready && st.ready <= now) {
@@ -151,7 +151,7 @@ export function releaseHold(run: Run, a: AgentState): boolean {
   let released = false;
   for (const pz of run.c.puzzlesByRoom.get(a.room) ?? []) {
     if (pz.type !== 'gate') continue;
-    const st = run.s.puzzles[pz.id];
+    const st = own(run.s.puzzles, pz.id);
     if (!st?.hold || st.hold.by !== a.id) continue;
     st.hold = null;
     st.open = 0;
@@ -196,7 +196,7 @@ export function puzzleViews(s: WorldState, roomId: string, now: number): PuzzleV
       } else if (st.winch > now) v.open = secs(st.winch);
     } else if (st.open > now) v.open = secs(st.open);
     if (pz.type === 'levers' && !v.open) {
-      const pulled = Object.keys(st.pulls).filter((t) => st.pulls[t]!.at > now - pz.window_sec * 1000);
+      const pulled = Object.entries(st.pulls).flatMap(([t, pull]) => (pull.at > now - pz.window_sec * 1000 ? [t] : []));
       if (pulled.length) v.pulled = pulled;
     }
     out.push(v);

@@ -1,5 +1,7 @@
+import { own } from '@ajwf/shared';
 import { addGold, bump, grantTitle } from './agent';
 import { BALANCE } from './balance';
+import { assertAmount, creditTreasury } from './ledger';
 import { emit, markAgent, msg, tell, type Run } from './run';
 import type { AgentState, Bounty, WorldState } from './types';
 import { VILLAGE_ID } from './village-state';
@@ -116,7 +118,7 @@ export function wantedTimer(run: Run, agentId: string, at: number): void {
 // ── Bounties ─────────────────────────────────────────────────────────────────
 
 export function bountyOn(s: WorldState, agentId: string): number {
-  return s.bounties[agentId]?.total ?? 0;
+  return own(s.bounties, agentId)?.total ?? 0;
 }
 
 /** When a bounty on this agent may be refunded: its infamy reached zero, plus the waiting time. */
@@ -133,14 +135,15 @@ function scheduleRefund(run: Run, b: Bounty, due: number): void {
 
 /** Whether `payer` can add to the bounty on this agent: a new contributor needs a free line. */
 export function bountyHasRoom(s: WorldState, target: AgentState, payer: string): boolean {
-  const b = s.bounties[target.id];
+  const b = own(s.bounties, target.id);
   return !b || b.by.length < BALANCE.bounty.maxContributors || b.by.some((x) => x.id === payer);
 }
 
 /** Escrows gold on an agent's head. The caller took the gold from the payer and checked `bountyHasRoom`. */
 export function addBounty(run: Run, target: AgentState, payer: { id: string; name: string | null }, gold: number): Bounty {
   const s = run.s;
-  let b = s.bounties[target.id];
+  assertAmount(gold, `bounty on ${target.id}`);
+  let b = own(s.bounties, target.id);
   if (!b) s.bounties[target.id] = b = { target: target.id, total: 0, by: [], at: run.now, due: 0 };
   const line = b.by.find((x) => x.id === payer.id);
   if (line) line.gold += gold;
@@ -153,7 +156,7 @@ export function addBounty(run: Run, target: AgentState, payer: { id: string; nam
 
 /** The hunter who felled the target collects the whole pool. Returns the gold collected (0 without a bounty). */
 export function claimBounty(run: Run, hunter: AgentState, target: AgentState): number {
-  const b = run.s.bounties[target.id];
+  const b = own(run.s.bounties, target.id);
   if (!b) return 0;
   delete run.s.bounties[target.id];
   run.s.dirty.add('bounties');
@@ -180,7 +183,7 @@ export function claimBounty(run: Run, hunter: AgentState, target: AgentState): n
  */
 export function bountyTimer(run: Run, targetId: string, at: number): void {
   const s = run.s;
-  const b = s.bounties[targetId];
+  const b = own(s.bounties, targetId);
   if (!b || b.due !== at) return;
   const target = s.agents.get(targetId);
   const due = target ? refundDue(target) : at;
@@ -198,7 +201,7 @@ export function bountyTimer(run: Run, targetId: string, at: number): void {
       markAgent(s, who);
       paid.push(who.id);
     } else {
-      s.village.treasury += line.gold;
+      creditTreasury(s.village, line.gold, 'village treasury');
       s.dirty.add('village');
     }
   }

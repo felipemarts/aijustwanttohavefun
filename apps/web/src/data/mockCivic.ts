@@ -129,7 +129,7 @@ export class MockCivic {
   private halls: Record<string, HallInfo> = {};
   private guilds: Guild[] = [];
   private mayor: { name: string; since: number; election: number } | null = null;
-  private election: { n: number; start: number; voteAt: number; end: number; voters: number; candidates: { name: string; at: number; votes: number; platform: string; lang: string; active: boolean }[] };
+  private election: { n: number; start: number; voteAt: number; end: number; voters: number; candidates: { name: string; at: number; platform: string; lang: string; active: boolean }[] };
   private treasury = 1840;
   private taxRate = 0.04;
   private priority: string | null = 'library';
@@ -212,7 +212,6 @@ export class MockCivic {
       candidates: cands.map((name, i) => ({
         name,
         at: now - 3 * DAY + i * 3 * HOUR,
-        votes: [17, 12, 9, 3][i] ?? 1,
         platform: PLATFORMS[i % PLATFORMS.length]![1],
         lang: PLATFORMS[i % PLATFORMS.length]![0],
         active: i !== 3,
@@ -246,13 +245,8 @@ export class MockCivic {
       const kinds = ['best_friends', 'epic_drop', 'duel_upset', 'hot_rumor', 'bounty_claimed', 'world_first'];
       this.pushHighlight(kinds[Math.floor(this.r() * kinds.length)]!, now, true);
     }
-    if (this.r() < 0.02) {
-      const c = this.election.candidates[Math.floor(this.r() * this.election.candidates.length)]!;
-      if (c.active) {
-        c.votes++;
-        this.election.voters++;
-      }
-    }
+    // A ballot now and then: only the turnout moves, the totals stay sealed until the election closes.
+    if (this.r() < 0.02) this.election.voters++;
   }
 
   /** Debug and screenshots: finish a project right now. */
@@ -606,7 +600,6 @@ export class MockCivic {
           p: { n: 3, phase: 'voting' },
           items: [
             { k: 'gazette.item.election_voting.1', p: { n: 3, voters: 41, hours: 38 } },
-            { k: 'gazette.item.election_leader.2', p: { name: this.election.candidates[0]!.name, votes: 17 } },
             { k: 'gazette.item.treasury.1', p: { gold: this.treasury, pct: 4 } },
           ],
         },

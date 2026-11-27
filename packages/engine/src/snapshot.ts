@@ -1,18 +1,20 @@
 import type { Content } from '@ajwf/content';
+import { hasOwnKey, isPlainKey, own } from '@ajwf/shared';
 import { BALANCE } from './balance';
+import { postEntry, postKey, restoreBoard } from './board';
 import { indexGuild } from './guild';
-import { indexOrder } from './market';
+import { indexOrder, returnOrders } from './market';
 import { indexEscort } from './escort';
 import { blankAgent } from './register';
 import { indexTrade } from './trade';
-import type { AgentState, BoardPost, Bounty, Escort, Guild, Market, Party, PuzzleState, RoomState, Timer, Trade, Village, WorldBoss, WorldMeta, WorldState } from './types';
+import type { AgentState, Bounty, Escort, Guild, Market, Order, Party, PuzzleState, RoomState, Timer, Trade, Village, WorldBoss, WorldMeta, WorldState } from './types';
 import { restoreVillage } from './village';
 import { createWorld, freshPuzzle, nextPhaseChange, spawnMonster, spawnSlots, WORLD_KEYS } from './world';
 import { nextWorldBossAt, pushTimers } from './worldboss';
 
 /**
  * What the server persists: agents one by one, the rest of the world by key (`meta`, `timers`, `room:<id>`,
- * `party:<id>`, `guild:<id>`, `trades`, `market`, `board`, `village`, `puzzles`, `wboss`, `escorts`, `bounties`). A world entry whose `data` is null was
+ * `party:<id>`, `guild:<id>`, `post:<id>`, `trades`, `market`, `village`, `puzzles`, `wboss`, `escorts`, `bounties`). A world entry whose `data` is null was
  * deleted (a dissolved party or guild): the store should drop the key.
  *
  * Both exports hand out the live objects of the world, not copies, so that saving costs nothing extra. Consumers
@@ -25,7 +27,9 @@ function worldEntry(s: WorldState, key: string): unknown {
   if (key === 'timers') return s.timers.toJSON();
   if (key === 'trades') return [...s.trades.values()];
   if (key === 'market') return s.market;
-  if (key === 'board') return s.board;
+  // The legacy whole-board entry: migrated to `post:<id>` entries, so the store drops it.
+  if (key === 'board') return null;
+  if (key.startsWith('post:')) return postEntry(s, key.slice(5));
   if (key === 'village') return s.village;
   if (key === 'puzzles') return s.puzzles;
   if (key === 'wboss') return s.worldBoss;
@@ -60,6 +64,7 @@ export function exportAll(s: WorldState): Snapshot {
   for (const r of s.rooms.values()) snap.world.push({ key: `room:${r.id}`, data: r });
   for (const p of s.parties.values()) snap.world.push({ key: `party:${p.id}`, data: p });
   for (const g of s.guilds.values()) snap.world.push({ key: `guild:${g.id}`, data: g });
+  for (const p of s.board) snap.world.push({ key: postKey(p.id), data: p });
   return snap;
 }
 
@@ -80,7 +85,8 @@ export function restoreWorld(content: Content, snap: Snapshot, now: number): Wor
   const timers = ((world.get('timers') as Timer[] | undefined) ?? s.timers.toJSON()).filter((t) => {
     if (t.kind === 'respawn') return content.rooms.has(t.room) && t.slot < spawnSlots(content, t.room).length;
     if (t.kind === 'puzzle') return content.puzzles.has(t.id);
-    return t.kind !== 'wboss';
+    // Trades expire through `sweepTrades`, without timers.
+    return t.kind !== 'wboss' && t.kind !== 'trade';
   });
   s.timers.replace(timers);
 
@@ -98,8 +104,8 @@ export function restoreWorld(content: Content, snap: Snapshot, now: number): Wor
       ground: {},
       said: saved?.said ?? [],
     };
-    for (const [id, node] of Object.entries(saved?.resources ?? {})) if (st.resources[id]) st.resources[id] = node;
-    for (const [id, qty] of Object.entries(saved?.ground ?? {})) if (content.items.has(id) && qty > 0) st.ground[id] = qty;
+    for (const [id, node] of Object.entries(saved?.resources ?? {})) if (hasOwnKey(st.resources, id)) st.resources[id] = node;
+    st.ground = cleanStock(content, saved?.ground);
     s.rooms.set(room.id, st);
     // Refill slots that have neither a living monster nor a pending respawn.
     const pending = new Set(timers.filter((t) => t.kind === 'respawn' && t.room === room.id).map((t) => (t as { slot: number }).slot));
@@ -114,7 +120,7 @@ export function restoreWorld(content: Content, snap: Snapshot, now: number): Wor
     const a: AgentState = { ...blankAgent(now), ...structuredClone(raw) };
     a.equip = { ...blankAgent(now).equip, ...a.equip };
     if (!content.rooms.has(a.room)) a.room = BALANCE.startRoom;
-    for (const id of Object.keys(a.inv)) if (!content.items.has(id)) delete a.inv[id];
+    a.inv = cleanStock(content, a.inv);
     for (const slot of Object.keys(a.equip) as (keyof AgentState['equip'])[]) {
       if (a.equip[slot] && !content.items.has(a.equip[slot]!)) a.equip[slot] = null;
     }
@@ -132,16 +138,18 @@ export function restoreWorld(content: Content, snap: Snapshot, now: number): Wor
   for (const r of s.rooms.values()) {
     for (const m of r.monsters) for (const id of Object.keys(m.threat)) if (!s.agents.has(id)) delete m.threat[id];
   }
-  restoreSocial(s, world);
+  const migrated = restoreSocial(s, world);
   restoreVillage(s);
   s.dirty.clear();
+  // Entries rewritten by the restore itself (the board moved to one entry per post) are saved at the next snapshot.
+  for (const key of migrated) s.dirty.add(key);
   return s;
 }
 
 /** Puzzles, the world boss schedule and the respawn index (timers are already in place). */
 function restoreEvents(s: WorldState, world: Map<string, unknown>, now: number): void {
   const saved = (world.get('puzzles') as Record<string, Partial<PuzzleState>> | undefined) ?? {};
-  for (const id of s.content.puzzles.keys()) s.puzzles[id] = { ...freshPuzzle(), ...saved[id] };
+  for (const id of s.content.puzzles.keys()) s.puzzles[id] = { ...freshPuzzle(), ...own(saved, id) };
 
   const wb = world.get('wboss') as Partial<WorldBoss> | undefined;
   if (wb) s.worldBoss = { ...s.worldBoss, ...wb };
@@ -160,8 +168,24 @@ function restoreEvents(s: WorldState, world: Map<string, unknown>, now: number):
   }
 }
 
+const isCount = (n: unknown): n is number => typeof n === 'number' && Number.isSafeInteger(n) && n > 0;
+
+/** A market order as written by this engine: plain id, positive whole quantity and price. */
+function validOrder(o: unknown): o is Order {
+  const x = o as Partial<Order> | null;
+  return !!x && typeof x.id === 'string' && isPlainKey(x.id) && typeof x.item === 'string' && typeof x.seller === 'string' && isCount(x.qty) && isCount(x.price);
+}
+
+/** A stock record (item id -> quantity) from a snapshot: known items with positive whole quantities only. */
+function cleanStock(c: Content, rec: Record<string, number> | undefined): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [id, qty] of Object.entries(rec ?? {})) if (c.items.has(id) && isCount(qty)) out[id] = qty;
+  return out;
+}
+
 /** Parties, guilds, trades, the market, the board and the village, with the indexes derived from them. */
-function restoreSocial(s: WorldState, world: Map<string, unknown>): void {
+function restoreSocial(s: WorldState, world: Map<string, unknown>): string[] {
+  const migrated: string[] = [];
   const c = s.content;
   const live = (id: string) => s.agents.get(id)?.status === 'active';
   for (const [key, data] of world) {
@@ -180,7 +204,7 @@ function restoreSocial(s: WorldState, world: Map<string, unknown>): void {
       g.officers = g.officers.filter((id) => id !== g.leader);
       // Snapshots from before coups existed have no votes.
       g.coup = (g.coup ?? []).filter((id) => id !== g.leader && g.members.includes(id));
-      for (const id of Object.keys(g.vault)) if (!c.items.has(id)) delete g.vault[id];
+      g.vault = cleanStock(c, g.vault);
       indexGuild(s, g);
     }
   }
@@ -190,8 +214,10 @@ function restoreSocial(s: WorldState, world: Map<string, unknown>): void {
     if (a.guild && !s.guilds.get(a.guild)?.members.includes(a.id)) a.guild = null;
   }
 
-  for (const t of (world.get('trades') as Trade[] | undefined) ?? []) {
-    if (!s.agents.has(t.from) || !s.agents.has(t.to)) continue;
+  // In order of expiry, which `sweepTrades` relies on (a changed TTL could otherwise mix the order up).
+  const trades = [...((world.get('trades') as Trade[] | undefined) ?? [])].sort((x, y) => x.expires - y.expires);
+  for (const t of trades) {
+    if (!s.agents.has(t.from) || !s.agents.has(t.to) || s.trades.has(t.id)) continue;
     s.trades.set(t.id, t);
     indexTrade(s, t);
   }
@@ -199,13 +225,21 @@ function restoreSocial(s: WorldState, world: Map<string, unknown>): void {
   const market = world.get('market') as Partial<Market> | undefined;
   s.market = { orders: {}, history: market?.history ?? [] };
   for (const o of Object.values(market?.orders ?? {})) {
-    // Escrowed items of a removed kind vanish, like the same items in an inventory would.
-    if (!c.items.has(o.item) || !s.agents.has(o.seller)) continue;
+    // Escrowed items of a removed kind vanish, like the same items in an inventory would; so do malformed orders.
+    if (!validOrder(o) || !c.items.has(o.item) || !s.agents.has(o.seller) || hasOwnKey(s.market.orders, o.id)) continue;
     s.market.orders[o.id] = o;
     indexOrder(s, o);
   }
+  // Orders of sellers retired or banned before their orders were cancelled with them (older versions).
+  for (const id of new Set([...s.ordersOf.keys()])) {
+    const seller = s.agents.get(id)!;
+    if (seller.status !== 'active') {
+      returnOrders(s, seller);
+      migrated.push(`agent:${id}`, 'market');
+    }
+  }
 
-  s.board = (world.get('board') as BoardPost[] | undefined) ?? [];
+  migrated.push(...restoreBoard(s, world));
   s.village = { ...s.village, ...(world.get('village') as Partial<Village> | undefined) };
 
   for (const e of (world.get('escorts') as Escort[] | undefined) ?? []) {
@@ -226,4 +260,5 @@ function restoreSocial(s: WorldState, world: Map<string, unknown>): void {
     s.bounties[target] = b;
     if (!timed.has(`${target}|${b.due}`)) s.timers.push({ at: b.due, kind: 'bounty', target });
   }
+  return migrated;
 }

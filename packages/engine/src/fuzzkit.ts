@@ -4,15 +4,16 @@
  * that pure transfers kept the world's wealth whole. Test-only: not exported from the package.
  */
 import { expect } from 'vitest';
-import type { ClassId, GameEvent, Rng } from '@ajwf/shared';
+import { actionParamSchemas, type ActionName, type ClassId, type GameEvent, type Rng } from '@ajwf/shared';
 import { touch } from './agent';
-import { applyAction } from './apply';
+import { applyAction, applyParsed } from './apply';
 import { checkInvariants } from './invariants';
 import { observe } from './observe';
 import { newRun } from './run';
+import { exportAll } from './snapshot';
 import { HOUR, SEC, worldWealth, type Kit } from './testkit';
 import { tick } from './tick';
-import type { AgentState, ApplyResult } from './types';
+import type { AgentState, ApplyResult, WorldState } from './types';
 
 export const CLASSES: ClassId[] = ['warrior', 'mage', 'rogue', 'cleric'];
 const JUNK = ['', ' ', 'dragon', 'north-west', '@mon:slime', 'Iron Sword', 'x'.repeat(80), '../etc', 'null'];
@@ -251,6 +252,33 @@ export function goldFlow(events: GameEvent[], r?: ApplyResult): number {
 
 export type FuzzStats = { ok: Record<string, number>; errors: Record<string, number>; unchanged: number; transfers: number };
 
+/** The whole persisted world, entry by entry: every snapshot entry (agents, rooms, parties, guilds, posts, the rest). */
+export function worldBytes(s: WorldState): string[] {
+  const snap = exportAll(s);
+  return [...snap.agents.map((a) => `agent:${a.id} ${JSON.stringify(a)}`), ...snap.world.map((e) => `${e.key} ${JSON.stringify(e.data)}`)];
+}
+
+/** Fails, naming the entries that changed, unless the world serializes exactly as `before`. */
+export function expectSameWorld(s: WorldState, before: string[], what: string): void {
+  const after = worldBytes(s);
+  if (after.length === before.length && after.every((x, i) => x === before[i])) return;
+  const was = new Set(before);
+  const now = new Set(after);
+  const diff = [...before.filter((x) => !now.has(x)).map((x) => `- ${x.slice(0, 600)}`), ...after.filter((x) => !was.has(x)).map((x) => `+ ${x.slice(0, 600)}`)];
+  throw new Error(`${what}: the world changed\n${diff.join('\n')}`);
+}
+
+/**
+ * Brings an agent up to date with the clock (lazy regeneration, and the walk back from the temple), so that the
+ * action that follows at the same instant has nothing left to update: a refusal must then change nothing at all.
+ * Returns the events of the walk back.
+ */
+export function settle(k: Kit, a: AgentState): GameEvent[] {
+  const run = newRun(k.s, k.now, k.rng, a);
+  touch(run, a);
+  return run.events;
+}
+
 /**
  * Lets agents act at random for `steps` actions, checking after each one: the invariants, the gold balance, that a
  * refused action changed nothing, and that pure transfers kept the world's wealth whole.
@@ -273,19 +301,19 @@ export function fuzz(k: Kit, rng: Rng, agents: AgentState[], steps: number, anyA
     // Wanderers walk back home now and then, so the same agents keep meeting.
     const back = home?.get(a);
     if (back && a.room !== back && !a.combat && !a.fallen && rng.chance(0.2)) k.place(a, back);
+    // Bring the actor up to date first, so a refusal can be checked to change nothing at all.
+    gold += goldFlow(settle(k, a));
     const cmd = plausible(k, rng, a, anyActions);
     const what = () => `step ${step}: ${a.name} ${cmd.action} ${JSON.stringify(cmd.params)}`;
-    // Bring the actor up to date first, so an error can be checked to change nothing at all.
-    touch(newRun(k.s, k.now, k.rng, a), a, false);
-    const before = JSON.stringify([a, k.s.rooms.get(a.room)]);
+    const before = worldBytes(k.s);
     const wealth = TRANSFERS.has(cmd.action) ? worldWealth(k.s) : null;
-    const room = a.room;
     let r: ApplyResult;
     try {
       r = applyAction(k.s, { agentId: a.id, ...cmd }, k.ctx());
     } catch (e) {
       throw new Error(`${what()} threw ${(e as Error).stack}`, { cause: e });
     }
+    if (r.internal !== undefined) throw new Error(`${what()}: internal error ${(r.internal as Error).stack}`);
     if (r.result.ok) {
       stats.ok[cmd.action] = (stats.ok[cmd.action] ?? 0) + 1;
       if (wealth) {
@@ -294,10 +322,10 @@ export function fuzz(k: Kit, rng: Rng, agents: AgentState[], steps: number, anyA
       }
     } else {
       stats.errors[r.result.error.code] = (stats.errors[r.result.error.code] ?? 0) + 1;
-      if (r.events.length === 0) {
-        expect(JSON.stringify([a, k.s.rooms.get(room)]), what()).toBe(before);
-        stats.unchanged++;
-      }
+      // A refusal (INTERNAL ones included) leaves the whole persisted world byte for byte as it was.
+      expect(r.events, what()).toEqual([]);
+      expectSameWorld(k.s, before, what());
+      stats.unchanged++;
     }
     gold += goldFlow(r.events, r);
     const actual = worldWealth(k.s).gold;
@@ -308,3 +336,137 @@ export function fuzz(k: Kit, rng: Rng, agents: AgentState[], steps: number, anyA
   return stats;
 }
 
+
+// ── Hostile params (prototype names, hostile numbers) ────────────────────────────────────────────────────────────
+
+/** Names of `Object.prototype` members: what an id that indexes a plain object must never resolve to. */
+export const PROTO_NAMES = ['__proto__', 'constructor', 'prototype', 'toString', 'hasOwnProperty', 'valueOf', '__defineGetter__'] as const;
+
+/** Numbers a JSON body can carry (and NaN, which only an internal caller can) that no amount should accept. */
+export const HOSTILE_NUMBERS: readonly unknown[] = [JSON.parse('1e309'), -JSON.parse('1e309'), -0, 0.5, 1.5, -1, 2 ** 53, 1e21, Number.MAX_VALUE, '5', '1e3', NaN];
+
+type ZodLike = { _zod: { def: Record<string, unknown> & { type: string } } };
+type Def = Record<string, unknown> & { type: string };
+const defOf = (s: unknown): Def => (s as ZodLike)._zod.def;
+
+/**
+ * A place in an action's params, as a path through its schema: object fields by name, `u<i>` for the i-th option
+ * of a union, `k` for the keys of a record (item bundles), `v` for its values, `e` for array elements, `t<i>` for
+ * tuple items. `field` is the name of the nearest object field (`item` inside item bundles), used to pick values.
+ */
+export type ParamSlot = { action: ActionName; path: string[]; field: string; kind: 'string' | 'number' };
+
+/** Every string (fields, enum values, item-bundle keys) and number of an action's params. */
+export function paramSlots(action: ActionName): ParamSlot[] {
+  const out: ParamSlot[] = [];
+  const walk = (s: unknown, path: string[], field: string): void => {
+    const d = defOf(s);
+    switch (d.type) {
+      case 'object':
+        for (const [k, v] of Object.entries(d.shape as Record<string, unknown>)) walk(v, [...path, k], k);
+        break;
+      case 'optional':
+      case 'default':
+      case 'nullable':
+        walk(d.innerType, path, field);
+        break;
+      case 'union':
+        (d.options as unknown[]).forEach((o, i) => walk(o, [...path, `u${i}`], field));
+        break;
+      case 'record':
+        out.push({ action, path: [...path, 'k'], field: 'item', kind: 'string' });
+        walk(d.valueType, [...path, 'v'], field);
+        break;
+      case 'array':
+        walk(d.element, [...path, 'e'], field);
+        break;
+      case 'tuple':
+        (d.items as unknown[]).forEach((o, i) => walk(o, [...path, `t${i}`], field));
+        break;
+      case 'string':
+      case 'enum':
+        out.push({ action, path, field, kind: 'string' });
+        break;
+      case 'number':
+        out.push({ action, path, field, kind: 'number' });
+        break;
+    }
+  };
+  walk(actionParamSchemas[action], [], '');
+  return out;
+}
+
+/** What an ordinary value for a field looks like here: the caller picks from what the actor can see and carries. */
+export type ValuePicker = { str(field: string): string; num(field: string): number };
+
+/**
+ * Params for an action with every slot ordinary (picked) except `slot`, which gets `hostile`. Optional fields off
+ * the slot's path are left out half the time. Record keys are computed keys, so `__proto__` is an own key there.
+ */
+export function paramsWith(action: ActionName, slot: ParamSlot | null, hostile: unknown, pick: ValuePicker, rng: Rng): unknown {
+  const build = (s: unknown, rest: string[] | null, field: string): unknown => {
+    const d = defOf(s);
+    const here = rest !== null && rest.length === 0;
+    switch (d.type) {
+      case 'object': {
+        const o: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(d.shape as Record<string, unknown>)) {
+          const on = rest && rest[0] === k ? rest.slice(1) : null;
+          if (!on && defOf(v).type === 'optional' && rng.chance(0.5)) continue;
+          o[k] = build(v, on, k);
+        }
+        return o;
+      }
+      case 'optional':
+      case 'default':
+      case 'nullable':
+        return build(d.innerType, rest, field);
+      case 'union': {
+        const i = rest ? Number(rest[0]!.slice(1)) : 0;
+        return build((d.options as unknown[])[i], rest ? rest.slice(1) : null, field);
+      }
+      case 'record': {
+        const key = rest?.[0] === 'k' ? String(hostile) : pick.str('item');
+        return { [key]: build(d.valueType, rest?.[0] === 'v' ? rest.slice(1) : null, field) };
+      }
+      case 'array':
+        return [build(d.element, rest?.[0] === 'e' ? rest.slice(1) : null, field)];
+      case 'tuple':
+        return (d.items as unknown[]).map((o, i) => build(o, rest?.[0] === `t${i}` ? rest.slice(1) : null, field));
+      case 'string':
+        return here ? hostile : pick.str(field);
+      case 'enum':
+        return here ? hostile : rng.pick(Object.values(d.entries as Record<string, string>));
+      case 'number':
+        return here ? hostile : pick.num(field);
+      default:
+        return undefined;
+    }
+  };
+  return build(actionParamSchemas[action], slot ? slot.path : null, '');
+}
+
+export type HostileOutcome = { ok: boolean; code: string | null };
+
+/**
+ * Applies one hostile command and checks what must hold whatever the params: nothing escapes, no INTERNAL error,
+ * a refusal leaves the serialized world byte for byte as `before`, and the invariants hold. `viaSchema` goes through
+ * `applyAction` (the boundary's schemas); otherwise `applyParsed` runs the handler on the raw params, as an internal
+ * caller that skipped the schemas would.
+ */
+export function hostileStep(k: Kit, a: AgentState, action: ActionName, params: unknown, before: string[], what: string, viaSchema = false): HostileOutcome {
+  let r: ApplyResult;
+  try {
+    r = viaSchema ? applyAction(k.s, { agentId: a.id, action, params }, k.ctx()) : applyParsed(k.s, a, action, params, k.ctx());
+  } catch (e) {
+    throw new Error(`${what}: threw ${(e as Error).stack}`, { cause: e });
+  }
+  if (r.internal !== undefined) throw new Error(`${what}: internal error ${(r.internal as Error).stack}`);
+  if (!r.result.ok) {
+    if (r.result.error.code === 'INTERNAL') throw new Error(`${what}: INTERNAL refusal`);
+    expectSameWorld(k.s, before, what);
+  }
+  const bad = checkInvariants(k.s, k.now);
+  if (bad.length) throw new Error(`${what}:\n${bad.join('\n')}`);
+  return { ok: r.result.ok, code: r.result.ok ? null : r.result.error.code };
+}

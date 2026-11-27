@@ -1,4 +1,4 @@
-import { MAX_SAY_LEN } from '@ajwf/shared';
+import { MAX_SAY_LEN, own } from '@ajwf/shared';
 import { bump } from '../agent';
 import { BALANCE } from '../balance';
 import { noteSpeech } from '../camaraderie';
@@ -12,17 +12,31 @@ const DAY = 24 * 60 * 60 * 1000;
 /** Whispers and private chats become public this long after being sent (PLANEJAMENTO §7.6). */
 export const REVEAL_AFTER_MS = DAY;
 
-/** One message every few seconds per agent, across all chat channels. */
-export function chatCooldown(run: Run, a: AgentState): void {
-  const readyAt = a.cooldowns.say ?? 0;
+/**
+ * One message every few seconds per agent, across all chat channels. Checked before the text is cleaned (the
+ * sanitizer is the expensive part of a chat action, and a refusal must cost the server as little as possible), and
+ * started only once the text passed, so a refused message changes nothing.
+ */
+export function checkChatCooldown(run: Run, a: AgentState): void {
+  const readyAt = own(a.cooldowns, 'say') ?? 0;
   if (readyAt > run.now) fail('COOLDOWN', 'chat_cooldown', { seconds: Math.ceil((readyAt - run.now) / 1000) });
+}
+
+export function startChatCooldown(run: Run, a: AgentState): void {
   a.cooldowns.say = run.now + BALANCE.chat.sayCooldownMs;
+}
+
+/** Cooldown first, then the text: the cleaned text, with the cooldown started. */
+export function chatText(run: Run, a: AgentState, raw: string, max: number, multiline = false): string {
+  checkChatCooldown(run, a);
+  const text = cleanText(raw, max, multiline);
+  startChatCooldown(run, a);
+  return text;
 }
 
 export const chatActions: HandlerMap = {
   say(run, a, p) {
-    const text = cleanText(p.text, MAX_SAY_LEN);
-    chatCooldown(run, a);
+    const text = chatText(run, a, p.text, MAX_SAY_LEN);
     tell(run, 'n.say');
     emit(run, 'say', { room: a.room, actor: a.id, to: 'room', lang: a.lang, drama: 1, data: { text } });
     bump(run, a, 'says');
@@ -34,8 +48,7 @@ export const chatActions: HandlerMap = {
     const b = agentByName(run, p.to);
     if (!b) fail('TARGET_NOT_FOUND', 'agent_unknown', { name: p.to });
     if (b === a) fail('INVALID_PARAMS', 'not_yourself');
-    const text = cleanText(p.text, MAX_SAY_LEN);
-    chatCooldown(run, a);
+    const text = chatText(run, a, p.text, MAX_SAY_LEN);
     tell(run, 'n.whisper', { name: b.name });
     emit(run, 'whisper', {
       room: a.room,
@@ -56,7 +69,11 @@ export const chatActions: HandlerMap = {
     const b = p.target ? agentHere(run, a, p.target) : null;
     const m = b ? msg(`content.emote.${id}.at`, { actor: a.name, target: b.name }) : msg(`content.emote.${id}.solo`, { actor: a.name });
     run.narr.push(m);
-    emit(run, 'emote', { room: a.room, actor: a.id, ...(b ? { target: b.id } : {}), to: 'room', m, data: { emote: id } });
+    // Emotes cost nothing: past one every `emoteInboxMs`, they are still seen (spectators, the room log) but no
+    // longer delivered to inboxes, so a flood of them cannot bury what other agents need to read.
+    const deliver = (own(a.cooldowns, 'emote') ?? 0) <= run.now;
+    if (deliver) a.cooldowns.emote = run.now + BALANCE.chat.emoteInboxMs;
+    emit(run, 'emote', { room: a.room, actor: a.id, ...(b ? { target: b.id } : {}), to: deliver ? 'room' : 'none', m, data: { emote: id } });
     questEvent(run, a, 'emote', id);
   },
 

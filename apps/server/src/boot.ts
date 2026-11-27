@@ -105,5 +105,6 @@ export async function boot(o: BootOptions): Promise<Server> {
     persistence: () => persistence.stats,
   });
   game.onTickTimed = (seconds) => metrics.tickSeconds.observe(seconds);
+  game.onInternalError = (action) => metrics.internalError(action);
   return { app, game, persistence, spectators, metrics, census, chronicle, push };
 }

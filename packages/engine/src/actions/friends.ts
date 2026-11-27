@@ -1,9 +1,17 @@
+import { hasOwnKey } from '@ajwf/shared';
 import { statMax } from '../agent';
 import { BALANCE } from '../balance';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 import { questEvent } from '../quests';
 import { emit, fail, markAgent, msg, tell, type Run } from '../run';
 import type { AgentState } from '../types';
 import { agentByName, type HandlerMap } from './util';
+
+/** Friend requests still waiting for an answer: requester id -> when it asked. Lapsed ones neither count nor block. */
+export function liveFriendRequests(a: AgentState, now: number): Record<string, number> {
+  return Object.fromEntries(Object.entries(a.friendReqs).filter(([, at]) => now - at < BALANCE.social.friendRequestMs));
+}
 
 /** Any active agent by name, wherever it is, but not the actor itself. */
 function someoneElse(run: Run, a: AgentState, name: string): AgentState {
@@ -35,11 +43,13 @@ export const friendActions: HandlerMap = {
     const b = someoneElse(run, a, p.agent);
     if (a.friends.includes(b.id)) fail('CONFLICT', 'already_friends', { name: b.name });
     // Both asked: that is a yes from each side.
-    if (a.friendReqs[b.id] !== undefined) return befriend(run, a, b);
-    if (b.friendReqs[a.id] !== undefined) fail('CONFLICT', 'friend_request_pending', { name: b.name });
-    if (Object.keys(b.friendReqs).length >= BALANCE.social.maxFriendRequests) fail('CONFLICT', 'friend_requests_full', { name: b.name });
+    if (hasOwnKey(liveFriendRequests(a, run.now), b.id)) return befriend(run, a, b);
+    const theirs = liveFriendRequests(b, run.now);
+    if (hasOwnKey(theirs, a.id)) fail('CONFLICT', 'friend_request_pending', { name: b.name });
+    if (Object.keys(theirs).length >= BALANCE.social.maxFriendRequests) fail('CONFLICT', 'friend_requests_full', { name: b.name });
     if (a.friends.length >= BALANCE.social.maxFriends) fail('CONFLICT', 'friends_full', { max: BALANCE.social.maxFriends });
-    b.friendReqs[a.id] = run.now;
+    // Lapsed requests are dropped on the way, so the list stays as short as the live ones.
+    b.friendReqs = { ...theirs, [a.id]: run.now };
     markAgent(run.s, b);
     tell(run, 'n.friend_request', { name: b.name });
     emit(run, 'friend_request', { room: a.room, actor: a.id, target: b.id, vis: 'private', to: [b.id], m: msg('ev.friend_request', { actor: a.name }) });
@@ -48,7 +58,7 @@ export const friendActions: HandlerMap = {
   friend_accept(run, a, p) {
     const b = someoneElse(run, a, p.agent);
     if (a.friends.includes(b.id)) fail('CONFLICT', 'already_friends', { name: b.name });
-    if (a.friendReqs[b.id] === undefined) fail('TARGET_NOT_FOUND', 'no_friend_request', { name: b.name });
+    if (!hasOwnKey(liveFriendRequests(a, run.now), b.id)) fail('TARGET_NOT_FOUND', 'no_friend_request', { name: b.name, days: BALANCE.social.friendRequestMs / DAY_MS });
     befriend(run, a, b);
   },
 

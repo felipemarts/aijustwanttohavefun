@@ -18,7 +18,7 @@ import {
  * instead of "not found": `market_buy {order: "__proto__"}` once turned an agent's gold into NaN, which then passed
  * every balance check. No game id is one of them, so they are refused at the boundary.
  */
-const PROTO_NAMES = new Set(Object.getOwnPropertyNames(Object.prototype).flatMap((k) => [k, k.toLowerCase()]));
+const PROTO_NAMES = new Set([...Object.getOwnPropertyNames(Object.prototype), 'prototype'].flatMap((k) => [k, k.toLowerCase()]));
 export function isPlainKey(s: string): boolean {
   const t = s.trim();
   return !PROTO_NAMES.has(t) && !PROTO_NAMES.has(t.toLowerCase().replace(/[\s-]+/g, '_'));

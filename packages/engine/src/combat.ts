@@ -1,4 +1,4 @@
-import { ref } from '@ajwf/shared';
+import { hasOwnKey, own, ref } from '@ajwf/shared';
 import { addGold, bump, derive, fall, gainXp, giveOrDrop, touch } from './agent';
 import { BALANCE, levelGapXpMod, respawnDelayMs } from './balance';
 import { raiseBond } from './bond';
@@ -6,7 +6,7 @@ import { bestFriendAtSide, markParty, partyOf } from './party';
 import { questEvent } from './quests';
 import { emit, fail, markAgent, markRoom, msg, tell, type Run } from './run';
 import type { AgentState, MonsterInst, Party } from './types';
-import { agentsIn, refreshMonster, roomState, scheduleRespawn, spawnSlots } from './world';
+import { agentsIn, monsterForgets, refreshMonster, roomState, scheduleRespawn, spawnSlots } from './world';
 import { addHonor } from './trust';
 import { worldBossKilled } from './worldboss';
 
@@ -23,8 +23,14 @@ export function rollDamage(run: Run, atk: number, mult: number, def: number, cri
  * With no target, the monster the agent is engaged with.
  */
 export function findMonster(run: Run, a: AgentState, target: string | undefined): MonsterInst {
+  const m = pickMonster(run, a, target);
+  // Brought up to date only once chosen: a refused target leaves every monster as it was.
+  refreshMonster(run.s, m, run.now);
+  return m;
+}
+
+function pickMonster(run: Run, a: AgentState, target: string | undefined): MonsterInst {
   const room = roomState(run.s, a.room);
-  for (const m of room.monsters) refreshMonster(run.s, m, run.now);
   if (!target) {
     const cur = a.combat && room.monsters.find((m) => m.uid === a.combat!.mon);
     if (cur) return cur;
@@ -40,10 +46,12 @@ export function findMonster(run: Run, a: AgentState, target: string | undefined)
     if (back !== null) fail('TARGET_NOT_FOUND', 'monster_respawning', { target, seconds: back });
     fail('TARGET_NOT_FOUND', 'monster_not_here', { target });
   }
+  // Threat as `refreshMonster` would leave it: a monster nobody hit for a while has forgotten its attackers.
+  const threat = (m: MonsterInst) => (monsterForgets(m, run.now) ? {} : m.threat);
   return (
     same.find((m) => m.uid === a.combat?.mon) ??
-    same.find((m) => m.threat[a.id] !== undefined) ??
-    same.find((m) => Object.keys(m.threat).length > 0) ??
+    same.find((m) => hasOwnKey(threat(m), a.id)) ??
+    same.find((m) => Object.keys(threat(m)).length > 0) ??
     same[0]!
   );
 }
@@ -61,7 +69,7 @@ export function respawnIn(run: Run, roomId: string, kind: string): number | null
 /** Agents in the monster's threat table who are still standing in its room. */
 export function fightersOf(run: Run, roomId: string, m: MonsterInst): AgentState[] {
   const out: AgentState[] = [];
-  for (const id in m.threat) {
+  for (const id of Object.keys(m.threat)) {
     const b = run.s.agents.get(id);
     if (b && b.room === roomId && !b.fallen) out.push(b);
   }
@@ -86,7 +94,7 @@ export function strike(run: Run, a: AgentState, m: MonsterInst, mult: number, ve
   }
   const dealt = Math.min(dmg, m.hp);
   m.hp -= dealt;
-  m.threat[a.id] = (m.threat[a.id] ?? 0) + dealt;
+  m.threat[a.id] = (own(m.threat, a.id) ?? 0) + dealt;
   m.lastHit = run.now;
   a.combat = { mon: m.uid, until: run.now + BALANCE.combat.engageMs };
   markRoom(run.s, a.room);
@@ -156,9 +164,8 @@ type Side = { members: AgentState[]; dmg: number; party: Party | undefined };
 function killSides(run: Run, roomId: string, m: MonsterInst): Side[] {
   const s = run.s;
   const byKey = new Map<string, Side & { dealers: AgentState[] }>();
-  for (const id in m.threat) {
+  for (const [id, dmg] of Object.entries(m.threat)) {
     const b = s.agents.get(id);
-    const dmg = m.threat[id]!;
     if (!b || b.room !== roomId || dmg <= 0) continue;
     const party = partyOf(s, b);
     const key = party?.id ?? b.id;

@@ -1,3 +1,4 @@
+import { BALANCE } from '@ajwf/engine';
 import type { GameEvent } from '@ajwf/shared';
 import { describe, expect, it } from 'vitest';
 import { createI18n, loadCatalogs } from './i18n';
@@ -13,7 +14,11 @@ describe('GET /events', () => {
     const { key } = await s.register('Pip');
     const brasa = await s.register('Brasa');
     const emote = [...s.game.content.emotes.keys()][0]!;
-    for (let i = 0; i < 60; i++) expect((await s.act(brasa.key, 'emote', { emote })).json().ok).toBe(true);
+    for (let i = 0; i < 60; i++) {
+      // One emote per sender per interval reaches other inboxes.
+      s.clock.advance(BALANCE.chat.emoteInboxMs);
+      expect((await s.act(brasa.key, 'emote', { emote })).json().ok).toBe(true);
+    }
 
     const page1 = (await s.get(key, '/api/v1/events?since=0')).json();
     expect(page1.more).toBe(true);

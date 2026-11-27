@@ -1,20 +1,21 @@
-import { ref } from '@ajwf/shared';
-import { addGold, addItem, bump, canFit, count, removeItem } from '../agent';
+import { own, ref } from '@ajwf/shared';
+import { addGold, addItem, bump, canFit, count, removeItem, takeGold } from '../agent';
 import { BALANCE } from '../balance';
+import { covers, creditTreasury } from '../ledger';
 import { addOrder, ordersOf, recordTrade, removeOrder } from '../market';
 import { questEvent } from '../quests';
 import { marketSlots } from '../unlocks';
 import { emit, fail, markAgent, msg, tell, type Run } from '../run';
 import type { AgentState, Order } from '../types';
 import { carried } from './items';
-import { hasFlag, normId, type HandlerMap } from './util';
+import { hasFlag, normId, wholeNumber, type HandlerMap } from './util';
 
 function atMarket(run: Run, a: AgentState): void {
   if (!hasFlag(run, a, 'market')) fail('NOT_AVAILABLE_HERE', 'market_only', { room: ref.room('village.market') });
 }
 
 function orderById(run: Run, raw: string): Order {
-  const o = run.s.market.orders[raw.trim().toLowerCase()];
+  const o = own(run.s.market.orders, raw.trim().toLowerCase());
   if (!o) fail('TARGET_NOT_FOUND', 'order_unknown', { order: raw });
   return o;
 }
@@ -24,17 +25,19 @@ export const marketActions: HandlerMap = {
     atMarket(run, a);
     const item = carried(run, a, p.item);
     if (item.type === 'quest') fail('NOT_ALLOWED', 'quest_item_bound', { item: ref.item(item.id) });
-    if (count(a, item.id) < p.qty) fail('MISSING_ITEMS', 'not_enough_items', { item: ref.item(item.id), have: count(a, item.id), need: p.qty });
+    const qty = wholeNumber(p.qty, 'qty', 1);
+    const price = wholeNumber(p.price, 'price', 1);
+    if (!covers(count(a, item.id), qty)) fail('MISSING_ITEMS', 'not_enough_items', { item: ref.item(item.id), have: count(a, item.id), need: qty });
     const max = marketSlots(run.s);
     if (ordersOf(run.s, a.id) >= max) fail('CONFLICT', 'market_orders_full', { max });
     // The items leave the bag now and wait in the market until someone buys them or the seller cancels.
-    removeItem(a, item.id, p.qty);
-    const o: Order = { id: `o${(++run.s.meta.orderSeq).toString(36)}`, seller: a.id, item: item.id, qty: p.qty, price: p.price, at: run.now };
+    removeItem(a, item.id, qty);
+    const o: Order = { id: `o${(++run.s.meta.orderSeq).toString(36)}`, seller: a.id, item: item.id, qty, price, at: run.now };
     addOrder(run.s, o);
     run.s.dirty.add('meta');
     run.data.order = o.id;
-    tell(run, 'n.market_sell', { qty: p.qty, item: ref.item(item.id), price: p.price, order: o.id });
-    emit(run, 'market_order', { room: a.room, actor: a.id, m: msg('ev.market_order', { actor: a.name, qty: p.qty, item: ref.item(item.id), price: p.price }), data: { order: o.id, item: item.id, qty: p.qty, price: p.price } });
+    tell(run, 'n.market_sell', { qty, item: ref.item(item.id), price, order: o.id });
+    emit(run, 'market_order', { room: a.room, actor: a.id, m: msg('ev.market_order', { actor: a.name, qty, item: ref.item(item.id), price }), data: { order: o.id, item: item.id, qty, price } });
     questEvent(run, a, 'market');
   },
 
@@ -62,19 +65,19 @@ export const marketActions: HandlerMap = {
     atMarket(run, a);
     const o = orderById(run, p.order);
     if (o.seller === a.id) fail('NOT_ALLOWED', 'order_own', { order: o.id });
-    const qty = p.qty ?? o.qty;
-    if (qty > o.qty) fail('CONFLICT', 'order_qty', { order: o.id, have: o.qty });
+    const qty = wholeNumber(p.qty ?? o.qty, 'qty', 1);
+    if (!(qty <= o.qty)) fail('CONFLICT', 'order_qty', { order: o.id, have: o.qty });
     const total = o.price * qty;
-    if (a.gold < total) fail('NOT_ENOUGH_GOLD', 'no_gold', { need: total, have: a.gold });
+    if (!covers(a.gold, total)) fail('NOT_ENOUGH_GOLD', 'no_gold', { need: total, have: a.gold });
     if (!canFit(run.c, a, [{ item: o.item, qty }])) fail('INVENTORY_FULL', 'inventory_full');
     const seller = run.s.agents.get(o.seller)!;
     const v = run.s.village;
     const tax = Math.floor(total * v.taxRate);
-    a.gold -= total;
+    takeGold(a, total);
     addItem(a, o.item, qty);
     // The seller is paid even when away: the market holds the goods, so it can settle alone.
     addGold(run, seller, total - tax);
-    v.treasury += tax;
+    creditTreasury(v, tax, 'market tax');
     run.s.dirty.add('village');
     o.qty -= qty;
     if (o.qty <= 0) removeOrder(run.s, o);

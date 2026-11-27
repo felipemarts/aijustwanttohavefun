@@ -1,6 +1,7 @@
 import type { Content, Item } from '@ajwf/content';
-import { ref } from '@ajwf/shared';
+import { hasOwnKey, own, ref } from '@ajwf/shared';
 import { BALANCE, xpToNext } from './balance';
+import { assertAmount, covers, stockAdd, stockTake } from './ledger';
 import { emit, markAgent, msg, tell, type Run } from './run';
 import type { AgentState, Buff, EquipSlot, Stack } from './types';
 import { applyLibrary } from './unlocks';
@@ -104,12 +105,34 @@ export function touch(run: Run, a: AgentState, wake = true): void {
   if (now > a.regenAt) {
     if (dt > 0 && !a.fallen && !a.combat) {
       const d = derive(run.c, a, now);
-      const boost = 1 + buffValue(a, 'regen', now);
-      if (a.hp < d.maxHp) a.hp = Math.min(d.maxHp, a.hp + (d.maxHp * B.regen.hpPerMin * boost * dt) / 60_000);
-      if (a.mp < d.maxMp) a.mp = Math.min(d.maxMp, a.mp + (d.maxMp * B.regen.mpPerMin * boost * dt) / 60_000);
+      a.hp = regenerated(a.hp, d.maxHp, B.regen.hpPerMin, a, now, dt);
+      a.mp = regenerated(a.mp, d.maxMp, B.regen.mpPerMin, a, now, dt);
     }
     a.regenAt = now;
   }
+}
+
+/** A pool (HP or MP) after `dt` ms of regeneration, capped at its maximum. */
+function regenerated(cur: number, max: number, perMin: number, a: AgentState, now: number, dt: number): number {
+  if (!(cur < max)) return cur;
+  return Math.min(max, cur + (max * perMin * (1 + buffValue(a, 'regen', now)) * dt) / 60_000);
+}
+
+/**
+ * The HP `touch` would bring an agent to right now, without changing anything: for checks made on another agent
+ * before an action decides to go ahead (a refused action must leave the world as it was).
+ */
+export function hpNow(run: Run, a: AgentState): number {
+  const now = run.now;
+  if (a.fallen || !(now > a.regenAt)) return a.hp;
+  let regenFrom = a.regenAt;
+  if (a.combat) {
+    const mon = a.combat.mon;
+    if (a.combat.until <= now) regenFrom = Math.max(regenFrom, a.combat.until);
+    else if (run.s.rooms.get(a.room)?.monsters.some((m) => m.uid === mon)) return a.hp;
+  }
+  const dt = now - regenFrom;
+  return dt > 0 ? regenerated(a.hp, derive(run.c, a, now).maxHp, BALANCE.regen.hpPerMin, a, now, dt) : a.hp;
 }
 
 /** HP as shown to players: whole numbers, never 0 while standing. */
@@ -125,48 +148,51 @@ export function isStackable(item: Item): boolean {
   return item.stackable ?? STACKABLE_TYPES.has(item.type);
 }
 
-export function slotsUsed(c: Content, inv: Record<string, number>): number {
+export function slotsUsed(c: Content, inv: Readonly<Record<string, number>> | ReadonlyMap<string, number>): number {
   let n = 0;
-  for (const id in inv) {
-    const qty = inv[id]!;
-    if (qty <= 0) continue;
+  for (const [id, qty] of inv instanceof Map ? inv : Object.entries(inv)) {
+    if (!(qty > 0)) continue;
     const item = c.items.get(id);
     n += item && !isStackable(item) ? qty : 1;
   }
   return n;
 }
 
-export function capacity(c: Content, a: AgentState): number {
-  const bag = a.equip.bag ? c.items.get(a.equip.bag) : undefined;
-  return BALANCE.inventory.slots + (bag?.bag_slots ?? 0);
+/** Inventory slots with this bag equipped (null: none). */
+export function bagCapacity(c: Content, bag: string | null): number {
+  const item = bag ? c.items.get(bag) : undefined;
+  return BALANCE.inventory.slots + (item?.bag_slots ?? 0);
 }
 
-/** Would the inventory still fit after removing `out` and adding `add`? */
-export function canFit(c: Content, a: AgentState, add: readonly Stack[], out: readonly Stack[] = []): boolean {
-  const inv = { ...a.inv };
-  for (const s of out) inv[s.item] = (inv[s.item] ?? 0) - s.qty;
-  for (const s of add) inv[s.item] = (inv[s.item] ?? 0) + s.qty;
-  return slotsUsed(c, inv) <= capacity(c, a);
+export function capacity(c: Content, a: AgentState): number {
+  return bagCapacity(c, a.equip.bag);
+}
+
+/** Would the inventory still fit after removing `out` and adding `add` (with `cap` slots, by default the current ones)? */
+export function canFit(c: Content, a: AgentState, add: readonly Stack[], out: readonly Stack[] = [], cap = capacity(c, a)): boolean {
+  const inv = new Map(Object.entries(a.inv));
+  for (const s of out) inv.set(s.item, (inv.get(s.item) ?? 0) - s.qty);
+  for (const s of add) inv.set(s.item, (inv.get(s.item) ?? 0) + s.qty);
+  return slotsUsed(c, inv) <= cap;
 }
 
 export function count(a: AgentState, item: string): number {
-  return a.inv[item] ?? 0;
+  return own(a.inv, item) ?? 0;
 }
 
+/** Whether the agent carries all of these (NaN or negative quantities answer no). */
 export function hasAll(a: AgentState, stacks: readonly Stack[]): boolean {
-  return stacks.every((s) => count(a, s.item) >= s.qty);
+  return stacks.every((s) => covers(count(a, s.item), s.qty));
 }
 
+/** Puts items in the bags (no room check: see `canFit`). Throws before changing anything on a bad id or quantity. */
 export function addItem(a: AgentState, item: string, qty: number): void {
-  if (qty <= 0) return;
-  a.inv[item] = (a.inv[item] ?? 0) + qty;
+  stockAdd(a.inv, item, qty, `inventory of ${a.id}`);
 }
 
+/** Takes items out of the bags; the agent must carry them. Throws before changing anything otherwise. */
 export function removeItem(a: AgentState, item: string, qty: number): void {
-  const left = (a.inv[item] ?? 0) - qty;
-  if (left < 0) throw new Error(`inventory underflow: ${a.id} ${item}`);
-  if (left === 0) delete a.inv[item];
-  else a.inv[item] = left;
+  stockTake(a.inv, item, qty, `inventory of ${a.id}`);
 }
 
 /** Gives an item, or leaves it on the ground when the bags are full. Returns false when it fell. */
@@ -175,8 +201,7 @@ export function giveOrDrop(run: Run, a: AgentState, item: string, qty: number): 
     addItem(a, item, qty);
     return true;
   }
-  const ground = run.s.rooms.get(a.room)!.ground;
-  ground[item] = (ground[item] ?? 0) + qty;
+  stockAdd(run.s.rooms.get(a.room)!.ground, item, qty, `ground of ${a.room}`);
   run.s.dirty.add(`room:${a.room}`);
   return false;
 }
@@ -190,11 +215,11 @@ export function equipped(a: AgentState, slot: EquipSlot): string | null {
 function checkAchievements(run: Run, a: AgentState, stat: string): void {
   const list = run.c.achievementsByStat.get(stat);
   if (!list) return;
-  const value = a.stats[stat] ?? 0;
+  const value = own(a.stats, stat) ?? 0;
   for (const ach of list) {
-    if (value < ach.gte || a.achievements[ach.id]) continue;
+    if (!(value >= ach.gte) || hasOwnKey(a.achievements, ach.id)) continue;
     if (ach.world_first) {
-      if (run.s.meta.worldFirsts[ach.id]) continue;
+      if (hasOwnKey(run.s.meta.worldFirsts, ach.id)) continue;
       run.s.meta.worldFirsts[ach.id] = a.id;
       run.s.dirty.add('meta');
     }
@@ -215,13 +240,14 @@ function checkAchievements(run: Run, a: AgentState, stat: string): void {
 
 /** Increments a counter and unlocks any achievement that depends on it. */
 export function bump(run: Run, a: AgentState, stat: string, n = 1): void {
-  a.stats[stat] = (a.stats[stat] ?? 0) + n;
+  assertAmount(n, `stat ${stat}`);
+  a.stats[stat] = (own(a.stats, stat) ?? 0) + n;
   checkAchievements(run, a, stat);
 }
 
 /** Raises a "highest value so far" counter (level, gold peak...). */
 export function statMax(run: Run, a: AgentState, stat: string, value: number): void {
-  if ((a.stats[stat] ?? 0) >= value) return;
+  if ((own(a.stats, stat) ?? 0) >= value) return;
   a.stats[stat] = value;
   checkAchievements(run, a, stat);
 }
@@ -230,9 +256,19 @@ export function grantTitle(a: AgentState, title: string): void {
   if (!a.titles.includes(title)) a.titles.push(title);
 }
 
+/** Gives gold to an agent. Throws before changing anything unless the amount is a safe non-negative integer. */
 export function addGold(run: Run, a: AgentState, amount: number): void {
+  assertAmount(amount, `gold to ${a.id}`);
+  assertAmount(a.gold, `gold of ${a.id}`);
   a.gold += amount;
   if (amount > 0) statMax(run, a, 'gold_peak', a.gold);
+}
+
+/** Takes gold from an agent, who must hold it (callers refuse first with `fail`). Throws before changing anything otherwise. */
+export function takeGold(a: AgentState, amount: number): void {
+  assertAmount(amount, `gold from ${a.id}`);
+  if (!covers(a.gold, amount)) throw new Error(`ledger: ${a.id} holds ${a.gold} gold, ${amount} asked`);
+  a.gold -= amount;
 }
 
 // ── XP and levels ────────────────────────────────────────────────────────────
@@ -312,7 +348,7 @@ export function fall(run: Run, a: AgentState, by: string, pvp = false): void {
 export function wakeAtTemple(run: Run, a: AgentState): void {
   if (!a.fallen) return;
   const lost = a.fallen.pvp ? 0 : Math.floor(a.gold * BALANCE.death.goldLoss);
-  a.gold -= lost;
+  takeGold(a, lost);
   a.fallen = null;
   a.combat = null;
   const from = a.room;

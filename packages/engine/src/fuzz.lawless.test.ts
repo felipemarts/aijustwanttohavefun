@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { createRng, type GameEvent, type Rng } from '@ajwf/shared';
-import { touch } from './agent';
 import { applyAction } from './apply';
 import { BALANCE } from './balance';
-import { CLASSES, type Cmd } from './fuzzkit';
+import { CLASSES, expectSameWorld, settle, worldBytes, type Cmd } from './fuzzkit';
 import { checkInvariants } from './invariants';
-import { newRun } from './run';
 import { HOUR, makeKit, MIN, SEC, worldWealth, type Kit } from './testkit';
 import { tick } from './tick';
 import type { AgentState, ApplyResult } from './types';
@@ -167,17 +165,20 @@ describe('fuzz: lawless', () => {
       check(tick(k.s, k.ctx()), () => `tick before step ${step}`);
       const cmd = command(k, rng, a, agents);
       const what = () => `step ${step}: ${a.name} (lvl ${a.level}) ${cmd.action} ${JSON.stringify(cmd.params)}`;
-      touch(newRun(k.s, k.now, k.rng, a), a, false);
-      const before = JSON.stringify([a, k.s.rooms.get(a.room), k.s.bounties, a.guild ? k.s.guilds.get(a.guild) : null]);
+      check(settle(k, a), () => `settling before step ${step}`);
+      const before = worldBytes(k.s);
       let r: ApplyResult;
       try {
         r = applyAction(k.s, { agentId: a.id, ...cmd }, k.ctx());
       } catch (e) {
         throw new Error(`${what()} threw ${(e as Error).stack}`, { cause: e });
       }
+      if (r.internal !== undefined) throw new Error(`${what()}: internal error ${(r.internal as Error).stack}`);
       if (r.result.ok) ok[cmd.action] = (ok[cmd.action] ?? 0) + 1;
-      else if (r.events.length === 0) {
-        expect(JSON.stringify([a, k.s.rooms.get(a.room), k.s.bounties, a.guild ? k.s.guilds.get(a.guild) : null]), what()).toBe(before);
+      else {
+        // A refusal leaves the whole persisted world byte for byte as it was.
+        expect(r.events, what()).toEqual([]);
+        expectSameWorld(k.s, before, what());
         unchanged++;
       }
       check(r.events, what);

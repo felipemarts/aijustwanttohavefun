@@ -186,6 +186,7 @@ ui:
     voting_opens_in: 'Voting opens in {time}'
     closes_in: 'Polls close in {time}'
     voters: '{n, plural, =0 {No ballots cast yet} one {# ballot cast} other {# ballots cast}}'
+    votes_sealed: Votes are counted when the election closes.
     no_candidates: Nobody has run for mayor yet.
     votes: '{n, plural, one {# vote} other {# votes}}'
     withdrawn: Out of the race

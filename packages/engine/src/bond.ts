@@ -1,3 +1,4 @@
+import { own } from '@ajwf/shared';
 import { bump } from './agent';
 import { BALANCE } from './balance';
 import { emit, markAgent, msg, tell, type Run } from './run';
@@ -18,7 +19,11 @@ export function bondLevel(v: number): BondLevel | null {
  * side's copy is then the truth.
  */
 export function bondScore(a: AgentState, b: AgentState): number {
-  return a.bonds[b.id]?.v ?? b.bonds[a.id]?.v ?? 0;
+  return own(a.bonds, b.id)?.v ?? own(b.bonds, a.id)?.v ?? 0;
+}
+
+function lastTalkOf(a: AgentState, b: AgentState): number {
+  return own(a.bonds, b.id)?.talk ?? own(b.bonds, a.id)?.talk ?? 0;
 }
 
 export function isBestFriend(a: AgentState, b: AgentState): boolean {
@@ -30,13 +35,13 @@ export function isBestFriend(a: AgentState, b: AgentState): boolean {
  * Returns whether the agent's stored bonds changed: a new entry evicted at once, or an identical write, changes nothing.
  */
 function store(a: AgentState, otherId: string, v: number, talk: number): boolean {
-  const old = a.bonds[otherId];
+  const old = own(a.bonds, otherId);
   if (old && old.v === v && old.talk === talk) return false;
   a.bonds[otherId] = { v, talk };
-  const ids = Object.keys(a.bonds);
-  if (ids.length <= BALANCE.bond.keep) return true;
-  let weakest = ids[0]!;
-  for (const id of ids) if (a.bonds[id]!.v < a.bonds[weakest]!.v) weakest = id;
+  const entries = Object.entries(a.bonds);
+  if (entries.length <= BALANCE.bond.keep) return true;
+  let [weakest, low] = entries[0]!;
+  for (const [id, bond] of entries) if (bond.v < low.v) [weakest, low] = [id, bond];
   delete a.bonds[weakest];
   return weakest !== otherId || old !== undefined;
 }
@@ -53,7 +58,7 @@ export function raiseBond(run: Run, a: AgentState, b: AgentState, amount: number
   const before = bondScore(a, b);
   const after = Math.min(BALANCE.bond.max, before + amount);
   if (after === before) return;
-  const lastTalk = talk ? run.now : (a.bonds[b.id]?.talk ?? b.bonds[a.id]?.talk ?? 0);
+  const lastTalk = talk ? run.now : lastTalkOf(a, b);
   setBond(run, a, b, after, lastTalk);
   const level = bondLevel(after);
   if (!level || level === bondLevel(before)) return;
@@ -85,12 +90,12 @@ export function dropBond(run: Run, a: AgentState, b: AgentState, amount: number)
   if (a === b || amount <= 0) return;
   const before = bondScore(a, b);
   if (before <= 0) return;
-  setBond(run, a, b, Math.max(0, before - amount), a.bonds[b.id]?.talk ?? b.bonds[a.id]?.talk ?? 0);
+  setBond(run, a, b, Math.max(0, before - amount), lastTalkOf(a, b));
 }
 
 /** Talking near each other counts at most once per pair per `talkEveryMs`, so chat spam cannot farm bonds. */
 export function talkBond(run: Run, a: AgentState, b: AgentState): void {
-  const last = a.bonds[b.id]?.talk ?? b.bonds[a.id]?.talk ?? 0;
+  const last = lastTalkOf(a, b);
   if (run.now - last < BALANCE.bond.talkEveryMs) return;
   raiseBond(run, a, b, BALANCE.bond.talk, true);
 }

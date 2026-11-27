@@ -1,3 +1,4 @@
+import { own } from '@ajwf/shared';
 import type { WorldState } from '@ajwf/engine';
 import type { DailyStats, GameEvent } from '@ajwf/shared';
 
@@ -50,14 +51,14 @@ export class DayTally {
   }
 
   count(type: string): number {
-    return this.data.counts[type] ?? 0;
+    return own(this.data.counts, type) ?? 0;
   }
 
   consume(ev: GameEvent, agentName: (id: string) => string | undefined): void {
     const d = this.data;
-    d.counts[ev.type] = (d.counts[ev.type] ?? 0) + 1;
+    d.counts[ev.type] = (own(d.counts, ev.type) ?? 0) + 1;
     const gold = ev.payload.gold;
-    if (typeof gold === 'number' && gold > 0) d.gold[ev.type] = (d.gold[ev.type] ?? 0) + gold;
+    if (typeof gold === 'number' && gold > 0) d.gold[ev.type] = (own(d.gold, ev.type) ?? 0) + gold;
     if (ev.type === 'arrival' && ev.actor) {
       d.newcomerCount++;
       const name = agentName(ev.actor);
@@ -74,7 +75,8 @@ export class DayTally {
 
   /** A market trade (also used to rebuild the day from stored trades after a restart). */
   trade(item: string, qty: number, price: number): void {
-    const v = (this.data.trades[item] ??= { qty: 0, gold: 0, n: 0 });
+    let v = own(this.data.trades, item);
+    if (!v) this.data.trades[item] = v = { qty: 0, gold: 0, n: 0 };
     v.qty += qty;
     v.gold += qty * price;
     v.n++;

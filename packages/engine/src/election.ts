@@ -1,8 +1,9 @@
+import { own } from '@ajwf/shared';
 import { bump, grantTitle } from './agent';
 import { BALANCE } from './balance';
 import { emit, markAgent, msg, type Run } from './run';
 import type { AgentState, WorldState } from './types';
-import { electionDue, newElection, type ElectionRecord, type Mayor } from './village-state';
+import { electionDue, newElection, type Election, type ElectionRecord, type Mayor } from './village-state';
 
 /** Title the mayor wears while in office; removed when the term ends. */
 export const MAYOR_TITLE = 'mayor';
@@ -76,17 +77,35 @@ function stepDown(run: Run, m: Mayor): void {
 }
 
 /**
- * Counts the votes. Most votes wins; a tie goes to the earliest candidacy; candidates banned or retired since cannot
- * win. No candidates, or no votes, means no mayor: the previous one steps down all the same.
+ * The ballots that count when the election closes: those of voters still active (an agent retired or banned since
+ * its vote does not vote). candidate id -> votes, and the voters counted. Bounded by the ballots cast, never a scan of
+ * all agents. `e.tally` keeps counting every ballot as it is cast; only the closing count leaves the inactive out.
+ */
+function countBallots(s: WorldState, e: Election): { tally: Record<string, number>; voters: string[] } {
+  const tally: Record<string, number> = {};
+  const voters: string[] = [];
+  for (const [voter, cand] of Object.entries(e.votes)) {
+    if (s.agents.get(voter)?.status !== 'active') continue;
+    tally[cand] = (own(tally, cand) ?? 0) + 1;
+    voters.push(voter);
+  }
+  return { tally, voters };
+}
+
+/**
+ * Counts the votes of the voters still active (see `countBallots`). Most votes wins; a tie goes to the earliest
+ * candidacy; candidates banned or retired since cannot win. No candidates, or no votes, means no mayor: the previous
+ * one steps down all the same.
  */
 function closeElection(run: Run): void {
   const s = run.s;
   const v = s.village;
   const e = v.election;
+  const count = countBallots(s, e);
   let winner: AgentState | null = null;
   let best = 0;
   for (const c of e.candidates) {
-    const n = e.tally[c.id] ?? 0;
+    const n = own(count.tally, c.id) ?? 0;
     const a = s.agents.get(c.id);
     if (n > best && a?.status === 'active') {
       winner = a;
@@ -111,7 +130,7 @@ function closeElection(run: Run): void {
     end: e.end,
     winner: winner?.name ?? null,
     winnerId: winner?.id ?? null,
-    votes: e.candidates.map((c) => ({ id: c.id, name: c.name, votes: e.tally[c.id] ?? 0 })),
+    votes: e.candidates.map((c) => ({ id: c.id, name: c.name, votes: own(count.tally, c.id) ?? 0 })),
   };
   v.history.push(record);
   if (v.history.length > BALANCE.election.historyKept) v.history.splice(0, v.history.length - BALANCE.election.historyKept);
@@ -125,15 +144,15 @@ function closeElection(run: Run): void {
     to: winner ? [winner.id] : 'none',
     drama: winner ? 9 : out ? 6 : 3,
     m: msg(key, { actor: winner?.name ?? '', votes: best, election: e.n, name: out ?? '' }),
-    data: { ...record, voters: Object.keys(e.votes).length, previous: out },
+    data: { ...record, voters: count.voters.length, previous: out },
   });
 
   if (!winner) return;
   bump(run, winner, 'mayor_elected');
   markAgent(s, winner);
-  // Only the winner's voters: bounded by the votes cast, never a scan of all agents.
-  for (const [voter, cand] of Object.entries(e.votes)) {
-    if (cand !== winner.id) continue;
+  // Only the winner's counted voters (active ones): bounded by the votes cast, never a scan of all agents.
+  for (const voter of count.voters) {
+    if (own(e.votes, voter) !== winner.id) continue;
     const a = s.agents.get(voter);
     if (!a) continue;
     bump(run, a, 'votes_for_winner');

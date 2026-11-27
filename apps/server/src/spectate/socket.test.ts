@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { WebSocket } from 'ws';
 import { makeServer, type TestServer } from '../test-helpers';
 import { constants as zlibConstants, inflateRawSync } from 'node:zlib';
-import { clientIp, deflateMessage, framing, ipMatches, textFrame } from './socket';
+import { deflateMessage, framing, textFrame } from './socket';
 
 const open: TestServer[] = [];
 afterEach(async () => {
@@ -174,25 +174,5 @@ describe('shared broadcast frames', () => {
     expect(framing('permessage-deflate; server_no_context_takeover; client_no_context_takeover')).toBe('deflate');
     expect(framing('permessage-deflate; server_no_context_takeover; server_max_window_bits=15')).toBe('deflate');
     expect(framing('permessage-deflate; server_no_context_takeover; server_max_window_bits=10')).toBe('ws');
-  });
-});
-
-describe('client IP behind proxies', () => {
-  it('ignores X-Forwarded-For unless the proxy is trusted', () => {
-    expect(clientIp('10.0.0.5', '1.2.3.4', false)).toBe('10.0.0.5');
-    expect(clientIp('10.0.0.5', '1.2.3.4, 10.0.0.9', true)).toBe('1.2.3.4');
-    expect(clientIp('10.0.0.5', '6.6.6.6, 1.2.3.4', ['10.0.0.0/8'])).toBe('1.2.3.4');
-    expect(clientIp('10.0.0.5', '6.6.6.6, 1.2.3.4, 10.1.1.1', ['10.0.0.0/8'])).toBe('1.2.3.4');
-    expect(clientIp('192.0.2.1', '1.2.3.4', ['10.0.0.0/8'])).toBe('192.0.2.1');
-    expect(clientIp('::ffff:10.0.0.5', '1.2.3.4', ['10.0.0.0/8'])).toBe('1.2.3.4');
-  });
-
-  it('matches exact addresses and IPv4 ranges', () => {
-    expect(ipMatches('10.1.2.3', '10.0.0.0/8')).toBe(true);
-    expect(ipMatches('11.1.2.3', '10.0.0.0/8')).toBe(false);
-    expect(ipMatches('127.0.0.1', '127.0.0.1')).toBe(true);
-    expect(ipMatches('::1', '::1')).toBe(true);
-    expect(ipMatches('1.2.3.4', '0.0.0.0/0')).toBe(true);
-    expect(ipMatches('1.2.3.4', 'bad/99')).toBe(false);
   });
 });

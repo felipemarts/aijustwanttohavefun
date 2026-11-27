@@ -73,7 +73,6 @@ export const GAZETTE_SLOTS: readonly string[] = [
     'item.election_no_winner',
     'item.election_candidacy',
     'item.election_voting',
-    'item.election_leader',
     'item.treasury',
     'item.tax_changed',
     'item.thefts',
@@ -145,11 +144,8 @@ export function buildGazette(o: GazetteInput): GazetteEdition {
   const e = v.election;
   if (t.count('election_result') > 0 && !hs.some((h) => h.type === 'mayor_elected' || h.type === 'mayor_reelected')) add('election', w.msg('item.election_no_winner', { n: v.lastElection?.n ?? e.n }));
   if (e.phase === 'candidacy') add('election', w.msg('item.election_candidacy', { n: e.candidates.length, days: Math.max(0, Math.ceil((e.voteAt - v.now) / 86_400_000)) }));
-  else {
-    add('election', w.msg('item.election_voting', { n: e.candidates.length, voters: e.voters, hours: Math.max(0, Math.ceil((e.end - v.now) / 3_600_000)) }));
-    const lead = [...e.candidates].filter((c) => c.active && c.votes > 0).sort((a, b) => b.votes - a.votes || a.at - b.at)[0];
-    if (lead) add('election', w.msg('item.election_leader', { name: lead.name, votes: lead.votes }));
-  }
+  // The ballot is secret: while the polls are open, the turnout only, never who leads.
+  else add('election', w.msg('item.election_voting', { n: e.candidates.length, voters: e.voters, hours: Math.max(0, Math.ceil((e.end - v.now) / 3_600_000)) }));
   if (t.count('mayor_tax') > 0) add('election', w.msg('item.tax_changed', { pct: Math.round(v.taxRate * 1000) / 10 }));
   add('election', w.msg('item.treasury', { gold: v.treasury, pct: Math.round(v.taxRate * 1000) / 10 }));
 

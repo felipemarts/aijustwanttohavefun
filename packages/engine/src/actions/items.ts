@@ -1,18 +1,19 @@
 import type { Item } from '@ajwf/content';
 import { hasOption, appearanceHash, type Layer } from '@ajwf/appearance';
-import { ref } from '@ajwf/shared';
-import { addBuff, addItem, bump, canFit, capacity, count, derive, removeItem, slotsUsed } from '../agent';
+import { own, ref } from '@ajwf/shared';
+import { addBuff, addItem, bagCapacity, bump, canFit, capacity, count, derive, removeItem, slotsUsed } from '../agent';
 import { questEvent } from '../quests';
 import { emit, fail, markAgent, markRoom, msg, tell, type Run } from '../run';
 import type { AgentState, EquipSlot } from '../types';
 import { roomState } from '../world';
-import { normId, type HandlerMap } from './util';
+import { normId, wholeNumber, type HandlerMap } from './util';
+import { stockAdd, stockTake } from '../ledger';
 
 /** An item the agent carries (inventory only), by loose id. */
 export function carried(run: Run, a: AgentState, raw: string): Item {
   const id = normId(raw);
   const item = run.c.items.get(id);
-  if (!item || count(a, id) <= 0) fail('TARGET_NOT_FOUND', 'item_not_carried', { item: raw });
+  if (!item || !(count(a, id) > 0)) fail('TARGET_NOT_FOUND', 'item_not_carried', { item: raw });
   return item;
 }
 
@@ -57,16 +58,13 @@ function equipItem(run: Run, a: AgentState, item: Item): void {
   }
   if (a.level < item.level) fail('LEVEL_REQUIRED', 'item_level', { item: ref.item(item.id), level: item.level });
   const old = a.equip[slot];
+  // A smaller bag must still hold everything (checked before anything moves).
+  if (slot === 'bag' && !canFit(run.c, a, old ? [{ item: old, qty: 1 }] : [], [{ item: item.id, qty: 1 }], bagCapacity(run.c, item.id))) {
+    fail('INVENTORY_FULL', 'bag_too_small');
+  }
   removeItem(a, item.id, 1);
   if (old) addItem(a, old, 1);
   a.equip[slot] = item.id;
-  // A smaller bag must still hold everything.
-  if (slot === 'bag' && slotsUsed(run.c, a.inv) > capacity(run.c, a)) {
-    a.equip[slot] = old;
-    if (old) removeItem(a, old, 1);
-    addItem(a, item.id, 1);
-    fail('INVENTORY_FULL', 'bag_too_small');
-  }
   // Max HP/MP may have dropped with the swap.
   const d = derive(run.c, a, run.now);
   a.hp = Math.min(a.hp, d.maxHp);
@@ -101,13 +99,10 @@ export const itemActions: HandlerMap = {
     const slot = (['weapon', 'armor', 'trinket', 'bag'] as const).find((s) => s === id || a.equip[s] === id);
     const cur = slot ? a.equip[slot] : null;
     if (!slot || !cur) fail('TARGET_NOT_FOUND', 'not_equipped', { item: p.item });
+    // Taking off a bag also takes its slots away.
+    if (!canFit(run.c, a, [{ item: cur, qty: 1 }], [], slot === 'bag' ? bagCapacity(run.c, null) : capacity(run.c, a))) fail('INVENTORY_FULL', 'inventory_full');
     a.equip[slot] = null;
     addItem(a, cur, 1);
-    if (slotsUsed(run.c, a.inv) > capacity(run.c, a)) {
-      removeItem(a, cur, 1);
-      a.equip[slot] = cur;
-      fail('INVENTORY_FULL', 'inventory_full');
-    }
     const d = derive(run.c, a, run.now);
     a.hp = Math.max(1, Math.min(a.hp, d.maxHp));
     a.mp = Math.min(a.mp, d.maxMp);
@@ -137,10 +132,10 @@ export const itemActions: HandlerMap = {
   drop(run, a, p) {
     const item = carried(run, a, p.item);
     if (item.type === 'quest') fail('NOT_ALLOWED', 'quest_item', { item: ref.item(item.id) });
-    const qty = Math.min(p.qty ?? 1, count(a, item.id));
-    removeItem(a, item.id, qty);
+    const qty = Math.min(wholeNumber(p.qty ?? 1, 'qty', 1), count(a, item.id));
     const ground = roomState(run.s, a.room).ground;
-    ground[item.id] = (ground[item.id] ?? 0) + qty;
+    removeItem(a, item.id, qty);
+    stockAdd(ground, item.id, qty, `ground of ${a.room}`);
     markRoom(run.s, a.room);
     tell(run, 'n.drop', { item: ref.item(item.id), qty });
     emit(run, 'drop', { room: a.room, actor: a.id, m: msg('ev.drop', { actor: a.name, item: ref.item(item.id), qty }), data: { item: item.id, qty } });
@@ -149,12 +144,11 @@ export const itemActions: HandlerMap = {
   take(run, a, p) {
     const id = normId(p.item);
     const ground = roomState(run.s, a.room).ground;
-    const there = ground[id] ?? 0;
-    if (there <= 0 || !run.c.items.has(id)) fail('TARGET_NOT_FOUND', 'item_not_here', { item: p.item });
-    const qty = Math.min(p.qty ?? there, there);
+    const there = own(ground, id) ?? 0;
+    if (!(there > 0) || !run.c.items.has(id)) fail('TARGET_NOT_FOUND', 'item_not_here', { item: p.item });
+    const qty = Math.min(wholeNumber(p.qty ?? there, 'qty', 1), there);
     if (!canFit(run.c, a, [{ item: id, qty }])) fail('INVENTORY_FULL', 'inventory_full');
-    if (there - qty <= 0) delete ground[id];
-    else ground[id] = there - qty;
+    stockTake(ground, id, qty, `ground of ${a.room}`);
     addItem(a, id, qty);
     markRoom(run.s, a.room);
     markAgent(run.s, a);

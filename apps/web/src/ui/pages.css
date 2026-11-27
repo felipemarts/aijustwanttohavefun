@@ -404,12 +404,6 @@
   gap: 8px;
 }
 
-.candidate-votes {
-  margin-inline-start: auto;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-
 .platform {
   font-size: 0.9rem;
 }

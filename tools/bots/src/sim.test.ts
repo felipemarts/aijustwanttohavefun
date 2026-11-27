@@ -10,12 +10,17 @@ import type { SimReport } from './sim/metrics';
 import { defaultOptions, Simulation } from './sim/runner';
 
 
-/** Enough of both populations to compare, over enough days for both to reach the middle levels; traitors among them. */
+/**
+ * Enough of both populations to compare, over enough days for both to reach the middle levels; traitors among them.
+ * At this scale the trust events of one run depend on its trajectory (seeds 1 to 6 range from 0 to 27 PvP kills):
+ * seed 1 is one where every kind happens. It moved from 7 when inboxes stopped delivering every emote and gained a
+ * priority ring, which changed what the bots read and so their whole run.
+ */
 const OPTIONS = defaultOptions({
   bots: 64,
   days: 3.5,
   actions: undefined,
-  seed: 7,
+  seed: 1,
   mix: { explorer: 0.06, fighter: 0.3, social: 0.3, trader: 0.1, politician: 0.1, traitor: 0.14 },
 });
 

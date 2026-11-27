@@ -1,5 +1,5 @@
 import type { Quest } from '@ajwf/content';
-import { ref } from '@ajwf/shared';
+import { hasOwnKey, ref } from '@ajwf/shared';
 import { BALANCE } from './balance';
 import { partyHere } from './party';
 import { questEvent } from './quests';
@@ -89,7 +89,7 @@ function holders(s: WorldState, e: Escort): AgentState[] {
   const out: AgentState[] = [];
   for (const id of ids) {
     const b = s.agents.get(id);
-    if (b?.quests[e.quest]) out.push(b);
+    if (b && hasOwnKey(b.quests, e.quest)) out.push(b);
   }
   return out;
 }
@@ -157,7 +157,7 @@ export function escortAfterMove(run: Run, a: AgentState): void {
   const names = guards.map((b) => b.name).join(', ');
   tell(run, 'n.escort_done', { npc, room: ref.room(to) });
   emit(run, 'escort_done', { room: to, actor: a.id, vis: 'public', to: party.members, drama: 4, m: msg('ev.escort_done', { npc, room: ref.room(to), names }), data: { npc: e.npc, quest: e.quest } });
-  for (const b of guards) if (b.quests[e.quest]) questEvent(run, b, 'escort', to);
+  for (const b of guards) if (hasOwnKey(b.quests, e.quest)) questEvent(run, b, 'escort', to);
 }
 
 /** Stall check: an escort whose NPC has not moved for too long ends. */

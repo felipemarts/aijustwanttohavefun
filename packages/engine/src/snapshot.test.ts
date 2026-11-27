@@ -244,15 +244,15 @@ describe('snapshots', () => {
     const fired = exportDirty(k.s);
     expect(timersIn(fired)).toBe(true);
     expect(JSON.stringify(fired.world.find((e) => e.key === 'timers')!.data)).toBe(JSON.stringify(k.s.timers.toJSON()));
-    // An action that schedules nothing leaves it out; one that pushes a timer (a trade offer expiring) brings it in.
+    // An action that schedules nothing leaves it out, a trade offer included: offers expire without timers.
     const a = k.s.agents.get(k.s.byName.get('warri')!)!;
     const b = k.s.agents.get(k.s.byName.get('healer')!)!;
     k.place(a, b.room);
     exportDirty(k.s);
     expect(applyAction(k.s, { agentId: a.id, action: 'emote', params: { emote: 'wave' } }, k.ctx()).result.ok).toBe(true);
     expect(timersIn(exportDirty(k.s))).toBe(false);
-    applyAction(k.s, { agentId: a.id, action: 'trade_offer', params: { to: 'Healer', give: { gold: 1 }, want: {} } }, k.ctx());
-    expect(timersIn(exportDirty(k.s))).toBe(true);
+    expect(applyAction(k.s, { agentId: a.id, action: 'trade_offer', params: { to: 'Healer', give: { gold: 1 }, want: {} } }, k.ctx()).result.ok).toBe(true);
+    expect(timersIn(exportDirty(k.s))).toBe(false);
     // A restored world starts clean.
     const restored = restoreWorld(k.c, persist(k.s), k.now);
     expect(exportDirty(restored)).toEqual({ agents: [], world: [] });

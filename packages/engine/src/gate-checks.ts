@@ -1,4 +1,4 @@
-import { ref } from '@ajwf/shared';
+import { own, ref } from '@ajwf/shared';
 import { BALANCE } from './balance';
 import type { Block } from './gates';
 import { puzzleBlock } from './puzzles';
@@ -16,7 +16,7 @@ export function partyGateBlock(run: Run, a: AgentState): Block | null {
   if (!p || p.members.length < P.partyMin) return block;
   const room = run.c.rooms.get(a.room)!;
   const sides = new Set([a.room]);
-  for (const [dir, g] of Object.entries(room.gates)) if (g.requires === 'party') sides.add(room.exits[dir]!);
+  for (const [dir, g] of Object.entries(room.gates)) if (g.requires === 'party') sides.add(own(room.exits, dir)!);
   const classes = new Set<string>();
   let n = 0;
   for (const id of p.members) {

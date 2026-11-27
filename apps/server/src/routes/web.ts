@@ -160,7 +160,7 @@ export async function webRoutes(app: FastifyInstance, ctx: AppContext): Promise<
 
   const ogLimit = {
     onRequest: async (req: FastifyRequest, reply: FastifyReply) => {
-      const t = ctx.limiters.og.take(req.ip, game.now());
+      const t = ctx.limiters.og.take(req.clientIp, game.now());
       if (!t.ok) return sendRateLimited(reply, render, 'en', t.retryAfterSec);
     },
   };

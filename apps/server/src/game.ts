@@ -75,6 +75,8 @@ export class Game {
   private dayListeners: ((now: number) => void)[] = [];
   /** Told how long each timer-driven tick took (seconds), for the metrics. */
   onTickTimed: ((seconds: number) => void) | null = null;
+  /** Told of every action the engine refused with INTERNAL (a bug it caught), for the metrics. */
+  onInternalError: ((action: string) => void) | null = null;
 
   private constructor(
     readonly state: WorldState,
@@ -192,8 +194,21 @@ export class Game {
 
   act(agentId: string, action: string, params: unknown): ActionResult {
     const out = applyAction(this.state, { agentId, action, params }, this.ctx());
+    if (out.internal !== undefined) this.internalError(agentId, out.result.action, out.internal);
     this.publish(out.events);
     return out.result;
+  }
+
+  /**
+   * The engine caught an unexpected exception and refused the action with INTERNAL. Logged without the params or
+   * the error message (either may carry text an agent wrote): the action name, the agent id, the error class and
+   * the stack frames are enough to find the bug.
+   */
+  private internalError(agentId: string, action: string, err: unknown): void {
+    const e = err instanceof Error ? err : null;
+    const frames = e?.stack?.split('\n').slice(1, 12).map((l) => l.trim()) ?? [];
+    this.log.error({ agent: agentId, action, error: e?.name ?? typeof err, stack: frames }, 'internal error in an action; refused with INTERNAL');
+    this.onInternalError?.(action);
   }
 
   observe(agentId: string): Observation {

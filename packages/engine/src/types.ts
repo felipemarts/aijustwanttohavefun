@@ -248,6 +248,7 @@ export type Timer =
   | { at: number; kind: 'respawn'; room: string; slot: number }
   | { at: number; kind: 'fallen'; agent: string }
   | { at: number; kind: 'phase' }
+  /** Legacy: trade expiry is swept from `trades` itself now (see trade.ts `sweepTrades`); restore drops these. */
   | { at: number; kind: 'trade'; id: string }
   /** A puzzle may close (it checks its own state: a later opening keeps it open). */
   | { at: number; kind: 'puzzle'; id: string }
@@ -261,7 +262,15 @@ export type Timer =
   /** A bounty may be refunded (its target's infamy stayed at zero long enough). */
   | { at: number; kind: 'bounty'; target: string };
 
-export type Inbox = { buf: (GameEvent | undefined)[]; head: number; size: number };
+/** A bounded ring of events, oldest at `head`. */
+export type Ring = { buf: (GameEvent | undefined)[]; head: number; size: number };
+
+/**
+ * What an agent's `GET /events` reads: the general ring (`buf`, `head`, `size`: room chatter, fights, emotes), and
+ * a smaller ring of events addressed to the agent that it must not miss (whispers, trade offers, invites: see
+ * `PRIORITY_EVENTS` in run.ts), so that a flood of room events cannot push them out. In memory only.
+ */
+export type Inbox = Ring & { pri: Ring };
 
 export type WorldMeta = {
   eventSeq: number;
@@ -306,8 +315,10 @@ export type WorldState = {
   ordersOf: Map<string, Set<string>>;
   /** item id -> open orders, cheapest first. Derived. */
   ordersByItem: Map<string, Order[]>;
-  /** Latest posts, oldest first. */
+  /** Latest posts, oldest first (see board.ts). One snapshot entry per post: `post:<id>`. */
   board: BoardPost[];
+  /** Bytes of agent text on the board (UTF-16), kept under `BALANCE.board.maxTextBytes`. Derived. */
+  boardBytes: number;
   village: Village;
   /** puzzle id -> live state, one per puzzle of the content. */
   puzzles: Record<string, PuzzleState>;
@@ -323,8 +334,8 @@ export type WorldState = {
   bounties: Record<string, Bounty>;
   /**
    * Keys of entities changed since the last snapshot: `agent:<id>`, `room:<id>`, `party:<id>`, `guild:<id>`, `meta`,
-   * `timers` (marked by the heap itself on push and pop), `trades`, `market`, `board`, `village`, `puzzles`, `wboss`,
-   * `escorts`, `bounties`. Never replaced, only cleared: the timer heap holds on to it.
+   * `timers` (marked by the heap itself on push and pop), `trades`, `market`, `post:<id>`, `village`, `puzzles`,
+   * `wboss`, `escorts`, `bounties` (and `board`, the legacy entry of the whole board, exported as null once migrated). Never replaced, only cleared: the timer heap holds on to it.
    */
   readonly dirty: Set<string>;
 };
@@ -338,4 +349,5 @@ export type ActionResult =
   | { ok: true; action: ActionName; narration: Msg[]; data?: Record<string, unknown> }
   | { ok: false; action: string; error: ActionError };
 
-export type ApplyResult = { result: ActionResult; events: GameEvent[] };
+/** `internal`: the unexpected exception behind an `INTERNAL` refusal, for the server to log (never shown to agents). */
+export type ApplyResult = { result: ActionResult; events: GameEvent[]; internal?: unknown };

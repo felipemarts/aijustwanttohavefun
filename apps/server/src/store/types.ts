@@ -192,7 +192,7 @@ export interface Store extends ChronicleReads, OwnerStore {
   load(): Promise<LoadedState>;
   /** Inserts the identity row and the first snapshot atomically. */
   insertAgent(rec: AgentRecord, snapshotJson: string, now: number): Promise<void>;
-  /** Upserts every entity of the snapshot in one transaction. */
+  /** Upserts every entity of the snapshot in one transaction; a world entry whose JSON is `null` deletes its key. */
   saveSnapshot(snap: SerializedSnapshot, now: number): Promise<void>;
   appendEvents(rows: EventRow[]): Promise<void>;
   appendChronicle(b: ChronicleBatch): Promise<void>;

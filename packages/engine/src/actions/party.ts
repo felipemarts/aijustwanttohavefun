@@ -1,13 +1,13 @@
-import { MAX_SAY_LEN, ref } from '@ajwf/shared';
+import { LOOT_MODES, MAX_SAY_LEN, own, ref } from '@ajwf/shared';
 import { addItem, canFit, removeItem } from '../agent';
 import { BALANCE } from '../balance';
 import { addMember, createParty, markParty, partyOf, partyTimeBonds, removeMember } from '../party';
 import { questEvent } from '../quests';
 import { emit, fail, markAgent, msg, tell, type Run } from '../run';
 import type { AgentState, Party } from '../types';
-import { chatCooldown, REVEAL_AFTER_MS } from './chat';
+import { chatText, REVEAL_AFTER_MS } from './chat';
 import { carried } from './items';
-import { agentHere, cleanText, type HandlerMap } from './util';
+import { agentHere, oneOf, type HandlerMap } from './util';
 
 function myParty(run: Run, a: AgentState): Party {
   const p = partyOf(run.s, a);
@@ -35,7 +35,7 @@ export const partyActions: HandlerMap = {
     if (b.party) fail('CONFLICT', b.party === a.party ? 'already_party_member' : 'target_in_party', { name: b.name });
     if (party && party.members.length >= BALANCE.party.maxSize) fail('CONFLICT', 'party_full', { max: BALANCE.party.maxSize });
     const invites = liveInvites(b.partyInvites, run.now);
-    if (invites[a.id] === undefined && Object.keys(invites).length >= BALANCE.party.maxInvites) fail('CONFLICT', 'party_invites_full', { name: b.name });
+    if (own(invites, a.id) === undefined && Object.keys(invites).length >= BALANCE.party.maxInvites) fail('CONFLICT', 'party_invites_full', { name: b.name });
     if (!party) createParty(run, a);
     b.partyInvites = { ...invites, [a.id]: run.now + BALANCE.party.inviteMs };
     markAgent(run.s, b);
@@ -46,7 +46,7 @@ export const partyActions: HandlerMap = {
 
   party_accept(run, a, p) {
     const b = agentHere(run, a, p.agent);
-    if ((a.partyInvites[b.id] ?? 0) <= run.now) fail('TARGET_NOT_FOUND', 'no_party_invite', { name: b.name, minutes: BALANCE.party.inviteMs / 60_000 });
+    if (!((own(a.partyInvites, b.id) ?? 0) > run.now)) fail('TARGET_NOT_FOUND', 'no_party_invite', { name: b.name, minutes: BALANCE.party.inviteMs / 60_000 });
     if (a.party) fail('CONFLICT', 'already_in_party');
     const existing = partyOf(run.s, b);
     if (existing && existing.members.length >= BALANCE.party.maxSize) fail('CONFLICT', 'party_full', { max: BALANCE.party.maxSize });
@@ -81,18 +81,18 @@ export const partyActions: HandlerMap = {
   },
 
   party_loot_mode(run, a, p) {
+    const mode = oneOf(p.mode, LOOT_MODES, 'party_loot_mode', 'mode');
     const party = leaderOf(run, a);
-    if (party.loot === p.mode) fail('CONFLICT', 'loot_mode_same', { mode: p.mode });
-    party.loot = p.mode;
+    if (party.loot === mode) fail('CONFLICT', 'loot_mode_same', { mode });
+    party.loot = mode;
     markParty(run.s, party);
-    tell(run, 'n.loot_mode', { mode: p.mode });
-    emit(run, 'party_loot_mode', { room: a.room, actor: a.id, target: party.id, to: party.members, m: msg('ev.loot_mode', { actor: a.name, mode: p.mode }), data: { mode: p.mode } });
+    tell(run, 'n.loot_mode', { mode });
+    emit(run, 'party_loot_mode', { room: a.room, actor: a.id, target: party.id, to: party.members, m: msg('ev.loot_mode', { actor: a.name, mode }), data: { mode } });
   },
 
   party_say(run, a, p) {
     const party = myParty(run, a);
-    const text = cleanText(p.text, MAX_SAY_LEN);
-    chatCooldown(run, a);
+    const text = chatText(run, a, p.text, MAX_SAY_LEN);
     tell(run, 'n.party_say', { n: party.members.length - 1 });
     emit(run, 'party_say', { room: a.room, actor: a.id, target: party.id, vis: 'delayed', revealAt: run.now + REVEAL_AFTER_MS, to: party.members, lang: a.lang, data: { text } });
   },

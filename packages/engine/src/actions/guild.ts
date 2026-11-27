@@ -1,13 +1,14 @@
-import { maskBlockedWords, MAX_SAY_LEN, sanitizeAgentText } from '@ajwf/shared';
-import { bump, canFit } from '../agent';
+import { maskBlockedWords, MAX_SAY_LEN, own, sanitizeAgentText } from '@ajwf/shared';
+import { bump, canFit, takeGold } from '../agent';
+import { covers, creditTreasury, debitTreasury, stockAdd, stockTake } from '../ledger';
 import { BALANCE } from '../balance';
-import { goodsValue, goodsView, isEmpty, missingGoods, parseGoods, putGoods, takeGoods } from '../goods';
+import { assertGoods, goodsValue, goodsView, isEmpty, missingGoods, parseGoods, putGoods, takeGoods } from '../goods';
 import { addGuildMember, canManage, checkGuildName, guildByName, guildOf, indexGuild, markGuild, removeGuildMember, setLeader } from '../guild';
 import { questEvent } from '../quests';
 import { emit, fail, markAgent, msg, tell, type Run } from '../run';
 import type { AgentState, Goods, Guild } from '../types';
-import { chatCooldown, REVEAL_AFTER_MS } from './chat';
-import { agentByName, cleanText, hasFlag, type HandlerMap } from './util';
+import { chatText, REVEAL_AFTER_MS } from './chat';
+import { agentByName, hasFlag, type HandlerMap } from './util';
 
 /** Banner colors when the founder picks none: earthy brown on parchment. */
 const DEFAULT_COLORS: [string, string] = ['#6b4f2a', '#e8d8a8'];
@@ -31,8 +32,11 @@ function vaultValue(run: Run, g: Guild): number {
 /** What the guild lacks to pay out these goods, as "item xN" strings. */
 function vaultLacks(g: Guild, goods: Goods): string[] {
   const out: string[] = [];
-  if (g.treasury < goods.gold) out.push(`gold x${goods.gold - g.treasury}`);
-  for (const s of goods.items) if ((g.vault[s.item] ?? 0) < s.qty) out.push(`${s.item} x${s.qty - (g.vault[s.item] ?? 0)}`);
+  if (!covers(g.treasury, goods.gold)) out.push(`gold x${goods.gold - g.treasury}`);
+  for (const s of goods.items) {
+    const have = own(g.vault, s.item) ?? 0;
+    if (!covers(have, s.qty)) out.push(`${s.item} x${s.qty - have}`);
+  }
   return out;
 }
 
@@ -67,13 +71,15 @@ export const guildActions: HandlerMap = {
     const G = BALANCE.guild;
     const name = checkGuildName(run.s, p.name);
     if (!name.ok) {
-      const np = { name: p.name, min: G.nameMin, max: G.nameMax };
+      const np = { name: p.name, min: G.nameMin, max: G.nameMax, words: G.nameMaxWords };
       if (name.reason === 'taken') fail('NAME_TAKEN', 'guild_name_taken', np);
       if (name.reason === 'length') fail('NAME_INVALID', 'guild_name_length', np);
       if (name.reason === 'characters') fail('NAME_INVALID', 'guild_name_characters', np);
+      if (name.reason === 'words') fail('NAME_INVALID', 'guild_name_words', np);
       fail('NAME_INVALID', 'guild_name_reserved', np);
     }
-    if (a.gold < G.cost) fail('NOT_ENOUGH_GOLD', 'no_gold', { need: G.cost, have: a.gold });
+    if (!covers(a.gold, G.cost)) fail('NOT_ENOUGH_GOLD', 'no_gold', { need: G.cost, have: a.gold });
+    if (p.colors && !p.colors.every((x) => typeof x === 'string' && /^#[0-9a-fA-F]{6}$/.test(x))) fail('INVALID_PARAMS', 'invalid_params', { action: 'guild_create', field: 'colors' });
     const motto = p.motto ? maskBlockedWords(sanitizeAgentText(p.motto, G.mottoMax).text) : '';
     const s = run.s;
     const g: Guild = {
@@ -93,7 +99,7 @@ export const guildActions: HandlerMap = {
       coup: [],
     };
     // The fee is a gold sink: it leaves the economy.
-    a.gold -= G.cost;
+    takeGold(a, G.cost);
     a.guild = g.id;
     a.guildInvites = {};
     indexGuild(s, g);
@@ -124,7 +130,7 @@ export const guildActions: HandlerMap = {
     const G = BALANCE.guild;
     if (g.members.length >= G.maxMembers) fail('CONFLICT', 'guild_full', { max: G.maxMembers });
     const invites = liveInvites(b.guildInvites, run.now);
-    if (invites[g.id] === undefined && Object.keys(invites).length >= G.maxInvites) fail('CONFLICT', 'guild_invites_full', { name: b.name });
+    if (own(invites, g.id) === undefined && Object.keys(invites).length >= G.maxInvites) fail('CONFLICT', 'guild_invites_full', { name: b.name });
     b.guildInvites = { ...invites, [g.id]: run.now + G.inviteMs };
     markAgent(run.s, b);
     tell(run, 'n.guild_invite', { name: b.name, guild: g.name });
@@ -135,7 +141,7 @@ export const guildActions: HandlerMap = {
     const g = guildByName(run.s, p.guild);
     if (!g) fail('TARGET_NOT_FOUND', 'guild_unknown', { guild: p.guild });
     if (a.guild) fail('CONFLICT', 'already_in_guild');
-    if ((a.guildInvites[g.id] ?? 0) <= run.now) fail('NOT_ALLOWED', 'no_guild_invite', { guild: g.name });
+    if (!((own(a.guildInvites, g.id) ?? 0) > run.now)) fail('NOT_ALLOWED', 'no_guild_invite', { guild: g.name });
     if (g.members.length >= BALANCE.guild.maxMembers) fail('CONFLICT', 'guild_full', { max: BALANCE.guild.maxMembers });
     a.guildInvites = liveInvites(a.guildInvites, run.now);
     addGuildMember(run.s, g, a);
@@ -202,8 +208,8 @@ export const guildActions: HandlerMap = {
     const missing = missingGoods(a, goods);
     if (missing.length) fail('MISSING_ITEMS', 'goods_missing', { missing: missing.join(', ') });
     takeGoods(a, goods);
-    g.treasury += goods.gold;
-    for (const s of goods.items) g.vault[s.item] = (g.vault[s.item] ?? 0) + s.qty;
+    creditTreasury(g, goods.gold, `treasury of ${g.id}`);
+    for (const s of goods.items) stockAdd(g.vault, s.item, s.qty, `vault of ${g.id}`);
     markGuild(run.s, g);
     tell(run, 'n.guild_deposit', { guild: g.name, gold: g.treasury });
     emit(run, 'guild_deposit', { room: a.room, actor: a.id, target: g.id, to: g.members, m: msg('ev.guild_deposit', { actor: a.name, guild: g.name, value: goodsValue(run, goods) }), data: { guild: g.id, ...goodsView(goods) } });
@@ -220,12 +226,9 @@ export const guildActions: HandlerMap = {
     const value = goodsValue(run, goods);
     // The share of the treasury taken is public: it is how a looted guild is spotted.
     const share = before > 0 ? Math.round((value / before) * 100) / 100 : 1;
-    g.treasury -= goods.gold;
-    for (const s of goods.items) {
-      const left = g.vault[s.item]! - s.qty;
-      if (left > 0) g.vault[s.item] = left;
-      else delete g.vault[s.item];
-    }
+    assertGoods(goods, `withdrawal from ${g.id}`);
+    debitTreasury(g, goods.gold, `treasury of ${g.id}`);
+    for (const s of goods.items) stockTake(g.vault, s.item, s.qty, `vault of ${g.id}`);
     putGoods(run, a, goods);
     markGuild(run.s, g);
     tell(run, 'n.guild_withdraw', { guild: g.name, value, pct: Math.round(share * 100) });
@@ -294,8 +297,7 @@ export const guildActions: HandlerMap = {
 
   guild_say(run, a, p) {
     const g = myGuild(run, a);
-    const text = cleanText(p.text, MAX_SAY_LEN);
-    chatCooldown(run, a);
+    const text = chatText(run, a, p.text, MAX_SAY_LEN);
     tell(run, 'n.guild_say', { n: g.members.length - 1 });
     emit(run, 'guild_say', { room: a.room, actor: a.id, target: g.id, vis: 'delayed', revealAt: run.now + REVEAL_AFTER_MS, to: g.members, lang: a.lang, data: { text } });
   },

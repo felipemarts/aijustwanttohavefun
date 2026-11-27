@@ -56,7 +56,7 @@ describe('engine i18n keys', () => {
 
   it('every hint belongs to an error the engine can raise', () => {
     const { slugs } = engineKeys();
-    const known = new Set([...slugs, 'invalid_action', 'invalid_params', 'name']);
+    const known = new Set([...slugs, 'invalid_action', 'invalid_params', 'internal', 'name']);
     const orphans = Object.keys(en).filter((k) => k.startsWith('hint.') && !known.has(k.slice(5)));
     expect(orphans).toEqual([]);
   });

@@ -1,24 +1,25 @@
-import { ref } from '@ajwf/shared';
+import { own, PROFESSIONS, ref } from '@ajwf/shared';
 import { addItem, bump, canFit, count, gainXp, hasAll, removeItem } from '../agent';
 import { BALANCE } from '../balance';
 import { questEvent } from '../quests';
 import { emit, fail, markRoom, msg, tell } from '../run';
-import { refreshResource } from '../world';
-import { normId, roomDef, type HandlerMap } from './util';
+import { peekResource, refreshResource } from '../world';
+import { normId, oneOf, roomDef, type HandlerMap } from './util';
 
 export const PROFESSION_LEVEL = 5;
 
 export const workActions: HandlerMap = {
   gather(run, a, p) {
     const id = normId(p.resource);
-    const node = refreshResource(run.s, a.room, id, run.now);
+    const node = peekResource(run.s, a.room, id, run.now);
     if (!node) {
       const here = roomDef(run, a).resources.map((r) => r.id);
       fail('NOT_AVAILABLE_HERE', here.length ? 'resource_not_here' : 'nothing_to_gather', { resource: p.resource, here: here.join(', ') });
     }
-    if (node.qty <= 0) fail('NOT_AVAILABLE_HERE', 'resource_depleted', { item: ref.item(id) });
+    if (!(node.qty > 0)) fail('NOT_AVAILABLE_HERE', 'resource_depleted', { item: ref.item(id) });
     if (!canFit(run.c, a, [{ item: id, qty: 1 }])) fail('INVENTORY_FULL', 'inventory_full');
-    run.s.rooms.get(a.room)!.resources[id]!.qty -= 1;
+    refreshResource(run.s, a.room, id, run.now);
+    own(run.s.rooms.get(a.room)!.resources, id)!.qty -= 1;
     markRoom(run.s, a.room);
     addItem(a, id, 1);
     bump(run, a, 'gathers');
@@ -29,12 +30,13 @@ export const workActions: HandlerMap = {
   },
 
   choose_profession(run, a, p) {
+    const prof = oneOf(p.profession, PROFESSIONS, 'choose_profession', 'profession');
     if (a.profession) fail('CONFLICT', 'profession_taken', { prof: ref.prof(a.profession) });
     if (a.level < PROFESSION_LEVEL) fail('LEVEL_REQUIRED', 'profession_level', { level: PROFESSION_LEVEL });
-    a.profession = p.profession;
-    tell(run, 'n.profession_chosen', { prof: ref.prof(p.profession) });
-    emit(run, 'profession', { room: a.room, actor: a.id, vis: 'public', to: 'room', drama: 1, m: msg('ev.profession', { actor: a.name, prof: ref.prof(p.profession) }), data: { profession: p.profession } });
-    questEvent(run, a, 'profession', p.profession);
+    a.profession = prof;
+    tell(run, 'n.profession_chosen', { prof: ref.prof(prof) });
+    emit(run, 'profession', { room: a.room, actor: a.id, vis: 'public', to: 'room', drama: 1, m: msg('ev.profession', { actor: a.name, prof: ref.prof(prof) }), data: { profession: prof } });
+    questEvent(run, a, 'profession', prof);
   },
 
   craft(run, a, p) {
@@ -44,7 +46,7 @@ export const workActions: HandlerMap = {
     if (a.level < recipe.level) fail('LEVEL_REQUIRED', 'recipe_level', { recipe: ref.recipe(recipe.id), level: recipe.level });
     if (!roomDef(run, a).stations.includes(recipe.station)) fail('NOT_AVAILABLE_HERE', 'no_station', { prof: ref.prof(recipe.profession) });
     if (!hasAll(a, recipe.inputs)) {
-      const missing = recipe.inputs.filter((s) => count(a, s.item) < s.qty).map((s) => `${s.item} x${s.qty - count(a, s.item)}`);
+      const missing = recipe.inputs.filter((s) => !(count(a, s.item) >= s.qty)).map((s) => `${s.item} x${s.qty - count(a, s.item)}`);
       fail('MISSING_ITEMS', 'recipe_inputs', { recipe: ref.recipe(recipe.id), missing: missing.join(', ') });
     }
     if (!canFit(run.c, a, [recipe.output], recipe.inputs)) fail('INVENTORY_FULL', 'inventory_full');

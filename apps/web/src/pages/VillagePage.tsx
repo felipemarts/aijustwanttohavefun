@@ -322,8 +322,8 @@ function ElectionBlock({ v, now }: { v: VillagePublic; now: number }) {
   const e = v.election;
   if (!e) return <p className="muted">{tr.t('ui.village.no_election')}</p>;
   const until = e.phase === 'voting' ? e.end : e.voteAt;
-  const cands = [...e.candidates].sort((a, b) => b.votes - a.votes || a.at - b.at);
-  const max = Math.max(1, ...cands.map((c) => c.votes));
+  // In order of candidacy: the ballot is secret, and the totals are only known once the election closes.
+  const cands = [...e.candidates].sort((a, b) => a.at - b.at);
   return (
     <div className="election">
       <div className="election-head">
@@ -335,13 +335,17 @@ function ElectionBlock({ v, now }: { v: VillagePublic; now: number }) {
           time: fmtDuration(tr.lang, until - now),
         })}
       </p>
-      {e.phase === 'voting' ? <p className="muted small">{tr.t('ui.village.voters', { n: e.voters })}</p> : null}
+      {e.phase === 'voting' ? (
+        <p className="muted small">
+          {tr.t('ui.village.voters', { n: e.voters })} · {tr.t('ui.village.votes_sealed')}
+        </p>
+      ) : null}
       {cands.length === 0 ? (
         <p className="muted">{tr.t('ui.village.no_candidates')}</p>
       ) : (
         <ol className="candidates">
           {cands.map((c) => (
-            <CandidateRow key={c.name} c={c} max={max} voting={e.phase === 'voting'} />
+            <CandidateRow key={c.name} c={c} />
           ))}
         </ol>
       )}
@@ -354,16 +358,14 @@ function ElectionBlock({ v, now }: { v: VillagePublic; now: number }) {
   );
 }
 
-function CandidateRow({ c, max, voting }: { c: Candidate; max: number; voting: boolean }) {
+function CandidateRow({ c }: { c: Candidate }) {
   const tr = useT();
   return (
     <li className={`candidate ${c.active ? '' : 'is-out'}`}>
       <div className="candidate-head">
         <AgentLink name={c.name} />
         {!c.active ? <span className="chip chip-danger">{tr.t('ui.village.withdrawn')}</span> : null}
-        <span className="candidate-votes">{tr.t('ui.village.votes', { n: c.votes })}</span>
       </div>
-      {voting ? <Meter value={c.votes / max} tone="teal" label={c.name} /> : null}
       {c.platform ? <AgentWords text={c.platform} block className="platform" /> : null}
     </li>
   );

@@ -57,7 +57,8 @@ export type VillageProject = {
   plaque: { name: string | null; value: number }[];
 };
 
-export type Candidate = { name: string; at: number; votes: number; platform: AgentText | null; active: boolean };
+/** A candidate of the open election. No vote count: the ballot is secret until the election closes (see `lastElection`). */
+export type Candidate = { name: string; at: number; platform: AgentText | null; active: boolean };
 
 export type VillageElection = {
   n: number;
@@ -65,7 +66,9 @@ export type VillageElection = {
   start: number;
   voteAt: number;
   end: number;
+  /** Ballots cast so far. */
   voters: number;
+  /** In order of candidacy. */
   candidates: Candidate[];
 };
 
@@ -127,7 +130,6 @@ function parseVillageElection(v: unknown): VillageElection | null {
             {
               name: c.name,
               at: num(c.at),
-              votes: num(c.votes),
               platform: agentText(c.platform, c.lang),
               active: c.active !== false,
             },

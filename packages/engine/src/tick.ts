@@ -4,7 +4,7 @@ import { escortTimer } from './escort';
 import { puzzleTimer } from './puzzles';
 import { emit, newRun } from './run';
 import { electionTick } from './election';
-import { closeTrade } from './trade';
+import { closeTrade, sweepTrades } from './trade';
 import { bountyTimer, wantedTimer } from './trust';
 import type { WorldState } from './types';
 import { phaseChange, spawnMonster } from './world';
@@ -32,7 +32,7 @@ export function tick(s: WorldState, ctx: { now: number; rng: Rng }): GameEvent[]
         break;
       }
       case 'trade':
-        // Expired offers are already refused on access; this only clears them out of the state.
+        // Legacy: trade timers of snapshots written before `sweepTrades` (restore drops them; harmless if one fires).
         if ((s.trades.get(t.id)?.expires ?? Infinity) <= ctx.now) closeTrade(s, t.id);
         break;
       case 'phase':
@@ -58,5 +58,6 @@ export function tick(s: WorldState, ctx: { now: number; rng: Rng }): GameEvent[]
         break;
     }
   }
+  sweepTrades(s, ctx.now);
   return run.events;
 }

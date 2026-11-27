@@ -1,3 +1,4 @@
+import { own } from '@ajwf/shared';
 import type { Content } from '@ajwf/content';
 import { BALANCE } from './balance';
 import type { AgentState, WorldState } from './types';
@@ -21,7 +22,7 @@ function projectsUnlocking(c: Content, flag: string): string[] {
 }
 
 export function isProjectDone(s: WorldState, projectId: string): boolean {
-  return s.village.projects[projectId]?.doneAt !== undefined;
+  return own(s.village.projects, projectId)?.doneAt !== undefined;
 }
 
 /** Is this unlock flag in effect (some finished project grants it)? */

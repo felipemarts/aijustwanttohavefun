@@ -31,7 +31,7 @@ export function registerRoutes(app: FastifyInstance, ctx: AppContext): void {
   app.post('/agents/register', async (req, reply) => {
     const admin = isAdminToken(req.headers['x-admin-token'], config.adminToken);
     if (!admin) {
-      const limit = ctx.limiters.register.take(req.ip, game.now());
+      const limit = ctx.limiters.register.take(req.clientIp, game.now());
       if (!limit.ok) return sendRateLimited(reply, render, 'en', limit.retryAfterSec);
     }
     const parsed = registerSchema.safeParse(req.body ?? {});

@@ -1,3 +1,4 @@
+import { hasOwnKey, own } from '@ajwf/shared';
 import { BALANCE, dayFraction, dayPhase, refreshResource, villageView, xpToNext, type AgentState, type WorldState } from '@ajwf/engine';
 import type { AgentCard, AgentPos, DayInfo, ElectionInfo, HallInfo, ProjectInfo, RoomFull, RoomInfo, RoomMonster, SpectatorEvent, StatueHonoree } from '@ajwf/shared';
 import { SPECTATE } from './constants';
@@ -106,8 +107,8 @@ export function roomInfo(s: WorldState, id: string): RoomInfo | undefined {
 
 /** What stands on a plot: the finished project's building id, `guild_hall`, or null. */
 export function buildingAt(s: WorldState, plot: string): string | null {
-  if (s.village.halls[plot]) return 'guild_hall';
-  for (const p of s.content.projects.values()) if (p.site === plot && s.village.projects[p.id]?.doneAt !== undefined) return p.building;
+  if (hasOwnKey(s.village.halls, plot)) return 'guild_hall';
+  for (const p of s.content.projects.values()) if (p.site === plot && own(s.village.projects, p.id)?.doneAt !== undefined) return p.building;
   return null;
 }
 

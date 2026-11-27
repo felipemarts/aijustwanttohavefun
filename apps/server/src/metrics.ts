@@ -125,6 +125,13 @@ export class Metrics {
     this.errors.set(code, (this.errors.get(code) ?? 0) + 1);
   }
 
+  /** Actions the engine refused with INTERNAL (an unexpected exception it caught), by action name. */
+  readonly internalErrors = new Map<string, number>();
+
+  internalError(action: string): void {
+    this.internalErrors.set(action, (this.internalErrors.get(action) ?? 0) + 1);
+  }
+
   /** Starts sampling the event loop delay and GC pauses (main process only; tests leave it off). */
   start(): void {
     if (this.loop) return;
@@ -190,6 +197,9 @@ export class Metrics {
 
     metric('ajwf_errors_total', 'counter', 'Error responses by API error code.');
     for (const [code, n] of [...this.errors].sort()) line('ajwf_errors_total', n, `{code="${esc(code)}"}`);
+    metric('ajwf_action_internal_errors_total', 'counter', 'Actions refused with INTERNAL: an unexpected exception in the engine (a bug), by action.');
+    if (!this.internalErrors.size) line('ajwf_action_internal_errors_total', 0);
+    for (const [action, n] of [...this.internalErrors].sort()) line('ajwf_action_internal_errors_total', n, `{action="${esc(action)}"}`);
 
     metric('ajwf_ws_payload_bytes_total', 'counter', 'Spectator message bytes handed to sockets (before compression).');
     line('ajwf_ws_payload_bytes_total', this.wsPayloadBytes);

@@ -1,4 +1,5 @@
-import { BALANCE, removeBoardPost, villageView, type WorldState } from '@ajwf/engine';
+import { hasOwnKey } from '@ajwf/shared';
+import { removeBoardPost, villageView, type WorldState } from '@ajwf/engine';
 import type { DailyStats, GameEvent, GazetteEdition, Highlight, KeyMsg, SecretConversation, TimelineEntry } from '@ajwf/shared';
 import type { Logger } from 'pino';
 import type { Census } from '../census';
@@ -83,7 +84,7 @@ export class Chronicle implements EventConsumer {
     for (const p of c.projects.values()) mem.sites.set(p.id, { site: p.site, building: p.building });
     for (const p of villageView(this.s, this.d.now()).projects) {
       if (p.status === 'done') mem.quarters.set(p.id, 4);
-      else if (this.s.village.projects[p.id]) mem.quarters.set(p.id, Math.floor(p.progress / 0.25));
+      else if (hasOwnKey(this.s.village.projects, p.id)) mem.quarters.set(p.id, Math.floor(p.progress / 0.25));
     }
     for (const [plot, h] of Object.entries(this.s.village.halls)) mem.halls.set(h.guild, plot);
     return mem;
@@ -391,7 +392,8 @@ export class Chronicle implements EventConsumer {
       posts.push({ id: p.id, agentId: p.by, parentId: null, tag: p.tag, text: p.text, lang: lang(p.by), ts: p.at });
       p.replies.forEach((r, n) => replies.push({ id: `${p.id}.${n}`, agentId: r.by, parentId: p.id, tag: p.tag, text: r.text, lang: lang(r.by), ts: r.at }));
     }
-    if (posts.length < q.limit && all.length >= BALANCE.board.maxPosts) {
+    // Posts left the board (trimmed by its count or text limits, or removed): older ones are in the store.
+    if (posts.length < q.limit && this.s.meta.postSeq > all.length) {
       const oldest = Math.min(q.beforeTs ?? Infinity, all[0]?.at ?? Infinity);
       const more = await this.d.store.listBoard({ ...q, limit: q.limit - posts.length, ...(Number.isFinite(oldest) ? { beforeTs: oldest } : {}) });
       posts.push(...more.posts);

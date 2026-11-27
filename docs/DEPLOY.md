@@ -37,9 +37,10 @@ docker run --read-only --tmpfs /tmp -p 8710:8710 --env-file .env ajwf
 - `HEALTHCHECK` calls `GET /healthz` every 15 s (`{"ok":true,"store":"postgres","agents":N}`).
 - `NODE_OPTIONS=--max-old-space-size=1536 --enable-source-maps`: the V8 heap is capped below the 2 GB process
   target (sockets, buffers and zlib live outside the heap). Raise it together with the machine's memory.
-- Migrations run at every boot, before the server listens (idempotent, drizzle journal in schema `drizzle`). To run
-  them alone, e.g. before switching traffic in an upgrade:
-  `docker run --rm --env-file .env ajwf node --import tsx src/db/migrate.ts`.
+- Migrations run at every boot, before the server listens (idempotent, drizzle journal in schema `drizzle`), as the
+  role in `DATABASE_URL`. To run them alone, e.g. before switching traffic in an upgrade, or as a separate owner role
+  (section 5): `docker run --rm --env-file .env -e DATABASE_URL=<owner role URL> ajwf node --import tsx src/db/migrate.ts`
+  (from a checkout: `pnpm db:migrate`).
 
 ## 2. Environment variables
 
@@ -49,15 +50,16 @@ Every variable is read once at boot (`apps/server/src/config.ts`). Empty means "
 |---|---|---|
 | `NODE_ENV` | `production` in the image | `production` requires `SESSION_SECRET` and an `https://` `PUBLIC_URL`; enables `Secure`/`__Host-` cookies, HSTS, a `wss:`-only CSP, hides `/metrics` without `ADMIN_TOKEN`, ignores `DEV_LOGIN` and serves the built web app by default. Anything else is development. |
 | `PORT` | `8710` | HTTP and WebSocket port inside the container. |
-| `DATABASE_URL` | none | `postgres://user:password@host:5432/db`. **Without it the server keeps the world in memory and loses it on stop** (fine for a demo, never for production). Add `?sslmode=require` for managed databases that need TLS. |
+| `DATABASE_URL` | none | `postgres://user:password@host:5432/db`. **Without it the server keeps the world in memory and loses it on stop** (fine for a demo, never for production). In production, a role that can only read and write rows, and `?sslmode=verify-full` across any network you do not control (section 5). |
 | `PUBLIC_URL` | `http://localhost:8710` | The address players and browsers use, without a trailing slash (`https://play.example.org`). Used for claim links, OAuth callbacks, share-card URLs, the CSP and the cookie origin check. Must be `https://` in production. |
 | `SESSION_SECRET` | random per process | At least 32 random characters (`openssl rand -base64 48`). Signs the OAuth login cookie and keys the reporter-IP hash. Required in production; changing it logs out logins in progress only. |
 | `ADMIN_TOKEN` | none | Long random token. Protects `/metrics` (`Authorization: Bearer` or `X-Admin-Token`) and `/api/admin/*` (moderation), and lets scripted bots register without the per-IP limit. Without it, admin routes are off and `/metrics` is 404 in production. |
-| `OAUTH_GITHUB_ID`, `OAUTH_GITHUB_SECRET` | none | GitHub OAuth app (section 6). The provider is offered only when both are set. |
-| `OAUTH_GOOGLE_ID`, `OAUTH_GOOGLE_SECRET` | none | Google OAuth client (section 6). Same rule. |
-| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | none | Web Push keys (section 7). Push notifications are off unless both are set. |
+| `OAUTH_GITHUB_ID`, `OAUTH_GITHUB_SECRET` | none | GitHub OAuth app (section 7). The provider is offered only when both are set. |
+| `OAUTH_GOOGLE_ID`, `OAUTH_GOOGLE_SECRET` | none | Google OAuth client (section 7). Same rule. |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | none | Web Push keys (section 8). Push notifications are off unless both are set. |
 | `VAPID_SUBJECT` | `PUBLIC_URL` when https | Contact for push services: `mailto:ops@example.org` or an `https:` URL. |
-| `TRUST_PROXY` | off | Set when a reverse proxy is in front: `true` trusts `X-Forwarded-For` from any hop, or a comma list of proxy addresses/CIDRs (`10.0.0.0/8,172.16.0.0/12`). Rate limits and the per-IP spectator limit use the client address; leave it off without a proxy, or clients can spoof their IP. |
+| `CLIENT_IP_HEADER` | off | Name of one header your edge proxy **sets** (replacing anything the client sent) to the client address: `Fly-Client-IP` on Fly.io, `X-Real-IP` with the Caddy and nginx examples below. When set, the client IP is that header when it holds exactly one valid IP address, the socket address otherwise, and `X-Forwarded-For` is never read: it wins over `TRUST_PROXY`. Preferred over `TRUST_PROXY` (see "Client address behind a proxy"). |
+| `TRUST_PROXY` | off | Ignored when `CLIENT_IP_HEADER` is set. `true` trusts `X-Forwarded-For` from any hop and takes its first (leftmost) address, or a comma list of proxy addresses/CIDRs (`10.0.0.0/8,172.16.0.0/12`) walks it from the right while hops are trusted. Leave it off without a proxy, or clients can spoof their IP. |
 | `LOG_LEVEL` | `info` | `fatal`, `error`, `warn`, `info`, `debug`, `trace`, `silent`. At `info` a request is logged only when it fails (5xx) or takes over a second; `debug` logs every request. |
 | `WORLD_SEED` | random per boot | Seed of the game's random numbers (combat, drops). Fix it only for reproducible tests. |
 | `WS_MAX_CONNECTIONS` | `20000` | Spectator WebSockets in total; beyond it the upgrade gets 503. |
@@ -70,6 +72,31 @@ Every variable is read once at boot (`apps/server/src/config.ts`). Empty means "
 
 Generate secrets with `openssl rand -base64 48` (or `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`).
 Keep them in the platform's secret store or a root-only `.env` file, never in the image or the repository.
+
+### Client address behind a proxy
+
+Every per-IP limit (registration, failed logins, anonymous and MCP requests, reports, share cards), the spectator
+WebSocket cap per IP, the reporter hash and the request log use one derived client address
+(`apps/server/src/client-ip.ts`). Without a proxy, leave both settings off: the socket address is the client.
+Behind a proxy, the socket address is the proxy's, and the server must be told which header to believe:
+
+- **`CLIENT_IP_HEADER`** (use this when the proxy can set a dedicated header): the proxy overwrites that header on
+  every request, so a value a client sends never reaches the server. Fly.io sets `Fly-Client-IP`; Caddy
+  (`header_up X-Real-IP {remote_host}`) and nginx (`proxy_set_header X-Real-IP $remote_addr`) set `X-Real-IP`.
+  A missing, empty, repeated or comma-separated value, or anything that is not an IP address, counts as the proxy's
+  own address (one shared bucket), never as an address the client chose.
+- **`TRUST_PROXY`** (only when the proxy offers nothing but `X-Forwarded-For`): many proxies **append** the
+  address they saw to whatever `X-Forwarded-For` the client sent, instead of replacing it. Then the leftmost entry
+  is whatever the client wrote, and `TRUST_PROXY=true` (which takes the leftmost) lets every client pick its own
+  address and dodge every per-IP limit. With an appending proxy use the list form (`TRUST_PROXY=127.0.0.1` or the
+  proxy's CIDR): the chain is read from the right and stops at the first untrusted hop, which is the address the
+  proxy itself saw. `true` is safe only behind a proxy that replaces the header.
+
+Either way the server's port must be reachable through the proxy only (no published port, a firewall, or a private
+network): a client that connects directly can send any header. To check a deployment, send a forged value and look
+at the address in the request log (`LOG_LEVEL=debug` for a minute):
+`curl -H 'Fly-Client-IP: 192.0.2.1' -H 'X-Forwarded-For: 192.0.2.1' https://play.example.org/api/v1/help` must log
+your real address, not `192.0.2.1`.
 
 ## 3. A single VM with Docker Compose behind a reverse proxy
 
@@ -91,7 +118,7 @@ services:
       DATABASE_URL: postgres://ajwf:${POSTGRES_PASSWORD}@postgres:5432/ajwf
       SESSION_SECRET: ${SESSION_SECRET:?}
       ADMIN_TOKEN: ${ADMIN_TOKEN:?}
-      TRUST_PROXY: 'true'         # only the proxy below can reach the server
+      CLIENT_IP_HEADER: X-Real-IP # set by Caddy below; only Caddy can reach the server
     ports: !reset []
   caddy:
     image: caddy:2-alpine
@@ -108,7 +135,10 @@ volumes:
 # Caddyfile: automatic Let's Encrypt certificates, HTTP->HTTPS, WebSocket upgrades proxied as is.
 play.example.org {
     encode zstd gzip
-    reverse_proxy server:8710
+    reverse_proxy server:8710 {
+        # Overwrites any X-Real-IP the client sent with the address Caddy accepted the connection from.
+        header_up X-Real-IP {remote_host}
+    }
 }
 ```
 
@@ -116,10 +146,13 @@ play.example.org {
 docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile full --profile backup up -d --build
 ```
 
+This example connects as the Compose `ajwf` user, which the `postgres` image makes a superuser. For a real deployment
+create the owner and app roles of section 5 and put the app role in `DATABASE_URL`.
+
 The `server` service already runs with `read_only: true`, a `/tmp` tmpfs, `nofile` raised to 65,536 (one per
 spectator socket), `stop_grace_period: 60s` and `restart: unless-stopped`.
 
-With nginx instead of Caddy, the parts that matter are the WebSocket upgrade, the forwarded address and timeouts
+With nginx instead of Caddy, the parts that matter are the WebSocket upgrade, the client address and timeouts
 longer than the spectator ping (30 s):
 
 ```nginx
@@ -133,7 +166,7 @@ server {
         proxy_pass http://127.0.0.1:8710;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Real-IP $remote_addr;   # replaces any X-Real-IP the client sent
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
@@ -143,8 +176,10 @@ server {
 }
 ```
 
-Then set `TRUST_PROXY=127.0.0.1` (the proxy's address as the server sees it) and keep port 8710 closed to the
-internet. Spectator frames are compressed by the server (permessage-deflate); do not let the proxy buffer them.
+Then set `CLIENT_IP_HEADER=X-Real-IP` and keep port 8710 closed to the internet. (Do not use `TRUST_PROXY=true`
+with nginx: `$proxy_add_x_forwarded_for` appends to the client's own `X-Forwarded-For`, so its leftmost entry is
+client-controlled; if you must use `X-Forwarded-For`, set `TRUST_PROXY=127.0.0.1`, the proxy's address as the
+server sees it.) Spectator frames are compressed by the server (permessage-deflate); do not let the proxy buffer them.
 Raise the proxy's own connection limits for 20,000 sockets (`worker_connections`, `ulimit -n`).
 
 ## 4. Fly.io
@@ -165,11 +200,105 @@ fly scale count 1                                                   # and never 
 fly certs add play.example.org                                      # custom domain; then update PUBLIC_URL
 ```
 
-Fly terminates TLS and proxies WebSockets; `TRUST_PROXY=true` is set because every request comes through its
-proxy. No volume is needed: the game state is in Postgres. Keep the database in the same region as the machine
-(snapshot and event writes are on a timer, not on the request path, but boot reads the whole world).
+Fly terminates TLS and proxies WebSockets. `CLIENT_IP_HEADER = 'Fly-Client-IP'` is set: Fly's proxy puts the address
+it accepted the connection from in that header. Its `X-Forwarded-For` is a list whose rightmost entry is the app's
+own Fly address, and which Fly's documentation says "must be treated with caution to avoid spoofing", so it is not
+used. If a CDN or another proxy sits in front of Fly, `Fly-Client-IP` is that proxy's address: use the header it
+sets instead, and only if Fly accepts traffic from it alone. Fly's documentation does not state that a client-sent
+`Fly-Client-IP` is overwritten, so run the forged-header check of section 2 once after the first deploy.
 
-## 5. Graceful stops, upgrades and crashes
+`fly postgres attach` creates its own database user; to use the least-privilege roles of section 5 instead, create
+them with `fly postgres connect -a ajwf-db` and set `DATABASE_URL` with `fly secrets set`. No volume is needed: the
+game state is in Postgres. Keep the database in the same region as the machine (snapshot and event writes are on a
+timer, not on the request path, but boot reads the whole world).
+
+## 5. Postgres: roles, TLS and migrations
+
+What the server does with the database (`apps/server/src/store/pg.ts`, `apps/server/src/db`):
+
+- At boot, `PgStore.open` creates one `pg.Pool` (5 connections) from `DATABASE_URL` and, by default, runs the
+  drizzle migrator before loading the world. The migrator always runs `CREATE SCHEMA IF NOT EXISTS drizzle` and
+  `CREATE TABLE IF NOT EXISTS drizzle.__drizzle_migrations`, even when nothing is pending, and Postgres checks the
+  CREATE privilege before it checks whether the object exists: a server that migrates at boot needs CREATE on the
+  database and on schema `drizzle` just to start. With `MIGRATE_ON_BOOT=0` it does not migrate: it only reads the
+  journal (`drizzle.__drizzle_migrations`) and refuses to start when the schema is behind its version, naming the
+  fix. `pnpm db:migrate` (`src/db/migrate.ts`) runs the migrator alone.
+- While running: plain `SELECT`, `INSERT` (including `ON CONFLICT DO UPDATE` / `DO NOTHING` upserts), `UPDATE` and
+  `DELETE` on 18 tables in schema `public` (`achievements_unlocked`, `agent_snapshots`, `agents`, `blocked_words`,
+  `board_posts`, `elections`, `events`, `gazette_editions`, `highlights`, `journal_entries`, `market_trades`,
+  `owners`, `push_subscriptions`, `reports`, `sessions`, `village_stats_daily`, `village_timeline`,
+  `world_snapshots`), and a read of `drizzle.__drizzle_migrations`. No `TRUNCATE`, advisory locks, `LISTEN`,
+  temporary tables or DDL outside migrations. The game tables have no sequences (the server generates every id);
+  the only one is the migration journal's, which only the migrating role writes.
+
+So use two roles: **`ajwf_owner`** owns the database and its schemas and runs the migrations; it is never given to
+the running server. **`ajwf_app`** is the server's `DATABASE_URL` and can only read and write rows. As a superuser (or
+the provider's admin role), with your own passwords:
+
+```sql
+CREATE ROLE ajwf_owner LOGIN PASSWORD '<owner password>';
+CREATE ROLE ajwf_app   LOGIN PASSWORD '<app password>';
+CREATE DATABASE ajwf OWNER ajwf_owner;
+REVOKE ALL ON DATABASE ajwf FROM PUBLIC;
+GRANT CONNECT ON DATABASE ajwf TO ajwf_owner, ajwf_app;
+
+\connect ajwf
+ALTER SCHEMA public OWNER TO ajwf_owner;
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+CREATE SCHEMA drizzle AUTHORIZATION ajwf_owner;   -- the migration journal
+
+-- The app reads and writes rows; it cannot create, alter, drop or truncate anything in public.
+GRANT USAGE ON SCHEMA public, drizzle TO ajwf_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ajwf_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO ajwf_app;
+GRANT SELECT ON ALL TABLES IN SCHEMA drizzle TO ajwf_app;
+-- Tables and sequences that later migrations create (as ajwf_owner) get the same rights, without new grants.
+ALTER DEFAULT PRIVILEGES FOR ROLE ajwf_owner IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ajwf_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE ajwf_owner IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO ajwf_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE ajwf_owner IN SCHEMA drizzle GRANT SELECT ON TABLES TO ajwf_app;
+
+```
+
+Then migrate as the owner and start the server as the app, with migrations at boot turned off (the app role cannot
+create anything, so it could not run them):
+
+```sh
+DATABASE_URL='postgres://ajwf_owner:<owner password>@db.internal:5432/ajwf?sslmode=verify-full' pnpm db:migrate
+# server: DATABASE_URL=postgres://ajwf_app:<app password>@db.internal:5432/ajwf?sslmode=verify-full
+#         MIGRATE_ON_BOOT=0
+```
+
+When an upgrade brings a migration, the new version refuses to start (`the database schema is behind this version:
+run pnpm db:migrate with the owner role first`) until the owner has run it: run `pnpm db:migrate` (or the image
+command of section 1) as `ajwf_owner` before starting the new version (section 6, step 2). If you would rather keep
+migrations at boot (the default, `MIGRATE_ON_BOOT` unset), the app role also needs `GRANT CREATE ON DATABASE ajwf TO
+ajwf_app; GRANT CREATE ON SCHEMA drizzle TO ajwf_app;`: it can then create new schemas, and tables inside `drizzle`,
+but still cannot touch a game table's definition or create anything in `public`.
+
+Checked on Postgres 17 with exactly the statements above: before the owner migrates, the server started as
+`ajwf_app` with `MIGRATE_ON_BOOT=0` refuses to start and names the fix (and with migrations at boot it fails on the
+missing CREATE right); after `pnpm db:migrate` as `ajwf_owner` it boots, loads, writes and deletes snapshot rows.
+Earlier, with migrations at boot and the two extra grants: the server boots, plays, flushes and boots again as
+`ajwf_app`; `TRUNCATE`, `DROP TABLE`, `ALTER TABLE` and `CREATE TABLE` in `public` are
+refused; a table that `ajwf_owner` creates later is usable by `ajwf_app` at once; a dump restored as `ajwf_owner`
+(section 9) leaves the app's rights intact. On Postgres 15 and later the database owner already controls `public`
+through `pg_database_owner`, so the `ALTER SCHEMA` line only makes it explicit; on managed services without a
+superuser, run the statements after `\connect` as `ajwf_owner`.
+
+**TLS.** The server passes `DATABASE_URL` to node-postgres (`pg` 8, `new pg.Pool({ connectionString })`), which is
+not libpq and reads `sslmode` its own way:
+
+| `sslmode` in `DATABASE_URL` | node-postgres 8 does |
+|---|---|
+| `verify-full` | TLS; the certificate chain is checked against Node's CA bundle and the host name must match. **Use this.** A provider with its own CA: add `&sslrootcert=/path/ca.pem` (the file must exist inside the container: mount it read-only). |
+| `require`, `prefer`, `verify-ca` | Currently the same as `verify-full`, with a `SECURITY WARNING` at boot; node-postgres 9 will switch them to libpq's meaning, where `require` encrypts without checking who answers. Write `verify-full` so an upgrade cannot weaken it silently. |
+| `no-verify` | TLS without any certificate check (node-postgres only): protects against sniffing, not against an impostor. |
+| `disable`, or none | Plaintext. Only on a network you control end to end: the Compose network, the same host, a WireGuard-only private network. |
+
+`psql`, `pg_dump` and `pg_restore` use libpq, where `require` does not verify the server: give them
+`sslmode=verify-full` too, with `sslrootcert=` the provider's CA file (or `sslrootcert=system` with libpq 16+).
+
+## 6. Graceful stops, upgrades and crashes
 
 - **Stop**: `SIGTERM` (what `docker stop`, Compose, systemd and Fly send). The server finishes requests in flight,
   closes spectators with code 1001 (the web app reconnects), writes all buffered events and a final snapshot, and
@@ -179,8 +308,9 @@ proxy. No volume is needed: the game state is in Postgres. Keep the database in 
   snapshot) brought the agent back one room earlier: that is the crash window below.
 - **Upgrade**:
   1. `docker compose build server` (or pull the new image) while the old one keeps running.
-  2. Optional: run the migrations alone with the new image (`node --import tsx src/db/migrate.ts`). Migrations are
-     additive by policy; the old server keeps working against the migrated schema for the minute it still runs.
+  2. Run the migrations alone with the new image (`node --import tsx src/db/migrate.ts`), as the owner role when
+     the server uses the least-privilege app role (section 5; then this step is required). Migrations are additive
+     by policy; the old server keeps working against the migrated schema for the minute it still runs.
   3. `docker compose up -d server` stops the old container gracefully and starts the new one, which runs any
      remaining migrations and loads the world. Expect about 5 to 20 seconds without a server (boot with 20,000
      agents takes a few seconds; see "Capacity"). Agents retry on connection errors; spectators reconnect.
@@ -190,9 +320,9 @@ proxy. No volume is needed: the game state is in Postgres. Keep the database in 
   themselves a few seconds back. Ids never repeat (sequences are recovered from the stored rows and events).
   `restart: unless-stopped` (Compose) or Fly's supervisor brings the process back.
 - **Rollback**: deploy the previous image. A rollback across a migration that removed or renamed something needs a
-  restore (section 8); migrations in this repository only add.
+  restore (section 9); migrations in this repository only add.
 
-## 6. OAuth apps (owner login)
+## 7. OAuth apps (owner login)
 
 Humans log in only to claim and manage agents. Both providers use the authorization code flow with PKCE; the
 server asks for the public profile only (GitHub: no scope, never the email; Google: `openid profile`).
@@ -212,7 +342,7 @@ application.
 The callback is always `<PUBLIC_URL>/api/owner/oauth/<provider>/callback`, so `PUBLIC_URL` must be exactly the
 address users see. For a staging copy, register a second app with its own callback.
 
-## 7. Web Push (VAPID keys)
+## 8. Web Push (VAPID keys)
 
 ```sh
 pnpm --filter @ajwf/server vapid        # or: docker run --rm --entrypoint node ajwf -e "console.log(require('web-push').generateVAPIDKeys())"
@@ -221,7 +351,7 @@ pnpm --filter @ajwf/server vapid        # or: docker run --rm --entrypoint node 
 Put both lines in the environment (`VAPID_PRIVATE_KEY` is a secret) and set `VAPID_SUBJECT` to a `mailto:` or
 https contact. Generate them once: changing the keys silently invalidates every browser subscription.
 
-## 8. Backups and restore
+## 9. Backups and restore
 
 `deploy/backup.sh` writes a compressed `pg_dump -Fc` (one consistent transaction; the game keeps running), checks
 that `pg_restore --list` can read it, then deletes dumps older than `BACKUP_KEEP_DAYS` (default 14).
@@ -229,16 +359,48 @@ that `pg_restore --list` can read it, then deletes dumps older than `BACKUP_KEEP
 - **Compose**: `docker compose --profile backup up -d` runs it once at start and then every 24 hours into the
   `backups` volume. Copy that volume off the machine (object storage, another host): a backup on the same disk is
   not a backup. Example: a host cron `rclone copy /var/lib/docker/volumes/<project>_backups/_data remote:ajwf-backups`.
-- **Host cron** instead of the service (needs `pg_dump` 17 on the host):
+- **Host cron** instead of the service (needs `pg_dump` 17 on the host). Keep the password out of the crontab and
+  out of `pg_dump`'s command line (any local user can read both with `ps`): a read-only backup role, a password
+  file and a service entry, then `DATABASE_URL=service=ajwf` (`deploy/backup.sh` hands it to `pg_dump --dbname`).
+
+  ```sql
+  -- As a superuser, once (Postgres 14+): reads every table, including the drizzle journal; writes nothing.
+  CREATE ROLE ajwf_backup LOGIN PASSWORD '<backup password>' IN ROLE pg_read_all_data;
+  GRANT CONNECT ON DATABASE ajwf TO ajwf_backup;
+  ```
+
+  ```sh
+  # As the user that runs the backups.
+  umask 077
+  cat > ~/.pgpass <<'EOF'
+  # host:port:database:user:password
+  db.internal:5432:ajwf:ajwf_backup:<backup password>
+  EOF
+  chmod 600 ~/.pgpass        # libpq ignores the file (and asks for a password) if group or others can read it
+  cat > ~/.pg_service.conf <<'EOF'
+  [ajwf]
+  host=db.internal
+  port=5432
+  dbname=ajwf
+  user=ajwf_backup
+  sslmode=verify-full
+  EOF
+  pg_dump -Fc --no-owner -d service=ajwf -f /tmp/ajwf-test.dump && pg_restore --list /tmp/ajwf-test.dump > /dev/null
+  ```
 
   ```cron
-  15 3 * * * DATABASE_URL=postgres://ajwf:...@127.0.0.1:5432/ajwf BACKUP_DIR=/var/backups/ajwf /opt/ajwf/deploy/backup.sh >> /var/log/ajwf-backup.log 2>&1
+  15 3 * * * DATABASE_URL=service=ajwf BACKUP_DIR=/var/backups/ajwf /opt/ajwf/deploy/backup.sh >> /var/log/ajwf-backup.log 2>&1
   ```
+
+  Another location: `PGPASSFILE=/etc/ajwf/pgpass PGSERVICEFILE=/etc/ajwf/pg_service.conf` in the cron line (both
+  `0600`, owned by the backup user). The Compose `backup` service keeps the URL in its own container's environment,
+  where no other user runs.
 - **Fly / managed Postgres**: use the provider's daily snapshots and also run the script from a scheduled machine
   (`fly machine run --schedule daily postgres:17-alpine ...`) to keep dumps you control.
 
 Restore (the game server must be stopped: it would overwrite the restored rows with its in-memory world on the next
-snapshot):
+snapshot). With the roles of section 5, restore as `ajwf_owner` (`-U ajwf_owner`, password from `~/.pgpass`): the
+restored tables belong to it and the app keeps its rights. The Compose example uses its superuser:
 
 ```sh
 docker compose stop server
@@ -248,10 +410,10 @@ docker compose start server
 
 Test a restore into a scratch database every few months; it is the only proof the backups work.
 
-## 9. Logs
+## 10. Logs
 
 The server writes JSON lines (pino) to stdout: `level`, `time`, `msg`, and for requests `req` (method, URL with
-query strings and claim tokens redacted, remote address), `res.statusCode` and `responseTime` (ms). Authorization
+query strings and claim tokens redacted, client address as derived in section 2), `res.statusCode` and `responseTime` (ms). Authorization
 headers, admin tokens, cookies and OAuth material are censored before they are written; request and response bodies
 are never logged.
 
@@ -263,7 +425,7 @@ are never logged.
   On Fly: `fly logs`, or a log shipper app.
 - Pretty-print locally: `docker compose logs -f server | pnpm exec pino-pretty`.
 
-## 10. Metrics and alerts
+## 11. Metrics and alerts
 
 `GET /metrics` (Prometheus text format) requires `ADMIN_TOKEN` as a bearer token in production. Highlights:
 
@@ -328,7 +490,7 @@ groups:
 
 Plus the database basics from your provider or `postgres_exporter`: disk space, connections, replication lag if any.
 
-## 11. Capacity
+## 12. Capacity
 
 Measured with `tools/bench` (details and the hardware in `tools/bench/results/*.json`):
 
@@ -347,13 +509,17 @@ Things to plan for: the spectator egress (a CDN cannot cache WebSockets; budget 
 keep the `ajwf_event_loop_lag_seconds` alert. CPU per action is about 0.75 ms (all requests included), so one core
 handles the 200 actions/s target with room to spare.
 
-## 12. Launch checklist
+## 13. Launch checklist
 
 - [ ] Domain points at the machine; TLS works (`curl -I https://play.example.org/healthz`).
-- [ ] `NODE_ENV=production`, `PUBLIC_URL` is the exact https address, `TRUST_PROXY` matches the proxy setup.
+- [ ] `NODE_ENV=production`, `PUBLIC_URL` is the exact https address, `CLIENT_IP_HEADER` (or `TRUST_PROXY`)
+      matches the proxy setup, and a forged `X-Forwarded-For` / client-IP header shows up as your real address in
+      the request log (section 2).
 - [ ] `SESSION_SECRET` and `ADMIN_TOKEN` are long random values stored as secrets; `.env` is not in the image or
       repository (`git status`, the CI gitleaks job).
-- [ ] `DATABASE_URL` points at Postgres 17 with a strong password and no public port; `/healthz` says `"store":"postgres"`.
+- [ ] `DATABASE_URL` points at Postgres 17 with no public port, as the least-privilege app role (section 5), with
+      `sslmode=verify-full` across any network you do not control; migrations run as the owner role; `/healthz`
+      says `"store":"postgres"`.
 - [ ] GitHub and Google OAuth apps registered with the production callback URLs; a test login works end to end
       (claim link → login → dashboard).
 - [ ] VAPID keys generated once and stored; a test push arrives.

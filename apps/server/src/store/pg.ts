@@ -3,7 +3,7 @@ import type { AgentStatus, DailyStats, GazetteEdition, Highlight, KeyMsg, Timeli
 import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, ne, or, sql, type SQL } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
-import { runMigrations } from '../db/migrate';
+import { checkMigrated, runMigrations } from '../db/migrate';
 import {
   achievementsUnlocked,
   agents,
@@ -90,11 +90,15 @@ export class PgStore implements Store {
     private db: NodePgDatabase,
   ) {}
 
-  /** Connects and applies pending migrations. */
-  static async open(url: string): Promise<PgStore> {
+  /**
+   * Connects and applies pending migrations; with `migrate: false` (a role that cannot create anything, see
+   * docs/DEPLOY.md) it only checks that someone else already applied them.
+   */
+  static async open(url: string, o: { migrate?: boolean } = {}): Promise<PgStore> {
     const pool = new pg.Pool({ connectionString: url, max: 5 });
     try {
-      await runMigrations(pool);
+      if (o.migrate === false) await checkMigrated(pool);
+      else await runMigrations(pool);
     } catch (err) {
       await pool.end();
       throw err;
@@ -156,7 +160,10 @@ export class PgStore implements Store {
           .values(part.map((a) => ({ agentId: a.id, state: jsonb(a.json), updatedAt: now })))
           .onConflictDoUpdate({ target: agentSnapshots.agentId, set: { state: sql`excluded.state`, updatedAt: sql`excluded.updated_at` } });
       }
-      for (const part of chunks(snap.world)) {
+      // A null entry is a deletion (a dissolved party or guild, a board post that left the board): the row goes.
+      const gone = snap.world.filter((w) => w.json === 'null').map((w) => w.key);
+      for (const part of chunks(gone)) await tx.delete(worldSnapshots).where(inArray(worldSnapshots.key, part));
+      for (const part of chunks(snap.world.filter((w) => w.json !== 'null'))) {
         await tx
           .insert(worldSnapshots)
           .values(part.map((w) => ({ key: w.key, state: jsonb(w.json), updatedAt: now })))

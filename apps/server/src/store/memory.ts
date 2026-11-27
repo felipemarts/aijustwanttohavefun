@@ -107,7 +107,11 @@ export class MemoryStore implements Store {
     this.check();
     for (const a of snap.agents) if (!this.agents.has(a.id)) throw new Error(`snapshot of unknown agent ${a.id}`);
     for (const a of snap.agents) this.agentSnapshots.set(a.id, a.json);
-    for (const w of snap.world) this.worldSnapshots.set(w.key, w.json);
+    // A null entry is a deletion (a dissolved party or guild, a board post that left the board).
+    for (const w of snap.world) {
+      if (w.json === 'null') this.worldSnapshots.delete(w.key);
+      else this.worldSnapshots.set(w.key, w.json);
+    }
   }
 
   async appendEvents(rows: EventRow[]): Promise<void> {

@@ -1,4 +1,6 @@
+import { hasOwnKey, isPlainKey, own } from '@ajwf/shared';
 import { capacity, derive, levelCap, slotsUsed } from './agent';
+import { postBytes } from './board';
 import { BALANCE, xpToNext } from './balance';
 import type { Goods, Timer, WorldState } from './types';
 import { checkVillage } from './village-invariants';
@@ -6,7 +8,28 @@ import { marketSlots } from './unlocks';
 import { spawnSlots } from './world';
 import { infamyNow, WANTED_TITLE } from './trust';
 
-const isNatural = (n: unknown): boolean => typeof n === 'number' && Number.isInteger(n) && n >= 0;
+const isNatural = (n: unknown): boolean => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0;
+const isFiniteNumber = (n: unknown): boolean => typeof n === 'number' && Number.isFinite(n);
+
+/**
+ * A record used as a dictionary is a plain object (its prototype was never replaced through a `__proto__` key)
+ * and has no key named like an `Object.prototype` member.
+ */
+function checkRecord(out: string[], what: string, rec: unknown): void {
+  if (rec === null || typeof rec !== 'object') {
+    out.push(`${what}: not a record (${String(rec)})`);
+    return;
+  }
+  const proto: unknown = Object.getPrototypeOf(rec);
+  if (proto !== Object.prototype && proto !== null) out.push(`${what}: prototype replaced`);
+  for (const k of Object.keys(rec)) if (!isPlainKey(k)) out.push(`${what}: reserved key ${JSON.stringify(k)}`);
+}
+
+/** Every value of a numeric record is a safe non-negative integer (gold, quantities, counters). */
+function checkNaturals(out: string[], what: string, rec: Record<string, unknown>): void {
+  checkRecord(out, what, rec);
+  for (const [k, v] of Object.entries(rec)) if (!isNatural(v)) out.push(`${what}: ${k} = ${String(v)} is not a non-negative integer`);
+}
 
 /**
  * Checks the rules that must hold after any sequence of actions and ticks (PLANEJAMENTO §16.4).
@@ -17,9 +40,30 @@ export function checkInvariants(s: WorldState, now: number): string[] {
   const out: string[] = [];
   const c = s.content;
 
+  // Nothing ever wrote through a `__proto__` key into the shared prototype.
+  if (Object.keys(Object.prototype).length) out.push(`Object.prototype polluted: ${Object.keys(Object.prototype).join(', ')}`);
+
   for (const a of s.agents.values()) {
     const who = `agent ${a.id} (${a.name})`;
     if (!isNatural(a.gold)) out.push(`${who}: gold ${a.gold} is not a non-negative integer`);
+    if (!isNatural(a.xp)) out.push(`${who}: xp ${a.xp} is not a non-negative integer`);
+    if (!isFiniteNumber(a.hp) || !isFiniteNumber(a.mp)) out.push(`${who}: HP ${a.hp} or MP ${a.mp} not finite`);
+    for (const [name, rec] of [['inv', a.inv], ['stats', a.stats]] as const) checkNaturals(out, `${who} ${name}`, rec);
+    for (const [name, rec] of [
+      ['cooldowns', a.cooldowns],
+      ['questsDone', a.questsDone],
+      ['achievements', a.achievements],
+      ['friendReqs', a.friendReqs],
+      ['partyInvites', a.partyInvites],
+      ['guildInvites', a.guildInvites],
+      ['duelInvites', a.duelInvites],
+    ] as const) {
+      checkRecord(out, `${who} ${name}`, rec);
+      for (const [k, v] of Object.entries(rec)) if (!isFiniteNumber(v)) out.push(`${who} ${name}: ${k} = ${String(v)}`);
+    }
+    checkRecord(out, `${who} quests`, a.quests);
+    checkRecord(out, `${who} bonds`, a.bonds);
+    checkRecord(out, `${who} equip`, a.equip);
     if (!Number.isInteger(a.ap) || a.ap < 0 || a.ap > BALANCE.ap.max) out.push(`${who}: AP ${a.ap} outside [0, ${BALANCE.ap.max}]`);
     if (!Number.isInteger(a.level) || a.level < 1 || a.level > BALANCE.maxLevel) out.push(`${who}: level ${a.level} outside [1, ${BALANCE.maxLevel}]`);
     if (!a.claimed && a.level > BALANCE.unclaimedMaxLevel) out.push(`${who}: unclaimed agent at level ${a.level}`);
@@ -47,7 +91,8 @@ export function checkInvariants(s: WorldState, now: number): string[] {
       else if (item.type !== slot) out.push(`${who}: ${id} (${item.type}) equipped as ${slot}`);
     }
     const used = slotsUsed(c, a.inv);
-    if (used > capacity(c, a)) out.push(`${who}: ${used} inventory slots used of ${capacity(c, a)}`);
+    // Market orders cancelled with a retired or banned agent come back to its bags over capacity (spilled on reactivation).
+    if (used > capacity(c, a) && a.status === 'active') out.push(`${who}: ${used} inventory slots used of ${capacity(c, a)}`);
 
     for (const [qid, prog] of Object.entries(a.quests)) {
       const q = c.quests.get(qid);
@@ -114,6 +159,9 @@ export function checkInvariants(s: WorldState, now: number): string[] {
       if (!node) out.push(`room ${roomId}: resource ${r.id} has no state`);
       else if (!isNatural(node.qty) || node.qty > r.max) out.push(`room ${roomId}: resource ${r.id} stock ${node.qty} outside [0, ${r.max}]`);
     }
+    checkRecord(out, `room ${roomId} resources`, st.resources);
+    checkNaturals(out, `room ${roomId} ground`, st.ground);
+    for (const m of st.monsters) checkRecord(out, `room ${roomId} monster ${m.uid} threat`, m.threat);
     for (const [id, qty] of Object.entries(st.ground)) {
       if (!Number.isInteger(qty) || qty <= 0) out.push(`room ${roomId}: ${qty} x ${id} on the ground`);
       if (!c.items.has(id)) out.push(`room ${roomId}: unknown item ${id} on the ground`);
@@ -153,6 +201,7 @@ function checkTrust(s: WorldState, now: number, out: string[]): void {
     if (gives.length > B.give.kept || new Set(gives.map((g) => g.id)).size !== gives.length) out.push(`${who}: ${gives.length} gives on record`);
     for (const g of gives) if (!s.agents.has(g.to) || !isNatural(g.value)) out.push(`${who}: bad give record ${JSON.stringify(g)}`);
   }
+  checkRecord(out, 'bounties', s.bounties);
   for (const [target, b] of Object.entries(s.bounties)) {
     const what = `bounty on ${target}`;
     if (b.target !== target || !s.agents.has(target)) out.push(`${what}: unknown or mismatched target ${b.target}`);
@@ -181,7 +230,8 @@ function checkEvents(s: WorldState, now: number, out: string[]): void {
     if (k) due.set(k, Math.max(due.get(k) ?? -Infinity, t.at));
   }
 
-  for (const id of c.puzzles.keys()) if (!s.puzzles[id]) out.push(`puzzle ${id}: no state`);
+  checkRecord(out, 'puzzles', s.puzzles);
+  for (const id of c.puzzles.keys()) if (!hasOwnKey(s.puzzles, id)) out.push(`puzzle ${id}: no state`);
   for (const [id, st] of Object.entries(s.puzzles)) {
     const pz = c.puzzles.get(id);
     const what = `puzzle ${id}`;
@@ -284,6 +334,7 @@ function checkSocial(s: WorldState, out: string[]): void {
     for (const id of g.officers) if (!g.members.includes(id)) out.push(`${what}: officer ${id} is not a member`);
     for (const id of g.members) if (s.agents.get(id)?.guild !== g.id) out.push(`${what}: member ${id} points elsewhere`);
     if (!isNatural(g.treasury)) out.push(`${what}: treasury ${g.treasury}`);
+    checkNaturals(out, `${what} vault`, g.vault);
     for (const [id, qty] of Object.entries(g.vault)) {
       if (!Number.isInteger(qty) || qty <= 0) out.push(`${what}: ${qty} x ${id} in the vault`);
       if (!s.content.items.has(id)) out.push(`${what}: unknown item ${id} in the vault`);
@@ -311,10 +362,12 @@ function checkEconomy(s: WorldState, out: string[]): void {
     books += book.length;
     for (let i = 0; i < book.length; i++) {
       const o = book[i]!;
-      if (o.item !== item || s.market.orders[o.id] !== o) out.push(`market book ${item}: stray order ${o.id}`);
+      if (o.item !== item || own(s.market.orders, o.id) !== o) out.push(`market book ${item}: stray order ${o.id}`);
       if (i > 0 && book[i - 1]!.price > o.price) out.push(`market book ${item}: not sorted by price`);
     }
   }
+  checkRecord(out, 'market orders', s.market.orders);
+  for (const h of s.market.history) if (!isNatural(h.qty) || !isNatural(h.price)) out.push(`market history: qty ${h.qty} price ${h.price}`);
   const orders = Object.values(s.market.orders);
   if (books !== orders.length) out.push(`market: ${orders.length} orders but ${books} in the books`);
   const perSeller = new Map<string, number>();
@@ -323,12 +376,16 @@ function checkEconomy(s: WorldState, out: string[]): void {
     if (!c.items.has(o.item)) out.push(`${what}: unknown item ${o.item}`);
     if (!Number.isInteger(o.qty) || o.qty <= 0 || !Number.isInteger(o.price) || o.price <= 0) out.push(`${what}: qty ${o.qty} price ${o.price}`);
     if (!s.agents.has(o.seller)) out.push(`${what}: unknown seller ${o.seller}`);
+    else if (s.agents.get(o.seller)!.status !== 'active') out.push(`${what}: seller ${o.seller} is not active`);
     if (!s.ordersOf.get(o.seller)?.has(o.id)) out.push(`${what}: missing from the seller index`);
     perSeller.set(o.seller, (perSeller.get(o.seller) ?? 0) + 1);
   }
   for (const [seller, n] of perSeller) if (n > marketSlots(s)) out.push(`seller ${seller}: ${n} open orders`);
   if (s.market.history.length > BALANCE.market.history) out.push(`market history holds ${s.market.history.length} trades`);
   if (s.board.length > BALANCE.board.maxPosts) out.push(`board holds ${s.board.length} posts`);
+  const bytes = s.board.reduce((n, p) => n + postBytes(p), 0);
+  if (bytes !== s.boardBytes) out.push(`board: ${s.boardBytes} bytes counted, ${bytes} held`);
+  if (bytes > BALANCE.board.maxTextBytes && s.board.length > 1) out.push(`board holds ${bytes} bytes of text`);
   if (new Set(s.board.map((p) => p.id)).size !== s.board.length) out.push('board: duplicate post id');
   if (!isNatural(s.village.treasury)) out.push(`village treasury ${s.village.treasury}`);
   checkVillage(s, out);

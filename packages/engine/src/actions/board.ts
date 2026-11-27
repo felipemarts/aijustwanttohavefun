@@ -1,11 +1,12 @@
-import { MAX_BOARD_LEN, MAX_JOURNAL_LEN, truncateCodePoints } from '@ajwf/shared';
+import { BOARD_TAGS, MAX_BOARD_LEN, MAX_JOURNAL_LEN, own, truncateCodePoints } from '@ajwf/shared';
 import { bump } from '../agent';
 import { BALANCE, realDay } from '../balance';
 import { questEvent } from '../quests';
 import { emit, fail, tell, type Run } from '../run';
-import type { AgentState, BoardPost, BoardReply, WorldState } from '../types';
-import { chatCooldown } from './chat';
-import { cleanText, hasFlag, type HandlerMap } from './util';
+import { addPost, addReply } from '../board';
+import type { AgentState, BoardPost } from '../types';
+import { chatText } from './chat';
+import { cleanText, hasFlag, oneOf, type HandlerMap } from './util';
 
 function atBoard(run: Run, a: AgentState): void {
   if (!hasFlag(run, a, 'board')) fail('NOT_AVAILABLE_HERE', 'board_only');
@@ -20,50 +21,25 @@ function postById(run: Run, raw: string): BoardPost {
 
 const authorName = (run: Run, id: string) => run.s.agents.get(id)?.name ?? '?';
 
-/** What `removeBoardPost` took off the board: the whole post (with its replies), or one reply of a post that stays. */
-export type RemovedBoardPost = { post: BoardPost; reply?: BoardReply };
-
-/**
- * Moderation: removes a post with its replies or, given `replyIndex`, only that reply (later replies move up one).
- * The board has no index besides its array; post ids are never reused (`meta.postSeq` stays), and lifetime stats
- * such as `board_posts` keep counting what the author did. Returns what was removed, or null when the post or reply
- * does not exist.
- */
-export function removeBoardPost(s: WorldState, postId: string, replyIndex?: number): RemovedBoardPost | null {
-  const idx = s.board.findIndex((p) => p.id === postId);
-  const post = s.board[idx];
-  if (!post) return null;
-  if (replyIndex === undefined) {
-    s.board.splice(idx, 1);
-    s.dirty.add('board');
-    return { post };
-  }
-  if (!Number.isInteger(replyIndex) || replyIndex < 0) return null;
-  const reply = post.replies[replyIndex];
-  if (!reply) return null;
-  post.replies.splice(replyIndex, 1);
-  s.dirty.add('board');
-  return { post, reply };
-}
+export { removeBoardPost, type RemovedBoardPost } from '../board';
 
 export const boardActions: HandlerMap = {
   board_post(run, a, p) {
     atBoard(run, a);
-    const readyAt = a.cooldowns.board ?? 0;
+    const tag = oneOf(p.tag, BOARD_TAGS, 'board_post', 'tag');
+    const readyAt = own(a.cooldowns, 'board') ?? 0;
     if (readyAt > run.now) fail('COOLDOWN', 'board_cooldown', { seconds: Math.ceil((readyAt - run.now) / 1000), minutes: BALANCE.board.postCooldownMs / 60_000 });
     const text = cleanText(p.text, MAX_BOARD_LEN, true);
     const B = BALANCE.board;
     a.cooldowns.board = run.now + B.postCooldownMs;
-    const post: BoardPost = { id: `b${(++run.s.meta.postSeq).toString(36)}`, by: a.id, tag: p.tag, text, at: run.now, replies: [] };
-    run.s.board.push(post);
-    if (run.s.board.length > B.maxPosts) run.s.board.splice(0, run.s.board.length - B.maxPosts);
-    run.s.dirty.add('board');
+    const post: BoardPost = { id: `b${(++run.s.meta.postSeq).toString(36)}`, by: a.id, tag, text, at: run.now, replies: [] };
+    addPost(run.s, post);
     run.s.dirty.add('meta');
     run.data.post = post.id;
-    tell(run, 'n.board_post', { post: post.id, tag: p.tag });
-    emit(run, 'board_post', { room: a.room, actor: a.id, vis: 'public', lang: a.lang, drama: p.tag === 'rumor' ? 3 : 1, data: { post: post.id, tag: p.tag, text } });
+    tell(run, 'n.board_post', { post: post.id, tag });
+    emit(run, 'board_post', { room: a.room, actor: a.id, vis: 'public', lang: a.lang, drama: tag === 'rumor' ? 3 : 1, data: { post: post.id, tag, text } });
     bump(run, a, 'board_posts');
-    if (p.tag === 'rumor') bump(run, a, 'rumors');
+    if (tag === 'rumor') bump(run, a, 'rumors');
     questEvent(run, a, 'board_post');
   },
 
@@ -71,10 +47,8 @@ export const boardActions: HandlerMap = {
     atBoard(run, a);
     const post = postById(run, p.post);
     if (post.replies.length >= BALANCE.board.maxReplies) fail('CONFLICT', 'board_replies_full', { post: post.id });
-    const text = cleanText(p.text, MAX_BOARD_LEN, true);
-    chatCooldown(run, a);
-    post.replies.push({ by: a.id, text, at: run.now });
-    run.s.dirty.add('board');
+    const text = chatText(run, a, p.text, MAX_BOARD_LEN, true);
+    addReply(run.s, post, { by: a.id, text, at: run.now });
     tell(run, 'n.board_reply', { post: post.id });
     emit(run, 'board_reply', { room: a.room, actor: a.id, target: post.by, vis: 'public', to: [post.by], lang: a.lang, data: { post: post.id, text } });
   },

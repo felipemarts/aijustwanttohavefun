@@ -66,7 +66,7 @@ describe('rate limits', () => {
     expect((await reg('203.0.113.50', 'Nobody1q')).statusCode).toBe(429);
     expect((await reg('203.0.113.50', 'Nobody2q', 'wrong-token')).statusCode).toBe(429);
     expect((await reg('203.0.113.50', 'Nobody3q', `${ADMIN}x`)).statusCode).toBe(429);
-    expect((await reg('203.0.113.50', 'Admin1q', ADMIN)).json().ok).toBe(true);
+    expect((await reg('203.0.113.50', 'Tokened1q', ADMIN)).json().ok).toBe(true);
     // Without the token the anonymous limit applies to registration too (120 per minute per address).
     let last = 200;
     let n = 0;

@@ -1,11 +1,12 @@
-import { ref } from '@ajwf/shared';
-import { addGold, addItem, canFit, count, derive, removeItem } from '../agent';
+import { hasOwnKey, ref } from '@ajwf/shared';
+import { addGold, addItem, canFit, count, derive, removeItem, takeGold } from '../agent';
+import { covers } from '../ledger';
 import { restPrice } from '../balance';
 import { questBlocker, questEvent, questReady } from '../quests';
 import { fail, tell, type Run } from '../run';
 import { wantedHours } from '../trust';
 import type { AgentState } from '../types';
-import { hasFlag, normId, npcHere, type HandlerMap } from './util';
+import { hasFlag, normId, npcHere, wholeNumber, type HandlerMap } from './util';
 
 /** Price a shop pays for one unit of an item, or 0 when it does not buy that kind of thing. */
 export function shopBuyPrice(run: Run, shopId: string, itemId: string): number {
@@ -36,7 +37,7 @@ export const npcActions: HandlerMap = {
     const offers: string[] = [];
     const ready: string[] = [];
     for (const q of run.c.questsByGiver.get(npc.id) ?? []) {
-      if (a.quests[q.id]) {
+      if (hasOwnKey(a.quests, q.id)) {
         if (questReady(a, q)) ready.push(q.id);
       } else if (!questBlocker(run, a, q)) offers.push(q.id);
     }
@@ -61,13 +62,14 @@ export const npcActions: HandlerMap = {
     const id = normId(p.item);
     const entry = run.c.shops.get(npc.shop)!.sells.find((e) => e.item === id);
     if (!entry) fail('TARGET_NOT_FOUND', 'shop_no_item', { npc: ref.npc(npc.id), item: p.item });
-    const total = entry.price * p.qty;
-    if (a.gold < total) fail('NOT_ENOUGH_GOLD', 'no_gold', { need: total, have: a.gold });
-    if (!canFit(run.c, a, [{ item: id, qty: p.qty }])) fail('INVENTORY_FULL', 'inventory_full');
-    a.gold -= total;
-    addItem(a, id, p.qty);
-    tell(run, 'n.shop_buy', { item: ref.item(id), qty: p.qty, gold: total });
-    questEvent(run, a, 'shop_buy', id, p.qty);
+    const qty = wholeNumber(p.qty, 'qty', 1);
+    const total = entry.price * qty;
+    if (!covers(a.gold, total)) fail('NOT_ENOUGH_GOLD', 'no_gold', { need: total, have: a.gold });
+    if (!canFit(run.c, a, [{ item: id, qty }])) fail('INVENTORY_FULL', 'inventory_full');
+    takeGold(a, total);
+    addItem(a, id, qty);
+    tell(run, 'n.shop_buy', { item: ref.item(id), qty, gold: total });
+    questEvent(run, a, 'shop_buy', id, qty);
   },
 
   shop_sell(run, a, p) {
@@ -75,12 +77,13 @@ export const npcActions: HandlerMap = {
     if (!npc.shop) fail('NOT_AVAILABLE_HERE', 'not_a_shop', { npc: ref.npc(npc.id) });
     refuseWanted(run, a);
     const id = normId(p.item);
-    if (count(a, id) < p.qty) fail('MISSING_ITEMS', 'not_enough_items', { item: p.item, have: count(a, id), need: p.qty });
+    const qty = wholeNumber(p.qty, 'qty', 1);
+    if (!covers(count(a, id), qty)) fail('MISSING_ITEMS', 'not_enough_items', { item: p.item, have: count(a, id), need: qty });
     const price = shopBuyPrice(run, npc.shop, id);
-    if (price <= 0) fail('NOT_ALLOWED', 'shop_wont_buy', { npc: ref.npc(npc.id), item: ref.item(id) });
-    removeItem(a, id, p.qty);
-    addGold(run, a, price * p.qty);
-    tell(run, 'n.shop_sell', { item: ref.item(id), qty: p.qty, gold: price * p.qty });
+    if (!(price > 0)) fail('NOT_ALLOWED', 'shop_wont_buy', { npc: ref.npc(npc.id), item: ref.item(id) });
+    removeItem(a, id, qty);
+    addGold(run, a, price * qty);
+    tell(run, 'n.shop_sell', { item: ref.item(id), qty, gold: price * qty });
   },
 
   rest(run, a) {
@@ -89,8 +92,8 @@ export const npcActions: HandlerMap = {
     const d = derive(run.c, a, run.now);
     if (a.hp >= d.maxHp && a.mp >= d.maxMp) fail('NOT_ALLOWED', 'already_rested');
     const cost = restCost(a);
-    if (a.gold < cost) fail('NOT_ENOUGH_GOLD', 'no_gold', { need: cost, have: a.gold });
-    a.gold -= cost;
+    if (!covers(a.gold, cost)) fail('NOT_ENOUGH_GOLD', 'no_gold', { need: cost, have: a.gold });
+    takeGold(a, cost);
     a.hp = d.maxHp;
     a.mp = d.maxMp;
     tell(run, 'n.rest', { gold: cost });

@@ -1,5 +1,5 @@
 import { ref } from '@ajwf/shared';
-import { addGold, bump, derive, fall, giveOrDrop, removeItem, touch } from './agent';
+import { addGold, bump, derive, fall, giveOrDrop, removeItem, takeGold, touch } from './agent';
 import { BALANCE } from './balance';
 import { dropBond, bondScore } from './bond';
 import { rollDamage } from './combat';
@@ -8,7 +8,7 @@ import { emit, fail, markAgent, msg, tell, type Run } from './run';
 import { addHonor, bountyOn, claimBounty, isWanted, raiseInfamy } from './trust';
 import type { AgentState } from './types';
 import { agentByName } from './actions/util';
-import { refreshMonster, roomState } from './world';
+import { roomState } from './world';
 
 /**
  * Player against player (PLANEJAMENTO §7.3): only in lawless rooms, only between agents of level 8 or more whose
@@ -28,10 +28,8 @@ export function pvpTarget(run: Run, a: AgentState, target: string | undefined): 
   if (!target) return null;
   const room = roomState(run.s, a.room);
   const id = target.trim().toLowerCase().replace(/^@?mon[:.]/, '').replace(/[\s-]+/g, '_');
-  for (const m of room.monsters) {
-    refreshMonster(run.s, m, run.now);
-    if (m.uid === id || m.kind === id) return null;
-  }
+  // Matched without bringing the monsters up to date (uid and kind never change): a refusal below changes nothing.
+  if (room.monsters.some((m) => m.uid === id || m.kind === id)) return null;
   const b = agentByName(run, target);
   if (!b) return null;
   if (b.room !== a.room) {
@@ -130,11 +128,13 @@ export function pvpKill(run: Run, killer: AgentState, victim: AgentState, defens
   const P = BALANCE.pvp;
   const outlaw = isWanted(victim) || bountyOn(run.s, victim.id) > 0;
   const gold = Math.floor(victim.gold * P.goldShare);
-  victim.gold -= gold;
+  takeGold(victim, gold);
   addGold(run, killer, gold);
   let item: string | undefined;
   let kept = true;
-  const loose = Object.keys(victim.inv).filter((id) => run.c.items.get(id)?.type !== 'quest' && (victim.inv[id] ?? 0) > 0);
+  const loose = Object.entries(victim.inv)
+    .filter(([id, qty]) => run.c.items.get(id)?.type !== 'quest' && qty > 0)
+    .map(([id]) => id);
   if (loose.length) {
     item = run.rng.pick(loose);
     removeItem(victim, item, 1);

@@ -1,3 +1,4 @@
+import { own } from '@ajwf/shared';
 import { BALANCE } from './balance';
 import { isBestFriend, raiseBond } from './bond';
 import type { Run } from './run';
@@ -53,7 +54,7 @@ export function partyTimeBonds(run: Run, p: Party, a: AgentState): void {
   for (const id of p.members) {
     const b = run.s.agents.get(id);
     if (!b || b === a) continue;
-    const since = Math.max(p.joined[a.id] ?? run.now, p.joined[id] ?? run.now);
+    const since = Math.max(own(p.joined, a.id) ?? run.now, own(p.joined, id) ?? run.now);
     raiseBond(run, a, b, Math.min(B.partyMax, Math.floor(((run.now - since) / 3_600_000) * B.partyPerHour)));
   }
 }

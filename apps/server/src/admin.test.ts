@@ -106,7 +106,7 @@ describe('admin routes', () => {
 
     s.game.state.dirty.clear();
     expect((await admin(s, 'DELETE', `/api/admin/board/${id}`)).json()).toEqual({ ok: true });
-    expect(s.game.state.dirty.has('board')).toBe(true);
+    expect(s.game.state.dirty.has(`post:${id}`)).toBe(true);
     sound(s);
     const after = await board();
     expect(after.map((p) => p.text)).toEqual(['Looking for a cleric.']);

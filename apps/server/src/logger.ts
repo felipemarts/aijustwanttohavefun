@@ -37,7 +37,7 @@ export function scrubUrl(url: string | undefined): string {
   return q >= 0 ? `${path}?[redacted]` : path;
 }
 
-type ReqLike = { method?: string; url?: string; ip?: string; socket?: { remotePort?: number } };
+type ReqLike = { method?: string; url?: string; ip?: string; clientIp?: string; socket?: { remotePort?: number } };
 
 const MAX_ERR_TEXT = 2000;
 /** Drizzle puts every bound value of a failed query in the message ("Failed query: ...\nparams: ..."). */
@@ -68,7 +68,7 @@ export function createLogger(level: string, destination?: DestinationStream): Lo
       redact: { paths: REDACT_PATHS, censor: '[redacted]' },
       // Replaces Fastify's request serializer (which logs the raw URL).
       serializers: {
-        req: (req: ReqLike) => ({ method: req.method, url: scrubUrl(req.url), remoteAddress: req.ip, remotePort: req.socket?.remotePort }),
+        req: (req: ReqLike) => ({ method: req.method, url: scrubUrl(req.url), remoteAddress: req.clientIp ?? req.ip, remotePort: req.socket?.remotePort }),
         err: errSerializer,
       },
     },

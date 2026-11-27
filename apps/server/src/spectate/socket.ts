@@ -1,51 +1,15 @@
 import type { IncomingMessage, Server } from 'node:http';
-import { isIPv4 } from 'node:net';
 import type { Duplex } from 'node:stream';
 import { constants as zlibConstants, deflateRawSync } from 'node:zlib';
 import { SPECTATE_PATH } from '@ajwf/shared';
 import type { Logger } from 'pino';
 import { WebSocketServer, type WebSocket } from 'ws';
+import { clientIp } from '../client-ip';
 import type { Config } from '../config';
 import type { Metrics } from '../metrics';
 import { ipKey } from '../rate-limit';
 import type { Broadcaster, SpectatorSocket } from './broadcaster';
 import { SPECTATE } from './constants';
-
-function ipv4ToInt(ip: string): number {
-  return ip.split('.').reduce((n, part) => (n << 8) + Number(part), 0) >>> 0;
-}
-
-/** Exact address or IPv4 CIDR (`10.0.0.0/8`). IPv4-mapped IPv6 addresses (`::ffff:10.0.0.1`) count as IPv4. */
-export function ipMatches(ip: string, rule: string): boolean {
-  const addr = ip.startsWith('::ffff:') && isIPv4(ip.slice(7)) ? ip.slice(7) : ip;
-  const [net, bits] = rule.split('/');
-  if (bits === undefined || !net) return addr === rule;
-  if (!isIPv4(addr) || !isIPv4(net)) return false;
-  const n = Number(bits);
-  if (!Number.isInteger(n) || n < 0 || n > 32) return false;
-  const mask = n === 0 ? 0 : (~0 << (32 - n)) >>> 0;
-  return (ipv4ToInt(addr) & mask) === (ipv4ToInt(net) & mask);
-}
-
-/**
- * The client address of an upgrade request, following the same `trustProxy` setting as Fastify: never trust
- * X-Forwarded-For unless configured; with a list, walk the chain from the nearest hop while hops are trusted.
- */
-export function clientIp(remote: string | undefined, forwarded: string | string[] | undefined, trust: Config['trustProxy']): string {
-  const peer = remote ?? 'unknown';
-  if (trust === false || !forwarded) return peer;
-  const header = Array.isArray(forwarded) ? forwarded.join(',') : forwarded;
-  const chain = header
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
-  if (trust === true) return chain[0] ?? peer;
-  const hops = [...chain, peer];
-  for (let i = hops.length - 1; i > 0; i--) {
-    if (!trust.some((rule) => ipMatches(hops[i]!, rule))) return hops[i]!;
-  }
-  return hops[0]!;
-}
 
 function refuse(socket: Duplex, status: number, text: string): void {
   socket.end(`HTTP/1.1 ${status} ${text}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`);
@@ -153,8 +117,8 @@ export function attachSpectatorSocket(server: Server, deps: { broadcaster: Broad
   server.on('upgrade', (req: IncomingMessage, socket: Duplex, head: Buffer) => {
     const path = (req.url ?? '').split('?')[0];
     if (path !== SPECTATE_PATH) return refuse(socket, 404, 'Not Found');
-    // Counted per IPv4 address or IPv6 /64, like the HTTP rate limits.
-    const ip = ipKey(clientIp(req.socket.remoteAddress, req.headers['x-forwarded-for'], config.trustProxy));
+    // Counted per IPv4 address or IPv6 /64, like the HTTP rate limits; the address is derived like theirs.
+    const ip = ipKey(clientIp({ remoteAddress: req.socket.remoteAddress, headers: req.headers }, config));
     const admission = broadcaster.admit(ip);
     if (!admission.ok) {
       metrics.wsRejected++;

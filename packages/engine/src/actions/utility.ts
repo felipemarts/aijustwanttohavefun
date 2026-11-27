@@ -1,5 +1,5 @@
 import type { Puzzle } from '@ajwf/content';
-import { ref, type ActionName } from '@ajwf/shared';
+import { own, ref, type ActionName } from '@ajwf/shared';
 import { addBuff, bump, count, derive, giveOrDrop, removeItem, touch } from '../agent';
 import { BALANCE, rogueChance } from '../balance';
 import { raiseBond } from '../bond';
@@ -51,7 +51,7 @@ function findPuzzle(run: Run, a: AgentState, action: ActionName, raw: string): F
   let target = pz.targets.includes(id) ? id : pz.targets[0]!;
   if (pz.type === 'levers' && !pz.targets.includes(id)) {
     // Named by the puzzle id: the first lever not pulled in the current window.
-    const live = (t: string) => (st.pulls[t]?.at ?? -Infinity) > run.now - pz.window_sec * 1000;
+    const live = (t: string) => (own(st.pulls, t)?.at ?? -Infinity) > run.now - pz.window_sec * 1000;
     target = pz.targets.find((t) => !live(t)) ?? target;
   }
   return { pz, st, target, winch: false };
@@ -97,11 +97,11 @@ function pullLever(run: Run, a: AgentState, pz: Puzzle, st: PuzzleState, target:
   const windowMs = pz.window_sec * 1000;
   const live: PuzzleState['pulls'] = {};
   for (const [t, pull] of Object.entries(st.pulls)) if (pull.at > run.now - windowMs && pz.targets.includes(t)) live[t] = pull;
-  const mine = Object.keys(live).find((t) => t !== target && live[t]!.by === a.id);
+  const mine = Object.entries(live).find(([t, pull]) => t !== target && pull.by === a.id)?.[0];
   if (mine) fail('NOT_ALLOWED', 'lever_same_agent', { target, other: mine, seconds: pz.window_sec });
   live[target] = { by: a.id, at: run.now };
   st.pulls = live;
-  const left = pz.targets.filter((t) => !live[t]);
+  const left = pz.targets.filter((t) => own(live, t) === undefined);
   if (left.length) {
     tell(run, 'n.lever_pulled', { target, left: left.length, seconds: pz.window_sec });
     emit(run, 'lever_pulled', { room: a.room, actor: a.id, to: 'room', m: msg('ev.lever_pulled', { actor: a.name, target, seconds: pz.window_sec }), data: { puzzle: pz.id, target } });
@@ -120,7 +120,7 @@ export const utilityActions: HandlerMap = {
     needClass(a, 'rogue', 'scout');
     const room = run.c.rooms.get(a.room)!;
     const { dir, to } = exitOf(room, p.target);
-    const gate = room.gates[dir];
+    const gate = own(room.gates, dir);
     const block = gate ? gateBlocker(run, a, gate) : null;
     const monsters: { id: string; n: number; lvl: number }[] = [];
     for (const m of run.s.rooms.get(to)?.monsters ?? []) {
@@ -142,7 +142,7 @@ export const utilityActions: HandlerMap = {
     const b = p.target ? agentHere(run, a, p.target) : a;
     if (b.fallen) fail('NOT_ALLOWED', 'target_fallen', { name: b.name });
     if (!b.equip.weapon) fail('NOT_ALLOWED', 'enchant_no_weapon', { name: b.name });
-    if (count(a, E.item) < 1) fail('MISSING_ITEMS', 'enchant_material', { item: ref.item(E.item) });
+    if (!(count(a, E.item) >= 1)) fail('MISSING_ITEMS', 'enchant_material', { item: ref.item(E.item) });
     removeItem(a, E.item, 1);
     if (b !== a) touch(run, b);
     addBuff(b, { id: 'enchant', stat: 'atk', value: E.atk, until: run.now + E.durationMs });
@@ -209,7 +209,7 @@ export const utilityActions: HandlerMap = {
     const P = BALANCE.puzzle;
     if (st.ready > run.now) fail('NOT_AVAILABLE_HERE', 'lock_empty', { puzzle: puzzleRef(pz.id), minutes: Math.max(1, Math.ceil((st.ready - run.now) / 60_000)) });
     const key = `lock:${pz.id}`;
-    const wait = a.cooldowns[key] ?? 0;
+    const wait = own(a.cooldowns, key) ?? 0;
     if (wait > run.now) fail('COOLDOWN', 'lock_cooldown', { puzzle: puzzleRef(pz.id), seconds: secondsLeft(run, wait) });
     if (!run.rng.chance(rogueChance('lock', derive(run.c, a, run.now).agi))) {
       a.cooldowns[key] = run.now + P.lockFailCooldownMs;

@@ -127,7 +127,7 @@ export function adminRoutes(app: FastifyInstance, ctx: AppContext): void {
 export function reportRoute(app: FastifyInstance, ctx: AppContext): void {
   const { game, render, config } = ctx;
   app.post('/report', async (req, reply) => {
-    const t = ctx.limiters.report.take(req.ip, game.now());
+    const t = ctx.limiters.report.take(req.clientIp, game.now());
     if (!t.ok) return sendRateLimited(reply, render, 'en', t.retryAfterSec);
     const body = reportBody.safeParse(req.body ?? {});
     if (!body.success) return reply.code(400).send(invalidParams(render, 'en', body.error.issues));
@@ -135,7 +135,7 @@ export function reportRoute(app: FastifyInstance, ctx: AppContext): void {
     // Agents are stored by id, so the report survives the name being shown differently later.
     const targetId = kind === 'agent' ? (game.anyAgentByName(target)?.id ?? target) : target;
     const details = body.data.details ? sanitizeAgentText(body.data.details, MAX_REPORT_DETAILS).text : '';
-    const reporterHash = createHash('sha256').update(`${config.sessionSecret}:${ipKey(req.ip)}`).digest('hex');
+    const reporterHash = createHash('sha256').update(`${config.sessionSecret}:${ipKey(req.clientIp)}`).digest('hex');
     await game.store.addReport({ id: `r${randomBytes(9).toString('base64url')}`, kind, targetId, reason, details, reporterHash, ts: game.now(), resolved: false });
     return { ok: true };
   });

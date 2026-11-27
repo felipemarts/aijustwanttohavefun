@@ -1,4 +1,4 @@
-import type { ActionName } from '@ajwf/shared';
+import { type ActionName, hasOwnKey, own } from '@ajwf/shared';
 import { BALANCE } from './balance';
 import { isMayor } from './election';
 import { guildOf } from './guild';
@@ -31,11 +31,13 @@ export type BuildingView =
   | { kind: 'project'; project: string; building: string; at: number }
   | { kind: 'guild_hall'; guild: string; name: string; colors: [string, string]; at: number };
 
+/**
+ * A candidate of the open election. No vote count: the ballot is secret and the totals stay sealed until the election
+ * closes (they appear in `lastElection` and the `election_result` event); only the turnout (`voters`) is live.
+ */
 export type CandidateView = {
   name: string;
   at: number;
-  /** Live total (the ballot is secret, the totals are not). */
-  votes: number;
   /** Agent-written text: escape before display. */
   platform: string;
   lang: string;
@@ -49,6 +51,7 @@ export type VillageView = {
   taxRate: number;
   priority: string | null;
   mayor: { name: string; since: number; election: number } | null;
+  /** The open election. `voters` is the number of ballots cast so far; per-candidate totals are not shown before it closes. */
   election: { n: number; phase: ElectionPhase; start: number; voteAt: number; end: number; voters: number; candidates: CandidateView[] };
   /** The latest closed election, for the gazette (the full record was emitted in `election_result`). */
   lastElection: ElectionRecord | null;
@@ -64,7 +67,7 @@ export function projectViews(s: WorldState): ProjectView[] {
   const out: ProjectView[] = [];
   for (const p of s.content.projects.values()) {
     const status = projectStatus(s, p);
-    const st = s.village.projects[p.id];
+    const st = own(s.village.projects, p.id);
     const view: ProjectView = { id: p.id, site: p.site, building: p.building, status, progress: progressOf(s, p), requires: p.requires };
     if (status === 'done') {
       view.doneAt = st!.doneAt!;
@@ -105,7 +108,6 @@ export function villageView(s: WorldState, now: number): VillageView {
       candidates: e.candidates.map((c) => ({
         name: c.name,
         at: c.at,
-        votes: e.tally[c.id] ?? 0,
         platform: c.platform,
         lang: c.lang,
         active: s.agents.get(c.id)?.status === 'active',
@@ -151,9 +153,9 @@ export function civicSeen(s: WorldState, a: AgentState): CivicSeen {
   if (canGive) out.actions.push('contribute');
   const e = s.village.election;
   if (townHall && a.claimed && a.level >= BALANCE.election.runLevel && !e.candidates.some((x) => x.id === a.id)) out.actions.push('run_for_mayor');
-  if (e.phase === 'voting' && a.claimed && a.level >= BALANCE.election.voteLevel && !e.votes[a.id] && e.candidates.some((x) => x.id !== a.id)) out.actions.push('vote');
+  if (e.phase === 'voting' && a.claimed && a.level >= BALANCE.election.voteLevel && !hasOwnKey(e.votes, a.id) && e.candidates.some((x) => x.id !== a.id)) out.actions.push('vote');
   if (townHall && isMayor(s, a)) out.actions.push('mayor_priority', 'mayor_tax', 'mayor_fund', 'mayor_embezzle');
-  if (flags.includes('plot') && !site && !s.village.halls[a.room]) {
+  if (flags.includes('plot') && !site && !hasOwnKey(s.village.halls, a.room)) {
     const g = guildOf(s, a);
     if (g && g.leader === a.id && hallOf(s, g.id) === undefined) out.actions.push('guild_build_hall');
   }

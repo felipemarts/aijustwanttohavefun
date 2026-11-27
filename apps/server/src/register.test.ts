@@ -129,8 +129,8 @@ describe('POST /agents/register', () => {
     const s = await makeServer();
     await register(s, { name: 'Sneaky', bot: true, claimed: true });
     expect(s.game.agentByName('Sneaky')).toMatchObject({ bot: false, claimed: false });
-    await register(s, { name: 'WrongAdmin', bot: true, claimed: true }, { 'x-admin-token': 'guess' });
-    expect(s.game.agentByName('WrongAdmin')).toMatchObject({ bot: false, claimed: false });
+    await register(s, { name: 'WrongToken', bot: true, claimed: true }, { 'x-admin-token': 'guess' });
+    expect(s.game.agentByName('WrongToken')).toMatchObject({ bot: false, claimed: false });
     await register(s, { name: 'TestBot', bot: true, claimed: true }, { 'x-admin-token': ADMIN });
     expect(s.game.agentByName('TestBot')).toMatchObject({ bot: true, claimed: true });
     const profile = (await s.app.inject({ method: 'GET', url: '/api/v1/agents/TestBot' })).json();

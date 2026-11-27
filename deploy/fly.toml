@@ -25,8 +25,9 @@ kill_timeout = '60s'
   NODE_ENV = 'production'
   PORT = '8710'
   PUBLIC_URL = 'https://ajwf.fly.dev'
-  # Every request arrives through Fly's proxy, which sets X-Forwarded-For.
-  TRUST_PROXY = 'true'
+  # Every request arrives through Fly's proxy, which puts the address it accepted the connection from in
+  # Fly-Client-IP. X-Forwarded-For is never read (its left part can come from the client), so no TRUST_PROXY.
+  CLIENT_IP_HEADER = 'Fly-Client-IP'
   LOG_LEVEL = 'info'
   WS_MAX_CONNECTIONS = '20000'
   WS_MAX_PER_IP = '20'

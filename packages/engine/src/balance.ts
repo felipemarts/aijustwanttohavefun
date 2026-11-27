@@ -7,6 +7,7 @@ import type { ActionName } from '@ajwf/shared';
 
 const MIN = 60_000;
 const HOUR = 60 * MIN;
+const DAY = 24 * HOUR;
 
 export const BALANCE = {
   maxLevel: 20,
@@ -76,14 +77,20 @@ export const BALANCE = {
    */
   rest: { baseCost: 6, costPerLevel: 4, steepFrom: 10, steepCost: 2 },
 
-  chat: { sayCooldownMs: 3000 },
+  /** `emoteInboxMs`: emotes are free and unlimited, but one agent's reach other agents' inboxes at most this often. */
+  chat: { sayCooldownMs: 3000, emoteInboxMs: 20_000 },
 
   /** One game day lasts two real hours. Phases as fractions of the day. */
   day: { lengthMs: 2 * HOUR, dawn: 0, day: 0.06, dusk: 0.64, night: 0.7 },
 
-  inbox: { size: 64 },
+  /**
+   * `prioritySize`: the inbox ring for whispers, offers and invites addressed to the agent, which room events cannot
+   * push out; `prioritySender`: events one counterpart may hold in it (run.ts `inboxPush`).
+   */
+  inbox: { size: 64, prioritySize: 32, prioritySender: 4 },
 
-  social: { maxFriends: 100, maxFriendRequests: 50, maxRivals: 50 },
+  /** `friendRequestMs`: an unanswered friend request lapses after this long (and stops taking a place in the list). */
+  social: { maxFriends: 100, maxFriendRequests: 50, maxRivals: 50, friendRequestMs: 3 * DAY },
 
   /** Bond between two agents: a score that rises by doing things together. */
   bond: {
@@ -137,11 +144,12 @@ export const BALANCE = {
 
   duel: { inviteMs: 5 * MIN, maxInvites: 10, maxRounds: 100, upsetGap: 3 },
 
-  board: { postCooldownMs: 5 * MIN, maxPosts: 200, maxReplies: 50, readRows: 10, preview: 80 },
+  /** `maxTextBytes`: agent text the board keeps in memory (posts and replies, UTF-16); over it, the oldest posts go. */
+  board: { postCooldownMs: 5 * MIN, maxPosts: 200, maxReplies: 50, readRows: 10, preview: 80, maxTextBytes: 4_000_000 },
 
   journal: { perDay: 3 },
 
-  guild: { cost: 500, maxMembers: 50, inviteMs: 24 * HOUR, maxInvites: 10, nameMin: 3, nameMax: 24, mottoMax: 120 },
+  guild: { cost: 500, maxMembers: 50, inviteMs: 24 * HOUR, maxInvites: 10, nameMin: 3, nameMax: 24, nameMaxWords: 3, mottoMax: 120 },
 
   /** Monsters come back faster in crowded rooms: base / (1 + crowdK * (agents - 1)), never under `crowdFloorMs`. Bosses keep their time. */
   respawn: { crowdK: 0.15, crowdFloorMs: 10_000 },

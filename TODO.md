@@ -7,8 +7,6 @@ Items deliberately simplified during implementation. Each one is a good candidat
 - **Library (`mage_library`)** is simplified to +10% maximum MP for Mages and +5% XP from quest rewards for everyone,
   instead of "an extra Mage skill and research quests" (PLANEJAMENTO §8.1). The project description in content still
   promises the skill and the quests.
-- **`mayor_bounty`** is not implemented yet (bounties arrive with the trust-and-betrayal task); the action is refused
-  as unknown.
 - **`sieges`** (village wall) has no effect yet: siege events are post-MVP.
 - **Guild hall perks**: a hall is a building on the map; the "own chat, vault and small visible area" of §8.4 are the
   guild chat and vault every guild already has. Nothing extra is unlocked by owning a hall.
@@ -33,5 +31,14 @@ Found while simulating and benchmarking, and not fixed. One line each, ready to 
 - **Dungeon timings are new and unsimulated**: the generous lever window (10 min), ways open for 2 h, gate held up to 30 min and winch of 10 min (for agents that play in sessions) have only passed the reduced simulation tests; the 380,000 waits at the stairs should be re-measured.
 - **Durations in seconds**: puzzle narration says "open for 7200 seconds"; a `minutes` parameter (or a duration formatter in the server renderer) would read better in every language.
 - **Durations duplicated in text**: puzzle and room descriptions and Berta's rest topic state numbers from `puzzles.yaml` and `BALANCE` ("10 minutes", "2 hours", "past level 10"); a content check comparing them would catch drift.
-- **Timer heap snapshot size**: the whole heap is one snapshot entry (167 KB for 4,400 timers in the ops benchmark), written whenever a timer is pushed or popped. In a bench-like run, trade-expiry timers are 99% of it, and they are derivable: rebuild one per open trade from the `trades` entry on restore (as escorts already do) and stop persisting them; respawn timers could likewise move into the room entry (the pending `at` per spawn slot) and be rebuilt on restore. That would cut the entry to a few hundred bytes.
+- **Timer heap snapshot size**: the whole heap is one snapshot entry, written whenever a timer is pushed or popped. Trade-expiry timers (99% of it in the ops benchmark) are gone: offers expire through a sweep of `trades` in expiry order (`sweepTrades`). Respawn timers could likewise move into the room entry (the pending `at` per spawn slot) and be rebuilt on restore.
 - **`meta.eventSeq` is not marked dirty on every event** (by design: the server recovers it from the stored events on boot); a store fed only by `exportDirty` holds a stale sequence until something else marks `meta`.
+
+## Security design notes (from the audit, unresolved)
+
+Design questions the security audit raised and left open on purpose. One line each, ready to become an issue.
+
+- **Multi-account voting**: one owner may claim up to `MAX_AGENTS_PER_OWNER` (3) active agents, and each claimed agent of level 3 or more casts its own vote, so one human can cast several ballots; mitigations considered: a lower claim limit per owner, a minimum owner-account age, or weighting votes by recent activity. (Ballots of agents retired or banned before the close no longer count, which closes the "claim, vote, retire, claim again" loop.)
+- **Room-visible `steal`**: a successful theft is shown, with the thief's name, to every agent in the room except the victim (a failed one to the whole room); a design choice that may need revisiting, since it makes the rogue's sneaky play public.
+- **Raw IPs in logs, no retention policy**: the request log line carries the client IP (`req.remoteAddress`) for every failed (5xx) or slow request at `info`, and for every request at `debug`; no log retention period is defined anywhere (DEPLOY.md only caps Docker log size).
+- **Events kept forever**: the `events` table only grows (the server inserts and never deletes or prunes events); there is no retention or archiving policy.

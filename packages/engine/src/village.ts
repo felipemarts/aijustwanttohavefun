@@ -1,7 +1,9 @@
 import type { Content, Project } from '@ajwf/content';
-import { ref } from '@ajwf/shared';
+import { own, ref } from '@ajwf/shared';
 import { grantTitle } from './agent';
 import { BALANCE } from './balance';
+import { assertGoods } from './goods';
+import { assertAmount, stockAdd } from './ledger';
 import { emit, markAgent, msg, type Run } from './run';
 import type { AgentState, Goods, Stack, WorldState } from './types';
 import { isProjectDone } from './unlocks';
@@ -31,10 +33,10 @@ export function projectAt(c: Content, room: string): Project | undefined {
 
 /** What the project still needs, gold and items (only the ones still short). */
 export function missingFor(s: WorldState, p: Project): Goods {
-  const st = s.village.projects[p.id];
+  const st = own(s.village.projects, p.id);
   return {
     gold: p.cost.gold - (st?.gold ?? 0),
-    items: p.cost.items.map((c) => ({ item: c.item, qty: c.qty - (st?.items[c.item] ?? 0) })).filter((x) => x.qty > 0),
+    items: p.cost.items.map((c) => ({ item: c.item, qty: c.qty - (own(st?.items, c.item) ?? 0) })).filter((x) => x.qty > 0),
   };
 }
 
@@ -48,15 +50,15 @@ export function valueOf(c: Content, g: Goods): number {
 /** Share of the cost delivered, by value at item base price, 0..1 (3 decimals). */
 export function progressOf(s: WorldState, p: Project): number {
   if (isProjectDone(s, p.id)) return 1;
-  const st = s.village.projects[p.id];
+  const st = own(s.village.projects, p.id);
   const total = valueOf(s.content, { gold: p.cost.gold, items: p.cost.items });
   if (!st || total <= 0) return 0;
-  const have = valueOf(s.content, { gold: st.gold, items: p.cost.items.map((c) => ({ item: c.item, qty: Math.min(c.qty, st.items[c.item] ?? 0) })) });
+  const have = valueOf(s.content, { gold: st.gold, items: p.cost.items.map((c) => ({ item: c.item, qty: Math.min(c.qty, own(st.items, c.item) ?? 0) })) });
   return Math.min(0.999, Math.floor((have / total) * 1000) / 1000);
 }
 
 function stateOf(s: WorldState, id: string): ProjectState {
-  let st = s.village.projects[id];
+  let st = own(s.village.projects, id);
   if (!st) s.village.projects[id] = st = { gold: 0, items: {}, by: {} };
   return st;
 }
@@ -83,15 +85,20 @@ export function splitOffer(offer: number, missing: number, bonusPct: number): { 
  */
 export function deliver(run: Run, p: Project, from: AgentState | null, given: Goods, bonus: Goods): void {
   const s = run.s;
+  // Every amount is checked before the ledger changes.
+  for (const g of [given, bonus]) assertGoods(g, `delivery to ${p.id}`);
+  const value = valueOf(run.c, given);
+  const extra = valueOf(run.c, bonus);
+  assertAmount(value, `ledger of ${p.id}`);
+  assertAmount(extra, `ledger of ${p.id}`);
   const st = stateOf(s, p.id);
   for (const g of [given, bonus]) {
     st.gold += g.gold;
-    for (const x of g.items) st.items[x.item] = (st.items[x.item] ?? 0) + x.qty;
+    for (const x of g.items) stockAdd(st.items, x.item, x.qty, `project ${p.id}`);
   }
   const id = from?.id ?? VILLAGE_ID;
-  st.by[id] = (st.by[id] ?? 0) + valueOf(run.c, given);
-  const extra = valueOf(run.c, bonus);
-  if (extra > 0) st.by[VILLAGE_ID] = (st.by[VILLAGE_ID] ?? 0) + extra;
+  st.by[id] = (own(st.by, id) ?? 0) + value;
+  if (extra > 0) st.by[VILLAGE_ID] = (own(st.by, VILLAGE_ID) ?? 0) + extra;
   s.dirty.add('village');
   const left = missingFor(s, p);
   if (left.gold <= 0 && !left.items.length) completeProject(run, p, st);
@@ -196,7 +203,7 @@ export function restoreVillage(s: WorldState): void {
   e.tally = {};
   for (const [voter, cand] of Object.entries(e.votes)) {
     if (!s.agents.has(voter) || !ids.has(cand)) delete e.votes[voter];
-    else e.tally[cand] = (e.tally[cand] ?? 0) + 1;
+    else e.tally[cand] = (own(e.tally, cand) ?? 0) + 1;
   }
   const due = electionDue(e);
   const timers = s.timers.toJSON();

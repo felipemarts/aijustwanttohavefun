@@ -3,7 +3,7 @@ import { derive, gainXp } from './agent';
 import { BALANCE, xpToNext } from './balance';
 import { eventsSince } from './observe';
 import { newRun } from './run';
-import { keys, makeKit, MIN, narr, SEC } from './testkit';
+import { dataOf, keys, makeKit, MIN, narr, SEC } from './testkit';
 
 describe('AP', () => {
   it('regenerates lazily, one point per interval, keeping the remainder and capped at max', () => {
@@ -221,6 +221,7 @@ describe('inbox', () => {
     // The arrival of later agents is in b's inbox already.
     const cursor = start.cursor;
     k.ok(a, 'emote', { emote: 'wave' });
+    k.advance(BALANCE.chat.emoteInboxMs);
     k.ok(a, 'emote', { emote: 'bow', target: 'Bob' });
     const got = eventsSince(k.s, b.id, cursor);
     expect(got.events.map((e) => e.type)).toEqual(['emote', 'emote']);
@@ -231,7 +232,10 @@ describe('inbox', () => {
     expect(eventsSince(k.s, a.id, cursor).events).toEqual([]);
     expect(eventsSince(k.s, far.id, cursor).events).toEqual([]);
     // Paging.
-    for (let i = 0; i < 5; i++) k.ok(a, 'emote', { emote: 'nod' });
+    for (let i = 0; i < 5; i++) {
+      k.advance(BALANCE.chat.emoteInboxMs);
+      k.ok(a, 'emote', { emote: 'nod' });
+    }
     const p1 = eventsSince(k.s, b.id, got.cursor, 3);
     expect(p1.events.length).toBe(3);
     const p2 = eventsSince(k.s, b.id, p1.cursor, 3);
@@ -243,9 +247,64 @@ describe('inbox', () => {
     const k = makeKit();
     const a = k.add('Pip', 'warrior');
     const b = k.add('Bob', 'warrior');
-    for (let i = 0; i < BALANCE.inbox.size + 10; i++) k.ok(a, 'emote', { emote: 'nod' });
+    for (let i = 0; i < BALANCE.inbox.size + 10; i++) {
+      k.advance(BALANCE.chat.emoteInboxMs);
+      k.ok(a, 'emote', { emote: 'nod' });
+    }
     const all = eventsSince(k.s, b.id, 0, 1000).events;
     expect(all.length).toBe(BALANCE.inbox.size);
     expect(all[all.length - 1]!.id).toBe(String(k.s.meta.eventSeq));
+  });
+
+  it('delivers one emote per sender per interval: a flood of free emotes reaches no inbox', () => {
+    const k = makeKit();
+    const a = k.add('Pip', 'warrior');
+    const b = k.add('Bob', 'warrior');
+    const cursor = k.s.meta.eventSeq;
+    const flood = Array.from({ length: 20 }, () => k.ok(a, 'emote', { emote: 'bow', target: 'Bob' }));
+    // Every emote happened (narrated, published for spectators), but only the first one was delivered.
+    expect(flood.every((r) => r.events.some((e) => e.type === 'emote'))).toBe(true);
+    expect(eventsSince(k.s, b.id, cursor).events.map((e) => e.type)).toEqual(['emote']);
+    k.advance(BALANCE.chat.emoteInboxMs);
+    k.ok(a, 'emote', { emote: 'wave' });
+    expect(eventsSince(k.s, b.id, cursor).events.map((e) => e.type)).toEqual(['emote', 'emote']);
+  });
+
+  it('keeps whispers and offers addressed to an agent when room events overflow its inbox', () => {
+    const k = makeKit();
+    const a = k.add('Pip', 'warrior');
+    const b = k.add('Bob', 'warrior');
+    const crowd = Array.from({ length: 5 }, (_, i) => k.add(`Crowd${'abcde'[i]}`, 'warrior'));
+    const cursor = k.s.meta.eventSeq;
+    k.ok(a, 'whisper', { to: 'Bob', text: 'meet me at the well' });
+    k.ok(a, 'trade_offer', { to: 'Bob', give: { gold: 1 }, want: {} });
+    // Far more room events than the general ring holds.
+    for (let i = 0; i < BALANCE.inbox.size * 2; i++) {
+      k.advance(BALANCE.chat.emoteInboxMs);
+      k.ok(crowd[i % crowd.length]!, 'emote', { emote: 'nod' });
+    }
+    const types = eventsSince(k.s, b.id, cursor, 1000).events.map((e) => e.type);
+    expect(types.filter((t) => t === 'emote')).toHaveLength(BALANCE.inbox.size);
+    expect(types).toContain('whisper');
+    expect(types).toContain('trade_offer');
+    // Merged in order of id.
+    const ids = eventsSince(k.s, b.id, cursor, 1000).events.map((e) => Number(e.id));
+    expect(ids).toEqual([...ids].sort((x, y) => x - y));
+  });
+
+  it('lets one counterpart hold only a few events of the priority ring, so cycling offers cannot push others out', () => {
+    const k = makeKit();
+    const a = k.add('Pip', 'warrior');
+    const b = k.add('Bob', 'warrior');
+    const c = k.add('Cid', 'warrior');
+    const cursor = k.s.meta.eventSeq;
+    k.ok(c, 'whisper', { to: 'Bob', text: 'from a friend' });
+    for (let i = 0; i < BALANCE.inbox.prioritySize * 2; i++) {
+      const t = dataOf(k.ok(a, 'trade_offer', { to: 'Bob', give: { gold: 1 }, want: {} })).trade as string;
+      k.ok(a, 'trade_cancel', { trade: t });
+    }
+    const got = eventsSince(k.s, b.id, cursor, 1000).events;
+    expect(got.filter((e) => e.actor === a.id)).toHaveLength(BALANCE.inbox.prioritySender);
+    expect(got.some((e) => e.type === 'whisper' && e.actor === c.id)).toBe(true);
   });
 });

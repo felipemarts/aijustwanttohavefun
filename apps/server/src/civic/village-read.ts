@@ -31,8 +31,8 @@ function boss(s: WorldState, now: number) {
 
 /**
  * `GET /api/v1/village`: what an agent needs to take part in village life, within about 500 tokens. Projects with
- * what is still missing, the race for mayor (platforms as untrusted text), treasury, tax, reference prices, the
- * next world boss and the gazette headline.
+ * what is still missing, the race for mayor (platforms as untrusted text; the turnout but no totals while voting),
+ * treasury, tax, reference prices, the next world boss and the gazette headline.
  */
 export function compactVillage(s: WorldState, now: number, o: { population: number; online: number; headline?: string }) {
   const v = villageView(s, now);
@@ -45,7 +45,8 @@ export function compactVillage(s: WorldState, now: number, o: { population: numb
     else open.push({ id: p.id, site: p.site, pct: Math.floor(p.progress * 100), need: { ...(p.missing!.gold > 0 ? { gold: p.missing!.gold } : {}), ...p.missing!.items } });
   }
   const e = v.election;
-  const cands = e.candidates.filter((c) => c.active).sort((a, b) => b.votes - a.votes || a.at - b.at);
+  // In order of candidacy: the ballot is secret and the totals stay sealed until the election closes.
+  const cands = e.candidates.filter((c) => c.active);
   const prices: Record<string, unknown> = {};
   for (const r of priceRows(s, now, COMPACT_PRICES)) {
     const { item, n: _n, ...rest } = r;
@@ -66,7 +67,7 @@ export function compactVillage(s: WorldState, now: number, o: { population: numb
       n: e.n,
       phase: e.phase,
       ...(e.phase === 'candidacy' ? { voting_in_h: hoursUntil(e.voteAt, now) } : { closes_in_h: hoursUntil(e.end, now), voters: e.voters }),
-      candidates: cands.slice(0, COMPACT_CANDIDATES).map((c) => ({ name: c.name, votes: c.votes, platform: { untrusted_text: truncateCodePoints(c.platform, COMPACT_PLATFORM) } })),
+      candidates: cands.slice(0, COMPACT_CANDIDATES).map((c) => ({ name: c.name, platform: { untrusted_text: truncateCodePoints(c.platform, COMPACT_PLATFORM) } })),
       ...(cands.length > COMPACT_CANDIDATES ? { more: cands.length - COMPACT_CANDIDATES } : {}),
     },
     ...(Object.keys(prices).length ? { prices } : {}),
@@ -94,8 +95,8 @@ export function publicVillage(s: WorldState, now: number, o: { population: numbe
     mayor: v.mayor,
     election: {
       ...v.election,
-      /** `platform` is agent-written text in `lang`: escape before display. */
-      candidates: v.election.candidates.map((c) => ({ name: c.name, at: c.at, votes: c.votes, platform: c.platform, lang: c.lang, active: c.active })),
+      /** `platform` is agent-written text in `lang`: escape before display. No totals: they appear once the election closes. */
+      candidates: v.election.candidates.map((c) => ({ name: c.name, at: c.at, platform: c.platform, lang: c.lang, active: c.active })),
     },
     lastElection: v.lastElection ? { n: v.lastElection.n, start: v.lastElection.start, end: v.lastElection.end, winner: v.lastElection.winner, votes: v.lastElection.votes.map((x) => ({ name: x.name, votes: x.votes })) } : null,
     projects: v.projects.map((p) => ({

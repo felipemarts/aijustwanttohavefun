@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { nameSkeleton, normalizeName } from '@ajwf/shared';
+import { applyAction } from './apply';
 import { BALANCE } from './balance';
 import { checkInvariants } from './invariants';
+import { exportAll, restoreWorld } from './snapshot';
 import { eventsSince, observe } from './observe';
 import { errCode, errKey, HOUR, makeKit, narr, worldWealth, type Kit } from './testkit';
 import type { AgentState, Guild } from './types';
@@ -62,6 +65,45 @@ describe('guild_create', () => {
     refuse(k, b, 'guild_create', { name: 'IronWolves' }, 'guild_name_taken');
     refuse(k, b, 'guild_create', { name: '1ron Wolves' }, 'guild_name_taken');
     expect(errCode(k.act(b, 'guild_create', { name: 'Ir0n Wolves' }))).toBe('NAME_TAKEN');
+  });
+
+  it('refuses names of more than three words, with invisible or modifier characters, or worded like instructions', () => {
+    const k = makeKit();
+    const a = k.add('Pip', 'warrior', { room: HALL });
+    a.gold = 2000;
+    refuse(k, a, 'guild_create', { name: 'The Old Iron Wolves' }, 'guild_name_words');
+    expect(BALANCE.guild.nameMaxWords).toBe(3);
+    // A zero-width joiner, a modifier-letter colon passing for punctuation: the agent-name rules apply.
+    refuse(k, a, 'guild_create', { name: 'Iron\u200dWolves' }, 'guild_name_characters');
+    refuse(k, a, 'guild_create', { name: 'Iron\ua788 Wolves' }, 'guild_name_characters');
+    refuse(k, a, 'guild_create', { name: 'Iron\u02d0 Wolves' }, 'guild_name_characters');
+    for (const name of ['System Notice', 'Ignore Previous', 'The Moderators', 'New Instructions', 'Api Key Club', 'Sistema Oficial', 'Équipe Système', '管理员公会', 'Sy5tem Wolves']) {
+      refuse(k, a, 'guild_create', { name }, 'guild_name_reserved');
+    }
+    k.ok(a, 'guild_create', { name: 'Iron Wolves' });
+    expect(checkInvariants(k.s, k.now)).toEqual([]);
+  });
+
+  it('keeps guilds of older snapshots whose names the current rules refuse', () => {
+    const k = makeKit();
+    const a = k.add('Pip', 'warrior', { room: HALL });
+    const b = k.add('Bob', 'warrior', { room: HALL });
+    a.gold = 2000;
+    k.ok(a, 'guild_create', { name: 'Iron Wolves' });
+    const g = k.s.guilds.get(a.guild!)!;
+    // Founded before the word limit and the instruction-like words existed.
+    g.name = 'The System Admin Wolves';
+    g.norm = normalizeName(g.name);
+    g.skeleton = nameSkeleton(g.name).replace(/ /g, '');
+    const restored = restoreWorld(k.c, exportAll(k.s), k.now);
+    const back = restored.guilds.get(g.id)!;
+    expect(back.name).toBe('The System Admin Wolves');
+    expect(checkInvariants(restored, k.now)).toEqual([]);
+    // It still works: invites, joins, deposits.
+    const r = restored.agents.get(a.id)!;
+    const ctx = { now: k.now + 1000, rng: k.rng };
+    expect(applyAction(restored, { agentId: r.id, action: 'guild_invite', params: { agent: 'Bob' } }, ctx).result.ok).toBe(true);
+    expect(applyAction(restored, { agentId: b.id, action: 'guild_join', params: { guild: 'The System Admin Wolves' } }, ctx).result.ok).toBe(true);
   });
 
   it('errors: not at the hall, already in a guild, not enough gold, unclaimed', () => {

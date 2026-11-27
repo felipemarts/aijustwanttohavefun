@@ -32,6 +32,10 @@ const envSchema = z.object({
   /** Disk cache of composed sprites and share cards (rebuilt on demand, safe to lose). */
   CACHE_DIR: optional(z.string().min(1)),
   TRUST_PROXY: optional(z.string().min(1)),
+  /** A header the edge proxy sets to the client address (e.g. `Fly-Client-IP`). Wins over TRUST_PROXY. */
+  CLIENT_IP_HEADER: optional(z.string().regex(/^[A-Za-z0-9!#$%&'*+.^_`|~-]+$/, 'must be an HTTP header name')),
+  /** `0` or `false`: do not run migrations at boot (the app's role cannot create tables); only check they ran. */
+  MIGRATE_ON_BOOT: optional(z.enum(['0', '1', 'false', 'true'])),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   WORLD_SEED: optional(z.coerce.number().int()),
   WS_MAX_CONNECTIONS: z.coerce.number().int().min(1).default(20_000),
@@ -50,6 +54,8 @@ export type Config = {
   production: boolean;
   port: number;
   databaseUrl: string | undefined;
+  /** Run pending migrations when the server starts (default). Off for a least-privilege role (docs/DEPLOY.md §5). */
+  migrateOnBoot: boolean;
   publicUrl: string;
   sessionSecret: string;
   adminToken: string | undefined;
@@ -69,6 +75,12 @@ export type Config = {
    * any proxy; a comma-separated list trusts only those addresses or CIDR ranges.
    */
   trustProxy: boolean | string[];
+  /**
+   * Lower-case name of a header the platform's edge proxy sets to the client address, replacing any value the
+   * client sent (Fly.io: `fly-client-ip`). When set, the client IP comes from this header only (see `clientIp`)
+   * and `trustProxy` is false, so X-Forwarded-For is never read.
+   */
+  clientIpHeader: string | undefined;
   logLevel: string;
   worldSeed: number;
   /** Spectator WebSocket limits: connections in total and per client IP. */
@@ -103,6 +115,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     production,
     port: e.PORT,
     databaseUrl: e.DATABASE_URL,
+    migrateOnBoot: e.MIGRATE_ON_BOOT !== '0' && e.MIGRATE_ON_BOOT !== 'false',
     publicUrl: e.PUBLIC_URL,
     // Signs the OAuth attempt cookie and keys the reporter-IP hash. Outside production a random one per process is
     // enough (a restart only invalidates logins in progress).
@@ -114,7 +127,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     extraOrigins: !production && e.DEV_WEB_ORIGIN ? [new URL(e.DEV_WEB_ORIGIN).origin] : [],
     webDist: webDist && existsSync(join(webDist, 'index.html')) ? webDist : null,
     cacheDir: e.CACHE_DIR ?? DEFAULT_CACHE_DIR,
-    trustProxy: parseTrustProxy(e.TRUST_PROXY),
+    // CLIENT_IP_HEADER wins: with it set, X-Forwarded-For is never trusted, whatever TRUST_PROXY says.
+    trustProxy: e.CLIENT_IP_HEADER ? false : parseTrustProxy(e.TRUST_PROXY),
+    clientIpHeader: e.CLIENT_IP_HEADER?.toLowerCase(),
     logLevel: e.LOG_LEVEL,
     worldSeed: e.WORLD_SEED ?? randomBytes(4).readUInt32LE(0),
     wsMaxConnections: e.WS_MAX_CONNECTIONS,

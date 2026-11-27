@@ -103,6 +103,22 @@ describe('empty states', () => {
     has(out, 'ui.village.no_mayor');
   });
 
+  it('/village during the vote: turnout and a sealed count, never a candidate total', () => {
+    // Even a server that still sent live totals would not get them on the page: the parser drops them.
+    const v = parseVillage({
+      now: 1,
+      projects: [],
+      election: { n: 4, phase: 'voting', voteAt: 0, end: 10, voters: 7, candidates: [{ name: 'Quillon', at: 2, votes: 5, platform: 'Roads.', lang: 'en', active: true }, { name: 'Zebedee', at: 1, votes: 2, platform: 'Bridges.', lang: 'en', active: true }] },
+    })!;
+    expect(v.election!.candidates[0]).not.toHaveProperty('votes');
+    const out = html(<VillageView village={ready(v)} history={ready([])} timeline={ready([])} now={1} />);
+    has(out, 'ui.village.votes_sealed');
+    expect(out).toContain('7 ballots cast');
+    expect(out).not.toMatch(/\d+ votes?\b/);
+    // In order of candidacy.
+    expect(out.indexOf('Zebedee')).toBeLessThan(out.indexOf('Quillon'));
+  });
+
   it('/gazette before the first edition', () => {
     has(html(<GazetteIndexPage index={ready([])} />), 'ui.gazette.empty');
   });
@@ -200,7 +216,7 @@ describe('agent text is never interpreted as markup', () => {
     const v = parseVillage({
       now: 1,
       projects: [],
-      election: { n: 1, phase: 'voting', voteAt: 0, end: 10, voters: 1, candidates: [{ name: 'Pip', votes: 1, platform: XSS, lang: 'zh-CN', active: true }] },
+      election: { n: 1, phase: 'voting', voteAt: 0, end: 10, voters: 1, candidates: [{ name: 'Pip', at: 0, platform: XSS, lang: 'zh-CN', active: true }] },
     })!;
     const out = html(<VillageView village={ready(v)} history={ready([])} timeline={ready([])} now={1} />);
     noMarkup(out);

@@ -1,5 +1,5 @@
 import type { Quest, QuestStep } from '@ajwf/content';
-import { createRng, hashString, ref } from '@ajwf/shared';
+import { createRng, hashString, hasOwnKey, own, ref } from '@ajwf/shared';
 import { count } from './agent';
 import { realDay } from './balance';
 import { emit, markAgent, msg, tell, type Run } from './run';
@@ -37,17 +37,17 @@ export function dailyQuests(s: WorldState, now: number, level: number): string[]
 }
 
 export function isDone(a: AgentState, q: Quest, now: number): boolean {
-  const at = a.questsDone[q.id];
+  const at = own(a.questsDone, q.id);
   if (at === undefined) return false;
   return q.kind === 'daily' ? realDay(at) === realDay(now) : true;
 }
 
 /** Why the agent cannot take this quest right now, or null when it can. */
 export function questBlocker(run: Run, a: AgentState, q: Quest): 'active' | 'done' | 'level' | 'requires' | 'not_today' | null {
-  if (a.quests[q.id]) return 'active';
+  if (hasOwnKey(a.quests, q.id)) return 'active';
   if (isDone(a, q, run.now)) return 'done';
   if (a.level < q.level) return 'level';
-  if (q.requires && a.questsDone[q.requires] === undefined) return 'requires';
+  if (q.requires && !hasOwnKey(a.questsDone, q.requires)) return 'requires';
   if (q.kind === 'daily' && !dailyQuests(run.s, run.now, a.level).includes(q.id)) return 'not_today';
   return null;
 }
@@ -57,7 +57,7 @@ export function stepHave(a: AgentState, q: Quest, i: number): number {
   const st = q.steps[i]!;
   if (st.type === 'collect') return Math.min(st.qty, st.target ? count(a, st.target) : 0);
   if (st.type === 'level') return Math.min(st.qty, a.level);
-  return Math.min(st.qty, a.quests[q.id]?.steps[i] ?? 0);
+  return Math.min(st.qty, own(a.quests, q.id)?.steps[i] ?? 0);
 }
 
 export function questReady(a: AgentState, q: Quest): boolean {
@@ -82,10 +82,9 @@ export function questView(a: AgentState, q: Quest): Record<string, unknown> {
  */
 export function questEvent(run: Run, a: AgentState, type: StepType, target?: string, n = 1): void {
   let partySize = -1;
-  for (const qid in a.quests) {
+  for (const [qid, prog] of Object.entries(a.quests)) {
     const q = run.c.quests.get(qid);
     if (!q) continue;
-    const prog = a.quests[qid]!;
     let changed = false;
     for (let i = 0; i < q.steps.length; i++) {
       const st = q.steps[i]!;
@@ -142,8 +141,8 @@ export function initialProgress(run: Run, a: AgentState, q: Quest): number[] {
 /** The next quest of the tutorial trail for this agent, if any. */
 export function nextTutorial(run: Run, a: AgentState): Quest | undefined {
   for (const q of run.c.quests.values()) {
-    if (q.kind !== 'tutorial' || a.questsDone[q.id] !== undefined) continue;
-    if (!q.requires || a.questsDone[q.requires] !== undefined) return q;
+    if (q.kind !== 'tutorial' || hasOwnKey(a.questsDone, q.id)) continue;
+    if (!q.requires || hasOwnKey(a.questsDone, q.requires)) return q;
   }
   return undefined;
 }

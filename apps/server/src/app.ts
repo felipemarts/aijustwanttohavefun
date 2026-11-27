@@ -16,6 +16,7 @@ import type { Logger } from 'pino';
 import { bearerKeyHash, isAdminToken } from './auth';
 import type { Census } from './census';
 import type { Chronicle } from './civic/chronicle';
+import { clientIp } from './client-ip';
 import { Leaderboards } from './civic/leaderboard';
 import type { Config } from './config';
 import type { Game } from './game';
@@ -49,6 +50,11 @@ declare module 'fastify' {
   interface FastifyRequest {
     /** The authenticated agent, on routes that require an API key. */
     agent: AgentState | null;
+    /**
+     * The client address for per-IP limits, hashes and logs (see `clientIp`): use this, never `ip` or `ips`,
+     * which ignore CLIENT_IP_HEADER.
+     */
+    readonly clientIp: string;
   }
   interface FastifyContextConfig {
     /** Public read-only GET route: any origin may read it, without credentials. */
@@ -179,7 +185,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     flushEvents: () => deps.persistence.flushEvents(),
     lang: (req) => render.lang(req.agent?.lang),
     limitAnonymous(req, reply) {
-      const t = limiters.anonymous.take(req.ip, game.now());
+      const t = limiters.anonymous.take(req.clientIp, game.now());
       if (t.ok) return true;
       sendRateLimited(reply, render, 'en', t.retryAfterSec);
       return false;
@@ -187,6 +193,11 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   };
 
   app.decorateRequest('agent', null);
+  app.decorateRequest('clientIp', {
+    getter(this: FastifyRequest) {
+      return clientIp({ remoteAddress: this.socket?.remoteAddress, headers: this.headers, fastifyIp: this.ip }, config);
+    },
+  });
   // Only JSON bodies are accepted; any other content type is answered with 415.
   app.removeContentTypeParser('text/plain');
 
@@ -279,7 +290,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   attachSpectatorSocket(app.server, { broadcaster: deps.spectators, config, metrics: deps.metrics, log: deps.logger });
   app.register(async (files) => {
     files.addHook('onRequest', async (req, reply) => {
-      const t = limiters.files.take(req.ip, game.now());
+      const t = limiters.files.take(req.clientIp, game.now());
       if (!t.ok) return sendRateLimited(reply, render, 'en', t.retryAfterSec);
     });
     fileRoutes(files, ctx);

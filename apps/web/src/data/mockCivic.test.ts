@@ -27,6 +27,9 @@ describe('mock civic data', () => {
     expect(v.projects.some((p) => p.status === 'available' && p.progress > 0)).toBe(true);
     expect(v.election?.phase).toBe('voting');
     expect(v.election?.candidates.length).toBeGreaterThanOrEqual(3);
+    // Secret ballot: the mock, like the server, never sends a live total, only the turnout.
+    expect(v.election?.voters).toBeGreaterThan(0);
+    expect(JSON.stringify((await src.getJson('/api/public/village') as { election: unknown }).election)).not.toMatch(/"votes"/);
     expect(v.honoree?.name).toBeTruthy();
     expect(Object.keys(v.halls).length).toBeGreaterThanOrEqual(1);
     expect(parseHistory(await src.getJson('/api/public/village/history')).length).toBeGreaterThanOrEqual(7);
