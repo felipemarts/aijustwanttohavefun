@@ -7,7 +7,18 @@ import type { Caption } from './director';
 
 export type Panel = { kind: 'room'; id: string } | { kind: 'agent'; name: string } | null;
 
-export type DirectorUi = { enabled: boolean; room: string | null; caption: Caption | null; seq: number };
+/**
+ * Director state shown by React. `star` is the agent the camera follows (null during a special moment or before one is
+ * chosen); `seq` changes only on a new shot (a change of star or a special moment), so the caption slides in again
+ * only then, while refreshes of the same shot keep it in place.
+ */
+export type DirectorUi = {
+  enabled: boolean;
+  star: string | null;
+  room: string | null;
+  caption: Caption | null;
+  seq: number;
+};
 
 export type SceneStats = {
   fps: number;
@@ -32,7 +43,7 @@ type Listener = () => void;
 
 class MapController {
   panel: Panel = null;
-  director: DirectorUi = { enabled: true, room: null, caption: null, seq: 0 };
+  director: DirectorUi = { enabled: true, star: null, room: null, caption: null, seq: 0 };
   follow: string | null = null;
   stats: SceneStats = {
     fps: 0,
@@ -108,15 +119,19 @@ class MapController {
     this.emit('director');
   }
 
-  setDirectorRoom(room: string, caption: Caption | null) {
-    this.director = { ...this.director, room, caption, seq: this.director.seq + 1 };
+  /** A new shot: a change of star, or a special moment (`star` null). */
+  setDirectorShot(star: string | null, room: string, caption: Caption | null) {
+    this.director = { ...this.director, star, room, caption, seq: this.director.seq + 1 };
     this.emit('director');
   }
 
-  setCaption(caption: Caption) {
-    const c = this.director.caption;
-    if (c && c.key === caption.key && JSON.stringify(c.params) === JSON.stringify(caption.params)) return;
-    this.director = { ...this.director, caption };
+  /** The same shot, refreshed: the star changed room or did something notable. */
+  updateDirectorShot(room: string, caption: Caption) {
+    const d = this.director;
+    const c = d.caption;
+    if (d.room === room && c && c.key === caption.key && JSON.stringify(c.params) === JSON.stringify(caption.params))
+      return;
+    this.director = { ...d, room, caption };
     this.emit('director');
   }
 

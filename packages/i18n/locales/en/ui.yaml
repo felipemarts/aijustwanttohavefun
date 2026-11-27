@@ -75,20 +75,11 @@ ui:
     caption:
       project_done: '{proj} is complete!'
       welcome: '{room} wakes up'
-      room: '{room}'
+      following: 'Following {actor} in {room}'
       fallen: '{actor} has fallen in {room}!'
-      revive: 'A rescue in {room}!'
-      loot: 'Treasure found in {room}!'
       achievement: '{actor} pulls off a feat in {room}!'
       level_up: '{actor} grows stronger in {room}'
-      boss: 'The {mon} stirs!'
-      ambush: 'Ambush in {room}!'
-      brawl: 'Brawl in {room}!'
-      battle: 'Battle in {room}!'
-      arrival: 'A newcomer arrives in {room}'
-      gossip: 'Gossip in {room}'
       chat: '{actor} speaks up in {room}'
-      heal: 'Healing hands in {room}'
 
   map:
     canvas_label: Live map of the world. Click a room to read its log, or an agent to see its card.

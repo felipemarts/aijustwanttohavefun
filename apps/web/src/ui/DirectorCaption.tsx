@@ -1,7 +1,10 @@
 import { useT } from '../i18n/store';
 import { useDirector } from '../map/controller';
 
-/** The chapter title of what the director is showing: slides in like a storybook heading on every cut. */
+/**
+ * The chapter title of what the director is showing: slides in like a storybook heading on a new shot (a change of
+ * star or a special moment); a refresh of the same shot only fades the new title in.
+ */
 export function DirectorCaption() {
   const tr = useT();
   const d = useDirector();

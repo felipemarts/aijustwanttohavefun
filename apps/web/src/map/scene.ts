@@ -22,7 +22,17 @@ import { SpriteAtlas } from './atlas';
 import { Camera } from './camera';
 import { controller } from './controller';
 import { gradeAt, phaseMid } from './daylight';
-import { captionFor, type DirectorMemory, directorStep, initialDirector } from './director';
+import {
+  type Cut,
+  DIRECTOR,
+  type DirectorMemory,
+  type DirectorWorld,
+  directorStep,
+  initialDirector,
+  resumedDirector,
+  starCaption,
+  startMoment,
+} from './director';
 import { Effects } from './effects';
 import { monsterSpot, npcSpot, roomPx, TILE, worldBounds } from './geometry';
 import { attachInput } from './input';
@@ -143,8 +153,8 @@ export class MapScene {
   private roomOutline = new Graphics();
   private arrow!: Sprite;
   private director: DirectorMemory = initialDirector();
+  private directorOn = controller.director.enabled;
   private lastDirectorAt = 0;
-  private lastCaptionAt = 0;
   private lastTopicsAt = 0;
   private lastStatsAt = 0;
   private lastGlintAt = 0;
@@ -267,6 +277,7 @@ export class MapScene {
     );
     this.disposers.push(this.opts.store.onChanges((ch) => this.onChanges(ch)));
     this.disposers.push(controller.subscribe('panel', () => this.onPanel()));
+    this.disposers.push(controller.subscribe('director', () => this.onDirector()));
     controller.commands = {
       zoom: (dir) => {
         controller.pauseDirector();
@@ -575,10 +586,13 @@ export class MapScene {
     this.banners.push({ box, x: v.cx, y: v.cy - Math.min(v.h, 90) - 14, t0: now, dur: 5200 });
     if (controller.director.enabled && !controller.follow) {
       this.camera.moveTo(v.cx, v.cy - 20, Math.max(this.directorScale(), 2), this.opts.reducedMotion ? 0 : 1100);
-      this.director = { room: v.room, prev: this.director.room, since: now, peak: 0, lastRiseAt: now };
+      // The project's moment holds the camera; then the director goes back to its star.
+      this.director = startMoment(this.director, now, DIRECTOR.projectMs);
       this.opts.store.setTopics('director', [`room:${v.room}`]);
-      controller.setDirectorRoom(v.room, { key: 'ui.director.caption.project_done', params: { proj: `@proj:${project}` } });
-      this.lastCaptionAt = now;
+      controller.setDirectorShot(null, v.room, {
+        key: 'ui.director.caption.project_done',
+        params: { proj: `@proj:${project}` },
+      });
     }
   }
 
@@ -643,9 +657,9 @@ export class MapScene {
     if (room) {
       const r = roomPx(room);
       this.camera.moveTo(r.x + r.w / 2, r.y + r.h / 2 + 6, s, 0);
-      // The postcard: start on the square with the director already "there".
-      this.director = { room: room.id, prev: null, since: performance.now(), peak: 0, lastRiseAt: 0 };
-      controller.setDirectorRoom(room.id, {
+      // The postcard: start on the square for a moment, then the director picks a star.
+      this.director = startMoment(initialDirector(), performance.now(), DIRECTOR.welcomeMs);
+      controller.setDirectorShot(null, room.id, {
         key: 'ui.director.caption.welcome',
         params: { room: `@room:${room.id}` },
       });
@@ -871,9 +885,10 @@ export class MapScene {
     const cam = this.camera;
     const store = this.opts.store;
 
-    // Follow keeps the camera on the agent.
-    if (controller.follow) {
-      const p = this.agents.head(controller.follow, now, this.tmp);
+    // Follow keeps the camera on the agent; the director's star gets the same tracking.
+    const tracked = controller.follow ?? this.directorStar();
+    if (tracked) {
+      const p = this.agents.head(tracked, now, this.tmp);
       if (p) {
         const k = Math.min(1, (dt / 1000) * 4);
         cam.x += (p.x - cam.x) * k;
@@ -1082,12 +1097,18 @@ export class MapScene {
       }
       const cands: LabelCandidate[] = [];
       const panel = controller.panel;
+      const star = this.directorStar();
       for (const v of this.agents.views.values()) {
         if (!v.visible || v.fadeOutAt) continue;
         const p = this.agents.positionAt(v, now, this.tmp);
         if (p.x < view.x + 30 || p.x > view.x + view.w - 30) continue;
         let priority = 0;
-        if (controller.follow === v.name || (panel?.kind === 'agent' && panel.name === v.name)) priority = 3;
+        if (
+          controller.follow === v.name ||
+          star === v.name ||
+          (panel?.kind === 'agent' && panel.name === v.name)
+        )
+          priority = 3;
         else if (this.overlay.hasBubble(v.name)) priority = 2;
         else if (v.pos.f?.includes('f')) priority = 1;
         cands.push({ name: v.name, x: p.x, y: p.y, priority });
@@ -1116,57 +1137,68 @@ export class MapScene {
     this.overlay.endLabels();
   }
 
+  /** The agent the director is following right now, if it is on and not holding a special moment. */
+  private directorStar(): string | null {
+    if (!controller.director.enabled || controller.follow || this.director.moment) return null;
+    return this.director.star;
+  }
+
+  /** Resuming the director picks a star right away, avoiding the one shown before the pause. */
+  private onDirector() {
+    const on = controller.director.enabled;
+    if (on === this.directorOn) return;
+    this.directorOn = on;
+    if (!on || !this.ready) return;
+    this.director = resumedDirector(this.director);
+    const now = performance.now();
+    this.lastDirectorAt = now;
+    this.directorTick(now);
+  }
+
+  private directorWorld(now: number): DirectorWorld {
+    const s = this.opts.store.state;
+    return {
+      now,
+      nowTs: now + s.clockSkew,
+      drama: dramaSnapshot(s, now),
+      agents: s.agents,
+      logs: s.roomLogs,
+    };
+  }
+
   private directorTick(now: number) {
     const store = this.opts.store;
-    const d = controller.director;
-    if (!d.enabled || controller.follow) {
-      return;
-    }
-    const drama = dramaSnapshot(store.state, now);
-    const population: Record<string, number> = {};
-    for (const a of store.state.agents.values()) population[a.r] = (population[a.r] ?? 0) + 1;
-    const { mem, cut } = directorStep(this.director, drama, now, population);
+    if (!controller.director.enabled || controller.follow) return;
+    const w = this.directorWorld(now);
+    const { mem, cut } = directorStep(this.director, w);
     this.director = mem;
-    const rooms = this.rooms();
-    const bosses = new Set(
-      Object.values(this.opts.world.monsters)
-        .filter((m) => m.boss)
-        .map((m) => m.id),
-    );
-    const zones = this.opts.world.zones;
-    const capOf = (roomId: string) => {
-      const room = rooms.find((r) => r.id === roomId);
-      const lawless = !!room && (zones[room.zone]?.law === 'lawless' || room.flags.includes('lawless'));
-      const log = store.state.roomLogs.get(roomId) ?? [];
-      const nowTs = now + store.state.clockSkew;
-      return captionFor(roomId, log, nowTs, { lawless, bosses });
-    };
+    // A special moment keeps its own camera, topic and caption.
+    if (mem.moment || !mem.star || !mem.room) return;
+    const caption = starCaption(mem.star, mem.room, w.logs.get(mem.room) ?? [], w.nowTs);
+    store.setTopics('director', [`room:${mem.room}`]);
     if (cut) {
-      const room = rooms.find((r) => r.id === cut);
-      if (room) {
-        const r = roomPx(room);
-        this.camera.moveTo(
-          r.x + r.w / 2,
-          r.y + r.h / 2 + 6,
-          this.directorScale(),
-          this.opts.reducedMotion ? 0 : 1300,
-        );
-        store.setTopics('director', [`room:${cut}`]);
-        controller.setDirectorRoom(cut, capOf(cut));
-        this.lastCaptionAt = now;
-      }
-      return;
+      this.glideTo(cut);
+      controller.setDirectorShot(cut.star, cut.room, caption);
+    } else controller.updateDirectorShot(mem.room, caption);
+  }
+
+  /** The cut to a new star: an eased move onto them, after which the frame keeps tracking them. */
+  private glideTo(cut: Cut) {
+    const now = performance.now();
+    const p = this.agents.head(cut.star, now, { x: 0, y: 0 });
+    let x: number;
+    let y: number;
+    if (p) {
+      x = p.x;
+      y = p.y + 24;
+    } else {
+      const room = this.rooms().find((r) => r.id === cut.room);
+      if (!room) return;
+      const r = roomPx(room);
+      x = r.x + r.w / 2;
+      y = r.y + r.h / 2 + 6;
     }
-    if (mem.room && now - this.lastCaptionAt > 2500) {
-      this.lastCaptionAt = now;
-      const cap = capOf(mem.room);
-      // Keep the welcome caption until something actually happens on the square.
-      if (
-        cap.key !== 'ui.director.caption.room' ||
-        controller.director.caption?.key !== 'ui.director.caption.welcome'
-      )
-        controller.setCaption(cap);
-    }
+    this.camera.moveTo(x, y, this.directorScale(), this.opts.reducedMotion ? 0 : 1300);
   }
 
   private updateViewportTopics(view: { x: number; y: number; w: number; h: number }) {
