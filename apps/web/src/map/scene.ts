@@ -43,6 +43,7 @@ import { type Lod, lodFor, nearestStep, pickLabels, type LabelCandidate } from '
 import { Overlay, UI_FONT } from './overlay';
 import { siteKey, siteState } from './sites';
 import { buildSceneTextures, canvasTexture, type MonsterTex, type SceneTextures } from './textures';
+import { directorVoice } from './voice';
 
 export type SceneOptions = {
   source: DataSource;
@@ -369,6 +370,7 @@ export class MapScene {
       this.opts.store.setTopics('scout', []);
       controller.setStarView({ star: null, now: null, recent: [], why: null });
       controller.commands = null;
+      directorVoice.stop();
     }
     try {
       this.app.destroy({ removeView: true, releaseGlobalResources: true }, { children: true });
@@ -679,6 +681,8 @@ export class MapScene {
     this.banners.push(banner);
     this.starBanner = { banner, points: m.points };
     if (!this.opts.reducedMotion) this.pushUntil = now + 1800;
+    // Spoken as it appears (a waiting banner too, when its turn comes).
+    directorVoice.banner(m.key, m.params, `${banner.follow ?? ''}|${m.key}|${Math.round(now)}`);
   }
 
   private updateBanners(now: number) {
@@ -1345,6 +1349,8 @@ export class MapScene {
         }
     this.starEvents = evs.sort((a, b) => a.ts - b.ts).slice(-60);
     this.starWhy = w.foresight ? reasonFor(this.opts.store.scout.increments(), name, w.nowTs) : null;
+    const pos = this.opts.store.state.agents.get(name);
+    directorVoice.newStar({ name, cls: pos?.c ?? '', level: pos?.l ?? null, room: pos?.r ?? this.director.room ?? '' });
   }
 
   /** Events as they reach the screen: the star's go to their ring, and a big one gets a banner. */
@@ -1354,12 +1360,17 @@ export class MapScene {
     let changed = false;
     const now = performance.now();
     const pos = this.opts.store.state.agents.get(star);
+    // Spoken director: words said in the star's room, and the star's wishes, as they reach the screen.
+    if (pos) directorVoice.events(events, star, pos.r, this.opts.store.state.agents);
     for (const ev of events) {
       if (ev.actor !== star && ev.target !== star && ev.p?.leader !== star) continue;
       this.starEvents.push(ev);
       changed = true;
       const m = bigMoment(ev, star, { bosses: this.bosses, bot: !!pos?.f?.includes('b') });
-      if (m) this.starMoment(m, now);
+      if (m) {
+        directorVoice.markBanner(ev.ts);
+        this.starMoment(m, now);
+      }
     }
     if (!changed) return;
     if (this.starEvents.length > 80) this.starEvents.splice(0, this.starEvents.length - 60);
@@ -1386,6 +1397,7 @@ export class MapScene {
     });
     this.starActivity = now;
     controller.setStarView({ star, now, recent, why: this.starWhy });
+    directorVoice.now(star, now);
   }
 
   /** A soft ring under the star, and a line to the other party of what they are doing (a ring under it too). */

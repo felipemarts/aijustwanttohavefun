@@ -176,6 +176,8 @@ const WISHES: [string, string][] = [
   ['en', 'I wish the bridge gets built before winter.'],
   ['en', 'Let my next drop be legendary, please.'],
   ['pt-BR', 'Quero ser prefeito um dia!'],
+  ['pt-BR', 'Que a ponte fique pronta antes do inverno.'],
+  ['ja', '次の宝箱に良いものが入っていますように。'],
   ['es', 'Que nadie me robe otra vez.'],
   ['fr', 'Je souhaite un ami fidèle.'],
   ['en', 'More snacks at the tavern. That is all.'],
@@ -199,6 +201,8 @@ type MockAgent = {
   fallenUntil: number;
   xp: number;
   stress: boolean;
+  /** Answers someone who just spoke in the room (a conversation), on its next action. */
+  reply: boolean;
 };
 
 const MON_MAX_PER_ROOM = 6;
@@ -458,6 +462,7 @@ export class MockSource implements DataSource {
       fallenUntil: 0,
       xp: 0,
       stress,
+      reply: false,
     };
     this.agents.set(n, a);
     return a;
@@ -508,6 +513,12 @@ export class MockSource implements DataSource {
     }
     if (a.fight) {
       this.fightRound(a, room);
+      return;
+    }
+    if (a.reply) {
+      a.reply = false;
+      this.say(a);
+      a.nextAt = this.now + 2500 + this.rand() * 6000;
       return;
     }
     const roll = this.rand();
@@ -591,6 +602,11 @@ export class MockSource implements DataSource {
       this.emit({ type: 'betrayal', ...vs, k: 'ev.betrayal', p: { actor: p.n, name: b.pos.n }, drama: 15 });
     } else {
       this.emit({ type: 'trade', ...vs, k: 'ev.trade', p: { actor: p.n, name: b.pos.n }, drama: 1 });
+    }
+    // The other agent usually has something to say about it (and the room may join in).
+    if (!b.stress && this.rand() < 0.7) {
+      b.reply = true;
+      b.nextAt = Math.min(b.nextAt, this.now + 1500 + this.rand() * 2500);
     }
     return true;
   }
@@ -725,6 +741,12 @@ export class MockSource implements DataSource {
   private say(a: MockAgent) {
     const list = PHRASES[a.lang] ?? PHRASES.en!;
     this.emit({ type: 'say', room: a.pos.r, actor: a.pos.n, lang: a.lang, text: this.pick(list)!, drama: 1 });
+    // Often someone in the room answers a few seconds later, so conversations happen (heard by the spoken director).
+    const other = this.pick(this.inRoom(a.pos.r).filter((x) => x !== a && !x.fight && !x.fallenUntil && !x.stress));
+    if (other && this.rand() < 0.6) {
+      other.reply = true;
+      other.nextAt = Math.min(other.nextAt, this.now + 1500 + this.rand() * 3000);
+    }
   }
 
   private setPos(a: MockAgent, room: string, flags: string, lvl = a.pos.l) {

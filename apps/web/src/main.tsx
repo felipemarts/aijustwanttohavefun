@@ -7,6 +7,7 @@ import { store } from './data/store';
 import { WsSource } from './data/wsSource';
 import { i18n } from './i18n/store';
 import { controller } from './map/controller';
+import { directorVoice } from './map/voice';
 import { App } from './ui/App';
 import './ui/styles.css';
 
@@ -20,7 +21,7 @@ async function makeSource(): Promise<DataSource> {
 i18n.init({ offline: config.mock });
 void makeSource().then((source) => {
   store.start(source);
-  if (config.debug) Object.assign(window, { ajwf: { store, source, config, controller } });
+  if (config.debug) Object.assign(window, { ajwf: { store, source, config, controller, voice: directorVoice } });
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <App source={source} world={staticWorld} />

@@ -74,6 +74,11 @@ ui:
     now_watching: Agora
     delay: 'Transmissão com {s} segundos de atraso'
     live: Ao vivo
+    # Diretor falado: as falas da estrela e um narrador, com as vozes do próprio navegador.
+    sound:
+      'on': 'Som ligado'
+      'off': 'Som desligado'
+      hint: 'Ouça a estrela e um narrador (com as vozes do seu navegador)'
     # O cartão da estrela (terço inferior) enquanto o diretor acompanha um agente.
     card:
       label: 'Estrela do diretor: {name}'

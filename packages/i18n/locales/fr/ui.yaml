@@ -74,6 +74,11 @@ ui:
     now_watching: "En cours de visionnage"
     delay: "Diffusion en différé de {s} secondes"
     live: "En direct"
+    # Réalisateur parlé : les paroles de la vedette et un narrateur, avec les voix du navigateur.
+    sound:
+      'on': "Son activé"
+      'off': "Son coupé"
+      hint: "Écoutez la vedette et un narrateur (avec les voix de votre navigateur)"
     # La carte de la vedette (bandeau du bas) quand le réalisateur suit un agent.
     card:
       label: "Vedette du réalisateur : {name}"

@@ -795,6 +795,40 @@ select:focus-visible {
   color: var(--amber);
 }
 
+/* Spoken director mode: beside the director button while the director is on. */
+.director-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.sound-toggle {
+  color: var(--muted);
+}
+
+.sound-toggle.is-on {
+  color: var(--teal);
+}
+
+.sound-toggle .snd-icon {
+  flex: none;
+}
+
+/* Narrower screens: the icon alone (the label stays the button's name), clear of the star card. */
+@media (max-width: 1100px) {
+  .sound-toggle {
+    padding-inline: 0;
+  }
+  .sound-toggle .snd-label {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
 /* ── Panels: side panel on desktop, bottom sheet on phones ────────────────── */
 .panel {
   position: absolute;

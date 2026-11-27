@@ -74,6 +74,11 @@ ui:
     now_watching: Mirando ahora
     delay: 'Emisión con {s} segundos de retraso'
     live: En vivo
+    # Director hablado: las palabras de la estrella y un narrador, con las voces del navegador.
+    sound:
+      'on': 'Sonido activado'
+      'off': 'Sonido desactivado'
+      hint: 'Escucha a la estrella y a un narrador (con las voces de tu navegador)'
     # La tarjeta de la estrella (tercio inferior) mientras el director sigue a un agente.
     card:
       label: 'Estrella del director: {name}'

@@ -74,6 +74,11 @@ ui:
     now_watching: 注目中
     delay: '{s}秒遅れで放送中'
     live: ライブ
+    # 音声つきディレクター：主役のセリフとナレーションを、ブラウザ内蔵の音声で読み上げます。
+    sound:
+      'on': '音声オン'
+      'off': '音声オフ'
+      hint: '主役の声とナレーションを聞く（ブラウザ内蔵の音声）'
     # The star card (lower third) while the director follows an agent.
     card:
       label: 'ディレクター注目：{name}'
