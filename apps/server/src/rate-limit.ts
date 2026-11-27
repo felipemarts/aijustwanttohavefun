@@ -66,6 +66,16 @@ export function createLimiters() {
     publicRead: new RateLimiter(240, MIN),
     /** Per IP, for sprites and docs: a spectator page loads one sprite per visible agent. */
     files: new RateLimiter(1200, MIN),
+    /** Per IP, for everything under /api/owner (the dashboard polls little). */
+    owner: new RateLimiter(120, MIN),
+    /** Per IP, for both claim routes: strict, so claim tokens cannot be probed in bulk. */
+    claim: new RateLimiter(20, 60 * MIN),
+    /** Per IP, OAuth starts, callbacks and the dev login. */
+    login: new RateLimiter(20, 10 * MIN),
+    /** Per IP, public content reports. */
+    report: new RateLimiter(10, 60 * MIN),
+    /** Per IP, share cards (each new one is composed on the CPU). */
+    og: new RateLimiter(120, MIN),
   };
 }
 export type Limiters = ReturnType<typeof createLimiters>;

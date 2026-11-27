@@ -22,6 +22,13 @@
       "when": 1795739841681,
       "tag": "0002_chronicle",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795741741901,
+      "tag": "0003_owners",
+      "breakpoints": true
     }
   ]
 }

@@ -122,4 +122,70 @@ describe.skipIf(!url)('PgStore (TEST_DATABASE_URL)', () => {
       await store.close();
     }
   });
+  it('owners on Postgres: claim, note, key regeneration, sessions, push, reports and moderation survive a restart', async () => {
+    await resetDatabase(url!);
+    const store1 = await PgStore.open(url!);
+    const vapid = { publicKey: 'pub', privateKey: 'priv', subject: 'mailto:ops@example.org' };
+    const pushSender = { send: async () => ({ ok: true as const }) };
+    let cookie: string;
+    let oldKey: string;
+    let newKey: string;
+    let token: string;
+    let pipId: string;
+    try {
+      const first = await makeServer({ store: store1, config: { vapid }, pushSender });
+      cookie = await first.ownerLogin('Ada');
+      const u = await first.registerUnclaimed('Pip');
+      ({ key: oldKey, token, id: pipId } = u);
+      expect((await first.owner(cookie, 'POST', `/api/owner/claim/${token}`)).json().ok).toBe(true);
+      expect((await first.owner(cookie, 'PUT', `/api/owner/agents/${pipId}/note`, { note: 'Become mayor' })).json().ok).toBe(true);
+      newKey = (await first.owner(cookie, 'POST', `/api/owner/agents/${pipId}/regenerate-key`)).json().api_key;
+      expect((await first.get(oldKey, '/api/v1/me')).statusCode).toBe(401);
+      const sub = { endpoint: 'https://fcm.googleapis.com/fcm/send/pg', keys: { p256dh: 'B'.repeat(87), auth: 'A'.repeat(22) } };
+      expect((await first.owner(cookie, 'POST', '/api/owner/push/subscribe', sub)).json().ok).toBe(true);
+      expect((await first.app.inject({ method: 'POST', url: '/api/public/report', payload: { kind: 'agent', target: 'Pip', reason: 'spam' } })).json().ok).toBe(true);
+      expect((await first.act(newKey, 'journal', { text: 'secret plans' })).json().ok).toBe(true);
+      first.clock.advance(1000);
+      const summary = (await first.owner(cookie, 'GET', `/api/owner/agents/${pipId}/summary`)).json();
+      expect(summary.ok).toBe(true);
+      await first.persistence.stop();
+      await first.chronicle.stop();
+      const journalId = (await store1.journalOf(pipId, 5))[0]!.id;
+      expect((await first.app.inject({ method: 'DELETE', url: `/api/admin/journal/${journalId}`, headers: { 'x-admin-token': 'test-admin-token-0123456789' } })).json().ok).toBe(true);
+      expect(await store1.journalOf(pipId, 5)).toEqual([]);
+      expect(await store1.listReports({ limit: 5 })).toEqual([expect.objectContaining({ kind: 'agent', targetId: pipId, reason: 'spam' })]);
+    } finally {
+      await store1.close();
+    }
+
+    const store2 = await PgStore.open(url!);
+    try {
+      const second = await makeServer({ store: store2, config: { vapid }, pushSender });
+      // The regenerated key survives the restart; the old one stays dead; the session and ownership too.
+      expect((await second.get(oldKey!, '/api/v1/me')).statusCode).toBe(401);
+      const me = (await second.get(newKey!, '/api/v1/me')).json();
+      expect(me).toMatchObject({ agent: { name: 'Pip', claimed: true }, owner_note: 'Become mayor' });
+      const owner = (await second.owner(cookie!, 'GET', '/api/owner/me')).json();
+      expect(owner.agents.map((a: { id: string }) => a.id)).toEqual([pipId!]);
+      expect(owner.push).toEqual({ enabled: true, subscriptions: 1 });
+      expect((await second.app.inject({ method: 'GET', url: `/api/owner/claim/${token!}` })).statusCode).toBe(404);
+      const client = new pg.Client({ connectionString: url });
+      await client.connect();
+      const rows = await client.query('SELECT claim_token, owner_id, key_hash FROM agents');
+      const sessions = await client.query('SELECT id FROM sessions');
+      await client.end();
+      expect(rows.rows[0]).toMatchObject({ claim_token: null, owner_id: owner.owner.id });
+      expect(JSON.stringify([rows.rows, sessions.rows])).not.toContain(newKey!);
+      expect(JSON.stringify(sessions.rows)).not.toContain(cookie!.split('=')[1]!);
+
+      expect((await second.owner(cookie!, 'DELETE', '/api/owner/me')).json().ok).toBe(true);
+      expect((await second.get(newKey!, '/api/v1/me')).statusCode).toBe(401);
+      expect(await store2.getOwner(owner.owner.id)).toBeNull();
+      expect(await store2.listPushSubscriptions(owner.owner.id)).toEqual([]);
+      await second.persistence.stop();
+      await second.chronicle.stop();
+    } finally {
+      await store2.close();
+    }
+  });
 });

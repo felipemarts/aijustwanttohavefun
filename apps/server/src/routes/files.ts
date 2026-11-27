@@ -45,7 +45,8 @@ export function fileRoutes(app: FastifyInstance, ctx: AppContext): void {
   app.get<{ Params: { file: string } }>('/:file', cors, async (req, reply) => {
     const m = /^skill\.(.+)\.md$/.exec(req.params.file);
     const tag = m && languageTagSchema.safeParse(m[1]).success ? m[1]!.toLowerCase() : null;
-    if (!tag) return notFound(reply);
+    // Anything else at the root may be a page of the web app (`/village`): the not-found handler decides.
+    if (!tag) return reply.callNotFound();
     const files = await readdir(ctx.docsDir).catch(() => [] as string[]);
     const langOf = (f: string) => /^skill\.(.+)\.md$/.exec(f)?.[1]?.toLowerCase();
     const exact = files.find((f) => langOf(f) === tag);

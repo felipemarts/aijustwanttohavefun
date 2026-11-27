@@ -400,6 +400,78 @@ export class Chronicle implements EventConsumer {
     return { posts, replies };
   }
 
+  // ── moderation ────────────────────────────────────────────────────────────────────────────────────────────
+
+  /** Drops the quote of every highlight (in memory and stored) that quotes exactly this text. */
+  private async scrubQuotes(text: string): Promise<void> {
+    if (!text) return;
+    for (const h of this.highlightRing.values()) if (h.quote?.text === text) delete h.quote;
+    for (const h of this.pending.highlights) if (h.quote?.text === text) delete h.quote;
+    this.today = null;
+    await this.d.store.scrubHighlightQuotes(text);
+  }
+
+  /**
+   * Deletes a board post with its replies (`b12`) or one reply (`b12.0`, as `/api/public/board` lists them): gone
+   * from the engine's board, the pending writes and the store (tombstoned), and from highlight quotes. The engine
+   * has no removal yet, so the board array is edited here and marked dirty for the next snapshot.
+   */
+  async removeBoard(id: string): Promise<{ ok: boolean; agentId?: string }> {
+    const m = /^(b[0-9a-z]+)(?:\.(\d+))?$/.exec(id);
+    if (!m) return { ok: false };
+    const postId = m[1]!;
+    const s = this.s;
+    const idx = s.board.findIndex((p) => p.id === postId);
+    const post = idx >= 0 ? s.board[idx] : undefined;
+    if (m[2] === undefined) {
+      const texts = post ? [post.text, ...post.replies.map((r) => r.text)] : [];
+      if (post) {
+        s.board.splice(idx, 1);
+        s.dirty.add('board');
+        this.detector.st.rumors.delete(postId);
+      }
+      this.pending.posts = this.pending.posts.filter((p) => p.id !== postId && p.parentId !== postId);
+      const stored = await this.d.store.removeBoardPost({ id: postId });
+      for (const t of texts) await this.scrubQuotes(t);
+      return { ok: !!post || stored, ...(post ? { agentId: post.by } : {}) };
+    }
+    const n = Number(m[2]);
+    const reply = post?.replies[n];
+    if (!post || !reply) return { ok: false };
+    post.replies.splice(n, 1);
+    s.dirty.add('board');
+    this.pending.posts = this.pending.posts.filter((p) => !(p.parentId === postId && p.agentId === reply.by && p.ts === reply.at));
+    await this.d.store.removeBoardPost({ parentId: postId, agentId: reply.by, ts: reply.at });
+    await this.scrubQuotes(reply.text);
+    return { ok: true, agentId: reply.by };
+  }
+
+  /** Deletes a journal entry (`j<event id>`): from the recent entries, the pending writes, the store and quotes. */
+  async removeJournal(id: string): Promise<{ ok: boolean; agentId?: string }> {
+    if (!/^j\d{1,15}$/.test(id)) return { ok: false };
+    let text = '';
+    let agentId: string | undefined;
+    for (const [agent, list] of this.journals) {
+      const i = list.findIndex((j) => j.id === id);
+      if (i >= 0) {
+        text = list[i]!.text;
+        agentId = agent;
+        list.splice(i, 1);
+        // The next read refills the list from the store, which no longer serves the entry.
+        this.journalsLoaded.delete(agent);
+      }
+    }
+    const pending = this.pending.journal.find((j) => j.id === id);
+    if (pending) {
+      text ||= pending.text;
+      agentId ??= pending.agentId;
+    }
+    this.pending.journal = this.pending.journal.filter((j) => j.id !== id);
+    const stored = await this.d.store.removeJournalEntry(id);
+    await this.scrubQuotes(text);
+    return { ok: stored || !!agentId, ...(agentId ? { agentId } : {}) };
+  }
+
   // ── writes ────────────────────────────────────────────────────────────────────────────────────────────────
 
   get buffered(): number {

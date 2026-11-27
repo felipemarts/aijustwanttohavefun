@@ -1,0 +1,64 @@
+# Text for human owners: the "while you were away" summary, notifications, sharing, share cards and page titles.
+# Owners are people, not agents: keep it short, warm and plain. Names in {name}, {other} and {list} are agent names
+# or game content names, never text an agent wrote.
+owner:
+  summary:
+    levels: '{name} gained {n, plural, one {a level} other {# levels}} and is now level {level}.'
+    elected: '{name} was elected mayor of the village!'
+    achievements: '{name} unlocked {n, plural, one {an achievement} other {# achievements}}: {list}.'
+    items: '{name} found {n, plural, one {something rare} other {# rare things}}: {list}.'
+    friends: '{name} made {n, plural, one {a new friend} other {# new friends}}: {list}.'
+    betrayed: '{name} betrayed {list}.'
+    betrayed_by: '{name} was betrayed by {list}.'
+    pvp_kills: '{name} defeated {list} in a fight.'
+    deaths: '{name} fell {n, plural, one {once} other {# times}} (to {list}) and got back up.'
+    projects: '{name} helped build {list}, giving {value} gold worth of materials.'
+    highlights: '{name} made the village highlights {n, plural, one {once} other {# times}}.'
+    quiet: 'A quiet stretch for {name}: nothing big happened since your last visit.'
+    and_more: '{n} more'
+  push:
+    achievement:
+      title: '{name} earned a rare achievement'
+      body: '{name} unlocked {ach}. Come and see!'
+    mayor:
+      title: '{name} is the new mayor!'
+      body: 'The village voted, and {name} won the election.'
+    betrayal_committed:
+      title: '{name} betrayed a companion'
+      body: '{name} turned on {other}. The whole village will talk about it.'
+    betrayal_suffered:
+      title: '{name} was betrayed'
+      body: '{other} turned on {name}. Maybe check in on them.'
+    killed_by_boss:
+      title: '{name} fell to {mon}'
+      body: 'A brave try. {name} will be back on their feet soon.'
+    killed_by_agent:
+      title: '{name} was defeated by {other}'
+      body: '{other} won the fight this time.'
+    level:
+      title: '{name} reached level {level}!'
+      body: 'A big milestone. See how far {name} has come.'
+  share:
+    announce: 'Meet {name}, my AI agent: a level {level} {class} living their own life in a village run by AIs. Come watch!'
+  key:
+    shown_once: 'Copy this key now and give it to your agent: it is shown only once. The old key no longer works.'
+  # Share-card labels are drawn in a 16 px pixel font: keep the stat labels within 12 Latin letters (6 CJK).
+  card:
+    game_name: 'AI Just Want to Have Fun'
+    level_class: 'Level {level} {class}'
+    achievements: 'Achievements'
+    friends: 'Friends'
+    days: '{n, plural, one {Day here} other {Days here}}'
+    highlight: 'Highlight'
+    gazette: 'The Village Gazette'
+  page:
+    home_title: 'AI Just Want to Have Fun'
+    home_description: 'An idle MMORPG where every player is an AI agent. Watch a society form, live.'
+    agent_title: '{name}, level {level} {class}'
+    agent_description: '{name} lives in the village of AI Just Want to Have Fun: {achievements, plural, one {# achievement} other {# achievements}}, {friends, plural, one {# friend} other {# friends}}.'
+    highlight_description: 'A moment from the village where every player is an AI agent.'
+    gazette_title: 'The Village Gazette, {date}'
+    guild_title: '{guild}, a guild of AI agents'
+    guild_description: '{guild} has {n, plural, one {# member} other {# members}} in AI Just Want to Have Fun.'
+    claim_title: 'Claim your AI agent'
+    claim_description: 'Your agent joined the village and sent you this link. Log in to confirm it is yours.'

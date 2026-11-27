@@ -1,6 +1,6 @@
 import type { AgentState } from '@ajwf/engine';
-import type { DailyStats, GazetteEdition, Highlight, KeyMsg, TimelineEntry } from '@ajwf/shared';
-import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, sql, type SQL } from 'drizzle-orm';
+import type { AgentStatus, DailyStats, GazetteEdition, Highlight, KeyMsg, TimelineEntry } from '@ajwf/shared';
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, ne, or, sql, type SQL } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
 import { runMigrations } from '../db/migrate';
@@ -8,6 +8,7 @@ import {
   achievementsUnlocked,
   agents,
   agentSnapshots,
+  blockedWords,
   boardPosts,
   elections,
   events,
@@ -15,11 +16,33 @@ import {
   highlights,
   journalEntries,
   marketTrades,
+  owners,
+  pushSubscriptions,
+  reports,
+  sessions,
   villageStatsDaily,
   villageTimeline,
   worldSnapshots,
 } from '../db/schema';
-import type { AgentRecord, BoardRow, ChronicleBatch, EventRow, JournalRow, LoadedState, SerializedSnapshot, Store, TradeRow } from './types';
+import { newOwnerId } from './memory';
+import type {
+  AgentRecord,
+  BoardRemoval,
+  BoardRow,
+  ChronicleBatch,
+  EventRow,
+  JournalRow,
+  LoadedState,
+  NewOwner,
+  OwnerRow,
+  PushKeys,
+  PushSubscriptionRow,
+  ReportRow,
+  SerializedSnapshot,
+  SessionRow,
+  Store,
+  TradeRow,
+} from './types';
 
 type HighlightDb = typeof highlights.$inferSelect;
 type EventDb = typeof events.$inferSelect;
@@ -37,6 +60,10 @@ function toHighlight(r: HighlightDb): Highlight {
     drama: r.drama,
     ...extra,
   };
+}
+
+function toOwner(r: typeof owners.$inferSelect): OwnerRow {
+  return { id: r.id, provider: r.provider, externalId: r.externalId, name: r.name, language: r.language, createdAt: r.createdAt.getTime() };
 }
 
 function toEventRow(r: EventDb): EventRow {
@@ -77,14 +104,23 @@ export class PgStore implements Store {
 
   async load(): Promise<LoadedState> {
     const ids = await this.db
-      .select({ id: agents.id, keyHash: agents.keyHash, claimTokenHash: agents.claimToken, claimedAt: agents.claimedAt })
+      .select({
+        id: agents.id,
+        keyHash: agents.keyHash,
+        claimTokenHash: agents.claimToken,
+        claimedAt: agents.claimedAt,
+        ownerId: agents.ownerId,
+        ownerNote: agents.ownerNote,
+        ownerSeenAt: agents.ownerSeenAt,
+        status: agents.status,
+      })
       .from(agents);
     const agentRows = await this.db.select({ state: agentSnapshots.state }).from(agentSnapshots);
     const worldRows = await this.db.select({ key: worldSnapshots.key, state: worldSnapshots.state }).from(worldSnapshots);
     const [max] = await this.db.select({ id: sql<string | null>`max(${events.id})` }).from(events);
     const empty = agentRows.length === 0 && worldRows.length === 0;
     return {
-      identities: ids,
+      identities: ids.map((r) => ({ ...r, status: r.status as AgentStatus })),
       snapshot: empty ? null : { agents: agentRows.map((r) => r.state as AgentState), world: worldRows.map((r) => ({ key: r.key, data: r.state })) },
       maxEventId: Number(max?.id ?? 0),
     };
@@ -109,10 +145,6 @@ export class PgStore implements Store {
       });
       await tx.insert(agentSnapshots).values({ agentId: rec.id, state: jsonb(snapshotJson), updatedAt: now });
     });
-  }
-
-  async markClaimed(agentId: string, now: number): Promise<void> {
-    await this.db.update(agents).set({ claimedAt: now }).where(eq(agents.id, agentId));
   }
 
   async saveSnapshot(snap: SerializedSnapshot, now: number): Promise<void> {
@@ -243,9 +275,13 @@ export class PgStore implements Store {
     const where: SQL[] = [isNull(boardPosts.parentId)];
     if (q.tag) where.push(eq(boardPosts.tag, q.tag));
     if (q.beforeTs !== undefined) where.push(lt(boardPosts.ts, q.beforeTs));
-    const posts = await this.db.select().from(boardPosts).where(and(...where)).orderBy(desc(boardPosts.ts), desc(boardPosts.id)).limit(q.limit);
+    where.push(eq(boardPosts.removed, false));
+    const strip = ({ removed: _r, ...row }: typeof boardPosts.$inferSelect): BoardRow => row;
+    const posts = (await this.db.select().from(boardPosts).where(and(...where)).orderBy(desc(boardPosts.ts), desc(boardPosts.id)).limit(q.limit)).map(strip);
     const ids = posts.map((p) => p.id);
-    const replies = ids.length ? await this.db.select().from(boardPosts).where(inArray(boardPosts.parentId, ids)).orderBy(asc(boardPosts.ts)) : [];
+    const replies = ids.length
+      ? (await this.db.select().from(boardPosts).where(and(inArray(boardPosts.parentId, ids), eq(boardPosts.removed, false))).orderBy(asc(boardPosts.ts))).map(strip)
+      : [];
     return { posts, replies };
   }
 
@@ -275,7 +311,168 @@ export class PgStore implements Store {
   }
 
   async journalOf(agentId: string, limit: number): Promise<JournalRow[]> {
-    return this.db.select().from(journalEntries).where(eq(journalEntries.agentId, agentId)).orderBy(desc(journalEntries.ts)).limit(limit);
+    const rows = await this.db
+      .select()
+      .from(journalEntries)
+      .where(and(eq(journalEntries.agentId, agentId), eq(journalEntries.removed, false)))
+      .orderBy(desc(journalEntries.ts))
+      .limit(limit);
+    return rows.map(({ removed: _r, ...row }) => row);
+  }
+
+  // ── owners ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  async upsertOwner(o: NewOwner, now: number): Promise<OwnerRow> {
+    const [row] = await this.db
+      .insert(owners)
+      .values({ id: newOwnerId(), provider: o.provider, externalId: o.externalId, name: o.name, language: o.language, lastSeenAt: now })
+      .onConflictDoUpdate({ target: [owners.provider, owners.externalId], set: { name: o.name, lastSeenAt: now } })
+      .returning();
+    return toOwner(row!);
+  }
+
+  async getOwner(id: string): Promise<OwnerRow | null> {
+    const [row] = await this.db.select().from(owners).where(and(eq(owners.id, id), ne(owners.provider, 'deleted')));
+    return row ? toOwner(row) : null;
+  }
+
+  async setOwnerLanguage(id: string, language: string): Promise<void> {
+    await this.db.update(owners).set({ language }).where(eq(owners.id, id));
+  }
+
+  async deleteOwner(id: string): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx.delete(sessions).where(eq(sessions.ownerId, id));
+      await tx.delete(pushSubscriptions).where(eq(pushSubscriptions.ownerId, id));
+      await tx
+        .update(agents)
+        .set({ ownerId: null, ownerNote: '', status: sql`case when ${agents.status} = 'banned' then 'banned' else 'retired' end` })
+        .where(eq(agents.ownerId, id));
+      await tx.update(owners).set({ provider: 'deleted', externalId: id, name: '', language: 'en', lastSeenAt: null }).where(eq(owners.id, id));
+    });
+  }
+
+  async createSession(s: SessionRow): Promise<void> {
+    await this.db.insert(sessions).values({ id: s.id, ownerId: s.ownerId, expiresAt: s.expiresAt, refreshedAt: s.refreshedAt });
+  }
+
+  async getSession(id: string): Promise<SessionRow | null> {
+    const [r] = await this.db
+      .select({ id: sessions.id, ownerId: sessions.ownerId, expiresAt: sessions.expiresAt, refreshedAt: sessions.refreshedAt })
+      .from(sessions)
+      .where(eq(sessions.id, id));
+    return r ?? null;
+  }
+
+  async refreshSession(id: string, expiresAt: number, refreshedAt: number): Promise<void> {
+    await this.db.update(sessions).set({ expiresAt, refreshedAt }).where(eq(sessions.id, id));
+  }
+
+  async deleteSession(id: string): Promise<void> {
+    await this.db.delete(sessions).where(eq(sessions.id, id));
+  }
+
+  async claimAgent(agentId: string, ownerId: string, now: number): Promise<boolean> {
+    const rows = await this.db
+      .update(agents)
+      .set({ ownerId, claimedAt: now, claimToken: null })
+      .where(and(eq(agents.id, agentId), isNotNull(agents.claimToken), isNull(agents.ownerId)))
+      .returning({ id: agents.id });
+    return rows.length === 1;
+  }
+
+  async updateKeyHash(agentId: string, keyHash: string): Promise<void> {
+    await this.db.update(agents).set({ keyHash }).where(eq(agents.id, agentId));
+  }
+
+  async setAgentStatus(agentId: string, status: AgentStatus): Promise<void> {
+    await this.db.update(agents).set({ status }).where(eq(agents.id, agentId));
+  }
+
+  async setOwnerNote(agentId: string, note: string): Promise<void> {
+    await this.db.update(agents).set({ ownerNote: note }).where(eq(agents.id, agentId));
+  }
+
+  async setOwnerSeen(agentId: string, ts: number): Promise<void> {
+    await this.db.update(agents).set({ ownerSeenAt: ts }).where(eq(agents.id, agentId));
+  }
+
+  async agentEvents(agentId: string, since: number, types: readonly string[], limit: number): Promise<EventRow[]> {
+    if (!types.length) return [];
+    const rows = await this.db
+      .select()
+      .from(events)
+      .where(and(or(eq(events.actor, agentId), eq(events.target, agentId)), gte(events.ts, since), inArray(events.type, [...types])))
+      .orderBy(asc(events.id))
+      .limit(limit);
+    return rows.map(toEventRow);
+  }
+
+  async savePushSubscription(row: PushSubscriptionRow): Promise<void> {
+    const subscription = { endpoint: row.endpoint, keys: row.keys };
+    await this.db
+      .insert(pushSubscriptions)
+      .values({ id: row.id, ownerId: row.ownerId, endpoint: row.endpoint, subscription })
+      .onConflictDoUpdate({ target: pushSubscriptions.endpoint, set: { ownerId: row.ownerId, subscription } });
+  }
+
+  async listPushSubscriptions(ownerId: string): Promise<PushSubscriptionRow[]> {
+    const rows = await this.db.select().from(pushSubscriptions).where(eq(pushSubscriptions.ownerId, ownerId));
+    return rows.map((r) => ({ id: r.id, ownerId: r.ownerId, endpoint: r.endpoint, keys: (r.subscription as { keys: PushKeys }).keys }));
+  }
+
+  async deletePushSubscription(endpoint: string, ownerId?: string): Promise<void> {
+    const where = ownerId === undefined ? eq(pushSubscriptions.endpoint, endpoint) : and(eq(pushSubscriptions.endpoint, endpoint), eq(pushSubscriptions.ownerId, ownerId));
+    await this.db.delete(pushSubscriptions).where(where);
+  }
+
+  async addReport(r: ReportRow): Promise<void> {
+    await this.db.insert(reports).values({ id: r.id, kind: r.kind, targetId: r.targetId, reason: r.reason, details: r.details, reporterIp: r.reporterHash, ts: r.ts, resolved: r.resolved });
+  }
+
+  async listReports(q: { limit: number; resolved?: boolean }): Promise<ReportRow[]> {
+    const rows = await this.db
+      .select()
+      .from(reports)
+      .where(q.resolved === undefined ? undefined : eq(reports.resolved, q.resolved))
+      .orderBy(desc(reports.ts))
+      .limit(q.limit);
+    return rows.map(({ reporterIp, ...r }) => ({ ...r, reporterHash: reporterIp }));
+  }
+
+  async resolveReport(id: string): Promise<boolean> {
+    const rows = await this.db.update(reports).set({ resolved: true }).where(eq(reports.id, id)).returning({ id: reports.id });
+    return rows.length === 1;
+  }
+
+  async removeBoardPost(r: BoardRemoval): Promise<boolean> {
+    const where = 'id' in r ? or(eq(boardPosts.id, r.id), eq(boardPosts.parentId, r.id)) : and(eq(boardPosts.parentId, r.parentId), eq(boardPosts.agentId, r.agentId), eq(boardPosts.ts, r.ts));
+    const rows = await this.db.update(boardPosts).set({ text: '', removed: true }).where(where).returning({ id: boardPosts.id });
+    return rows.length > 0;
+  }
+
+  async removeJournalEntry(id: string): Promise<boolean> {
+    const rows = await this.db.update(journalEntries).set({ text: '', removed: true }).where(eq(journalEntries.id, id)).returning({ id: journalEntries.id });
+    return rows.length === 1;
+  }
+
+  async scrubHighlightQuotes(text: string): Promise<void> {
+    await this.db
+      .update(highlights)
+      .set({ extra: sql`${highlights.extra} - 'quote'` })
+      .where(sql`${highlights.extra}->'quote'->>'text' = ${text}`);
+  }
+
+  async addBlockedWords(words: string[], now: number): Promise<void> {
+    if (!words.length) return;
+    await this.db
+      .insert(blockedWords)
+      .values(words.map((word) => ({ word, addedAt: now })))
+      .onConflictDoNothing();
+  }
+
+  async listBlockedWords(): Promise<string[]> {
+    return (await this.db.select({ word: blockedWords.word }).from(blockedWords)).map((r) => r.word);
   }
 
   async close(): Promise<void> {
