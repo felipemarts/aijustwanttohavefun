@@ -113,8 +113,9 @@ describe('attack', () => {
     const gold0 = a.gold;
     const r = killIt(k, a, m);
     const kill = narr(r, 'n.kill')!;
-    expect(kill.xp).toBe(12);
-    expect(a.xp).toBe(12);
+    const slimeXp = k.c.monsters.get('slime')!.xp;
+    expect(kill.xp).toBe(slimeXp);
+    expect(a.xp).toBe(slimeXp);
     expect(Number(kill.gold)).toBeGreaterThanOrEqual(1);
     expect(Number(kill.gold)).toBeLessThanOrEqual(3);
     expect(a.gold).toBe(gold0 + Number(kill.gold));
@@ -148,8 +149,9 @@ describe('attack', () => {
       const total = m.threat[w.id]! + m.threat[g.id]!;
       expect(total).toBe(55);
       const mod = levelGapXpMod(1, 2);
-      expect(w.xp).toBe(Math.max(1, Math.round(20 * mod * (m.threat[w.id]! / total))));
-      expect(g.xp).toBe(Math.max(1, Math.round(20 * mod * (m.threat[g.id]! / total))));
+      const wolfXp = k.c.monsters.get('wolf')!.xp;
+      expect(w.xp).toBe(Math.max(1, Math.round(wolfXp * mod * (m.threat[w.id]! / total))));
+      expect(g.xp).toBe(Math.max(1, Math.round(wolfXp * mod * (m.threat[g.id]! / total))));
       const ev = last!.events.find((e) => e.type === 'kill')!;
       const parts = ev.payload.gold as Record<string, number>;
       const gold = parts[w.id]! + parts[g.id]!;

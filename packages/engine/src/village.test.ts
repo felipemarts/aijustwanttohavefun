@@ -307,13 +307,13 @@ describe('unlock effects', () => {
     k.ok(war, 'inventory');
     expect(derive(k.c, mage, k.now).maxMp).toBe(Math.floor(mp * 1.1));
     expect(derive(k.c, war, k.now).maxMp).toBe(wmp);
-    // Quest rewards: c_civic_1 gives 400 XP, now 420.
+    // Quest rewards: c_civic_1 XP, now 5% more.
     war.inv.wood = 5;
     k.ok(war, 'quest_accept', { quest: 'c_civic_1' });
     for (let i = 0; i < 5; i++) k.ok(war, 'contribute', { project: 'inn_expansion', items: { wood: 1 } });
     const xp = war.xp;
     k.ok(war, 'quest_turn_in', { quest: 'c_civic_1' });
-    expect(war.xp - xp).toBe(420);
+    expect(war.xp - xp).toBe(Math.round(k.c.quests.get('c_civic_1')!.rewards.xp * 1.05));
     expect(checkInvariants(k.s, k.now)).toEqual([]);
   });
 

@@ -211,13 +211,13 @@ describe('camaraderie', () => {
     return { a, b };
   }
 
-  it('speaking after staying 10 minutes while someone else spoke gives +15% XP for an hour', () => {
+  it('speaking after staying 10 minutes while someone else spoke gives the Camaraderie XP buff for an hour', () => {
     const k = makeKit();
     const { a, b } = chatty(k);
     k.advance(BALANCE.camaraderie.stayMs);
     k.ok(b, 'say', { text: 'nice day' });
     const r = k.ok(a, 'say', { text: 'indeed' });
-    expect(narr(r, 'n.camaraderie')).toEqual({ pct: 15, minutes: 60 });
+    expect(narr(r, 'n.camaraderie')).toEqual({ pct: Math.round(BALANCE.camaraderie.xp * 100), minutes: BALANCE.camaraderie.durationMs / MIN });
     expect(a.buffs).toContainEqual({ id: 'camaraderie', stat: 'xp', value: BALANCE.camaraderie.xp, until: k.now + BALANCE.camaraderie.durationMs });
     // Refreshing is silent.
     k.advance(BALANCE.chat.sayCooldownMs);

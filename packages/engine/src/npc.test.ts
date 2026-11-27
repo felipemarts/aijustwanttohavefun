@@ -22,7 +22,7 @@ describe('talk', () => {
     const k = makeKit();
     const a = k.add('Pip', 'warrior', { room: 'village.tavern', level: 4 });
     const r = k.ok(a, 'talk', { npc: 'berta' });
-    expect((r.result.ok && (r.result.data?.npc as Record<string, unknown>).rest_cost)).toBe(4 + 4 * 2);
+    expect((r.result.ok && (r.result.data?.npc as Record<string, unknown>).rest_cost)).toBe(BALANCE.rest.baseCost + 4 * BALANCE.rest.costPerLevel);
   });
 
   it('errors: npc elsewhere, unknown topic', () => {
@@ -94,8 +94,9 @@ describe('rest', () => {
     a.mp = 1;
     const gold = a.gold;
     const r = k.ok(a, 'rest');
-    expect(narr(r, 'n.rest')).toEqual({ gold: 4 + 3 * 2 });
-    expect(a.gold).toBe(gold - 10);
+    const cost = BALANCE.rest.baseCost + 3 * BALANCE.rest.costPerLevel;
+    expect(narr(r, 'n.rest')).toEqual({ gold: cost });
+    expect(a.gold).toBe(gold - cost);
     expect(a.hp).toBe(k.maxHp(a));
     expect(a.mp).toBe(derive(k.c, a, k.now).maxMp);
     expect(a.ap).toBe(BALANCE.ap.max);
@@ -112,6 +113,6 @@ describe('rest', () => {
     a.gold = 100;
     k.ok(a, 'rest');
     expect(errKey(k.act(a, 'rest'))).toBe('err.already_rested');
-    expect(a.gold).toBe(94);
+    expect(a.gold).toBe(100 - (BALANCE.rest.baseCost + BALANCE.rest.costPerLevel));
   });
 });

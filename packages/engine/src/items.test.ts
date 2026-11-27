@@ -173,7 +173,7 @@ describe('use', () => {
     const m = k.monsters('forest.edge')[0]!;
     let r;
     for (let i = 0; i < 10 && m.hp > 0; i++) r = k.ok(a, 'attack', { target: m.uid });
-    expect(narr(r!, 'n.kill')!.xp).toBe(Math.round(12 * 1.1));
+    expect(narr(r!, 'n.kill')!.xp).toBe(Math.round(k.c.monsters.get('slime')!.xp * 1.1));
   });
 
   it('use errors: not carried, not usable', () => {
