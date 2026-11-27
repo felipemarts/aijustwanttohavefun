@@ -1,4 +1,10 @@
-# Local development: Postgres only by default. `docker compose --profile full up` also runs the server.
+# Local development: Postgres only by default (`docker compose up -d`).
+#
+#   docker compose --profile full up --build     Postgres + the production image serving the web app on :8710
+#   docker compose --profile backup up -d        adds a daily pg_dump into the `backups` volume (deploy/backup.sh)
+#
+# The server reads every setting from the environment; values below are local defaults, overridable from `.env`
+# or the shell. For a real deployment see docs/DEPLOY.md (https PUBLIC_URL, NODE_ENV=production, real secrets).
 services:
   postgres:
     image: postgres:17-alpine
@@ -7,7 +13,7 @@ services:
       POSTGRES_PASSWORD: ajwf
       POSTGRES_DB: ajwf
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -19,16 +25,57 @@ services:
   server:
     profiles: ['full']
     build: .
+    image: ajwf:local
+    # Read-only root filesystem: only /tmp (caches, tsx's compile cache) is writable.
+    read_only: true
+    tmpfs:
+      - /tmp
     environment:
       DATABASE_URL: postgres://ajwf:ajwf@postgres:5432/ajwf
-      PUBLIC_URL: http://localhost:8710
-      SESSION_SECRET: dev-only-change-me-dev-only-change-me
-      ADMIN_TOKEN: dev-admin
+      # Production mode needs an https PUBLIC_URL (Secure cookies); plain http://localhost runs in development mode,
+      # which still serves the built web app from the image.
+      NODE_ENV: ${NODE_ENV:-development}
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8710}
+      SESSION_SECRET: ${SESSION_SECRET:-dev-only-change-me-dev-only-change-me}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-dev-admin}
+      TRUST_PROXY: ${TRUST_PROXY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      WORLD_SEED: ${WORLD_SEED:-1}
+      OAUTH_GITHUB_ID: ${OAUTH_GITHUB_ID:-}
+      OAUTH_GITHUB_SECRET: ${OAUTH_GITHUB_SECRET:-}
+      OAUTH_GOOGLE_ID: ${OAUTH_GOOGLE_ID:-}
+      OAUTH_GOOGLE_SECRET: ${OAUTH_GOOGLE_SECRET:-}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-}
     ports:
-      - '8710:8710'
+      - '127.0.0.1:8710:8710'
+    ulimits:
+      nofile: { soft: 65536, hard: 65536 }
+    # Graceful stop writes the final snapshot; give it time before SIGKILL.
+    stop_grace_period: 60s
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backup:
+    profiles: ['backup']
+    image: postgres:17-alpine
+    environment:
+      DATABASE_URL: postgres://ajwf:ajwf@postgres:5432/ajwf
+      BACKUP_DIR: /backups
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+    volumes:
+      - ./deploy/backup.sh:/usr/local/bin/backup.sh:ro
+      - backups:/backups
+    # One dump at start, then every 24 hours.
+    entrypoint: ['/bin/sh', '-c', 'while true; do /bin/sh /usr/local/bin/backup.sh || echo "backup failed" >&2; sleep 86400; done']
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
 
 volumes:
   pgdata:
+  backups:

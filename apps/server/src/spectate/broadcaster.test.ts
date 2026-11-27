@@ -187,6 +187,33 @@ describe('spectator broadcast', () => {
     expect(encode.mock.calls.filter(([m]) => m.t === 'full')).toHaveLength(1);
   });
 
+  it('hands a large fan-out out over several event-loop turns, in order, without starving other work', async () => {
+    const { s, brasa } = await twoAgents();
+    // More subscribers than one turn's budget (wsMaxPerIp is small in tests: one address each).
+    const n = SPECTATE.sendsPerTurn + 500;
+    const viewers = Array.from({ length: n }, (_, i) => viewer(s, `10.${i >> 16}.${(i >> 8) & 255}.${i & 255}`));
+    for (const v of viewers) v.sub(SQUARE);
+    for (const v of viewers) v.sock.clear();
+    await s.act(brasa.key, 'say', { text: 'first' });
+    s.clock.advance(SPECTATE.batchMs);
+    s.spectators.flush();
+    const got = () => viewers.filter((v) => batches(v.sock, SQUARE).length > 0).length;
+    // One turn's worth went out at once; the rest waits for the next turn.
+    expect(got()).toBe(SPECTATE.sendsPerTurn);
+    expect(s.spectators.pendingSends).toBe(500);
+    s.clock.advance(10_000);
+    expect((await s.act(brasa.key, 'say', { text: 'second' })).json().ok).toBe(true);
+    s.spectators.flush();
+    await new Promise((r) => setImmediate(r));
+    await new Promise((r) => setImmediate(r));
+    expect(s.spectators.pendingSends).toBe(0);
+    // Every viewer got both batches, the first one first.
+    for (const v of viewers) {
+      const texts = eventsOf(batches(v.sock, SQUARE)).filter((e) => e.type === 'say').map((e) => (e as { text?: string }).text);
+      expect(texts).toEqual(['first', 'second']);
+    }
+  });
+
   it('caps the world topic at 4 batches per second and sends it only big events', async () => {
     const { s, ids } = await twoAgents();
     const v = viewer(s);

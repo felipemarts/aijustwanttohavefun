@@ -442,8 +442,10 @@ describe('spectator protocol additions', () => {
     expect(done).toMatchObject({ buildings: expect.objectContaining({ 'village.square': 'statue' }), honoree: { name: 'Pip', sprite } });
     // Only on change: the next village batch does not repeat it; the world topic never carries it.
     expect(batches(sock, 'world').some((b) => b.village && 'honoree' in b.village)).toBe(false);
-    s.game.agentByName('Pip')!.gold += 10;
-    expect((await s.act(pip.key, 'contribute', { project: 'arena', gold: 10 })).json().ok).toBe(true);
+    // A gift big enough to move the progress the spectators see, whatever the arena costs after balancing.
+    const gift = Math.ceil(s.game.state.content.projects.get('arena')!.cost.gold / 10);
+    s.game.agentByName('Pip')!.gold += gift;
+    expect((await s.act(pip.key, 'contribute', { project: 'arena', gold: gift })).json().ok).toBe(true);
     s.clock.advance(300);
     s.spectators.flush();
     expect(batches(sock, 'village').at(-1)!.village!.projects).toEqual([expect.objectContaining({ id: 'arena' })]);

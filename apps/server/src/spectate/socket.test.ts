@@ -3,7 +3,8 @@ import type { SpectatorServerMsg } from '@ajwf/shared';
 import { afterEach, describe, expect, it } from 'vitest';
 import { WebSocket } from 'ws';
 import { makeServer, type TestServer } from '../test-helpers';
-import { clientIp, ipMatches } from './socket';
+import { constants as zlibConstants, inflateRawSync } from 'node:zlib';
+import { clientIp, deflateMessage, framing, ipMatches, textFrame } from './socket';
 
 const open: TestServer[] = [];
 afterEach(async () => {
@@ -126,6 +127,53 @@ describe('spectator WebSocket (real socket)', () => {
     a.ws.close();
     b.ws.close();
     await Promise.all([a.closed, b.closed]);
+  });
+});
+
+describe('shared broadcast frames', () => {
+  it('compress once for every connection, with and without permessage-deflate, and arrive intact', async () => {
+    // The world full state (every room, the village) is well over the 1 KB compression threshold.
+    const { s, ws } = await listening({ wsMaxPerIp: 10 });
+    const deflating = [client(ws), client(ws)];
+    const plain = new WebSocket(ws, { perMessageDeflate: false });
+    const plainMsgs: string[] = [];
+    plain.on('message', (d) => plainMsgs.push(String(d)));
+    await Promise.all([...deflating.map((c) => c.opened), new Promise((r) => plain.once('open', r))]);
+    expect(plain.extensions).toBe('');
+    for (const c of deflating) c.ws.send(JSON.stringify({ op: 'sub', topics: ['world'] }));
+    plain.send(JSON.stringify({ op: 'sub', topics: ['world'] }));
+    const fulls = await Promise.all(deflating.map((c) => c.next((m) => m.t === 'full')));
+    for (let i = 0; i < 100 && !plainMsgs.some((m) => m.startsWith('{"t":"full"')); i++) await new Promise((r) => setTimeout(r, 20));
+    const plainFull = JSON.parse(plainMsgs.find((m) => m.startsWith('{"t":"full"'))!) as SpectatorServerMsg;
+    expect(JSON.stringify(fulls[0]).length).toBeGreaterThan(1024);
+    expect(fulls[1]).toEqual(fulls[0]);
+    expect(plainFull).toEqual(fulls[0]);
+    // Fewer bytes went out than were handed over: the large frames were compressed.
+    expect(s.spectators.wireBytes()).toBeLessThan(s.metrics.wsPayloadBytes);
+    plain.close();
+    for (const c of deflating) c.ws.close();
+    await Promise.all(deflating.map((c) => c.closed));
+  });
+
+  it('builds RFC 6455 text frames and RFC 7692 messages', () => {
+    const small = textFrame(Buffer.from('hi'), false);
+    expect([...small]).toEqual([0x81, 2, 0x68, 0x69]);
+    const mid = textFrame(Buffer.alloc(300, 0x61), true);
+    expect([mid[0], mid[1], mid.readUInt16BE(2), mid.length]).toEqual([0xc1, 126, 300, 304]);
+    const big = textFrame(Buffer.alloc(70_000, 0x61), false);
+    expect([big[1], big.readUInt32BE(6), big.length]).toEqual([127, 70_000, 70_010]);
+    const text = Buffer.from(JSON.stringify({ t: 'batch', events: Array.from({ length: 50 }, (_, i) => ({ id: i, type: 'say' })) }));
+    const z = deflateMessage(text);
+    expect(z.length).toBeLessThan(text.length);
+    // The receiver appends the removed 00 00 ff ff and inflates.
+    expect(inflateRawSync(Buffer.concat([z, Buffer.from([0, 0, 0xff, 0xff])]), { finishFlush: zlibConstants.Z_SYNC_FLUSH }).equals(text)).toBe(true);
+  });
+
+  it('falls back to ws for clients that want a smaller compression window', () => {
+    expect(framing('')).toBe('plain');
+    expect(framing('permessage-deflate; server_no_context_takeover; client_no_context_takeover')).toBe('deflate');
+    expect(framing('permessage-deflate; server_no_context_takeover; server_max_window_bits=15')).toBe('deflate');
+    expect(framing('permessage-deflate; server_no_context_takeover; server_max_window_bits=10')).toBe('ws');
   });
 });
 

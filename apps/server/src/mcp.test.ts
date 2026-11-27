@@ -210,7 +210,8 @@ describe('/mcp', () => {
 
   it('never puts the key in logs, nor in any result but the registration', async () => {
     const lines: string[] = [];
-    const s = await makeServer({ logStream: { write: (line: string) => void lines.push(line) } });
+    // Every request is logged at debug (info keeps only failures and slow ones): the scrubbing must hold for all.
+    const s = await makeServer({ logStream: { write: (line: string) => void lines.push(line) }, logLevel: 'debug' });
     const anon = await mcp(s);
     const key = body(await anon.call('village_register', { name: 'Pip', class: 'mage' })).api_key as string;
     const me = await mcp(s, { key });

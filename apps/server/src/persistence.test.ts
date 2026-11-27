@@ -75,4 +75,46 @@ describe('persistence', () => {
     expect(store.events.length).toBeGreaterThan(0);
     expect(s.persistence.buffered).toBe(0);
   });
+
+  it('serializes every second and writes one consistent cut every five', async () => {
+    const store = new MemoryStore();
+    const s = await makeServer({ store });
+    const pip = await s.register('Pip');
+    const brasa = await s.register('Brasa');
+    await s.persistence.snapshot();
+    const id = (name: string) => s.game.agentByName(name)!.id;
+    const saved = (name: string) => JSON.parse(store.agentSnapshots.get(id(name))!) as { room: string; gold: number };
+
+    // Brasa moves, a collection serializes it; then only Pip moves twice, with a collection in between.
+    await s.act(brasa.key, 'move', { dir: 'north' });
+    s.persistence.collect();
+    await s.act(pip.key, 'move', { dir: 'north' });
+    s.persistence.collect();
+    expect(s.game.state.dirty.size).toBe(0);
+    await s.act(pip.key, 'move', { dir: 'south' });
+    // Nothing reaches the store before the write...
+    expect(saved('Brasa').room).toBe('village.square');
+    await s.persistence.snapshot();
+    // ...and the write holds each entity as it is now: the latest serialization wins.
+    expect(saved('Brasa').room).toBe('village.tavern');
+    expect(saved('Pip').room).toBe('village.square');
+    expect(s.persistence.stats.snapshots).toBe(2);
+    expect(s.persistence.stats.serialize.count).toBeGreaterThanOrEqual(3);
+  });
+
+  it('after a failed write, a newer serialization of an entity replaces the one that failed', async () => {
+    const store = new MemoryStore();
+    const s = await makeServer({ store });
+    const { key } = await s.register('Pip');
+    await s.persistence.snapshot();
+    await s.act(key, 'move', { dir: 'north' });
+    store.failNext = new Error('database down');
+    await s.persistence.snapshot();
+    expect(s.persistence.stats.snapshotFailures).toBe(1);
+    await s.act(key, 'move', { dir: 'south' });
+    s.persistence.collect();
+    await s.persistence.snapshot();
+    expect(JSON.parse(store.agentSnapshots.get(s.game.agentByName('Pip')!.id)!).room).toBe('village.square');
+    expect(s.persistence.stats.lastSnapshotAt).toBeGreaterThan(0);
+  });
 });

@@ -40,8 +40,11 @@ async function shutdown(signal: string): Promise<void> {
     await app.close();
     game.stop();
     await persistence.stop();
+    const p = persistence.stats;
+    log.info({ rows: p.lastSnapshotRows, snapshots: p.snapshots, eventsWritten: p.eventsWritten, buffered: persistence.buffered }, 'final snapshot written');
     await chronicle.stop();
     await store.close();
+    log.info('stopped');
     process.exit(0);
   } catch (err) {
     log.error({ err }, 'shutdown failed');

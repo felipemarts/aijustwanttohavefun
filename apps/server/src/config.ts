@@ -29,6 +29,8 @@ const envSchema = z.object({
   VAPID_SUBJECT: optional(z.string().min(1)),
   /** Built web app to serve (index.html and assets). Defaults to apps/web/dist in production. */
   WEB_DIST: optional(z.string().min(1)),
+  /** Disk cache of composed sprites and share cards (rebuilt on demand, safe to lose). */
+  CACHE_DIR: optional(z.string().min(1)),
   TRUST_PROXY: optional(z.string().min(1)),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   WORLD_SEED: optional(z.coerce.number().int()),
@@ -41,6 +43,8 @@ export type Vapid = { publicKey: string; privateKey: string; subject: string };
 
 /** Default location of the built web app. */
 export const DEFAULT_WEB_DIST = join(import.meta.dirname, '..', '..', 'web', 'dist');
+/** Default disk cache (gitignored). */
+export const DEFAULT_CACHE_DIR = join(import.meta.dirname, '..', '.cache');
 
 export type Config = {
   production: boolean;
@@ -58,6 +62,8 @@ export type Config = {
   extraOrigins: string[];
   /** Directory of the built web app, or null to answer page routes with a minimal HTML shell only. */
   webDist: string | null;
+  /** Where sprites and share cards are cached on disk. */
+  cacheDir: string;
   /**
    * Passed to Fastify's `trustProxy`: off by default so X-Forwarded-For cannot spoof the client IP. `true` trusts
    * any proxy; a comma-separated list trusts only those addresses or CIDR ranges.
@@ -101,6 +107,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     vapid: e.VAPID_PUBLIC_KEY && e.VAPID_PRIVATE_KEY ? { publicKey: e.VAPID_PUBLIC_KEY, privateKey: e.VAPID_PRIVATE_KEY, subject } : null,
     extraOrigins: !production && e.DEV_WEB_ORIGIN ? [new URL(e.DEV_WEB_ORIGIN).origin] : [],
     webDist: webDist && existsSync(join(webDist, 'index.html')) ? webDist : null,
+    cacheDir: e.CACHE_DIR ?? DEFAULT_CACHE_DIR,
     trustProxy: parseTrustProxy(e.TRUST_PROXY),
     logLevel: e.LOG_LEVEL,
     worldSeed: e.WORLD_SEED ?? randomBytes(4).readUInt32LE(0),

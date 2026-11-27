@@ -73,6 +73,8 @@ export class Game {
   private timer: NodeJS.Timeout | null = null;
   private dayTimer: NodeJS.Timeout | null = null;
   private dayListeners: ((now: number) => void)[] = [];
+  /** Told how long each timer-driven tick took (seconds), for the metrics. */
+  onTickTimed: ((seconds: number) => void) | null = null;
 
   private constructor(
     readonly state: WorldState,
@@ -391,11 +393,13 @@ export class Game {
 
   start(): void {
     this.timer ??= setInterval(() => {
+      const t0 = performance.now();
       try {
         this.tick();
       } catch (err) {
         this.log.error({ err }, 'tick failed');
       }
+      this.onTickTimed?.((performance.now() - t0) / 1000);
     }, TICK_MS);
     if (!this.dayTimer) this.scheduleDay();
   }

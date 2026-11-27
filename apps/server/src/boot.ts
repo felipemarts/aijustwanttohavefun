@@ -21,9 +21,6 @@ import type { Store } from './store/types';
 
 const SERVER_DIR = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const DOCS_DIR = join(SERVER_DIR, '..', '..', 'public-docs');
-/** Gitignored (`.cache/`). */
-export const SPRITES_DIR = join(SERVER_DIR, '.cache', 'sprites');
-export const CARDS_DIR = join(SERVER_DIR, '.cache', 'og');
 
 export type BootOptions = {
   config: Config;
@@ -86,7 +83,7 @@ export async function boot(o: BootOptions): Promise<Server> {
     config: o.config,
     i18n,
     logger: o.logger,
-    spritesDir: o.spritesDir ?? SPRITES_DIR,
+    spritesDir: o.spritesDir ?? join(o.config.cacheDir, 'sprites'),
     docsDir: o.docsDir ?? DOCS_DIR,
     spectators,
     metrics,
@@ -94,7 +91,7 @@ export async function boot(o: BootOptions): Promise<Server> {
     chronicle,
     persistence,
     render,
-    cardsDir: o.cardsDir ?? CARDS_DIR,
+    cardsDir: o.cardsDir ?? join(o.config.cacheDir, 'og'),
     ...(o.fetch ? { fetch: o.fetch } : {}),
   });
   metrics.setSources({
@@ -105,6 +102,8 @@ export async function boot(o: BootOptions): Promise<Server> {
     spectators: () => spectators.connections,
     wsWireBytes: () => spectators.wireBytes(),
     persistenceBuffered: () => persistence.buffered,
+    persistence: () => persistence.stats,
   });
+  game.onTickTimed = (seconds) => metrics.tickSeconds.observe(seconds);
   return { app, game, persistence, spectators, metrics, census, chronicle, push };
 }

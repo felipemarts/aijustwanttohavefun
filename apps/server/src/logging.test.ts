@@ -14,6 +14,8 @@ describe('logs', () => {
     const lines: string[] = [];
     const s = await makeServer({
       logStream: { write: (line: string) => void lines.push(line) },
+      // Every request is logged at debug: the scrubbing must hold for all of them.
+      logLevel: 'debug',
       config: { oauth: { github: { id: 'gh', secret: 'GH-CLIENT-SECRET-123' } } },
       fetch: provider,
     });
@@ -49,6 +51,23 @@ describe('logs', () => {
       expect(all).not.toContain(secret);
     }
     expect(all).not.toContain('ajwf_sk_');
+  });
+
+  it('writes one line per request at debug, and only failures and slow requests at info', async () => {
+    const lines: string[] = [];
+    const s = await makeServer({ logStream: { write: (line: string) => void lines.push(line) } });
+    const { key } = await s.register('Pip');
+    await s.act(key, 'move', { dir: 'north' });
+    await s.get(key, '/api/v1/me');
+    expect(lines.filter((l) => l.includes('request'))).toEqual([]);
+
+    const debug: string[] = [];
+    const d = await makeServer({ logStream: { write: (line: string) => void debug.push(line) }, logLevel: 'debug' });
+    await d.register('Pip');
+    const done = debug.map((l) => JSON.parse(l) as { msg: string; req?: { url: string }; res?: { statusCode: number } }).filter((l) => l.msg === 'request completed');
+    expect(done).toHaveLength(1);
+    expect(done[0]!.req!.url).toBe('/api/v1/agents/register');
+    expect(done[0]!.res!.statusCode).toBe(200);
   });
 
   it('scrubs claim tokens and query strings from logged URLs', () => {

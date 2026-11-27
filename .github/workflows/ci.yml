@@ -5,9 +5,71 @@ on:
     branches: [main]
   pull_request:
 
+# Least privilege: jobs only read the repository. Third-party actions are pinned to full commit SHAs (version in
+# the comment); Dependabot keeps both the pins and the comments current.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ajwf
+          POSTGRES_PASSWORD: ajwf
+          # The store tests wipe their database and refuse one whose name does not say "test".
+          POSTGRES_DB: ajwf_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U ajwf" --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      # The Postgres-backed store tests run against the service container (they are skipped without it).
+      TEST_DATABASE_URL: postgres://ajwf:ajwf@localhost:5432/ajwf_test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The benchmark measures the base commit too.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm content:check
+      - run: pnpm i18n:report
+      - run: pnpm test
+      - run: pnpm --filter @ajwf/web build
+      - name: Reduced benchmark (fails on >20% regression)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        # Timings are compared with the base commit measured on this same runner (CI machines vary too much for a
+        # committed number); without a usable base, with the committed baseline (sizes always, timings when the
+        # baseline came from the same platform).
+        run: |
+          if [ -n "$BASE_SHA" ] && git cat-file -e "$BASE_SHA:tools/bench/src/ci.ts" 2>/dev/null \
+             && git grep -q -- "--baseline" "$BASE_SHA" -- tools/bench/src/main.ts; then
+            git worktree add --detach "$RUNNER_TEMP/base" "$BASE_SHA"
+            (cd "$RUNNER_TEMP/base" && pnpm install --frozen-lockfile --prefer-offline \
+              && pnpm bench --ci --update-baseline --baseline "$RUNNER_TEMP/base-baseline.json")
+            pnpm bench --ci --baseline "$RUNNER_TEMP/base-baseline.json"
+          else
+            pnpm bench --ci
+          fi
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:17-alpine
@@ -18,31 +80,42 @@ jobs:
         ports: ['5432:5432']
         options: >-
           --health-cmd "pg_isready -U ajwf" --health-interval 2s --health-timeout 3s --health-retries 30
-    env:
-      TEST_DATABASE_URL: postgres://ajwf:ajwf@localhost:5432/ajwf
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm content:check
-      - run: pnpm i18n:report
-      - run: pnpm test
-      - run: pnpm --filter @ajwf/web build
-      - name: Reduced benchmark (fails on >20% regression)
-        run: pnpm bench --ci
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build the production image (not pushed)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: false
+          load: true
+          tags: ajwf:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke test (read-only root, /healthz, graceful stop)
+        run: |
+          docker run -d --name ajwf --network host --read-only --tmpfs /tmp \
+            -e DATABASE_URL=postgres://ajwf:ajwf@localhost:5432/ajwf -e PUBLIC_URL=http://localhost:8710 \
+            -e NODE_ENV=development -e LOG_LEVEL=info ajwf:ci
+          for i in $(seq 1 60); do curl -fsS http://localhost:8710/healthz && break; sleep 1; done
+          curl -fsS http://localhost:8710/api/v1/help > /dev/null
+          curl -fsS -H 'accept: text/html' http://localhost:8710/ | grep -q '<div id="root">'
+          docker stop -t 60 ajwf
+          docker logs ajwf 2>&1 | tail -5
+          test "$(docker inspect ajwf --format '{{.State.ExitCode}}')" = 0
 
   secrets:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
+          persist-credentials: false
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Findings fail the job; no PR comments (that would need pull-requests: write).
+          GITLEAKS_ENABLE_COMMENTS: false

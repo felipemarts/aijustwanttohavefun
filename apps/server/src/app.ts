@@ -3,6 +3,7 @@ import { OptionsTokenStore } from '@ajwf/appearance';
 import type { AgentState } from '@ajwf/engine';
 import type { I18n } from '@ajwf/i18n';
 import Fastify, {
+  LogController,
   type FastifyBaseLogger,
   type FastifyInstance,
   type FastifyReply,
@@ -79,6 +80,28 @@ export type AppDeps = {
 
 const ACT_ROUTE = '/api/v1/act';
 const REGISTER_ROUTE = '/api/v1/agents/register';
+/** Requests slower than this are logged at warn (the `/act` target is 30 ms at p99). */
+const SLOW_REQUEST_MS = 1000;
+
+/**
+ * Fastify writes two lines per request ("incoming request", "request completed") at info: about 1,000 lines per
+ * second at the §3.4 load. Here a request is one line, at debug unless it failed (error) or was slow (warn).
+ */
+class RequestLogs extends LogController {
+  override incomingRequest(): void {}
+
+  override requestCompleted(error: Error | null | undefined, request: FastifyRequest, reply: FastifyReply): void {
+    const ms = reply.elapsedTime;
+    const level = error || reply.statusCode >= 500 ? 'error' : ms >= SLOW_REQUEST_MS ? 'warn' : 'debug';
+    // Skip building the line when the level is off (the logger is pino's, which knows `isLevelEnabled`).
+    if (!(request.log as FastifyBaseLogger & { isLevelEnabled(l: string): boolean }).isLevelEnabled(level)) return;
+    request.log[level]({ req: request, res: { statusCode: reply.statusCode }, responseTime: Math.round(ms * 10) / 10, ...(error ? { err: error } : {}) }, 'request completed');
+  }
+
+  override routeNotFound(request: FastifyRequest): void {
+    request.log.debug({ req: request }, 'route not found');
+  }
+}
 /** Every API error body starts like this, so error codes can be counted without parsing the JSON. */
 const ERROR_PREFIX = '{"ok":false,"error":{"code":"';
 
@@ -119,6 +142,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     loggerInstance: deps.logger,
     bodyLimit: BODY_LIMIT,
     trustProxy: config.trustProxy,
+    logController: new RequestLogs(),
   });
 
   const render = deps.render;

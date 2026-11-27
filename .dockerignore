@@ -1,0 +1,27 @@
+# Keep the build context small and free of secrets. Everything the image needs is rebuilt inside it.
+**/node_modules
+**/dist
+**/.cache
+**/coverage
+**/*.log
+.git
+.github
+.env
+.env.*
+!.env.example
+.claude
+.playwright-mcp
+.vitest
+.vscode
+.idea
+.DS_Store
+**/.DS_Store
+tools/bench/results
+tools/bots/reports
+docs
+deploy
+Dockerfile
+.dockerignore
+docker-compose*.yml
+.agent-key.json
+**/.agent-key.json

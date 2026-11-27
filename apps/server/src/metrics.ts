@@ -1,4 +1,4 @@
-import { monitorEventLoopDelay, type IntervalHistogram } from 'node:perf_hooks';
+import { constants, monitorEventLoopDelay, PerformanceObserver, type IntervalHistogram } from 'node:perf_hooks';
 
 /** Sampling period of the event loop delay histogram; samples include it, so it is subtracted to get the lag. */
 const LOOP_RESOLUTION_MS = 20;
@@ -48,6 +48,33 @@ export class Histogram {
   }
 }
 
+/** Buckets (seconds) for work done on the event loop: fine below the 30 ms `/act` target, coarse above it. */
+export const LOOP_WORK_BUCKETS = [0.0005, 0.001, 0.002, 0.003, 0.005, 0.0075, 0.01, 0.015, 0.02, 0.03, 0.05, 0.1, 0.25, 0.5, 1] as const;
+
+/** What the persistence loop reports (counters since boot; see `Persistence`). */
+export type PersistenceStats = {
+  snapshots: number;
+  snapshotFailures: number;
+  /** Epoch ms of the last snapshot stored (0 before the first). */
+  lastSnapshotAt: number;
+  /** Entities written by the last snapshot. */
+  lastSnapshotRows: number;
+  /** Main-thread time spent collecting and serializing dirty entities (blocks the game while it runs). */
+  serialize: Histogram;
+  /** Database time of a snapshot transaction (off the main thread). */
+  write: Histogram;
+  eventsWritten: number;
+  eventWriteFailures: number;
+  eventsDropped: number;
+};
+
+const GC_KINDS: Record<number, string> = {
+  [constants.NODE_PERFORMANCE_GC_MINOR]: 'minor',
+  [constants.NODE_PERFORMANCE_GC_MAJOR]: 'major',
+  [constants.NODE_PERFORMANCE_GC_INCREMENTAL]: 'incremental',
+  [constants.NODE_PERFORMANCE_GC_WEAKCB]: 'weakcb',
+};
+
 /** What the rest of the server reports at scrape time. */
 export type MetricsSources = {
   now(): number;
@@ -57,6 +84,7 @@ export type MetricsSources = {
   spectators(): number;
   wsWireBytes(): number;
   persistenceBuffered(): number;
+  persistence?(): PersistenceStats;
 };
 
 const esc = (v: string) => v.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
@@ -67,10 +95,20 @@ const esc = (v: string) => v.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace
  */
 export class Metrics {
   readonly actions = new RateMeter();
-  readonly actLatency = new Histogram([0.001, 0.0025, 0.005, 0.01, 0.02, 0.03, 0.05, 0.1, 0.25, 0.5, 1]);
+  readonly actLatency = new Histogram(LOOP_WORK_BUCKETS);
+  /** One game tick (timers due), on the event loop. */
+  readonly tickSeconds = new Histogram(LOOP_WORK_BUCKETS);
+  /** One spectator flush: building, serializing and handing every topic batch to its sockets. */
+  readonly wsFlushSeconds = new Histogram(LOOP_WORK_BUCKETS);
+  /** Garbage collection pauses by kind. */
+  readonly gc = new Map<string, Histogram>();
+  private gcObserver: PerformanceObserver | null = null;
+  private readonly startedAt = Date.now();
   readonly errors = new Map<string, number>();
   readonly batches = new RateMeter();
   wsPayloadBytes = 0;
+  /** Messages handed to spectator sockets (one per subscriber per batch, plus direct ones). */
+  wsMessages = 0;
   wsFulls = 0;
   wsBackpressure = 0;
   wsDropped = 0;
@@ -87,16 +125,29 @@ export class Metrics {
     this.errors.set(code, (this.errors.get(code) ?? 0) + 1);
   }
 
-  /** Starts sampling the event loop delay (main process only; tests leave it off). */
+  /** Starts sampling the event loop delay and GC pauses (main process only; tests leave it off). */
   start(): void {
     if (this.loop) return;
     this.loop = monitorEventLoopDelay({ resolution: LOOP_RESOLUTION_MS });
     this.loop.enable();
+    this.gcObserver = new PerformanceObserver((list) => {
+      for (const e of list.getEntries()) this.observeGc((e as { detail?: { kind?: number } }).detail?.kind, e.duration / 1000);
+    });
+    this.gcObserver.observe({ entryTypes: ['gc'] });
+  }
+
+  observeGc(kind: number | undefined, seconds: number): void {
+    const name = GC_KINDS[kind ?? -1] ?? 'other';
+    let h = this.gc.get(name);
+    if (!h) this.gc.set(name, (h = new Histogram(LOOP_WORK_BUCKETS)));
+    h.observe(seconds);
   }
 
   stop(): void {
     this.loop?.disable();
     this.loop = null;
+    this.gcObserver?.disconnect();
+    this.gcObserver = null;
   }
 
   render(): string {
@@ -125,17 +176,25 @@ export class Metrics {
     metric('ajwf_actions_per_second', 'gauge', 'POST /act requests per second, averaged over the last minute.');
     line('ajwf_actions_per_second', round(this.actions.perSecond(now)));
 
+    const histogram = (name: string, h: Histogram, labels: string[] = []) => {
+      const l = (extra?: string) => `{${[...labels, ...(extra ? [extra] : [])].join(',')}}`;
+      h.buckets.forEach((b, i) => line(`${name}_bucket`, h.counts[i]!, l(`le="${b}"`)));
+      line(`${name}_bucket`, h.count, l('le="+Inf"'));
+      line(`${name}_sum`, round(h.sum, 6), labels.length ? l() : '');
+      line(`${name}_count`, h.count, labels.length ? l() : '');
+    };
     metric('ajwf_act_latency_seconds', 'histogram', 'Server-side latency of POST /act.');
-    this.actLatency.buckets.forEach((b, i) => line('ajwf_act_latency_seconds_bucket', this.actLatency.counts[i]!, `{le="${b}"}`));
-    line('ajwf_act_latency_seconds_bucket', this.actLatency.count, '{le="+Inf"}');
-    line('ajwf_act_latency_seconds_sum', round(this.actLatency.sum, 6));
-    line('ajwf_act_latency_seconds_count', this.actLatency.count);
+    histogram('ajwf_act_latency_seconds', this.actLatency);
+    metric('ajwf_tick_seconds', 'histogram', 'Game tick (due timers) duration on the event loop.');
+    histogram('ajwf_tick_seconds', this.tickSeconds);
 
     metric('ajwf_errors_total', 'counter', 'Error responses by API error code.');
     for (const [code, n] of [...this.errors].sort()) line('ajwf_errors_total', n, `{code="${esc(code)}"}`);
 
     metric('ajwf_ws_payload_bytes_total', 'counter', 'Spectator message bytes handed to sockets (before compression).');
     line('ajwf_ws_payload_bytes_total', this.wsPayloadBytes);
+    metric('ajwf_ws_messages_total', 'counter', 'Messages handed to spectator sockets (each batch counts once per subscriber).');
+    line('ajwf_ws_messages_total', this.wsMessages);
     metric('ajwf_ws_batches_total', 'counter', 'Topic batches built and sent (one serialization each).');
     line('ajwf_ws_batches_total', this.batches.total);
     metric('ajwf_ws_batches_per_second', 'gauge', 'Topic batches per second, averaged over the last minute.');
@@ -148,6 +207,30 @@ export class Metrics {
     line('ajwf_ws_dropped_total', this.wsDropped);
     metric('ajwf_ws_rejected_total', 'counter', 'Spectator connections refused by the connection limits.');
     line('ajwf_ws_rejected_total', this.wsRejected);
+    metric('ajwf_ws_flush_seconds', 'histogram', 'Spectator batch flush (build, serialize once per topic, hand to sockets) on the event loop.');
+    histogram('ajwf_ws_flush_seconds', this.wsFlushSeconds);
+
+    const p = src?.persistence?.();
+    if (p) {
+      metric('ajwf_snapshots_total', 'counter', 'Snapshots of dirty entities stored.');
+      line('ajwf_snapshots_total', p.snapshots);
+      metric('ajwf_snapshot_failures_total', 'counter', 'Snapshot transactions that failed (retried at the next interval).');
+      line('ajwf_snapshot_failures_total', p.snapshotFailures);
+      metric('ajwf_snapshot_last_success_timestamp_seconds', 'gauge', 'When the last snapshot was stored (0: none since boot).');
+      line('ajwf_snapshot_last_success_timestamp_seconds', round(p.lastSnapshotAt / 1000, 3));
+      metric('ajwf_snapshot_last_rows', 'gauge', 'Entities written by the last snapshot.');
+      line('ajwf_snapshot_last_rows', p.lastSnapshotRows);
+      metric('ajwf_snapshot_serialize_seconds', 'histogram', 'Main-thread time to collect and serialize dirty entities.');
+      histogram('ajwf_snapshot_serialize_seconds', p.serialize);
+      metric('ajwf_snapshot_write_seconds', 'histogram', 'Database time of a snapshot transaction.');
+      histogram('ajwf_snapshot_write_seconds', p.write);
+      metric('ajwf_events_written_total', 'counter', 'Game events appended to the store.');
+      line('ajwf_events_written_total', p.eventsWritten);
+      metric('ajwf_event_write_failures_total', 'counter', 'Event batches that failed to be written (kept in memory and retried).');
+      line('ajwf_event_write_failures_total', p.eventWriteFailures);
+      metric('ajwf_events_dropped_total', 'counter', 'Events dropped because the in-memory buffer was full (store unreachable for too long).');
+      line('ajwf_events_dropped_total', p.eventsDropped);
+    }
 
     metric('ajwf_event_loop_lag_seconds', 'gauge', 'Event loop delay since the last scrape (mean, p99, max).');
     const h = this.loop;
@@ -156,6 +239,11 @@ export class Metrics {
     line('ajwf_event_loop_lag_seconds', ns(h?.percentile(99) ?? 0), '{stat="p99"}');
     line('ajwf_event_loop_lag_seconds', ns(h?.max ?? 0), '{stat="max"}');
     h?.reset();
+
+    if (this.gc.size) {
+      metric('nodejs_gc_pause_seconds', 'histogram', 'Garbage collection pauses by kind.');
+      for (const [kind, h] of [...this.gc].sort((x, y) => x[0].localeCompare(y[0]))) histogram('nodejs_gc_pause_seconds', h, [`kind="${kind}"`]);
+    }
 
     const mem = process.memoryUsage();
     metric('process_resident_memory_bytes', 'gauge', 'Resident set size.');
@@ -169,6 +257,12 @@ export class Metrics {
     const cpu = process.cpuUsage();
     metric('process_cpu_seconds_total', 'counter', 'User and system CPU time.');
     line('process_cpu_seconds_total', round((cpu.user + cpu.system) / 1e6, 3));
+    metric('process_cpu_user_seconds_total', 'counter', 'User CPU time (JavaScript, zlib, JSON).');
+    line('process_cpu_user_seconds_total', round(cpu.user / 1e6, 3));
+    metric('process_cpu_system_seconds_total', 'counter', 'System CPU time (socket writes and the kernel network stack).');
+    line('process_cpu_system_seconds_total', round(cpu.system / 1e6, 3));
+    metric('process_start_time_seconds', 'gauge', 'When the process started (Unix time).');
+    line('process_start_time_seconds', round(this.startedAt / 1000, 3));
     return out.join('\n') + '\n';
   }
 }

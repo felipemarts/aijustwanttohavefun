@@ -176,6 +176,9 @@ export class Broadcaster implements EventConsumer {
   private lastPing = -Infinity;
   private lastHousekeeping = -Infinity;
   private timer: NodeJS.Timeout | null = null;
+  /** Serialized batches waiting to be handed to their subscribers, oldest first (see `pump`). */
+  private outbox: { buf: Buffer; subs: SpectatorConn[]; next: number; now: number }[] = [];
+  private pumpScheduled = false;
 
   constructor(o: BroadcasterOptions) {
     this.o = o;
@@ -339,11 +342,45 @@ export class Broadcaster implements EventConsumer {
       t.gone.clear();
       t.lastSent = now;
       this.o.metrics.batches.add(now);
-      for (const c of t.subs) this.deliver(c, buf, now);
+      this.outbox.push({ buf, subs: [...t.subs], next: 0, now });
     }
     this.flushedSeq = this.lastSeq;
     this.fullCache.clear();
-    this.resumeStalled(now);
+    this.pump();
+  }
+
+  /**
+   * Hands queued batches to their subscribers, at most `SPECTATE.sendsPerTurn` sockets per event-loop turn: with
+   * tens of thousands of spectators one flush means tens of thousands of socket writes, and agents' requests must
+   * not wait behind all of them. Each socket still gets its batches in order (one FIFO queue). Slow sockets are
+   * resumed only once the queue is empty, so a fresh full state never overtakes an older batch.
+   */
+  private pump(): void {
+    let budget: number = SPECTATE.sendsPerTurn;
+    while (this.outbox.length && budget > 0) {
+      const job = this.outbox[0]!;
+      const end = Math.min(job.subs.length, job.next + budget);
+      for (let i = job.next; i < end; i++) this.deliver(job.subs[i]!, job.buf, job.now);
+      budget -= end - job.next;
+      job.next = end;
+      if (job.next >= job.subs.length) this.outbox.shift();
+    }
+    if (this.outbox.length) {
+      if (!this.pumpScheduled) {
+        this.pumpScheduled = true;
+        setImmediate(() => {
+          this.pumpScheduled = false;
+          this.pump();
+        });
+      }
+      return;
+    }
+    this.resumeStalled(this.now());
+  }
+
+  /** Batches still being handed out (0 unless a flush had more sends than one turn allows). */
+  get pendingSends(): number {
+    return this.outbox.reduce((n, j) => n + j.subs.length - j.next, 0);
   }
 
   private collectPositions(now: number): void {
@@ -399,6 +436,7 @@ export class Broadcaster implements EventConsumer {
     }
     c.socket.send(buf);
     this.o.metrics.wsPayloadBytes += buf.length;
+    this.o.metrics.wsMessages++;
   }
 
   private resumeStalled(now: number): void {
@@ -538,6 +576,7 @@ export class Broadcaster implements EventConsumer {
     const buf = this.frame(msg);
     c.socket.send(buf);
     this.o.metrics.wsPayloadBytes += buf.length;
+    this.o.metrics.wsMessages++;
   }
 
   private sendError(c: SpectatorConn, code: SpectatorErrorCode, params?: MsgParams, topic?: string): void {
@@ -672,8 +711,10 @@ export class Broadcaster implements EventConsumer {
   }
 
   tick(): void {
+    const t0 = performance.now();
     try {
       this.flush();
+      this.o.metrics.wsFlushSeconds.observe((performance.now() - t0) / 1000);
       const now = this.now();
       if (now - this.lastHousekeeping >= 1000) this.housekeeping(now);
     } catch (err) {
@@ -689,6 +730,7 @@ export class Broadcaster implements EventConsumer {
   stop(): void {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
+    this.outbox = [];
     for (const c of [...this.conns]) {
       c.socket.close(CLOSE.goingAway, 'server shutting down');
       this.detach(c);

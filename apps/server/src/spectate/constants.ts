@@ -39,6 +39,8 @@ export const SPECTATE = {
   msgWindowMs: 10_000,
   maxTopics: MAX_TOPICS_PER_CONNECTION,
   maxMessageBytes: MAX_CLIENT_MESSAGE_BYTES,
+  /** Socket writes per event-loop turn when handing out batches; the rest waits for the next turn. */
+  sendsPerTurn: 2000,
   /** permessage-deflate only for frames at least this large: tiny frames cost more to compress than they save. */
   deflateThresholdBytes: 1024,
 } as const;

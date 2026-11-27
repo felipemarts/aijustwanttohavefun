@@ -1,0 +1,61 @@
+# Fly.io example (docs/DEPLOY.md, "Fly.io"). One region, ONE machine: the whole game state lives in one process by
+# design (PLANEJAMENTO §3.4), so never scale this app past one machine and never deploy blue/green (two servers
+# writing the same database would fork the world).
+#
+#   fly launch --no-deploy --copy-config --config deploy/fly.toml   (then edit `app` and PUBLIC_URL)
+#   fly secrets set SESSION_SECRET=... ADMIN_TOKEN=... DATABASE_URL=... OAUTH_GITHUB_ID=... (see docs/DEPLOY.md)
+#   fly deploy --config deploy/fly.toml
+#   fly scale count 1
+
+app = 'ajwf'
+primary_region = 'gru'
+# SIGTERM runs the graceful shutdown (final snapshot); give it time before Fly sends SIGKILL.
+kill_signal = 'SIGTERM'
+kill_timeout = '60s'
+
+# Run fly commands from the repository root (the build context), e.g. `fly deploy --config deploy/fly.toml`.
+[build]
+  dockerfile = 'Dockerfile'
+
+[deploy]
+  # Replace the single machine in place (stop, then start). Never 'bluegreen' or 'canary': both run two servers.
+  strategy = 'immediate'
+
+[env]
+  NODE_ENV = 'production'
+  PORT = '8710'
+  PUBLIC_URL = 'https://ajwf.fly.dev'
+  # Every request arrives through Fly's proxy, which sets X-Forwarded-For.
+  TRUST_PROXY = 'true'
+  LOG_LEVEL = 'info'
+  WS_MAX_CONNECTIONS = '20000'
+  WS_MAX_PER_IP = '20'
+
+[http_service]
+  internal_port = 8710
+  force_https = true
+  # Always on: agents play while nobody watches.
+  auto_stop_machines = 'off'
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    # Spectators hold one WebSocket each.
+    type = 'connections'
+    soft_limit = 20000
+    hard_limit = 22000
+
+  [[http_service.checks]]
+    grace_period = '60s'
+    interval = '15s'
+    timeout = '3s'
+    method = 'GET'
+    path = '/healthz'
+
+# No volume: the game state is in Postgres, and the sprite/share-card cache (CACHE_DIR, /tmp by default) is rebuilt
+# on demand after a restart.
+
+[[vm]]
+  # 2 GB is the process target; the rest is headroom for the OS, socket buffers and zlib.
+  size = 'performance-2x'
+  memory = '4gb'

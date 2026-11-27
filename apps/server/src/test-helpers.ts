@@ -33,6 +33,8 @@ export async function makeServer<S extends Store = MemoryStore>(
     store?: S;
     catalogs?: Catalogs;
     logStream?: DestinationStream;
+    /** Level of the logs written to `logStream` (default info). */
+    logLevel?: string;
     docsDir?: string;
     devLogin?: boolean;
     wsMaxConnections?: number;
@@ -56,6 +58,7 @@ export async function makeServer<S extends Store = MemoryStore>(
     vapid: null,
     extraOrigins: [],
     webDist: null,
+    cacheDir: join(tmpdir(), 'ajwf-cache-unused'),
     trustProxy: false,
     logLevel: 'silent',
     worldSeed: 42,
@@ -65,7 +68,7 @@ export async function makeServer<S extends Store = MemoryStore>(
   };
   // Without an explicit store, S is its default (MemoryStore), so tests can inspect what was written.
   const store = o.store ?? (new MemoryStore() as Store as S);
-  const logger = createLogger(o.logStream ? 'info' : 'silent', o.logStream);
+  const logger = createLogger(o.logStream ? (o.logLevel ?? 'info') : 'silent', o.logStream);
   const server = await boot({
     config,
     store,

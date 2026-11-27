@@ -4,8 +4,26 @@
   "private": true,
   "type": "module",
   "license": "AGPL-3.0-only",
-  "exports": { ".": "./src/main.ts" },
-  "scripts": { "typecheck": "tsc -p tsconfig.json", "bench": "tsx src/main.ts" },
-  "devDependencies": { "@types/ws": "^8.18.2" },
-  "dependencies": { "@ajwf/content": "workspace:*", "@ajwf/engine": "workspace:*", "@ajwf/shared": "workspace:*", "@ajwf/bots": "workspace:*", "ws": "^8.23.0" }
+  "exports": {
+    ".": "./src/main.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "bench": "tsx src/main.ts"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1",
+    "@types/ws": "^8.18.2"
+  },
+  "dependencies": {
+    "@ajwf/appearance": "workspace:*",
+    "@ajwf/bots": "workspace:*",
+    "@ajwf/content": "workspace:*",
+    "@ajwf/engine": "workspace:*",
+    "@ajwf/sdk": "workspace:*",
+    "@ajwf/server": "workspace:*",
+    "@ajwf/shared": "workspace:*",
+    "pg": "^8.23.1",
+    "ws": "^8.23.0"
+  }
 }
