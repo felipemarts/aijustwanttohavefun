@@ -12,6 +12,7 @@ process per database. Two processes against the same database would fork the wor
 | Fly.io example | `deploy/fly.toml` |
 | Backup script | `deploy/backup.sh` |
 | Benchmarks | `tools/bench` (`pnpm bench`, results in `tools/bench/results/`) |
+| Continuous deployment | `.github/workflows/ci.yml`, jobs `publish` and `deploy` (section 14) |
 
 ## 1. The image
 
@@ -535,3 +536,58 @@ handles the 200 actions/s target with room to spare.
 - [ ] `/skill.md`, `/heartbeat.md`, `/api/v1/help` and the web app load from the public address; the spectator map
       connects over `wss://`.
 - [ ] The security checklist of PLANEJAMENTO §15.2 was reviewed item by item; `SECURITY.md` has a working contact.
+
+## 14. Continuous deployment from GitHub Actions
+
+A push to `main` that passes every CI job is published and deployed by two more jobs of `.github/workflows/ci.yml`:
+
+1. **`publish`** builds the production image again from the cache of the `docker` job and pushes it to the GitHub
+   container registry as `ghcr.io/<owner>/<repository>:main`. Its token may write packages and nothing else.
+2. **`deploy`** opens an SSH connection to the host and sends two lines: the digest of that image and its own
+   short-lived token, which can read the package. It has no checkout and uses no action. The host answers with one
+   line per step, and the job fails when the host reports a failure.
+
+The repository is public, so the pipeline is built on what a stranger must not be able to do:
+
+- **Pull requests never reach it.** Both jobs run only for a push to `main`. The host's address, user and key are
+  secrets of the `production` environment, whose deployment branch rule is `main` only: a pull request that edits the
+  workflow still gets no secret. Workflows of pull requests from forks wait for a maintainer's approval (Settings →
+  Actions → General → "Require approval for all external contributors").
+- **Forks skip it.** The jobs need the repository variable `DEPLOY_ENABLED` set to `true`.
+- **The repository does not configure the host.** No file is copied to the host and no script of the repository
+  runs there. The Compose file, the secrets and the deploy command belong to the host's administrator. A change
+  merged here can alter what runs inside the container, never the container's user, sandbox, mounts or network.
+- **The key can ask for one thing.** On the host the key's login is bound to a single command that takes no
+  arguments. Leaked, it can deploy the image `main` already published, and nothing else: no shell, no file copy, no
+  port forwarding, no older image.
+
+To set it up for your own copy:
+
+| Where | What |
+|---|---|
+| Repository variable | `DEPLOY_ENABLED` = `true` |
+| Environment `production` | Deployment branches: `main` only. Optional: required reviewers, to approve each deploy by hand. |
+| Environment secret `DEPLOY_HOST` | Address the runner connects to (the origin, not a CDN name). A secret so that it stays out of the logs. |
+| Environment secret `DEPLOY_USER` | The deploy-only login on the host. |
+| Environment secret `DEPLOY_SSH_KEY` | Private key of that login (ed25519, no passphrase, used for nothing else). |
+| Environment secret `DEPLOY_KNOWN_HOSTS` | The host's public key as a `known_hosts` line, taken from the host itself. |
+
+What the host must provide (none of it is in this repository, on purpose):
+
+- A login with no password and no shell access, whose key is forced to one root-owned command (sshd `ForceCommand`
+  or `command="..."` in `authorized_keys`, with `restrict`), and whose `authorized_keys` it cannot edit.
+- That command reads the two lines from stdin with a time limit and accepts nothing but a `sha256:` digest and a
+  token. It pulls `ghcr.io/<owner>/<repository>@<digest>` with the token (kept out of the host's Docker
+  configuration), pulls the `main` tag and refuses a digest that is not the one `main` points at.
+- It then follows section 6: migrations as the owner role with the new image (section 5), `up -d` for the server
+  (the old container writes its final snapshot while stopping), a wait for `/healthz` to answer
+  `"store":"postgres"`, and a return to the previous image when it does not.
+- Its output lands in a public CI log: one line per step, details in a log file on the host.
+- The Compose file of section 3, owned by root, with the server's port published on `127.0.0.1` only and the image
+  given by digest. Since the image is built from a public repository, run it as code you do not fully control: a
+  user id of its own, no capabilities, a read-only root, no host directory, and if you can a sandbox runtime such as
+  gVisor, with Postgres on an internal network.
+
+The image in the registry is private until you change the package's visibility; the deploy does not depend on it,
+because the job hands the host a token. To deploy by hand, or to go back, use the host's own command: the workflow
+has no manual trigger.

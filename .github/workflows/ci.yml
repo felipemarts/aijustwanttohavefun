@@ -127,3 +127,80 @@ jobs:
           echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/gitleaks.tgz" | sha256sum -c -
           tar -xzf "$RUNNER_TEMP/gitleaks.tgz" -C "$RUNNER_TEMP" gitleaks
           "$RUNNER_TEMP/gitleaks" git --redact --verbose --exit-code 1 .
+
+  # ── Deployment: pushes to main only, after every job above ───────────────────────────────────────────────────────
+  # This repository is public, so (docs/DEPLOY.md section 14):
+  # - both jobs run only where the DEPLOY_ENABLED variable is "true": a fork skips them;
+  # - the host's address and key are secrets of the `production` environment, which accepts runs from main only: a
+  #   pull request, even one that edits this file, never sees them;
+  # - nothing from the repository is copied to the host or run on it. The key can ask for one thing: "run the image
+  #   that main just published". How that image runs (user, sandbox, network, secrets) is the host's own file.
+
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    needs: [check, docker, secrets]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Log in to the GitHub container registry
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+      - name: Build and push the production image
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: true
+          # One moving tag: the host runs the image by digest and checks that it is what this tag points at.
+          tags: ghcr.io/${{ github.repository }}:main
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          # Written by the `docker` job of this same run.
+          cache-from: type=gha
+
+  deploy:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://aijustwanttohavefun.com
+    permissions:
+      packages: read
+    steps:
+      # No checkout and no action: the job that holds the key runs these lines and nothing else.
+      - name: Ask the host to run the published image
+        env:
+          DIGEST: ${{ needs.publish.outputs.digest }}
+          # Lives as long as this job: the host pulls the image with it.
+          REGISTRY_TOKEN: ${{ github.token }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -eu
+          case "$DIGEST" in sha256:*) ;; *) echo "the publish job gave no image digest" >&2; exit 1 ;; esac
+          umask 077
+          dir="$RUNNER_TEMP/deploy"
+          mkdir -p "$dir"
+          trap 'rm -rf "$dir"' EXIT
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$dir/key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$dir/known_hosts"
+          # The host ignores any command: it reads these two lines, and answers with one line per step.
+          printf '%s\n%s\n' "$DIGEST" "$REGISTRY_TOKEN" | ssh -T -i "$dir/key" \
+            -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$dir/known_hosts" -o LogLevel=ERROR \
+            -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 \
+            "$DEPLOY_USER@$DEPLOY_HOST"
