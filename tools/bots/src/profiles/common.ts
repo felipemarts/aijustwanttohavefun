@@ -177,10 +177,10 @@ export function smallTalk(v: AgentView, x: DecideCtx, force = false): BotStep | 
 // ── Survival and combat ──────────────────────────────────────────────────────
 
 /** The monster kinds a bot of this level hunts. Elites and group bosses only with a party around. */
-export function preyFor(c: Content, level: number, grouped: boolean, below = 3, above = 0): Set<string> {
+export function preyFor(c: Content, level: number, grouped: boolean, below = 3, above = 0, inDungeon = false): Set<string> {
   const outside = openWorldKinds(c);
   const fits = (m: Content['monsters'] extends Map<string, infer M> ? M : never) =>
-    !m.boss && m.min_group <= 1 && !(m.solo_crush >= 2 && !grouped) && !(m.elite && !grouped) && outside.has(m.id);
+    !m.boss && m.min_group <= 1 && !(m.solo_crush >= 2 && !grouped) && !(m.elite && !grouped) && (inDungeon || outside.has(m.id));
   const out = new Set<string>();
   for (const m of c.monsters.values()) if (fits(m) && m.level <= level + above && m.level >= level - below) out.add(m.id);
   if (out.size) return out;

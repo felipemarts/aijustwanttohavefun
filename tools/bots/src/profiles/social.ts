@@ -244,7 +244,8 @@ function partyPlay(v: AgentView, x: DecideCtx): BotStep | null {
     x.mem.ext.campSaidAt = v.now;
     return cmd('party_say', { text: `camp ${camp}` });
   }
-  const prey = preyFor(x.c, lvl, true, 4, 2);
+  // In the dungeon its own monsters are the prey; elsewhere only what lives in the open world.
+  const prey = preyFor(x.c, lvl, true, 4, 2, v.obs.room.flags.includes('dungeon'));
   const strike = strikeHere(v, x, prey, v.cls === 'cleric');
   if (strike) return strike;
   return smallTalk(v, x) ?? shareLoot(v, x) ?? { wait: BOT.shortWait };
