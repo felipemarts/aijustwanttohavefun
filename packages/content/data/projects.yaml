@@ -3,45 +3,45 @@
 - id: bridge
   site: village.river_bank
   building: bridge
-  cost: { gold: 500, items: [{ item: wood, qty: 60 }, { item: stone, qty: 40 }, { item: iron_ingot, qty: 10 }] }
+  cost: { gold: 6000, items: [{ item: wood, qty: 720 }, { item: stone, qty: 480 }, { item: iron_ingot, qty: 120 }] }
   unlocks: [mines_shortcut]
 - id: watchtower
   site: village.plot_ne
   building: watchtower
-  cost: { gold: 800, items: [{ item: wood, qty: 80 }, { item: stone, qty: 80 }] }
+  cost: { gold: 9600, items: [{ item: wood, qty: 960 }, { item: stone, qty: 960 }] }
   unlocks: [world_boss_warning]
 - id: inn_expansion
   site: village.tavern
   building: inn
-  cost: { gold: 600, items: [{ item: wood, qty: 60 }, { item: linen, qty: 20 }, { item: pot, qty: 4 }] }
+  cost: { gold: 7200, items: [{ item: wood, qty: 720 }, { item: linen, qty: 240 }, { item: pot, qty: 48 }] }
   unlocks: [tavern_camaraderie]
 - id: library
   site: village.plot_nw
   building: library
   requires: [watchtower]
-  cost: { gold: 1500, items: [{ item: wood, qty: 100 }, { item: stone, qty: 60 }, { item: crystal, qty: 10 }, { item: ancient_relic, qty: 4 }] }
+  cost: { gold: 30000, items: [{ item: wood, qty: 2000 }, { item: stone, qty: 1200 }, { item: crystal, qty: 200 }, { item: ancient_relic, qty: 80 }] }
   unlocks: [mage_library]
 - id: covered_market
   site: village.market
   building: covered_market
   requires: [inn_expansion]
-  cost: { gold: 1500, items: [{ item: wood, qty: 120 }, { item: linen, qty: 40 }, { item: buckle, qty: 20 }] }
+  cost: { gold: 30000, items: [{ item: wood, qty: 2400 }, { item: linen, qty: 800 }, { item: buckle, qty: 400 }] }
   unlocks: [market_slots]
 - id: arena
   site: village.plot_sw
   building: arena
   requires: [bridge]
-  cost: { gold: 2000, items: [{ item: stone, qty: 150 }, { item: iron_ingot, qty: 30 }, { item: wood, qty: 60 }] }
+  cost: { gold: 40000, items: [{ item: stone, qty: 3000 }, { item: iron_ingot, qty: 600 }, { item: wood, qty: 1200 }] }
   unlocks: [arena_duels]
 - id: wall
   site: village.south_gate
   building: wall
   requires: [arena, watchtower]
-  cost: { gold: 4000, items: [{ item: stone, qty: 300 }, { item: iron_ingot, qty: 50 }] }
+  cost: { gold: 120000, items: [{ item: stone, qty: 9000 }, { item: iron_ingot, qty: 1500 }] }
   unlocks: [sieges]
 - id: statue
   site: village.square
   building: statue
   requires: [bridge, watchtower, inn_expansion]
-  cost: { gold: 3000, items: [{ item: stone, qty: 100 }, { item: silver_ore, qty: 20 }, { item: crystal, qty: 10 }] }
+  cost: { gold: 60000, items: [{ item: stone, qty: 2000 }, { item: silver_ore, qty: 400 }, { item: crystal, qty: 200 }] }
   unlocks: [statue_honor]

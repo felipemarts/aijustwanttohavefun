@@ -8,7 +8,7 @@ import { deactivateAgent } from './register';
 import { newRun } from './run';
 import { HOUR, makeKit, SEC, worldWealth, type Kit } from './testkit';
 import { tick } from './tick';
-import type { AgentState, ApplyResult } from './types';
+import type { AgentState, ApplyResult, WorldState } from './types';
 import { missingFor, projectStatus } from './village';
 
 /**
@@ -58,7 +58,7 @@ function command(k: Kit, rng: Rng, a: AgentState): Cmd {
     const st = s.village.projects[proj.id];
     const items: Record<string, number> = {};
     for (const x of proj.cost.items) if (rng.chance(0.5)) items[x.item] = rng.int(1, Math.max(1, x.qty - (st?.items[x.item] ?? 0) + 3));
-    return { action: 'contribute', params: { project: proj.id, ...(rng.chance(0.5) ? { gold: rng.int(1, 400) } : {}), ...(Object.keys(items).length ? { items } : {}) } };
+    return { action: 'contribute', params: { project: proj.id, ...(rng.chance(0.5) ? { gold: rng.int(1, 400) * costScale(s) } : {}), ...(Object.keys(items).length ? { items } : {}) } };
   }
   return command2(k, rng, a, rng.chance(0.3) && civic.length ? pick(civic) : pick(ACTIONS), goods);
 }
@@ -147,6 +147,11 @@ function clean(items: Record<string, number>): Record<string, number> {
   return Object.fromEntries(Object.entries(items).filter(([, n]) => n !== 0));
 }
 
+/** How many times the bridge costs more than the 500 gold this test was written for. */
+function costScale(s: WorldState): number {
+  return Math.max(1, Math.round(s.content.projects.get('bridge')!.cost.gold / 500));
+}
+
 describe('civic fuzz', () => {
   it('6,000 civic actions over several elections keep every invariant and conserve gold and items', () => {
     const k = makeKit(808);
@@ -155,8 +160,9 @@ describe('civic fuzz', () => {
     for (let i = 0; i < 20; i++) {
       const level = i % 10 === 9 ? 2 : i % 4 === 0 ? 3 : 5 + (i % 4);
       const a = k.add(`Civ${i}`, CLASSES[i % 4]!, { claimed: i % 10 !== 7, room: ROOMS[i % ROOMS.length], level: i % 10 === 7 ? 3 : level });
-      a.gold = rng.int(500, 3000);
-      for (const m of MATERIALS) a.inv[m] = rng.int(5, 60);
+      // Wealth in proportion to what projects cost (a tuning number of the content), so some of them get built.
+      a.gold = rng.int(500, 3000) * costScale(k.s);
+      for (const m of MATERIALS) a.inv[m] = rng.int(5, 60) * costScale(k.s);
       agents.push(a);
     }
     // Three guilds start out, half-way to affording a hall.

@@ -259,17 +259,18 @@ describe('mayor powers', () => {
 
   it('mayor_fund: treasury gold only, trimmed to the gold still missing', () => {
     const { k, m } = withMayor();
-    k.s.village.treasury = 600;
-    refuse(k, m, 'mayor_fund', { project: 'bridge', gold: 601 }, 'treasury_lacks');
+    const cost = k.c.projects.get('bridge')!.cost.gold;
+    k.s.village.treasury = cost + 100;
+    refuse(k, m, 'mayor_fund', { project: 'bridge', gold: cost + 101 }, 'treasury_lacks');
     refuse(k, m, 'mayor_fund', { project: 'library', gold: 10 }, 'project_locked');
     const before = worldWealth(k.s).gold;
     const mine = m.gold;
-    const r = k.ok(m, 'mayor_fund', { project: 'bridge', gold: 600 });
-    expect(r.events.find((e) => e.type === 'mayor_fund')).toMatchObject({ visibility: 'public', payload: { project: 'bridge', gold: 500, treasury: 100 } });
+    const r = k.ok(m, 'mayor_fund', { project: 'bridge', gold: cost + 100 });
+    expect(r.events.find((e) => e.type === 'mayor_fund')).toMatchObject({ visibility: 'public', payload: { project: 'bridge', gold: cost, treasury: 100 } });
     expect(k.s.village.treasury).toBe(100);
     expect(m.gold).toBe(mine);
-    expect(worldWealth(k.s).gold).toBe(before - 500);
-    expect(k.s.village.projects.bridge).toMatchObject({ gold: 500, by: { '@village': 500 } });
+    expect(worldWealth(k.s).gold).toBe(before - cost);
+    expect(k.s.village.projects.bridge).toMatchObject({ gold: cost, by: { '@village': cost } });
     refuse(k, m, 'mayor_fund', { project: 'bridge', gold: 50 }, 'project_no_gold_needed');
     expect(checkInvariants(k.s, k.now)).toEqual([]);
   });
