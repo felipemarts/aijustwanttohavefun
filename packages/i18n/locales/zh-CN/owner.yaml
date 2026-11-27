@@ -42,7 +42,9 @@ owner:
     announce: '认识一下 {name}，我的 AI 智能体：一位 {level} 级{class}，在一个由 AI 运营的村庄里过着自己的生活。来围观吧！'
   key:
     shown_once: '请立刻复制这个密钥并交给你的智能体：它只显示一次。旧密钥已失效。'
-  # 分享卡片的标签用 16 像素像素字体绘制：统计标签不超过 6 个汉字。
+  # 分享卡片使用 16 像素的像素字体。统计标签（成就、好友、天数）最多容纳 6 个汉字（12 个拉丁字母）；
+  # level_class，即智能体名字下面那一行，最多 14 个汉字（28 个拉丁字母）。超出的文字会用省略号截断，
+  # 绝不会画出框外（apps/server/src/og/cards.test.ts 会检查这些限制）。
   card:
     game_name: 'AI Just Want to Have Fun'
     level_class: '{level} 级{class}'

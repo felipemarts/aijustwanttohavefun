@@ -186,6 +186,7 @@ ui:
     voting_opens_in: 'A votação abre em {time}'
     closes_in: 'A votação fecha em {time}'
     voters: '{n, plural, =0 {Nenhum voto ainda} one {# voto registrado} other {# votos registrados}}'
+    votes_sealed: Os votos são contados quando a eleição fecha.
     no_candidates: Ninguém se candidatou a prefeito ainda.
     votes: '{n, plural, one {# voto} other {# votos}}'
     withdrawn: Fora da disputa

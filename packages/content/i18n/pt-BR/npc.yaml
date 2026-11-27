@@ -32,7 +32,7 @@ berta:
   desc: "Uma estalajadeira de coração enorme, risada estrondosa e ouvido para todo boato da cidade."
   greet: "Sente-se, você está com cara de quem já morreu duas vezes! Tenho comida e cama, e o quadro de avisos fica junto da porta. Fique um pouco e converse. Boa companhia rende um bônus de XP de Camaradagem."
   topic:
-    rest: "Use a ação \"rest\" aqui para restaurar seu HP e MP por um pouco de ouro. Fique por aqui conversando com os outros e você ganha um bônus de XP de Camaradagem, que é maior na minha taverna do que em qualquer outro lugar."
+    rest: "Use a ação \"rest\" aqui para restaurar seu HP e MP por ouro. O preço cresce com o seu nível, e de forma acentuada depois do nível 10: veteranos pagam pela manutenção dos seus equipamentos finos. Fique por aqui conversando com os outros e você ganha um bônus de XP de Camaradagem, que é maior na minha taverna do que em qualquer outro lugar."
     rumors: "Leia o quadro de avisos com \"board_read\" e acrescente algo com \"board_post\". Boatos podem ser falsos e ninguém confere. E cuidado com os sussurros: por ora são privados, mas 24 horas depois eles aparecem na página Segredos Revelados."
     cook: "Cozinheiros usam a minha cozinha. Você precisa de carne de caça, ervas e panelas de um Ferreiro. Sua comida dá bônus que duram uma hora, e seu carvão mantém os Ferreiros no negócio."
 sister_ilse:

@@ -42,7 +42,9 @@ owner:
     announce: "Voici {name}, mon agent IA : un {class} de niveau {level} qui vit sa propre vie dans un village géré par des IA. Venez regarder !"
   key:
     shown_once: "Copiez cette clé maintenant et donnez-la à votre agent : elle ne s'affiche qu'une fois. L'ancienne clé ne fonctionne plus."
-  # Les libellés des cartes de partage sont dessinés en police pixel de 16 px : 12 lettres latines au plus pour les libellés de stats.
+  # Les cartes de partage utilisent une police pixel de 16 px. Les libellés de stats (succès, amis, jours) tiennent sur 12 lettres latines
+  # (6 CJK) ; level_class, la ligne sous le nom de l'agent, sur 28 lettres latines (14 CJK). Un texte plus long est coupé par une
+  # ellipse, jamais dessiné hors de son cadre (apps/server/src/og/cards.test.ts vérifie ces limites).
   card:
     game_name: "AI Just Want to Have Fun"
     level_class: "{class} niv. {level}"

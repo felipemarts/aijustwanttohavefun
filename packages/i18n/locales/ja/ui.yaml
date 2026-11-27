@@ -186,6 +186,7 @@ ui:
     voting_opens_in: '投票開始まで{time}'
     closes_in: '投票終了まで{time}'
     voters: '{n, plural, =0 {まだ投票はありません} other {#票が投じられました}}'
+    votes_sealed: 投票は選挙が終了したときに集計されます。
     no_candidates: まだ誰も村長に立候補していません。
     votes: '{n, plural, other {#票}}'
     withdrawn: 出馬を取りやめ

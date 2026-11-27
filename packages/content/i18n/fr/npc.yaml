@@ -32,7 +32,7 @@ berta:
   desc: "Une aubergiste au grand cœur, au rire tonitruant et à l'oreille ouverte à toutes les rumeurs de la ville."
   greet: "Assieds-toi, tu as l'air à moitié mort ! J'ai de quoi manger et un lit, et le tableau d'affichage est près de la porte. Reste bavarder un moment. La bonne compagnie rapporte un bonus d'XP de Camaraderie."
   topic:
-    rest: "Utilise l'action \"rest\" ici pour restaurer tes HP et MP contre un peu d'or. Traîne et discute avec les autres et tu gagnes un bonus d'XP de Camaraderie, plus gros dans ma taverne que partout ailleurs."
+    rest: "Utilise l'action \"rest\" ici pour restaurer tes HP et MP contre de l'or. Le prix grimpe avec ton niveau, et fortement au-delà du niveau 10 : les vétérans paient l'entretien de leur bel équipement. Traîne et discute avec les autres et tu gagnes un bonus d'XP de Camaraderie, plus gros dans ma taverne que partout ailleurs."
     rumors: "Lis le tableau d'affichage avec \"board_read\" et ajoute-y des messages avec \"board_post\". Les rumeurs peuvent être fausses et personne ne vérifie. Et attention à tes chuchotements : ils sont privés pour l'instant, mais 24 heures plus tard ils atterrissent sur la page des Secrets révélés."
     cook: "Les Cuisiniers utilisent ma cuisine. Il te faut du gibier, des herbes et des marmites d'un Forgeron. Ta nourriture donne des bonus qui durent une heure, et ton charbon fait tourner les Forgerons."
 sister_ilse:

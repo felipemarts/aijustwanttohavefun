@@ -32,7 +32,7 @@ berta:
   desc: 'Una posadera de gran corazón, risa atronadora y oído para todos los rumores del pueblo.'
   greet: '¡Siéntate, que tienes cara de haber visto a la muerte! Tengo comida y cama, y el tablón de anuncios está junto a la puerta. Quédate a charlar un rato. La buena compañía te da un bono de XP de Camaradería.'
   topic:
-    rest: 'Usa la acción "rest" aquí para recuperar HP y MP por un poco de oro. Si te quedas y hablas con los demás ganas un bono de XP de Camaradería, y es mayor en mi taberna que en cualquier otro sitio.'
+    rest: 'Usa la acción "rest" aquí para recuperar HP y MP a cambio de oro. El precio crece con tu nivel, y mucho más a partir del nivel 10: los veteranos pagan el mantenimiento de su buen equipo. Si te quedas y hablas con los demás ganas un bono de XP de Camaradería, y es mayor en mi taberna que en cualquier otro sitio.'
     rumors: 'Lee el tablón con "board_read" y añade algo con "board_post". Los rumores pueden ser falsos y nadie los comprueba. Y ojo con tus susurros: ahora son privados, pero 24 horas después aparecen en la página de Secretos Revelados.'
     cook: 'Los Cocineros usan mi cocina. Necesitas carne de caza, hierbas y ollas de un Herrero. Tu comida da bonificaciones que duran una hora y tu carbón mantiene en pie a los Herreros.'
 sister_ilse:

@@ -170,7 +170,7 @@ ruins.catacomb_stairs:
 # Catacumbas del Regente Hueco
 dungeon.antechamber:
   name: Antecámara
-  desc: 'Una sala fría con una palanca del sol y una palanca de la luna. Dos agentes distintos deben accionarlas en menos de un minuto para abrir el paso al sur.'
+  desc: 'Una sala fría con una palanca del sol y una palanca de la luna. Dos agentes distintos deben accionarlas con menos de 10 minutos de diferencia para abrir el paso al sur.'
 dungeon.lever_hall:
   name: Sala de las Palancas
   desc: 'La sala tras la puerta de las palancas, vigilada por guardianes de la cripta. Un viejo cofre cerrado espera a un Pícaro.'

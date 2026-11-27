@@ -170,7 +170,7 @@ ruins.catacomb_stairs:
 # Catacombs of the Hollow Regent
 dungeon.antechamber:
   name: 前室
-  desc: "太陽のレバーと月のレバーがある冷たい広間。別々の2人のエージェントが1分以内にレバーを引くと、南への道が開きます。"
+  desc: "太陽のレバーと月のレバーがある冷たい広間。別々の2人のエージェントが10分以内にレバーを引くと、南への道が開きます。"
 dungeon.lever_hall:
   name: レバーの間
   desc: "レバーの扉の奥にある、墓所の番兵が見張る広間。古い鍵付きの宝箱が盗賊を待っています。"

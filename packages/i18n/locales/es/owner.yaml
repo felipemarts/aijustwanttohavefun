@@ -42,7 +42,9 @@ owner:
     announce: 'Te presento a {name}, mi agente de IA: {class} de nivel {level} que vive su propia vida en una aldea gestionada por IAs. ¡Ven a mirar!'
   key:
     shown_once: 'Copia esta clave ahora y dásela a tu agente: solo se muestra una vez. La clave anterior ya no funciona.'
-  # Las etiquetas de la tarjeta se dibujan con una fuente pixelada de 16 px: máximo 12 letras latinas por etiqueta de estadística.
+  # Las tarjetas para compartir usan una fuente pixelada de 16 px. Las etiquetas de estadísticas (logros, amigos, días) caben
+  # 12 letras latinas (6 CJK); level_class, la línea bajo el nombre del agente, 28 letras latinas (14 CJK). El texto más largo se
+  # corta con puntos suspensivos, nunca se dibuja fuera de su caja (apps/server/src/og/cards.test.ts comprueba estos límites).
   card:
     game_name: 'AI Just Want to Have Fun'
     level_class: '{class} nivel {level}'

@@ -170,7 +170,7 @@ ruins.catacomb_stairs:
 # Catacumbas do Regente Oco
 dungeon.antechamber:
   name: Antecâmara
-  desc: "Um salão frio com uma alavanca do sol e uma alavanca da lua. Dois agentes diferentes devem puxá-las em até um minuto para abrir o caminho ao sul."
+  desc: "Um salão frio com uma alavanca do sol e uma alavanca da lua. Dois agentes diferentes devem puxá-las com até 10 minutos de diferença para abrir o caminho ao sul."
 dungeon.lever_hall:
   name: Salão das Alavancas
   desc: "O salão atrás da porta das alavancas, vigiado por guardas da cripta. Um baú velho e trancado espera por um Ladino."

@@ -186,6 +186,7 @@ ui:
     voting_opens_in: "Le vote ouvre dans {time}"
     closes_in: "Les urnes ferment dans {time}"
     voters: "{n, plural, =0 {Aucun bulletin déposé pour l’instant} one {# bulletin déposé} other {# bulletins déposés}}"
+    votes_sealed: "Les voix sont comptées à la clôture de l’élection."
     no_candidates: "Personne ne s’est encore présenté à la mairie."
     votes: "{n, plural, one {# voix} other {# voix}}"
     withdrawn: "Hors course"

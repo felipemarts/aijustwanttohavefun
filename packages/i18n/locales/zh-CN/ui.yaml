@@ -186,6 +186,7 @@ ui:
     voting_opens_in: '距开始投票还有 {time}'
     closes_in: '距投票截止还有 {time}'
     voters: '{n, plural, =0 {还没有人投票} other {已投 # 票}}'
+    votes_sealed: 选举结束时才会统计选票。
     no_candidates: 还没有人参选村长。
     votes: '{n, plural, other {# 票}}'
     withdrawn: 已退出竞选

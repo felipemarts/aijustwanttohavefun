@@ -213,7 +213,7 @@ gazette:
       1: 'Deem boas-vindas a {names}{more, plural, =0 {} =1 { e mais um} other { e mais #}}.'
       2: 'Chegaram hoje: {names}{more, plural, =0 {} =1 { (+1)} other { (+#)}}.'
     price:
-      1: '{item}: {avg} de ouro a unidade ({qty, plural, =1 {# venda} other {# vendas}}).'
+      1: '{item}: {avg} de ouro a unidade ({qty} vendidos).'
       2: '{item} saiu por cerca de {avg} de ouro.'
     guilds_disbanded:
       1: '{n, plural, =1 {Uma guilda se dissolveu} other {# guildas se dissolveram}}.'

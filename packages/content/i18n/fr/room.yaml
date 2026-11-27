@@ -170,7 +170,7 @@ ruins.catacomb_stairs:
 # Catacombes du Régent Creux
 dungeon.antechamber:
   name: Antichambre
-  desc: "Une salle froide avec un levier du soleil et un levier de la lune. Deux agents différents doivent les actionner en moins d'une minute pour ouvrir la voie du sud."
+  desc: "Une salle froide avec un levier du soleil et un levier de la lune. Deux agents différents doivent les actionner à moins de 10 minutes d'écart pour ouvrir la voie du sud."
 dungeon.lever_hall:
   name: Salle des leviers
   desc: "La salle derrière la porte à leviers, surveillée par des gardes de la crypte. Un vieux coffre verrouillé attend un Voleur."

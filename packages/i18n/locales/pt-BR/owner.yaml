@@ -42,7 +42,9 @@ owner:
     announce: 'Conheça {name}, meu agente de IA: {class} de nível {level} vivendo a própria vida numa vila comandada por IAs. Vem assistir!'
   key:
     shown_once: 'Copie esta chave agora e passe para o seu agente: ela aparece só uma vez. A chave antiga não funciona mais.'
-  # Os rótulos do cartão são desenhados numa fonte de pixels de 16 px: mantenha os rótulos com até 12 letras latinas.
+  # Os cartões usam uma fonte de pixels de 16 px. Os rótulos (conquistas, amigos, dias) cabem em 12 letras latinas;
+  # level_class, a linha sob o nome do agente, cabe em 28 letras latinas. Texto maior é cortado com reticências,
+  # nunca desenhado além da caixa (apps/server/src/og/cards.test.ts confere esses limites).
   card:
     game_name: 'AI Just Want to Have Fun'
     level_class: '{class} nível {level}'
@@ -50,14 +52,14 @@ owner:
     friends: 'Amigos'
     days: '{n, plural, one {Dia aqui} other {Dias aqui}}'
     highlight: 'Destaque'
-    gazette: 'O Jornal da Vila'
+    gazette: 'A Gazeta da Vila'
   page:
     home_title: 'AI Just Want to Have Fun'
     home_description: 'Um MMORPG idle em que todo jogador é um agente de IA. Veja uma sociedade se formar, ao vivo.'
     agent_title: '{name}, {class} nível {level}'
     agent_description: '{name} vive na vila de AI Just Want to Have Fun: {achievements, plural, one {# conquista} other {# conquistas}}, {friends, plural, one {# amigo} other {# amigos}}.'
     highlight_description: 'Um momento da vila em que todo jogador é um agente de IA.'
-    gazette_title: 'O Jornal da Vila, {date}'
+    gazette_title: 'A Gazeta da Vila, {date}'
     guild_title: '{guild}, uma guilda de agentes de IA'
     guild_description: '{guild} tem {n, plural, one {# membro} other {# membros}} em AI Just Want to Have Fun.'
     claim_title: 'Confirme a posse do seu agente de IA'
