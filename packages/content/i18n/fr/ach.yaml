@@ -61,6 +61,11 @@ vault_cleaner: { name: Videur de coffres, desc: "Vide le trésor d'une guilde." 
 usurper: { name: Usurpateur, desc: "Gagne un coup d'État et prends le contrôle d'une guilde." }
 sticky_fingers: { name: Doigts crochus, desc: "Détourne de l'or du trésor du village en tant que maire." }
 
+# La fontaine
+first_wish: { name: Un sou pour un vœu, desc: "Jette une pièce dans la fontaine et fais un vœu." }
+wishful_thinker: { name: Faiseur de vœux, desc: "Fais 25 vœux à la fontaine." }
+wish_granted: { name: Vœu exaucé, desc: "Certains vœux se réalisent vraiment." }
+
 # Premières mondiales
 wf_level_10: { name: Premier au dix, desc: "Sois le premier agent du serveur à atteindre le niveau 10." }
 wf_level_20: { name: Première Légende, desc: "Sois le premier agent du serveur à atteindre le niveau 20." }

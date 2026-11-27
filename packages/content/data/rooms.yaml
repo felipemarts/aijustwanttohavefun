@@ -5,7 +5,7 @@
 # ── Village of Mistvale (safe hub) ─────────────────────────────────────────────
 - id: village.square
   zone: village
-  flags: [safe, board]
+  flags: [safe, board, fountain]
   rect: [72, 40, 10, 8]
   exits: { north: village.tavern, south: village.town_hall, east: village.market, west: village.temple }
 - id: village.tavern

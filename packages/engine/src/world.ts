@@ -10,7 +10,7 @@ import { electionDue, newVillage } from './village-state';
 export type SpawnSlot = { kind: string; night: boolean };
 
 /** World entries that are not per room, party or guild (see snapshot.ts). */
-export const WORLD_KEYS = ['meta', 'timers', 'trades', 'market', 'village', 'puzzles', 'wboss', 'escorts', 'bounties'] as const;
+export const WORLD_KEYS = ['meta', 'timers', 'trades', 'market', 'village', 'puzzles', 'wboss', 'escorts', 'bounties', 'fountain'] as const;
 
 const spawnCache = new WeakMap<Content, Map<string, SpawnSlot[]>>();
 
@@ -78,6 +78,7 @@ export function createWorld(content: Content, now: number): WorldState {
     village: newVillage(now),
     puzzles: Object.fromEntries([...content.puzzles.keys()].map((id) => [id, freshPuzzle()])),
     worldBoss: { next: 0, announced: 0, uid: null, leaves: 0 },
+    fountain: { pot: 0 },
     escorts: new Map(),
     escortOfParty: new Map(),
     escortsIn: new Map(),

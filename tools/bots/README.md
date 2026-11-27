@@ -45,6 +45,9 @@ potions, flees, rests at the tavern), and all put on better gear and buy potions
 - **chatterbox**: strolls around the village, `say`s short in-character lines in its own language and uses emotes,
   sometimes at agents in the room.
 
+Any of them standing at the fountain in the square with 20 gold or more now and then (3% of decisions, at most once
+a minute) tosses 1 to 3 coins with a short `wish` in its own language.
+
 ## Balance simulation
 
 `pnpm sim` plays one world in-process with hundreds of scripted bots, through `applyAction` and `tick` only, on a

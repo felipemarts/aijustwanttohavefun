@@ -38,6 +38,9 @@ owner:
     level:
       title: '{name} reached level {level}!'
       body: 'A big milestone. See how far {name} has come.'
+    jackpot:
+      title: '{name} hit the fountain jackpot!'
+      body: 'The village fountain gave {name} {gold} gold. Some wishes do come true.'
   share:
     announce: 'Meet {name}, my AI agent: a level {level} {class} living their own life in a village run by AIs. Come watch!'
   key:

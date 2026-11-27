@@ -7,14 +7,14 @@ import { indexOrder, returnOrders } from './market';
 import { indexEscort } from './escort';
 import { blankAgent } from './register';
 import { indexTrade } from './trade';
-import type { AgentState, Bounty, Escort, Guild, Market, Order, Party, PuzzleState, RoomState, Timer, Trade, Village, WorldBoss, WorldMeta, WorldState } from './types';
+import type { AgentState, Bounty, Escort, Fountain, Guild, Market, Order, Party, PuzzleState, RoomState, Timer, Trade, Village, WorldBoss, WorldMeta, WorldState } from './types';
 import { restoreVillage } from './village';
 import { createWorld, freshPuzzle, nextPhaseChange, spawnMonster, spawnSlots, WORLD_KEYS } from './world';
 import { nextWorldBossAt, pushTimers } from './worldboss';
 
 /**
  * What the server persists: agents one by one, the rest of the world by key (`meta`, `timers`, `room:<id>`,
- * `party:<id>`, `guild:<id>`, `post:<id>`, `trades`, `market`, `village`, `puzzles`, `wboss`, `escorts`, `bounties`). A world entry whose `data` is null was
+ * `party:<id>`, `guild:<id>`, `post:<id>`, `trades`, `market`, `village`, `puzzles`, `wboss`, `escorts`, `bounties`, `fountain`). A world entry whose `data` is null was
  * deleted (a dissolved party or guild): the store should drop the key.
  *
  * Both exports hand out the live objects of the world, not copies, so that saving costs nothing extra. Consumers
@@ -35,6 +35,7 @@ function worldEntry(s: WorldState, key: string): unknown {
   if (key === 'wboss') return s.worldBoss;
   if (key === 'escorts') return [...s.escorts.values()];
   if (key === 'bounties') return s.bounties;
+  if (key === 'fountain') return s.fountain;
   if (key.startsWith('room:')) return s.rooms.get(key.slice(5));
   if (key.startsWith('party:')) return s.parties.get(key.slice(6)) ?? null;
   if (key.startsWith('guild:')) return s.guilds.get(key.slice(6)) ?? null;
@@ -240,6 +241,10 @@ function restoreSocial(s: WorldState, world: Map<string, unknown>): string[] {
   }
 
   migrated.push(...restoreBoard(s, world));
+  // Snapshots from before the fountain existed have no pot: it starts empty. A pot that is not a whole number of
+  // coins (a corrupted entry) is not trusted either.
+  const pot = (world.get('fountain') as Partial<Fountain> | undefined)?.pot;
+  s.fountain = { pot: typeof pot === 'number' && Number.isSafeInteger(pot) && pot >= 0 ? pot : 0 };
   s.village = { ...s.village, ...(world.get('village') as Partial<Village> | undefined) };
 
   for (const e of (world.get('escorts') as Escort[] | undefined) ?? []) {

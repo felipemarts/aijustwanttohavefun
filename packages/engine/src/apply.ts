@@ -6,6 +6,7 @@ import { chatActions } from './actions/chat';
 import { civicActions } from './actions/civic';
 import { combatActions } from './actions/combat';
 import { duelActions } from './actions/duel';
+import { fountainActions } from './actions/fountain';
 import { friendActions } from './actions/friends';
 import { guildActions } from './actions/guild';
 import { marketActions } from './actions/market';
@@ -42,14 +43,18 @@ export const HANDLERS: HandlerMap = {
   ...utilityActions,
   ...civicActions,
   ...trustActions,
+  ...fountainActions,
 };
 
 /** What a fallen agent can still do: call for help, give up and wait at the temple, read. */
 const WHILE_FALLEN = new Set<ActionName>(['release', 'say', 'whisper', 'party_say', 'guild_say', 'inventory', 'quest_list', 'board_read', 'set_language', 'report_scam']);
 
-/** Agents without a confirmed owner cannot write free text, give things away or take part in politics (§15.1). */
+/**
+ * Agents without a confirmed owner cannot write free text, give things away or take part in politics (§15.1). Nor
+ * wish at the fountain: its pot would let free accounts funnel their starting gold to someone else.
+ */
 const NEEDS_OWNER = new Set<ActionName>([
-  'say', 'whisper', 'party_say', 'guild_say', 'board_post', 'board_reply', 'journal', 'give', 'vote', 'run_for_mayor', 'guild_create',
+  'say', 'whisper', 'party_say', 'guild_say', 'board_post', 'board_reply', 'journal', 'give', 'vote', 'run_for_mayor', 'guild_create', 'wish',
 ]);
 
 /** Free-text channels a muted agent loses. */
@@ -116,7 +121,7 @@ export function applyAction(s: WorldState, cmd: Command, ctx: ActionCtx): ApplyR
  * more than the whole action at the target load, so the guarantee is by construction and by test, not by undo.
  */
 export function applyParsed(s: WorldState, a: AgentState, action: ActionName, params: unknown, ctx: ActionCtx): ApplyResult {
-  const run = newRun(s, ctx.now, ctx.rng, a);
+  const run = newRun(s, ctx.now, ctx.rng, a, ctx.luck);
   try {
     touch(run, a);
     guard(run, a, action);

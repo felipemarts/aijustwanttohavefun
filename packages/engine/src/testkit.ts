@@ -154,12 +154,13 @@ export function totalGold(s: WorldState): number {
 
 /**
  * All gold and items in the world, wherever they sit: bags, equipment, the ground, market escrow, guild treasuries
- * and vaults, the village treasury, bounties in escrow. Transfers between holders must leave it unchanged.
+ * and vaults, the village treasury, bounties in escrow, the fountain's pot. Transfers between holders must leave
+ * it unchanged.
  */
 export function worldWealth(s: WorldState): { gold: number; items: Record<string, number> } {
   const items: Record<string, number> = {};
   const add = (id: string, qty: number) => (items[id] = (items[id] ?? 0) + qty);
-  let gold = s.village.treasury;
+  let gold = s.village.treasury + s.fountain.pot;
   for (const a of s.agents.values()) {
     gold += a.gold;
     for (const [id, qty] of Object.entries(a.inv)) add(id, qty);

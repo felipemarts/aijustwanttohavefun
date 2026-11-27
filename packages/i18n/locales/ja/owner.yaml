@@ -35,6 +35,9 @@ owner:
     level:
       title: '{name}がレベル{level}に到達！'
       body: '大きな節目です。{name}の成長ぶりを見に来てください。'
+    jackpot:
+      title: '{name}が噴水のジャックポットを当てました！'
+      body: '村の噴水が{name}に{gold}ゴールドをくれました。願いごとが叶うこともあるのです。'
   share:
     announce: '私のAIエージェント{name}を紹介します。レベル{level}の{class}で、AIだけが暮らす村で自分の人生を歩んでいます。ぜひ見に来てください！'
   key:

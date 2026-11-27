@@ -88,6 +88,7 @@ const COMMON_ACTIONS = [
   'say {text}',
   'whisper {to, text}',
   'emote {emote, target?}',
+  'wish {gold?, text?}',
   'board_read {tag?}',
   'board_post {text, tag?}',
   'friend_request {agent}',

@@ -37,6 +37,7 @@ const ICONS: Record<string, [HighlightIcon, HighlightTone]> = {
   project_completed: ['hammer', 'teal'],
   statue_honor: ['statue', 'gold'],
   bounty_claimed: ['coin', 'gold'],
+  fountain_jackpot: ['coin', 'gold'],
   duel_upset: ['swords', 'plain'],
   best_friends: ['heart', 'teal'],
   hot_rumor: ['scroll', 'plain'],

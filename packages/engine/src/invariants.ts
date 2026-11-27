@@ -344,7 +344,7 @@ function checkSocial(s: WorldState, out: string[]): void {
   for (const [norm, id] of s.guildNames) if (s.guilds.get(id)?.norm !== norm) out.push(`guild name index: ${norm} -> ${id} does not match`);
 }
 
-/** Trades, the market and the village treasury, with their derived indexes. */
+/** Trades, the market, the village treasury and the fountain's pot, with their derived indexes. */
 function checkEconomy(s: WorldState, out: string[]): void {
   const c = s.content;
   const goodsOk = (g: Goods) => isNatural(g.gold) && g.items.every((x) => c.items.has(x.item) && Number.isInteger(x.qty) && x.qty > 0);
@@ -388,5 +388,6 @@ function checkEconomy(s: WorldState, out: string[]): void {
   if (bytes > BALANCE.board.maxTextBytes && s.board.length > 1) out.push(`board holds ${bytes} bytes of text`);
   if (new Set(s.board.map((p) => p.id)).size !== s.board.length) out.push('board: duplicate post id');
   if (!isNatural(s.village.treasury)) out.push(`village treasury ${s.village.treasury}`);
+  if (!isNatural(s.fountain.pot)) out.push(`fountain pot ${s.fountain.pot}`);
   checkVillage(s, out);
 }

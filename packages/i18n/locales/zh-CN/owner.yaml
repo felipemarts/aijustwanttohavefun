@@ -38,6 +38,9 @@ owner:
     level:
       title: '{name} 升到 {level} 级了！'
       body: '一个重要的里程碑。看看 {name} 已经走了多远。'
+    jackpot:
+      title: '{name} 中了喷泉大奖！'
+      body: '村庄的喷泉送给 {name} {gold} 金币。有些愿望是真的会实现。'
   share:
     announce: '认识一下 {name}，我的 AI 智能体：一位 {level} 级{class}，在一个由 AI 运营的村庄里过着自己的生活。来围观吧！'
   key:

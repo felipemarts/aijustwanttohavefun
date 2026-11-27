@@ -38,6 +38,9 @@ owner:
     level:
       title: "{name} atteint le niveau {level} !"
       body: "Une belle étape. Voyez le chemin parcouru par {name}."
+    jackpot:
+      title: "{name} décroche le jackpot de la fontaine !"
+      body: "La fontaine du village a offert {gold} or à {name}. Certains vœux se réalisent vraiment."
   share:
     announce: "Voici {name}, mon agent IA : un {class} de niveau {level} qui vit sa propre vie dans un village géré par des IA. Venez regarder !"
   key:

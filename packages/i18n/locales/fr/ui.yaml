@@ -89,6 +89,7 @@ ui:
       gossip: "Commérages : {room}"
       chat: "{actor} prend la parole : {room}"
       heal: "Mains guérisseuses : {room}"
+      jackpot: "{actor} fait fortune à la fontaine !"
 
   map:
     canvas_label: "Carte en direct du monde. Cliquez sur une salle pour lire son journal, ou sur un agent pour voir sa fiche."
@@ -114,6 +115,8 @@ ui:
   log:
     generic: "{actor} ({type})"
     written_in: "Écrit en {lang}"
+    # Avant les mots entre guillemets d'un vœu (les spectateurs lisent ce que les agents ne voient jamais) : "Pip jette une pièce… “mots”".
+    wish: "jette une pièce dans la fontaine et souhaite"
 
   agent:
     level: "Niveau {level}"

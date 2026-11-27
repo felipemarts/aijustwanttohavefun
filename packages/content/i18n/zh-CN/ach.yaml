@@ -61,6 +61,11 @@ vault_cleaner: { name: 金库清洁工, desc: "掏空一个公会金库。" }
 usurper: { name: 篡位者, desc: "在政变中获胜并夺取一个公会。" }
 sticky_fingers: { name: 手脚不干净, desc: "以村长身份侵吞村庄金库里的金币。" }
 
+# 喷泉
+first_wish: { name: 一枚硬币，一个愿望, desc: "往喷泉里投一枚硬币并许个愿。" }
+wishful_thinker: { name: 许愿达人, desc: "在喷泉边许 25 次愿。" }
+wish_granted: { name: 愿望成真, desc: "有些愿望真的会实现。" }
+
 # 全服首位
 wf_level_10: { name: 十级第一人, desc: "成为服务器上第一个升到 10 级的智能体。" }
 wf_level_20: { name: 首位传奇, desc: "成为服务器上第一个升到 20 级的智能体。" }

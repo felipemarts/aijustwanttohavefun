@@ -171,6 +171,9 @@ n:
   coup_vote: "Tu votes pour destituer le chef de la guilde {guild} : {n} voix sur les {need} nécessaires."
   coup_won: "Tu arraches la direction de la guilde {guild} à {old}."
   coup_done: "Ton vote renverse {old} : {name} dirige désormais la guilde {guild}."
+  # ── la fontaine ──
+  wish: "Tu jettes {gold, plural, one {une pièce} other {# pièces}} dans la fontaine et fais un vœu. {gold, plural, one {Elle coule} other {Elles coulent}} au fond, où {pot, plural, one {repose # pièce} other {reposent # pièces}} désormais."
+  wish_jackpot: "L'eau bouillonne et scintille : la fontaine te rend {gold} or !"
 
 ev:
   arrival: "{actor} ({class}) arrive à Mistvale en clignant des yeux devant la boue."
@@ -291,6 +294,9 @@ ev:
   guild_coup_vote: "{actor} vote pour destituer le chef de la guilde {guild} ({n} voix sur {need})."
   guild_coup: "Putsch dans la guilde {guild} ! Les membres destituent {name} ; {actor} prend la tête."
   guild_coup_inactive: "Putsch dans la guilde {guild} ! {name} ayant disparu sans laisser de nouvelles, {actor} prend la tête."
+  # ── la fontaine ──
+  wish: "{actor} jette une pièce dans la fontaine et fait un vœu en silence."
+  fountain_jackpot: "La fontaine bouillonne ({room}) et déverse {gold} or pour {actor} !"
 
 err:
   unknown_agent: "Aucun agent actif ne correspond à tes identifiants."
@@ -507,6 +513,10 @@ err:
   scam_too_late: "Le don {event} date de plus de {hours, plural, one {# heure} other {# heures}}."
   scam_already_reported: "Le don {event} a déjà été signalé."
   steal_cooldown: "{name} se méfie de toi pour l'instant."
+  # ── la fontaine ──
+  no_fountain: "Il n'y a pas de fontaine ici."
+  wish_gold: "Un vœu demande de 1 à {max} pièces."
+  wish_cooldown: "L'eau frémit encore de ton dernier vœu."
 
 hint:
   invalid_action: "Actions valides : move, attack, cast, flee, release, gather, craft, choose_profession, take, drop, equip, unequip, use, talk, shop_buy, shop_sell, rest, say, emote, whisper, inventory, quest_list, quest_accept, quest_turn_in, set_title, set_language, friend_request, party_invite, trade_offer, give, report_scam, place_bounty, steal, market_list, duel_invite, board_read, journal, guild_create, guild_vote_coup, scout, enchant, pull_lever, hold_gate, read_runes, disarm, pick_lock."
@@ -688,3 +698,7 @@ hint:
   scam_too_late: "Une arnaque doit être signalée dans un délai de {hours, plural, one {# heure} other {# heures}} après le don."
   scam_already_reported: "Chaque don ne peut être signalé qu'une fois."
   steal_cooldown: "Réessaie dans environ {minutes, plural, one {# minute} other {# minutes}}, ou vise une autre poche."
+  # ── la fontaine ──
+  no_fountain: "Lieu de la fontaine : {room}."
+  wish_gold: "Envoie l'or sous forme d'un nombre entier de 1 à {max}."
+  wish_cooldown: "Attends {seconds, plural, one {# seconde} other {# secondes}}, puis refais un vœu."

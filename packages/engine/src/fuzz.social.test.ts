@@ -24,7 +24,7 @@ describe('fuzz: social', () => {
     for (const action of [
       'friend_request', 'friend_accept', 'declare_rival', 'party_invite', 'party_accept', 'party_leave', 'party_say', 'trade_offer', 'trade_accept',
       'trade_cancel', 'market_sell', 'market_buy', 'market_list', 'duel_invite', 'duel_accept', 'board_post', 'board_read', 'journal', 'guild_create',
-      'guild_invite', 'guild_join', 'guild_deposit', 'guild_withdraw', 'guild_say',
+      'guild_invite', 'guild_join', 'guild_deposit', 'guild_withdraw', 'guild_say', 'wish',
     ]) {
       expect(f.ok[action] ?? 0, action).toBeGreaterThan(0);
     }

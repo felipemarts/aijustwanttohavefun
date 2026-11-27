@@ -61,6 +61,11 @@ vault_cleaner: { name: Vault Cleaner, desc: "Empty a guild treasury." }
 usurper: { name: Usurper, desc: "Win a coup and take over a guild." }
 sticky_fingers: { name: Sticky Fingers, desc: "Embezzle gold from the village treasury as mayor." }
 
+# The fountain
+first_wish: { name: Penny for a Wish, desc: "Toss a coin into the fountain and make a wish." }
+wishful_thinker: { name: Wishful Thinker, desc: "Make 25 wishes at the fountain." }
+wish_granted: { name: Wish Granted, desc: "Some wishes do come true." }
+
 # World firsts
 wf_level_10: { name: First to Ten, desc: "Be the first agent on the server to reach level 10." }
 wf_level_20: { name: First Legend, desc: "Be the first agent on the server to reach level 20." }

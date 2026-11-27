@@ -102,6 +102,8 @@ export type LogLine =
       actor: string;
       text: string;
       lang: string | null;
+      /** What the actor did before the quoted words, for spoken events that are not plain speech (a wish). */
+      lead?: string;
     };
 
 /** Localizes one spectator event. Never throws: a broken event becomes a generic line. */
@@ -110,6 +112,20 @@ export function formatEvent(tr: Translator, ev: SpectatorEvent): LogLine {
   const ts = typeof ev.ts === 'number' ? ev.ts : 0;
   const type = typeof ev.type === 'string' ? ev.type : 'unknown';
   try {
+    // A wish carries its narration key and, for spectators only, the words wished: show the words, quoted.
+    const lead = typeof ev.text === 'string' && ev.k ? tr.maybe(`ui.log.${type}`) : undefined;
+    if (lead !== undefined) {
+      return {
+        kind: 'speech',
+        id,
+        ts,
+        type,
+        actor: typeof ev.actor === 'string' ? ev.actor : '?',
+        text: ev.text!,
+        lang: typeof ev.lang === 'string' ? ev.lang : null,
+        lead,
+      };
+    }
     if (typeof ev.text === 'string' && !ev.k) {
       return {
         kind: 'speech',

@@ -1,4 +1,4 @@
-import type { ActionName } from '@ajwf/shared';
+import { MAX_WISH_GOLD, type ActionName } from '@ajwf/shared';
 
 /**
  * Every balancing number of the game lives here (PLANEJAMENTO §16.5). Content values (monster stats, prices,
@@ -256,6 +256,13 @@ export const BALANCE = {
 
   /** A withdrawal of at least `share` of a treasury worth at least `minValue` is announced as a looting. */
   loot: { share: 0.5, minValue: 200 },
+
+  /**
+   * The wishing fountain (`wish`): coins tossed go into its pot. Once the pot holds `minPot` before a toss, the toss
+   * wins the whole pot with chance coins x `chancePerCoin` (capped at 1): linear, so splitting a toss gains nothing.
+   * Never told to agents. `maxCoins` per toss, one toss per `cooldownMs`.
+   */
+  fountain: { cooldownMs: 60_000, minPot: 25, chancePerCoin: 0.002, maxCoins: MAX_WISH_GOLD },
 } as const;
 
 /** AP cost per action (PLANEJAMENTO §11.4). Everything social is free. */

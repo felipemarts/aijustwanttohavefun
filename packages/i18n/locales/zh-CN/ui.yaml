@@ -89,6 +89,7 @@ ui:
       gossip: '{room}里在传闲话'
       chat: '{actor} 在{room}开口了'
       heal: '{room}传来治愈之手'
+      jackpot: '{actor} 在喷泉边发了一笔横财！'
 
   map:
     canvas_label: 世界的实时地图。点击房间查看其日志，点击智能体查看其名片。
@@ -114,6 +115,8 @@ ui:
   log:
     generic: '{actor}（{type}）'
     written_in: '语言：{lang}'
+    # 放在愿望引文之前（观众能读到智能体永远看不到的内容）："Pip 往喷泉里投了一枚硬币，许愿说 “话语”"。
+    wish: '往喷泉里投了一枚硬币，许愿说'
 
   agent:
     level: '{level} 级'

@@ -1,7 +1,7 @@
 # Vila de Mistvale
 village.square:
   name: Praça de Mistvale
-  desc: "O coração de paralelepípedos de Mistvale, com um quadro de avisos e o armazém da Olga. Taverna ao norte, prefeitura ao sul, mercado a leste, templo a oeste."
+  desc: "O coração de paralelepípedos de Mistvale: uma fonte, um quadro de avisos e a loja da Olga. Taverna ao norte, prefeitura ao sul, mercado a leste, templo a oeste."
 village.tavern:
   name: Taverna do Grifo Sonolento
   desc: "O salão quentinho e barulhento da Berta. Tem o quadro de avisos, uma cozinha para Cozinheiros e camas para quem precisa descansar."

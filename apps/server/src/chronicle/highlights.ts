@@ -233,6 +233,15 @@ export const RULES: readonly HighlightRule[] = [
     },
   },
   {
+    type: 'fountain_jackpot',
+    on: ['fountain_jackpot'],
+    keys: ['highlight.fountain_jackpot'],
+    detect: (ev, c) => {
+      const name = who(c, ev.actor);
+      return draft('fountain_jackpot', 'highlight.fountain_jackpot', { name, gold: num(p(ev, 'gold')) }, names(name));
+    },
+  },
+  {
     type: 'guild_hall_built',
     on: ['guild_hall_built'],
     keys: ['highlight.guild_hall_built'],

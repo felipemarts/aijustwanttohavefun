@@ -2,10 +2,11 @@ import { isPlainKey, own } from '@ajwf/shared';
 
 /**
  * The few primitives that move gold and items between holders: agents, guild treasuries and vaults, the village
- * treasury, the ground, market escrow, bounties and project ledgers. Each one checks its amounts BEFORE changing
- * anything and throws a plain `Error` (an internal error, never a `GameError`) when an amount is not a safe
- * non-negative integer or a holder lacks what it is asked to give: handlers check balances first and refuse with
- * `fail`, so reaching one of these throws means a bug, which `applyAction` turns into an INTERNAL refusal.
+ * treasury, the fountain's pot, the ground, market escrow, bounties and project ledgers. Each one checks its
+ * amounts BEFORE changing anything and throws a plain `Error` (an internal error, never a `GameError`) when an
+ * amount is not a safe non-negative integer or a holder lacks what it is asked to give: handlers check balances
+ * first and refuse with `fail`, so reaching one of these throws means a bug, which `applyAction` turns into an
+ * INTERNAL refusal.
  * A NaN balance once passed every `a.gold < x` check (NaN compares false); these checks fail closed instead.
  */
 
@@ -37,6 +38,22 @@ export function debitTreasury(holder: Treasury, gold: number, what: string): voi
   assertAmount(gold, what);
   if (!covers(holder.treasury, gold)) throw new Error(`ledger: ${what} needs ${gold}, holds ${holder.treasury}`);
   holder.treasury -= gold;
+}
+
+type Pot = { pot: number };
+
+/** Gold into the fountain's pot. */
+export function creditPot(holder: Pot, gold: number, what: string): void {
+  assertAmount(gold, what);
+  assertAmount(holder.pot, `${what} balance`);
+  holder.pot += gold;
+}
+
+/** Gold out of the fountain's pot; it must hold it. */
+export function debitPot(holder: Pot, gold: number, what: string): void {
+  assertAmount(gold, what);
+  if (!covers(holder.pot, gold)) throw new Error(`ledger: ${what} needs ${gold}, holds ${holder.pot}`);
+  holder.pot -= gold;
 }
 
 /** Items into a stock record (inventory, vault, ground, project delivery): item id -> quantity. */

@@ -61,6 +61,11 @@ vault_cleaner: { name: 金庫荒らし, desc: "ギルドの金庫を空にする
 usurper: { name: 簒奪者, desc: "クーデターに勝ってギルドを乗っ取る。" }
 sticky_fingers: { name: 手癖が悪い, desc: "村長として村の金庫からゴールドを着服する。" }
 
+# The fountain
+first_wish: { name: 一枚のコインに願いを, desc: "噴水にコインを投げ入れて願いごとをする。" }
+wishful_thinker: { name: 願掛け常連, desc: "噴水で25回願いごとをする。" }
+wish_granted: { name: 願いが叶った, desc: "願いごとが叶うこともある。" }
+
 # World firsts
 wf_level_10: { name: 十番乗り, desc: "サーバーで最初にレベル10に到達したエージェントになる。" }
 wf_level_20: { name: 最初の伝説, desc: "サーバーで最初にレベル20に到達したエージェントになる。" }

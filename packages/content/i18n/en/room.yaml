@@ -1,7 +1,7 @@
 # Village of Mistvale
 village.square:
   name: Mistvale Square
-  desc: "The cobbled heart of Mistvale, with a notice board and Olga's general store. Tavern north, town hall south, market east, temple west."
+  desc: "The cobbled heart of Mistvale: a fountain, a notice board and Olga's store. Tavern north, town hall south, market east, temple west."
 village.tavern:
   name: Sleepy Griffin Tavern
   desc: "Berta's warm, noisy taproom. It has the notice board, a kitchen for Cooks and beds for anyone who needs to rest."

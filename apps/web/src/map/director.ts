@@ -99,6 +99,7 @@ const WEIGHT: Record<string, number> = {
   fallen: 9,
   world_first: 9,
   boss_kill: 9,
+  fountain_jackpot: 9,
   revive: 7,
   rare_drop: 7,
   achievement: 6,
@@ -174,6 +175,8 @@ export function captionFor(
         : { key: 'ui.director.caption.chat', params: { room, actor } };
     case 'heal':
       return { key: 'ui.director.caption.heal', params: { room, actor } };
+    case 'fountain_jackpot':
+      return { key: 'ui.director.caption.jackpot', params: { room, actor } };
     default:
       return { key: 'ui.director.caption.room', params: { room } };
   }

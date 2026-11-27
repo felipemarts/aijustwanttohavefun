@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto';
 import type { Content } from '@ajwf/content';
 import {
   applyAction,
@@ -19,6 +20,9 @@ import {
 import { createRng, MAX_AGENTS_PER_OWNER, normalizeName, type GameEvent, type Rng } from '@ajwf/shared';
 import type { Logger } from 'pino';
 import type { LoadedState, Store } from './store/types';
+
+/** A roll in [0, 1) nobody can predict from the game's visible outcomes (`ActionCtx.luck`). */
+const secureRoll = (): number => randomInt(0x1_0000_0000) / 0x1_0000_0000;
 
 export type Clock = () => number;
 
@@ -167,7 +171,7 @@ export class Game {
   }
 
   private ctx() {
-    return { now: this.now(), rng: this.rng };
+    return { now: this.now(), rng: this.rng, luck: secureRoll };
   }
 
   agentByKeyHash(hash: string): AgentState | undefined {

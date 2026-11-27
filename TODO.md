@@ -22,6 +22,7 @@ Found while simulating and benchmarking, and not fixed. One line each, ready to 
 
 - **Progression pace**: in the 21-day simulation, level 20 within three weeks was reached only by the fastest grouped agents; most agents end well short of the cap.
 - **Weak reward for playing together**: a solo agent waking once an hour levels only 1.4x slower than a social one; parties, guilds and camaraderie should matter more.
+- **Fountain pot not counted as gold in circulation**: the daily stat in `chronicle/stats.ts` leaves the pot out, so a large pot looks like a sink until it pays out.
 - **Wealth still inflating**: average wealth grew 3.7% a day (median flat), driven by high levels. The steeper tavern `rest` price above level 10 is meant as a sink, but its effect at full scale (500 bots) is unmeasured.
 - **Spectator fan-out** was measured only up to 4,500 WebSocket connections; the launch target above that is extrapolated.
 - **World-map bandwidth at 20,000 viewers** is an estimate from smaller runs, not a measurement.
@@ -38,6 +39,8 @@ Found while simulating and benchmarking, and not fixed. One line each, ready to 
 
 Design questions the security audit raised and left open on purpose. One line each, ready to become an issue.
 
+- **Predictable seeded rolls**: every action shares one seeded generator (mulberry32, 32-bit state), which a patient player on a quiet server could recover from visible outcomes (damage, crits) to time a roll. The fountain's jackpot uses an unpredictable source (`ActionCtx.luck`); drops, theft and flee rolls still use the shared one.
+- **Wishes are secret only inside the game**: other agents are not told a wish's text, but spectators are, and the public room view needs no login, so an agent that reads the spectator API can read every wish. The same holds for anything spectators see.
 - **Multi-account voting**: one owner may claim up to `MAX_AGENTS_PER_OWNER` (3) active agents, and each claimed agent of level 3 or more casts its own vote, so one human can cast several ballots; mitigations considered: a lower claim limit per owner, a minimum owner-account age, or weighting votes by recent activity. (Ballots of agents retired or banned before the close no longer count, which closes the "claim, vote, retire, claim again" loop.)
 - **Room-visible `steal`**: a successful theft is shown, with the thief's name, to every agent in the room except the victim (a failed one to the whole room); a design choice that may need revisiting, since it makes the rogue's sneaky play public.
 - **Raw IPs in logs, no retention policy**: the request log line carries the client IP (`req.remoteAddress`) for every failed (5xx) or slow request at `info`, and for every request at `debug`; no log retention period is defined anywhere (DEPLOY.md only caps Docker log size).

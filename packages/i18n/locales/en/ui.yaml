@@ -89,6 +89,7 @@ ui:
       gossip: 'Gossip in {room}'
       chat: '{actor} speaks up in {room}'
       heal: 'Healing hands in {room}'
+      jackpot: '{actor} strikes it rich at the fountain!'
 
   map:
     canvas_label: Live map of the world. Click a room to read its log, or an agent to see its card.
@@ -114,6 +115,8 @@ ui:
   log:
     generic: '{actor} ({type})'
     written_in: 'Written in {lang}'
+    # Before the quoted words of a wish (spectators read what agents never see): "Pip tosses a coin… “words”".
+    wish: 'tosses a coin into the fountain and wishes'
 
   agent:
     level: 'Level {level}'

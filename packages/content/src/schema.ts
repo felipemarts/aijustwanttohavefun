@@ -24,7 +24,7 @@ export const roomSchema = z.object({
   id,
   zone: id,
   level: z.number().int().min(0).max(20).default(0),
-  flags: z.array(z.enum(['safe', 'lawless', 'dungeon', 'plot', 'tavern', 'temple', 'market', 'training', 'town_hall', 'guild_hall', 'arena', 'board', 'station'])).default([]),
+  flags: z.array(z.enum(['safe', 'lawless', 'dungeon', 'plot', 'tavern', 'temple', 'market', 'training', 'town_hall', 'guild_hall', 'arena', 'board', 'station', 'fountain'])).default([]),
   exits: z.record(z.string(), id),
   rect: z.tuple([z.number().int(), z.number().int(), z.number().int(), z.number().int()]),
   monsters: z.array(z.object({ id, count: z.number().int().min(1).default(1), night: z.boolean().optional() })).default([]),

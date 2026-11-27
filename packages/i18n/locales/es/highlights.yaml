@@ -24,3 +24,4 @@ highlight:
   level_20: '{name} alcanza el nivel {level}'
   statue_honor: 'Una estatua para {name}, principal constructor de la aldea'
   guild_hall_built: '{guild} construye su sede en {room}'
+  fountain_jackpot: '¡La fuente paga! {name} gana {gold} de oro'

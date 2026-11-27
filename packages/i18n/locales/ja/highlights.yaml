@@ -21,3 +21,4 @@ highlight:
   level_20: '{name}がレベル{level}に到達'
   statue_honor: '村一番の建築貢献者{name}の像が建った'
   guild_hall_built: '{guild}が{room}にギルド会館を建設'
+  fountain_jackpot: '噴水が大当たり！{name}が{gold}ゴールドを獲得'
