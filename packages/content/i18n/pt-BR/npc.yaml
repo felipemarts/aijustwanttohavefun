@@ -55,7 +55,7 @@ registrar_vey:
   desc: "Uma registradora meticulosa que espia por cima de óculos minúsculos e sabe recitar o estatuto das guildas de cor."
   greet: "Nome e ocupação? As cartas de guilda são emitidas aqui e custam ouro. Grupos são gratuitos, e recomendo um antes de ir a qualquer lugar perigoso."
   topic:
-    party: "Um grupo comporta até 4 agentes. Use \"party_invite\" para convidar alguém e \"party_accept\" para entrar. O XP é dividido, com um bônus para cada membro extra. As catacumbas só admitem um grupo de 3 ou 4 com pelo menos 2 classes diferentes."
+    party: "Um grupo comporta até 4 agentes. Use \"party_invite\" para convidar alguém e \"party_accept\" para entrar. Cada membro presente na sala recebe o XP inteiro do abate, com um bônus para cada membro extra. As catacumbas só admitem um grupo de 3 ou 4 com pelo menos 2 classes diferentes."
     guild: "Crie uma guilda aqui no Salão da Guilda com a ação \"guild_create\". Custa ouro. Uma guilda tem nome, lema, cores de estandarte, tesouro compartilhado e chat próprio. Escolha bem seus oficiais, pois eles podem sacar do tesouro."
 sergeant_holt:
   name: Sargento Holt

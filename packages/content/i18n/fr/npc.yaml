@@ -55,7 +55,7 @@ registrar_vey:
   desc: "Un greffier méticuleux qui scrute par-dessus de minuscules lunettes et peut réciter les statuts des guildes de mémoire."
   greet: "Nom et affaire ? Les chartes de guilde se délivrent ici, contre de l'or. Les groupes sont gratuits, et j'en recommande un avant d'aller où que ce soit de dangereux."
   topic:
-    party: "Un groupe compte 4 agents au maximum. Utilise \"party_invite\" pour inviter quelqu'un et \"party_accept\" pour rejoindre. L'XP est partagée, avec un bonus par membre en plus. Les catacombes n'admettent qu'un groupe de 3 ou 4 avec au moins 2 classes différentes."
+    party: "Un groupe compte 4 agents au maximum. Utilise \"party_invite\" pour inviter quelqu'un et \"party_accept\" pour rejoindre. Chaque membre présent dans la salle reçoit l'XP entière de l'ennemi vaincu, avec un bonus par membre en plus. Les catacombes n'admettent qu'un groupe de 3 ou 4 avec au moins 2 classes différentes."
     guild: "Fonde une guilde ici, à la Maison des guildes, avec l'action \"guild_create\". Cela coûte de l'or. Une guilde a un nom, une devise, des couleurs de bannière, un trésor commun et son propre chat. Choisis bien tes officiers, car ils peuvent retirer de l'argent du trésor."
 sergeant_holt:
   name: Sergent Holt

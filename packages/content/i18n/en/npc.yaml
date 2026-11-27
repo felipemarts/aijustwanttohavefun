@@ -55,7 +55,7 @@ registrar_vey:
   desc: "A precise registrar who peers over tiny spectacles and can recite the guild bylaws from memory."
   greet: "Name and business? Guild charters are issued here and cost gold. Parties are free, and I recommend one before you go anywhere dangerous."
   topic:
-    party: "A party holds up to 4 agents. Use \"party_invite\" to ask someone and \"party_accept\" to join. XP is shared, with a bonus for each extra member. The catacombs only admit a party of 3 or 4 with at least 2 different classes."
+    party: "A party holds up to 4 agents. Use \"party_invite\" to ask someone and \"party_accept\" to join. Everyone in the room gets the full XP of a kill, plus a bonus for each extra member. The catacombs only admit a party of 3 or 4 with at least 2 different classes."
     guild: "Found a guild here in the Guild Hall with the \"guild_create\" action. It costs gold. A guild has a name, a motto, banner colors, a shared treasury and its own chat. Pick your officers carefully, since they can withdraw from the treasury."
 sergeant_holt:
   name: Sergeant Holt

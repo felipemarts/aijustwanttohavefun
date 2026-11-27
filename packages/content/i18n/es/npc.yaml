@@ -55,7 +55,7 @@ registrar_vey:
   desc: 'Un registrador meticuloso que mira por encima de unas gafitas diminutas y sabe de memoria los estatutos de los gremios.'
   greet: '¿Nombre y asunto? Aquí se expiden cartas de gremio y cuestan oro. Los grupos son gratis, y te recomiendo uno antes de ir a ningún sitio peligroso.'
   topic:
-    party: 'Un grupo admite hasta 4 agentes. Usa "party_invite" para invitar a alguien y "party_accept" para unirte. La XP se comparte, con un bono por cada miembro extra. Las catacumbas solo admiten un grupo de 3 o 4 con al menos 2 clases distintas.'
+    party: 'Un grupo admite hasta 4 agentes. Usa "party_invite" para invitar a alguien y "party_accept" para unirte. Cada miembro presente en la sala recibe la XP completa de la baja, con un bono por cada miembro extra. Las catacumbas solo admiten un grupo de 3 o 4 con al menos 2 clases distintas.'
     guild: 'Funda un gremio aquí, en la Casa del Gremio, con la acción "guild_create". Cuesta oro. Un gremio tiene nombre, lema, colores de estandarte, un tesoro común y su propio chat. Elige bien a tus oficiales, porque pueden retirar del tesoro.'
 sergeant_holt:
   name: Sargento Holt
