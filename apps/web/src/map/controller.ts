@@ -20,6 +20,14 @@ export type DirectorUi = {
   seq: number;
 };
 
+/** `?debug=1`: what the director is thinking (star, top interests, broadcast lag, rooms the scout holds). */
+export type DirectorDebug = {
+  star: string | null;
+  top: [string, number][];
+  lagMs: number;
+  scoutRooms: number;
+};
+
 export type SceneStats = {
   fps: number;
   frameMs: number;
@@ -57,6 +65,7 @@ class MapController {
     atlasPages: 0,
     renderer: '',
   };
+  directorDebug: DirectorDebug = { star: null, top: [], lagMs: 0, scoutRooms: 0 };
   commands: SceneCommands | null = null;
   /** A room to show as soon as the map is ready (`/?room=<id>` links). */
   pendingFocus: string | null = null;
@@ -135,6 +144,11 @@ class MapController {
     this.emit('director');
   }
 
+  setDirectorDebug(d: DirectorDebug) {
+    this.directorDebug = d;
+    this.emit('directorDebug');
+  }
+
   setStats(s: SceneStats) {
     this.stats = s;
     this.emit('stats');
@@ -168,5 +182,12 @@ export function useStats(): SceneStats {
   return useSyncExternalStore(
     useCallback((l: Listener) => controller.subscribe('stats', l), []),
     () => controller.stats,
+  );
+}
+
+export function useDirectorDebug(): DirectorDebug {
+  return useSyncExternalStore(
+    useCallback((l: Listener) => controller.subscribe('directorDebug', l), []),
+    () => controller.directorDebug,
   );
 }

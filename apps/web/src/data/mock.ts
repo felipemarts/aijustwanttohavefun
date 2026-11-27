@@ -3,7 +3,19 @@
  * server (`hello`, `full`, `batch`). Agents wander, chat in several languages, fight the monsters of their room,
  * level up, fall in lawless zones and get back up. It is the `?mock=1` demo and the fixture of the smoke tests.
  */
-import type { AgentPos, DayPhase, RoomInfo, SpectatorEvent, WorldFull } from '@ajwf/shared';
+import {
+  type AgentPos,
+  type DayPhase,
+  eventPoints,
+  INTEREST,
+  type InterestIncrement,
+  type RoomInfo,
+  roundPoints,
+  SayTracker,
+  selectIncrements,
+  type SpectatorEvent,
+  type WorldFull,
+} from '@ajwf/shared';
 import { hash32, rng } from '../util/rng';
 import { MockCivic } from './mockCivic';
 import { drawMockSheet } from './mockSprites';
@@ -203,6 +215,10 @@ export class MockSource implements DataSource {
   private pendingEvents: SpectatorEvent[] = [];
   private pendingPos = new Map<string, AgentPos>();
   private pendingGone: string[] = [];
+  /** Interest increments for the next world batch (director mode), scored like the server does. */
+  private pendingInterest: InterestIncrement[] = [];
+  private says = new SayTracker();
+  private lastPruneAt = 0;
   private nextArrival = 0;
   private readonly opts: Required<Omit<MockOptions, 'phase' | 'now' | 'builtAll'>>;
   private spriteCache = new Map<string, HTMLCanvasElement>();
@@ -675,6 +691,7 @@ export class MockSource implements DataSource {
   private emit(e: Omit<SpectatorEvent, 'id' | 'ts'>) {
     const ev: SpectatorEvent = { id: String(this.seq++), ts: this.now, ...e };
     this.pendingEvents.push(ev);
+    this.score(ev);
     if (ev.room) {
       const log = this.logs.get(ev.room) ?? [];
       log.push(ev);
@@ -684,10 +701,35 @@ export class MockSource implements DataSource {
     }
   }
 
+  /** The server's scoring, on the mock's events (every mock event is spectator-visible). */
+  private score(ev: SpectatorEvent) {
+    const actor = ev.actor ? this.agents.get(ev.actor) : undefined;
+    const target = ev.tk === 'agent' && ev.target && ev.target !== ev.actor ? this.agents.get(ev.target) : undefined;
+    const conversation = ev.type === 'say' && !!actor && !!ev.room && this.says.spoke(ev.room, actor.pos.n, ev.ts);
+    const input = {
+      type: ev.type,
+      drama: ev.drama,
+      boss: ev.type === 'kill' && !!ev.target && !!this.world.monsters[ev.target]?.boss,
+      vsAgent: !!target,
+      conversation,
+    };
+    for (const [a, share] of [[actor, 1], [target, INTEREST.targetShare]] as const) {
+      if (!a) continue;
+      const p = roundPoints(eventPoints({ ...input, bot: !!a.pos.f?.includes('b') }) * share);
+      if (p >= INTEREST.minPoints) this.pendingInterest.push({ n: a.pos.n, r: ev.room ?? a.pos.r, p, e: ev.type });
+    }
+  }
+
   private flush() {
     const events = this.pendingEvents;
     const pos = [...this.pendingPos.values()];
     const gone = this.pendingGone;
+    const interest = selectIncrements(this.pendingInterest);
+    this.pendingInterest = [];
+    if (this.now - this.lastPruneAt > 30_000) {
+      this.lastPruneAt = this.now;
+      this.says.prune(this.now);
+    }
     this.pendingEvents = [];
     this.pendingPos.clear();
     this.pendingGone = [];
@@ -715,6 +757,7 @@ export class MockSource implements DataSource {
           drama: this.topDrama(),
           ...(map && Object.keys(map).length ? { village: map } : {}),
           ...(highlights.length ? { highlights } : {}),
+          ...(interest.length ? { interest } : {}),
         });
       } else if (topic === 'village') {
         const v = { ...(delta ?? {}), ...(countsDue ? this.counts() : {}) };

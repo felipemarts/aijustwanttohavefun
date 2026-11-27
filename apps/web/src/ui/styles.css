@@ -546,6 +546,28 @@ select:focus-visible {
   gap: 4px;
 }
 
+.director-control {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+/* The broadcast delay (director mode) or live (manual): small, under the director button. */
+.broadcast-tag {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  background: rgba(27, 23, 38, 0.8);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.broadcast-tag.is-live {
+  color: var(--teal);
+}
+
 .director-toggle .dir-dot {
   inline-size: 10px;
   block-size: 10px;

@@ -2,7 +2,7 @@
  * Small validators for untrusted JSON from the server (WebSocket and `/api/public`). Everything is checked field by
  * field; a malformed entry is dropped on its own and never takes the rest of a list with it.
  */
-import type { ElectionInfo, HallInfo, Highlight, KeyMsg } from '@ajwf/shared';
+import type { ElectionInfo, HallInfo, Highlight, InterestIncrement, KeyMsg } from '@ajwf/shared';
 
 export type Obj = Record<string, unknown>;
 export const isObj = (v: unknown): v is Obj => !!v && typeof v === 'object' && !Array.isArray(v);
@@ -13,6 +13,21 @@ export const num = (v: unknown, d = 0): number => (isNum(v) ? v : d);
 export const strOrNull = (v: unknown): string | null => (typeof v === 'string' && v.length > 0 ? v : null);
 export const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 export const strings = (v: unknown): string[] => arr(v).filter(isStr);
+
+/**
+ * `batch.interest` of the world topic (director mode): at most 50 entries, each with a plausible agent name, room
+ * id, event type and a finite positive score. Anything else is dropped entry by entry.
+ */
+export function parseIncrements(v: unknown): InterestIncrement[] {
+  const out: InterestIncrement[] = [];
+  for (const x of arr(v).slice(0, 50)) {
+    if (!isObj(x) || !isStr(x.n) || !isStr(x.r) || !isStr(x.e) || !isNum(x.p)) continue;
+    if (!x.n || x.n.length > 64 || !/^[a-z0-9_.]{1,80}$/.test(x.r) || !/^[a-z0-9_]{1,40}$/.test(x.e)) continue;
+    if (x.p <= 0 || x.p > 1000) continue;
+    out.push({ n: x.n, r: x.r, p: x.p, e: x.e });
+  }
+  return out;
+}
 
 /** Params of an i18n message: only strings and numbers survive. */
 export function params(v: unknown): Record<string, string | number> {

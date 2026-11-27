@@ -6,9 +6,11 @@ import type { DayPhase, RoomInfo, SpectatorEvent } from '@ajwf/shared';
 // The production CSP has no 'unsafe-eval': Pixi's shader and uniform code must not use `new Function`.
 import 'pixi.js/unsafe-eval';
 import { Application, BitmapFont, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
+import { config } from '../config';
 import { drawMockSheet } from '../data/mockSprites';
 import type { Changes } from '../data/reducers';
 import { dayFractionAt, dramaSnapshot } from '../data/reducers';
+import { bigAhead, interestAt } from '../data/scout';
 import type { DataSource } from '../data/source';
 import type { StaticWorld } from '../data/staticWorld';
 import type { LiveStore } from '../data/store';
@@ -55,6 +57,8 @@ const LABEL_FONT = 'ajwf-label';
 let fontInstalled = false;
 const START_ROOM = 'village.square';
 const MON_CAP = 3;
+/** Rooms the director's scout subscribes to ahead of time, beyond the room on screen. */
+const SCOUT_ROOMS = 4;
 
 type MonsterView = {
   room: string;
@@ -278,6 +282,8 @@ export class MapScene {
     this.disposers.push(this.opts.store.onChanges((ch) => this.onChanges(ch)));
     this.disposers.push(controller.subscribe('panel', () => this.onPanel()));
     this.disposers.push(controller.subscribe('director', () => this.onDirector()));
+    // Director mode plays the world with a broadcast delay; manual browsing is live.
+    this.opts.store.setDelay(this.directorOn);
     controller.commands = {
       zoom: (dir) => {
         controller.pauseDirector();
@@ -307,6 +313,8 @@ export class MapScene {
 
   destroy() {
     this.destroyed = true;
+    this.opts.store.setDelay(false);
+    this.opts.store.setTopics('scout', []);
     for (const d of this.disposers) d();
     this.disposers = [];
     if (controller.commands) controller.commands = null;
@@ -1148,21 +1156,38 @@ export class MapScene {
     const on = controller.director.enabled;
     if (on === this.directorOn) return;
     this.directorOn = on;
+    // Pausing goes live at once (everything held is applied); resuming builds the delay again from zero.
+    this.opts.store.setDelay(on);
+    if (!on) this.opts.store.setTopics('scout', []);
     if (!on || !this.ready) return;
-    this.director = resumedDirector(this.director);
-    const now = performance.now();
-    this.lastDirectorAt = now;
-    this.directorTick(now);
+    const now0 = performance.now();
+    this.director = resumedDirector(this.director, now0);
+    this.lastDirectorAt = now0;
+    this.directorTick(now0);
   }
 
+  /**
+   * The world as the screen shows it (delayed while the director is on), plus what the scout foresees for that
+   * display time from the undelayed increments.
+   */
   private directorWorld(now: number): DirectorWorld {
-    const s = this.opts.store.state;
+    const store = this.opts.store;
+    const s = store.state;
+    const display = store.displayNow();
+    const incs = store.scout.increments();
     return {
       now,
-      nowTs: now + s.clockSkew,
+      nowTs: display,
       drama: dramaSnapshot(s, now),
       agents: s.agents,
       logs: s.roomLogs,
+      foresight: store.scout.ready
+        ? {
+            interest: interestAt(incs, display),
+            big: bigAhead(incs, display),
+            buffered: (room) => store.isBuffered(`room:${room}`),
+          }
+        : undefined,
     };
   }
 
@@ -1172,6 +1197,18 @@ export class MapScene {
     const w = this.directorWorld(now);
     const { mem, cut } = directorStep(this.director, w);
     this.director = mem;
+    // The scout subscribes early to the rooms of the agents most interesting right now: what is subscribed now is
+    // on screen after the lag, when the camera may want it.
+    const held = new Set(mem.room ? [mem.room] : []);
+    const scoutRooms = store.scout.leaderRooms(now, SCOUT_ROOMS, held);
+    store.setTopics(
+      'scout',
+      scoutRooms.map((r) => `room:${r}`),
+    );
+    if (config.debug) {
+      const top = [...(w.foresight?.interest ?? new Map<string, number>())].sort((a, b) => b[1] - a[1]).slice(0, 5);
+      controller.setDirectorDebug({ star: mem.star, top, lagMs: store.lagMs(), scoutRooms: scoutRooms.length });
+    }
     // A special moment keeps its own camera, topic and caption.
     if (mem.moment || !mem.star || !mem.room) return;
     const caption = starCaption(mem.star, mem.room, w.logs.get(mem.room) ?? [], w.nowTs);

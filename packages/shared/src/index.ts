@@ -7,3 +7,4 @@ export * from './moderation';
 export * from './protocol';
 export * from './rng';
 export * from './own';
+export * from './interest';

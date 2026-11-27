@@ -20,6 +20,7 @@
  * Event ids are increasing decimal strings. A `full` never contains an event that a later `batch` of the same topic
  * repeats, but a client that resubscribes may see an id twice: dedupe by id when in doubt.
  */
+import type { InterestIncrement } from './interest';
 
 export const SPECTATE_PATH = '/ws/spectate';
 /** Version of this protocol, sent in `hello.v`. */
@@ -248,6 +249,12 @@ export type SpectatorServerMsg =
       village?: VillageDelta;
       /** `world` only: highlights detected since the last batch, oldest first (the ticker). */
       highlights?: Highlight[];
+      /**
+       * `world` only: interest increments since the last batch (director mode), in event order. Every
+       * spectator-visible event gives points to its actor and half to a target agent (`eventPoints`); increments
+       * below `INTEREST.minPoints` are dropped and at most `INTEREST.maxPerBatch` (the largest) are sent.
+       */
+      interest?: InterestIncrement[];
     }
   | { t: 'pong' }
   | { t: 'error'; message: string; code?: SpectatorErrorCode; topic?: string };

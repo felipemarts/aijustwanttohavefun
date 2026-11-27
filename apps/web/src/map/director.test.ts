@@ -107,109 +107,122 @@ describe('rankMoments', () => {
   });
 });
 
-describe('directorStep', () => {
-  const busy = (star: string) => (t: number) =>
-    world(
-      [agent('Pip', 'a'), agent('Bo', 'b'), agent('Cy', 'c')],
-      { a: 2, b: 8, c: 4 },
-      // the star keeps busy, so the idle rule never applies
-      [ev('gather', t, star, star === 'Pip' ? 'a' : star === 'Bo' ? 'b' : 'c'), ev('kill', t, 'Bo', 'b'), ev('kill', t, 'Cy', 'c')],
-      t,
-    );
+describe('directorStep (with foresight)', () => {
+  const cast = [agent('Pip', 'a'), agent('Bo', 'b'), agent('Cy', 'c')];
+  /** A world where the scout foresees the given interest (and big moments, and rooms not buffered yet). */
+  const seen = (
+    interest: Record<string, number>,
+    t: number,
+    o: { big?: Record<string, number>; unbuffered?: string[]; agents?: StarAgent[]; drama?: Record<string, number> } = {},
+  ): DirectorWorld => ({
+    ...world(o.agents ?? cast, o.drama ?? {}, [], t),
+    foresight: {
+      interest: new Map(Object.entries(interest)),
+      big: new Map(Object.entries(o.big ?? {}).map(([n, p]) => [n, { p }])),
+      buffered: (room) => !o.unbuffered?.includes(room),
+    },
+  });
+  const starting = (star: string, interest: Record<string, number>) => {
+    const r = directorStep(initialDirector(), seen(interest, 0));
+    expect(r.cut?.star).toBe(star);
+    return r.mem;
+  };
 
-  it('picks a star at once, stays the minimum time, and switches by the maximum stay when drama is flat', () => {
-    const first = directorStep(initialDirector(), busy('Bo')(0));
-    expect(first.cut).toEqual({ star: 'Bo', room: 'b' });
-    const r = firstCut(first.mem, 1000, DIRECTOR.hardStayMs, busy('Bo'));
-    expect(r.at).toBe(DIRECTOR.maxStayMs);
-    expect(r.cut?.star).not.toBe('Bo');
-    expect(r.mem.prev).toBe('Bo');
+  it('follows the most interesting agent; without interest data, the drama of the rooms decides', () => {
+    expect(directorStep(initialDirector(), seen({ Pip: 3, Bo: 9, Cy: 4 }, 0)).cut).toEqual({ star: 'Bo', room: 'b' });
+    expect(directorStep(initialDirector(), { ...world(cast, { c: 5 }), foresight: undefined }).cut?.star).toBe('Cy');
   });
 
-  it('holds a star longer while the drama of their room keeps rising, but not past the hard limit', () => {
-    const w = (t: number) => ({ ...busy('Bo')(t), drama: { a: 2, b: 8 * Math.pow(1.1, t / 1000), c: 4 } });
-    const first = directorStep(initialDirector(), w(0));
-    const r = firstCut(first.mem, 1000, DIRECTOR.hardStayMs + 2000, w);
-    expect(r.at).toBe(DIRECTOR.hardStayMs);
+  it('stays the minimum time, then switches to a challenger 30 % more interesting', () => {
+    const mem = starting('Bo', { Bo: 10, Pip: 5 });
+    const strong = (t: number) => seen({ Bo: 10, Pip: 14 }, t);
+    expect(firstCut(mem, 1000, 30_000, strong)).toMatchObject({ at: DIRECTOR.minStayMs, cut: { star: 'Pip' } });
+    // 20 % more is not enough until the maximum stay
+    const close = (t: number) => seen({ Bo: 10, Pip: 12 }, t);
+    expect(firstCut(mem, 1000, 90_000, close)).toMatchObject({ at: DIRECTOR.maxStayMs, cut: { star: 'Pip' } });
+    // a challenger below the floor never counts as one
+    const tiny = (t: number) => seen({ Bo: 0.5, Pip: 1.5 }, t);
+    expect(firstCut(mem, 1000, DIRECTOR.maxStayMs - 1000, tiny).at).toBe(-1);
   });
 
-  it('switches early, after the minimum stay, when the star is idle and another room has drama', () => {
-    const quiet = (t: number) =>
-      world([agent('Pip', 'a'), agent('Bo', 'b')], { a: 9, b: 4 }, [ev('kill', 0, 'Pip', 'a'), ev('kill', t, 'Bo', 'b')], t);
-    const first = directorStep(initialDirector(), quiet(0));
-    expect(first.cut?.star).toBe('Pip');
-    const r = firstCut(first.mem, 1000, DIRECTOR.maxStayMs, quiet);
-    expect(r.at).toBe(DIRECTOR.minStayMs);
-    expect(r.cut).toEqual({ star: 'Bo', room: 'b' });
-    // with no drama anywhere else, an idle star is kept until the maximum stay
-    const alone = (t: number) => ({ ...quiet(t), drama: { a: 9 } });
-    expect(firstCut(directorStep(initialDirector(), alone(0)).mem, 1000, DIRECTOR.hardStayMs, alone).at).toBe(DIRECTOR.maxStayMs);
+  it('at the maximum stay, holds a star nobody else rivals; in a world with no interest at all, the drama decides', () => {
+    const mem = starting('Bo', { Bo: 10 });
+    expect(firstCut(mem, 1000, 120_000, (t) => seen({ Bo: 10 }, t)).at).toBe(-1);
+    const quiet = (t: number) => seen({}, t, { drama: { c: 3 } });
+    expect(firstCut(mem, 1000, 120_000, quiet)).toMatchObject({ at: DIRECTOR.maxStayMs, cut: { star: 'Cy' } });
   });
 
-  it('switches at once when the star leaves the world', () => {
-    const first = directorStep(initialDirector(), busy('Bo')(0));
-    const gone = { ...busy('Bo')(3000), agents: new Map([['Pip', agent('Pip', 'a')], ['Cy', agent('Cy', 'c')]]) };
-    const r = directorStep(first.mem, gone);
-    expect(r.cut?.star).toBe('Cy');
-    expect(r.mem.prev).toBe('Bo');
-    // nobody left: no star, and one is picked as soon as someone shows up
-    const empty = directorStep(first.mem, world([], {}, [], 3000));
+  it('cuts after only 6 s to arrive before a big moment of someone else', () => {
+    const mem = starting('Bo', { Bo: 10, Cy: 3 });
+    const coming = (t: number) => seen({ Bo: 10, Cy: 3 }, t, { big: { Cy: 16 } });
+    expect(firstCut(mem, 1000, 30_000, coming)).toMatchObject({ at: DIRECTOR.bigCutAfterMs, cut: { star: 'Cy', room: 'c' } });
+    // not when the star has a big moment coming too
+    const both = (t: number) => seen({ Bo: 10, Cy: 3 }, t, { big: { Cy: 16, Bo: 12 } });
+    expect(firstCut(mem, 1000, DIRECTOR.minStayMs - 1000, both).at).toBe(-1);
+    // a big moment is the first choice when there is no star yet, buffered or not
+    expect(directorStep(initialDirector(), seen({ Bo: 30, Cy: 3 }, 0, { big: { Cy: 12 }, unbuffered: ['c'] })).cut?.star).toBe('Cy');
+  });
+
+  it('a recent star counts at half interest, so the cast rotates', () => {
+    const mem = starting('Bo', { Bo: 10, Pip: 5 });
+    const pip = firstCut(mem, 1000, 30_000, (t) => seen({ Bo: 10, Pip: 14 }, t));
+    expect(pip).toMatchObject({ at: DIRECTOR.minStayMs, cut: { star: 'Pip' } });
+    expect(pip.mem.recent.Bo).toBe(DIRECTOR.minStayMs);
+    // Pip has been the star for 20 s; Bo would beat Pip by 1.6x, but counts at half while recent...
+    const onPip = { ...pip.mem, since: 100_000 };
+    expect(directorStep(onPip, seen({ Bo: 22, Pip: 14 }, 120_000)).cut).toBeNull();
+    // ...and at full interest two minutes after he stopped being the star
+    const after = DIRECTOR.minStayMs + DIRECTOR.recentStarMs;
+    expect(directorStep(onPip, seen({ Bo: 22, Pip: 14 }, after)).cut?.star).toBe('Bo');
+  });
+
+  it('prefers a candidate whose room is already buffered', () => {
+    expect(directorStep(initialDirector(), seen({ Pip: 10, Cy: 9 }, 0, { unbuffered: ['a'] })).cut?.star).toBe('Cy');
+    expect(directorStep(initialDirector(), seen({ Pip: 20, Cy: 9 }, 0, { unbuffered: ['a'] })).cut?.star).toBe('Pip');
+  });
+
+  it('never picks a fallen agent; holds a fallen star 5 s; replaces a star who leaves at once', () => {
+    const withFallen = [agent('Pip', 'a', 'd'), agent('Bo', 'b'), agent('Cy', 'c')];
+    expect(directorStep(initialDirector(), seen({ Pip: 50, Bo: 2 }, 0, { agents: withFallen })).cut?.star).toBe('Bo');
+    let mem = starting('Bo', { Bo: 10, Cy: 3 });
+    const fell = (t: number) => seen({ Bo: 10, Cy: 3 }, t, { agents: [agent('Bo', 'b', 'd'), agent('Cy', 'c')] });
+    mem = directorStep(mem, fell(2000)).mem;
+    expect(directorStep(mem, fell(2000 + DIRECTOR.fallenHoldMs - 1000)).cut).toBeNull();
+    expect(directorStep(mem, fell(2000 + DIRECTOR.fallenHoldMs)).cut?.star).toBe('Cy');
+    const fresh = starting('Bo', { Bo: 10, Cy: 3 });
+    const gone = directorStep(fresh, seen({ Cy: 3 }, 1000, { agents: [agent('Cy', 'c')] }));
+    expect(gone.cut?.star).toBe('Cy');
+    expect(gone.mem.prev).toBe('Bo');
+    const empty = directorStep(fresh, seen({}, 1000, { agents: [] }));
     expect(empty.cut).toBeNull();
     expect(empty.mem.star).toBeNull();
-    expect(directorStep(empty.mem, world([agent('Zed', 'z')], {}, [], 4000)).cut?.star).toBe('Zed');
   });
 
-  it('holds a fallen star a few seconds, then switches; a fallen agent is never picked', () => {
-    const w = (t: number, f?: string) => ({
-      ...busy('Bo')(t),
-      agents: new Map([
-        ['Bo', agent('Bo', 'b', f)],
-        ['Cy', agent('Cy', 'c')],
-        ['Pip', agent('Pip', 'a', 'd')],
-      ]),
-    });
-    let mem = directorStep(initialDirector(), w(0)).mem;
-    mem = directorStep(mem, w(2000, 'd')).mem;
-    expect(mem.fallenAt).toBe(2000);
-    expect(directorStep(mem, w(2000 + DIRECTOR.fallenHoldMs - 1000, 'd')).cut).toBeNull();
-    const r = directorStep(mem, w(2000 + DIRECTOR.fallenHoldMs, 'd'));
-    expect(r.cut).toEqual({ star: 'Cy', room: 'c' });
-  });
-
-  it('follows the star into another room and measures the rise there', () => {
-    let mem = directorStep(initialDirector(), busy('Bo')(0)).mem;
-    const moved = { ...busy('Bo')(5000), agents: new Map([['Bo', agent('Bo', 'c')], ['Pip', agent('Pip', 'a')]]) };
-    const r = directorStep(mem, moved);
+  it('follows the star into another room', () => {
+    const mem = starting('Bo', { Bo: 10 });
+    const r = directorStep(mem, seen({ Bo: 10 }, 3000, { agents: [agent('Bo', 'c'), agent('Pip', 'a')] }));
     expect(r.cut).toBeNull();
-    mem = r.mem;
-    expect(mem.star).toBe('Bo');
-    expect(mem.room).toBe('c');
-    expect(mem.peak).toBe(4);
+    expect(r.mem.room).toBe('c');
   });
 
   it('a special moment holds the camera, then the director comes back to the star', () => {
-    const first = directorStep(initialDirector(), busy('Bo')(0));
-    const held = startMoment(first.mem, 10_000, DIRECTOR.projectMs);
-    expect(directorStep(held, busy('Bo')(15_000)).cut).toBeNull();
-    const back = directorStep(held, busy('Bo')(10_000 + DIRECTOR.projectMs));
+    const mem = starting('Bo', { Bo: 10, Cy: 3 });
+    const held = startMoment(mem, 10_000, DIRECTOR.projectMs);
+    expect(directorStep(held, seen({ Bo: 10, Cy: 3 }, 15_000)).cut).toBeNull();
+    const back = directorStep(held, seen({ Bo: 10, Cy: 3 }, 10_000 + DIRECTOR.projectMs));
     expect(back.cut).toEqual({ star: 'Bo', room: 'b' });
-    expect(back.mem.moment).toBeNull();
-    // the moment's time is not counted against the star's stay
     expect(back.mem.since).toBe(DIRECTOR.projectMs);
     // a star whose time is nearly up is not brought back
-    const late = startMoment(first.mem, 40_000, DIRECTOR.projectMs);
-    const after = directorStep(late, busy('Bo')(40_000 + DIRECTOR.projectMs));
-    expect(after.cut?.star).toBe('Cy');
-    expect(after.mem.prev).toBe('Bo');
+    const late = startMoment(mem, 55_000, DIRECTOR.projectMs);
+    expect(directorStep(late, seen({ Bo: 10, Cy: 3 }, 55_000 + DIRECTOR.projectMs)).cut?.star).toBe('Cy');
     // the welcome postcard has no star: the director picks one when it ends
     const welcome = startMoment(initialDirector(), 0, DIRECTOR.welcomeMs);
-    expect(directorStep(welcome, busy('Bo')(DIRECTOR.welcomeMs)).cut?.star).toBe('Bo');
+    expect(directorStep(welcome, seen({ Bo: 10 }, DIRECTOR.welcomeMs)).cut?.star).toBe('Bo');
   });
 
-  it('after a resume, picks a new star right away, avoiding the one shown before', () => {
-    const first = directorStep(initialDirector(), busy('Bo')(0));
-    const r = directorStep(resumedDirector(first.mem), busy('Bo')(5000));
-    expect(r.cut?.star).toBe('Cy');
+  it('after a resume, picks a star right away, the one before the pause at half interest', () => {
+    const mem = starting('Bo', { Bo: 10, Cy: 6 });
+    expect(directorStep(resumedDirector(mem, 5000), seen({ Bo: 10, Cy: 6 }, 5000)).cut?.star).toBe('Cy');
   });
 });
 

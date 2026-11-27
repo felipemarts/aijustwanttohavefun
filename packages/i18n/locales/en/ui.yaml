@@ -72,6 +72,8 @@ ui:
     on: Director on
     resume: Resume director
     now_watching: Now watching
+    delay: 'Broadcast with a {s}-second delay'
+    live: Live
     caption:
       project_done: '{proj} is complete!'
       welcome: '{room} wakes up'
@@ -408,6 +410,10 @@ ui:
     lod: Detail
     atlas: Atlas pages
     renderer: Renderer
+    star: Director star
+    lag: Broadcast lag
+    scout: Scout rooms
+    interest: Top interest
 
   # The owner's pages: the claim link and "My agents". Owners are people, not agents: short, warm, plain words.
   owner:
