@@ -20,31 +20,31 @@
     drops: [{ item: stone, chance: 0.9, qty: 2 }, { item: iron_ore, chance: 0.5 }, { item: crystal, chance: 0.1 }] }
 - { id: crystal_beetle, level: 9, hp: 220, atk: 32, def: 16, xp: 45, gold: [8, 16], respawn_sec: 150,
     drops: [{ item: crystal, chance: 0.4 }, { item: copper_ring, chance: 0.03 }] }
-- { id: kobold_foreman, level: 10, hp: 420, atk: 37, def: 16, xp: 188, gold: [20, 40], respawn_sec: 300, elite: true, solo_crush: 2,
+- { id: kobold_foreman, level: 10, hp: 420, atk: 37, def: 16, xp: 132, gold: [20, 40], respawn_sec: 300, elite: true, solo_crush: 2,
     drops: [{ item: iron_ingot, chance: 0.4 }, { item: cos_goggles, chance: 0.05 }, { item: pot, chance: 0.2 }] }
-- { id: mire_toad, level: 10, hp: 260, atk: 37, def: 12, xp: 52, gold: [10, 18], respawn_sec: 120,
+- { id: mire_toad, level: 10, hp: 260, atk: 37, def: 12, xp: 36, gold: [10, 18], respawn_sec: 120,
     drops: [{ item: slime_gel, chance: 0.6 }, { item: raw_meat, chance: 0.3 }] }
-- { id: bog_lurker, level: 11, hp: 320, atk: 42, def: 14, xp: 64, gold: [12, 22], respawn_sec: 140,
+- { id: bog_lurker, level: 11, hp: 320, atk: 42, def: 14, xp: 45, gold: [12, 22], respawn_sec: 140,
     drops: [{ item: bog_lily, chance: 0.3 }, { item: leather, chance: 0.4 }] }
-- { id: will_o_wisp, level: 12, hp: 260, atk: 47, def: 10, xp: 71, gold: [12, 24], respawn_sec: 140,
+- { id: will_o_wisp, level: 12, hp: 260, atk: 47, def: 10, xp: 32, gold: [12, 24], respawn_sec: 140,
     drops: [{ item: ectoplasm, chance: 0.5 }, { item: moonstone_amulet, chance: 0.02 }] }
-- { id: swamp_hag, level: 13, hp: 520, atk: 50, def: 18, xp: 262, gold: [25, 45], respawn_sec: 400, elite: true, solo_crush: 2,
+- { id: swamp_hag, level: 13, hp: 520, atk: 50, def: 18, xp: 118, gold: [25, 45], respawn_sec: 400, elite: true, solo_crush: 2,
     drops: [{ item: shadowcap, chance: 0.4 }, { item: cos_witch_hat, chance: 0.04 }, { item: blue_dye, chance: 0.2 }] }
-- { id: skeleton, level: 12, hp: 330, atk: 45, def: 16, xp: 71, gold: [12, 22], respawn_sec: 140,
+- { id: skeleton, level: 12, hp: 330, atk: 45, def: 16, xp: 32, gold: [12, 22], respawn_sec: 140,
     drops: [{ item: bone, chance: 0.7 }, { item: ancient_relic, chance: 0.05 }] }
-- { id: bandit, level: 13, hp: 380, atk: 50, def: 18, xp: 82, gold: [20, 40], respawn_sec: 160,
+- { id: bandit, level: 13, hp: 380, atk: 50, def: 18, xp: 37, gold: [20, 40], respawn_sec: 160,
     drops: [{ item: linen, chance: 0.4 }, { item: leather, chance: 0.3 }, { item: bandit_signet, chance: 0.03 }] }
-- { id: wraith, level: 15, hp: 420, atk: 57, def: 18, xp: 112, gold: [20, 40], respawn_sec: 180,
+- { id: wraith, level: 15, hp: 420, atk: 57, def: 18, xp: 34, gold: [20, 40], respawn_sec: 180,
     drops: [{ item: ectoplasm, chance: 0.6 }, { item: cos_circlet, chance: 0.02 }, { item: crystal_pendant, chance: 0.02 }] }
-- { id: bandit_captain, level: 16, hp: 900, atk: 65, def: 26, xp: 525, gold: [60, 120], respawn_sec: 600, elite: true, solo_crush: 2,
+- { id: bandit_captain, level: 16, hp: 900, atk: 65, def: 26, xp: 158, gold: [60, 120], respawn_sec: 600, elite: true, solo_crush: 2,
     drops: [{ item: cos_royal_doublet, chance: 0.05 }, { item: bandit_signet, chance: 0.2 }, { item: star_iron, chance: 0.3 }] }
-- { id: crypt_guard, level: 16, hp: 650, atk: 65, def: 28, xp: 142, gold: [25, 50], respawn_sec: 600,
+- { id: crypt_guard, level: 16, hp: 650, atk: 65, def: 28, xp: 43, gold: [25, 50], respawn_sec: 600,
     drops: [{ item: bone, chance: 0.5 }, { item: plate_armor, chance: 0.02 }] }
-- { id: bone_hound, level: 17, hp: 560, atk: 72, def: 22, xp: 150, gold: [20, 40], respawn_sec: 600,
+- { id: bone_hound, level: 17, hp: 560, atk: 72, def: 22, xp: 45, gold: [20, 40], respawn_sec: 600,
     drops: [{ item: bone, chance: 0.6 }, { item: wolf_fang_charm, chance: 0.05 }] }
-- { id: the_hollow_regent, level: 20, hp: 6000, atk: 80, def: 35, xp: 1500, gold: [400, 800], respawn_sec: 7200, boss: true, aoe: 25, solo_crush: 3,
+- { id: the_hollow_regent, level: 20, hp: 6000, atk: 80, def: 35, xp: 450, gold: [400, 800], respawn_sec: 7200, boss: true, aoe: 25, solo_crush: 3,
     drops: [{ item: hollow_regents_scepter, chance: 0.25 }, { item: regent_eye, chance: 0.3 }, { item: cos_crown, chance: 0.15 }, { item: oathkeeper, chance: 0.2 },
             { item: mithril_ore, chance: 1, qty: 3 }, { item: star_iron, chance: 1, qty: 2 }] }
-- { id: ancient_colossus, level: 15, hp: 20000, atk: 60, def: 30, xp: 1125, gold: [100, 200], respawn_sec: 86400, boss: true, world_boss: true, aoe: 15, solo_crush: 4, min_group: 8,
+- { id: ancient_colossus, level: 15, hp: 20000, atk: 60, def: 30, xp: 338, gold: [100, 200], respawn_sec: 86400, boss: true, world_boss: true, aoe: 15, solo_crush: 4, min_group: 8,
     drops: [{ item: colossus_heart, chance: 0.1 }, { item: wyrmscale_armor, chance: 0.15 }, { item: cos_top_hat, chance: 0.2 }, { item: cos_feather_cloak, chance: 0.2 },
             { item: star_iron, chance: 1 }, { item: crystal, chance: 1, qty: 2 }] }

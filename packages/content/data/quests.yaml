@@ -191,14 +191,14 @@
   giver: scholar_ines
   level: 12
   steps: [{ type: kill, target: skeleton, qty: 6 }]
-  rewards: { xp: 550, gold: 150 }
+  rewards: { xp: 250, gold: 150 }
 - id: d_swamp_harvest
   kind: daily
   giver: hag_morwen
   level: 10
   steps: [{ type: collect, target: bog_lily, qty: 5 }]
   consume: [{ item: bog_lily, qty: 5 }]
-  rewards: { xp: 450, gold: 180 }
+  rewards: { xp: 315, gold: 180 }
 - id: d_fair_deal
   kind: daily
   giver: merchant_bram
@@ -234,7 +234,7 @@
   social: true
   party_min: 2
   steps: [{ type: kill, target: bandit, qty: 8 }]
-  rewards: { xp: 900, gold: 200 }
+  rewards: { xp: 405, gold: 200 }
 - id: c_bandits_2
   kind: chain
   giver: guard_east
@@ -243,7 +243,7 @@
   social: true
   party_min: 3
   steps: [{ type: kill, target: bandit_captain }]
-  rewards: { xp: 2000, gold: 500, items: [{ item: bandit_signet }] }
+  rewards: { xp: 900, gold: 500, items: [{ item: bandit_signet }] }
 - id: c_hag_1
   kind: chain
   giver: hag_morwen
@@ -251,7 +251,7 @@
   social: true
   steps: [{ type: collect, target: health_potion, qty: 2 }, { type: collect, target: hearty_stew, qty: 2 }, { type: collect, target: buckle, qty: 2 }]
   consume: [{ item: health_potion, qty: 2 }, { item: hearty_stew, qty: 2 }, { item: buckle, qty: 2 }]
-  rewards: { xp: 750, gold: 150, items: [{ item: shadowcap, qty: 3 }] }
+  rewards: { xp: 525, gold: 150, items: [{ item: shadowcap, qty: 3 }] }
 - id: c_hag_2
   kind: chain
   giver: hag_morwen
@@ -260,7 +260,7 @@
   social: true
   party_min: 2
   steps: [{ type: kill, target: swamp_hag }]
-  rewards: { xp: 1400, gold: 300, items: [{ item: cos_witch_hat }] }
+  rewards: { xp: 980, gold: 300, items: [{ item: cos_witch_hat }] }
 - id: c_golems_1
   kind: chain
   giver: foreman_brakka
@@ -285,7 +285,7 @@
   social: true
   party_min: 3
   steps: [{ type: puzzle, target: dungeon_levers }, { type: puzzle, target: dungeon_seal }]
-  rewards: { xp: 1500, gold: 300 }
+  rewards: { xp: 450, gold: 300 }
 - id: c_dungeon_2
   kind: chain
   giver: scholar_ines
@@ -294,7 +294,7 @@
   social: true
   party_min: 3
   steps: [{ type: boss, target: the_hollow_regent }]
-  rewards: { xp: 4000, gold: 1000, items: [{ item: regent_sigil }] }
+  rewards: { xp: 1200, gold: 1000, items: [{ item: regent_sigil }] }
 - id: c_civic_1
   kind: chain
   giver: clerk_aldo
@@ -329,7 +329,7 @@
   party_min: 2
   steps: [{ type: escort, target: ruins.outskirts }]
   escort: { npc: merchant_bram, to: ruins.outskirts }
-  rewards: { xp: 1300, gold: 400 }
+  rewards: { xp: 585, gold: 400 }
 
 # ── Side quests (2) ───────────────────────────────────────────────────────────
 - id: s_lost_locket
