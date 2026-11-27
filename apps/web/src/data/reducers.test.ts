@@ -112,7 +112,8 @@ describe('applyBatch', () => {
     expect(s.agents.has('Bo')).toBe(false);
     expect(s.roomLogs.get('b')!.length).toBe(1);
     expect(ch.moved).toEqual(['Pip']);
-    expect(ch.highlights).toBe(true);
+    // the ticker now takes highlights from `world` batches, not from events
+    expect(ch.highlights).toBe(false);
   });
 
   it('dedupes events by id and keeps the log bounded', () => {

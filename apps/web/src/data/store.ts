@@ -3,16 +3,17 @@
  * subscribe to small channels (`counts`, `log:<room>`, ...) through the hooks below, so a batch never re-renders
  * the whole app.
  */
-import type { AgentPos, SpectatorEvent } from '@ajwf/shared';
+import type { AgentPos, Highlight, SpectatorEvent } from '@ajwf/shared';
 import { useCallback, useSyncExternalStore } from 'react';
 import {
   applyBatch,
   applyFull,
   applyHello,
-  applyStats,
+  applyHighlights,
   type Changes,
   createState,
   dayFractionAt,
+  emptyChanges,
   type RoomExtras,
   type WorldState,
 } from './reducers';
@@ -40,7 +41,7 @@ export class LiveStore {
     phase: 'day' as string,
   };
   private now: () => number;
-  private statsTimer: ReturnType<typeof setInterval> | null = null;
+  private villageSnap: VillageSnapshot = emptyVillage();
 
   constructor(now: () => number = () => performance.now()) {
     this.now = now;
@@ -56,16 +57,17 @@ export class LiveStore {
       },
     });
     this.pushTopics();
-    const poll = async () => {
-      const body = await source.getJson('/api/public/stats');
-      if (body && this.source === source) this.dispatch(applyStats(this.state, body));
-    };
-    void poll();
-    this.statsTimer = setInterval(() => void poll(), 20_000);
+    // Population and online come with `village` batches; the ticker is seeded once with the latest highlights so it
+    // is not empty until the next big moment.
+    void source.getJson('/api/public/highlights?limit=8').then((body) => {
+      if (!body || this.source !== source || typeof body !== 'object') return;
+      const ch = emptyChanges();
+      applyHighlights(this.state, (body as { highlights?: unknown }).highlights, ch);
+      if (ch.highlights) this.dispatch(ch);
+    });
   }
 
   stop() {
-    if (this.statsTimer) clearInterval(this.statsTimer);
     this.source?.close();
     this.source = null;
   }
@@ -104,6 +106,7 @@ export class LiveStore {
     for (const room of ch.logs) this.emit(`log:${room}`);
     for (const room of ch.extras) this.emit(`extras:${room}`);
     if (ch.highlights) this.emit('highlights');
+    if (ch.village || ch.counts) this.refreshVillage();
     if (ch.rooms) this.emit('rooms');
     if (ch.agents) {
       for (const n of ch.moved) this.emit(`agent:${n}`);
@@ -130,6 +133,23 @@ export class LiveStore {
       return;
     this.countsSnap = { population: s.population, online: s.online, agents: s.agents.size, phase };
     this.emit('counts');
+  }
+
+  private refreshVillage() {
+    const s = this.state;
+    this.villageSnap = {
+      projects: s.projects,
+      buildings: s.buildings,
+      halls: s.halls,
+      civic: s.civic,
+      population: s.population,
+      online: s.online,
+    };
+    this.emit('village');
+  }
+
+  village() {
+    return this.villageSnap;
   }
 
   /** Called by the map once a second so the day phase counter advances between server updates. */
@@ -182,6 +202,26 @@ export class LiveStore {
   }
 }
 
+export type VillageSnapshot = {
+  projects: WorldState['projects'];
+  buildings: WorldState['buildings'];
+  halls: WorldState['halls'];
+  civic: WorldState['civic'];
+  population: number | null;
+  online: number | null;
+};
+
+function emptyVillage(): VillageSnapshot {
+  return {
+    projects: [],
+    buildings: {},
+    halls: {},
+    civic: { mayor: null, election: null, treasury: null, taxRate: null, priority: null },
+    population: null,
+    online: null,
+  };
+}
+
 export const store = new LiveStore();
 
 const EMPTY_LOG: SpectatorEvent[] = [];
@@ -214,9 +254,19 @@ export function useRoomExtras(room: string | null): RoomExtras | undefined {
   );
 }
 
-export function useHighlights(): SpectatorEvent[] {
+/** The live village (projects, halls, mayor, election, counts) as the `village` topic keeps it. */
+export function useLiveVillage(): VillageSnapshot {
+  return useSyncExternalStore(
+    useCallback((l: Listener) => store.subscribe('village', l), []),
+    () => store.village(),
+    () => store.village(),
+  );
+}
+
+export function useHighlights(): Highlight[] {
   return useSyncExternalStore(
     useCallback((l: Listener) => store.subscribe('highlights', l), []),
+    () => store.state.highlights,
     () => store.state.highlights,
   );
 }
@@ -225,6 +275,7 @@ export function useAgentPos(name: string | null): AgentPos | undefined {
   return useSyncExternalStore(
     useCallback((l: Listener) => (name ? store.subscribe(`agent:${name}`, l) : () => undefined), [name]),
     () => (name ? store.state.agents.get(name) : undefined),
+    () => undefined,
   );
 }
 

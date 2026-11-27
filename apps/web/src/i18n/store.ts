@@ -55,6 +55,8 @@ class I18nStore {
   private cache = new Map<Lang, Messages>();
   private offline = false;
   private seq = 0;
+  /** English fallback: the shell's strings, plus the pages' once a page chunk has registered them. */
+  private fallback: Messages = { ...uiEn };
 
   constructor() {
     const lang =
@@ -62,6 +64,15 @@ class I18nStore {
         ? detectLang(readStored(), navigator.languages ?? [navigator.language])
         : 'en';
     this.tr = new Translator(lang, {}, uiEn);
+  }
+
+  /** Lazy page chunks bring their own English strings (so the main bundle does not carry them). */
+  addFallback(messages: Messages) {
+    if (Object.keys(messages).every((k) => this.fallback[k] !== undefined)) return;
+    this.fallback = { ...this.fallback, ...messages };
+    const cached = this.cache.get(this.lang);
+    this.tr = new Translator(this.lang, cached ?? {}, { ...this.fallback, ...(this.lang === 'en' ? {} : (this.cache.get('en') ?? {})) });
+    this.emit();
   }
 
   get lang(): Lang {
@@ -87,7 +98,7 @@ class I18nStore {
     document.documentElement.dir = textDirection(lang);
     // Switch immediately (English fallback), then again when the catalog arrives.
     const cached = this.cache.get(lang);
-    this.tr = new Translator(lang, cached ?? {}, uiEn);
+    this.tr = new Translator(lang, cached ?? {}, this.fallback);
     this.emit();
     if (cached) return;
     let messages: Messages;
@@ -99,7 +110,7 @@ class I18nStore {
     this.cache.set(lang, messages);
     if (seq !== this.seq) return;
     this.tr = new Translator(lang, messages, {
-      ...uiEn,
+      ...this.fallback,
       ...(lang === 'en' ? {} : (this.cache.get('en') ?? {})),
     });
     this.emit();

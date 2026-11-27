@@ -20,6 +20,9 @@
     system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Helvetica Neue', Arial, 'PingFang SC',
     'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans CJK JP',
     sans-serif;
+  --serif:
+    'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', 'Noto Serif', 'Songti SC',
+    'Noto Serif CJK SC', 'Hiragino Mincho ProN', serif;
   --mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Noto Sans Mono', monospace;
   --bar-h: 52px;
   --ticker-h: 36px;
@@ -342,14 +345,57 @@ select:focus-visible {
   gap: 6px;
 }
 
-.lang-select select {
+.lang-select {
+  position: relative;
+  display: inline-flex;
+  margin: 2px;
+}
+
+.lang-face {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   min-block-size: 44px;
+  padding-inline: 10px;
   background: var(--panel-solid);
-  border: 0;
-  padding-inline: 8px;
   box-shadow: 0 0 0 2px var(--edge);
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.lang-face svg {
+  color: var(--teal);
+  flex: none;
+}
+
+.lang-caret {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.lang-short {
+  display: none;
+}
+
+/* The native select sits on top, invisible: the platform picker opens, the face never clips a name. */
+.lang-select select {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  opacity: 0;
   cursor: pointer;
-  max-inline-size: 150px;
+  border: 0;
+  font-size: 16px;
+}
+
+.lang-select:focus-within .lang-face {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+}
+
+.lang-select:hover .lang-face {
+  background: #2a2340;
 }
 
 .cta-short {
@@ -911,6 +957,333 @@ select:focus-visible {
   z-index: 6;
 }
 
+/* ── Navigation ───────────────────────────────────────────────────────────── */
+.topnav {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.topnav-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding-inline: 9px;
+  min-block-size: 44px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  position: relative;
+}
+
+.topnav-link:hover {
+  color: var(--text);
+}
+
+.topnav-link.is-active {
+  color: var(--amber);
+}
+
+.topnav-link.is-active::after {
+  content: '';
+  position: absolute;
+  inset-inline: 9px;
+  inset-block-end: 6px;
+  block-size: 2px;
+  background: var(--amber);
+}
+
+.topbar.is-map .topnav-link:not(.is-active) {
+  color: #9a8fae;
+}
+
+.topnav-link:focus-visible,
+.drawer-link:focus-visible,
+.tab:focus-visible,
+.agent-link:focus-visible,
+.ticker-label:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.drawer-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 9, 18, 0.55);
+  z-index: 40;
+  animation: fade 160ms var(--ease) both;
+}
+
+.drawer {
+  position: absolute;
+  inset-block: var(--bar-h) 0;
+  inset-inline-end: 0;
+  inline-size: min(340px, 100%);
+  margin: 0;
+  padding: 14px 14px 20px;
+  background: var(--panel-solid);
+  overflow-y: auto;
+  animation: slide-in 200ms var(--ease) both;
+}
+
+.drawer .sheet-handle {
+  display: none;
+}
+
+.drawer-title {
+  font-size: 1rem;
+  color: var(--muted);
+  margin-block-end: 8px;
+}
+
+.drawer-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.drawer-link {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  min-block-size: 44px;
+  text-decoration: none;
+  color: var(--text);
+  background: #241e34;
+  box-shadow: inset 0 0 0 1px #3a3050;
+}
+
+.drawer-link.is-active {
+  box-shadow: inset 4px 0 0 0 var(--amber), inset 0 0 0 1px #8a6a2a;
+}
+
+[dir='rtl'] .drawer-link.is-active {
+  box-shadow: inset -4px 0 0 0 var(--amber), inset 0 0 0 1px #8a6a2a;
+}
+
+.drawer-link-name {
+  font-weight: 700;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.06em;
+  font-size: 1.05rem;
+}
+
+.drawer-link-hint {
+  color: var(--muted);
+}
+
+.drawer-counts {
+  margin-block: 14px 0;
+}
+
+@media (min-width: 1200px) {
+  .topnav {
+    display: flex;
+  }
+  .menu-btn {
+    display: none;
+  }
+  .counters {
+    margin-inline-start: auto;
+  }
+}
+
+@media (max-width: 1599px) {
+  .topbar .brand-name {
+    display: none;
+  }
+}
+
+@media (min-width: 1200px) and (max-width: 1599px) {
+  .counter-pop,
+  .chip-demo,
+  .counter-phase {
+    display: none;
+  }
+}
+
+@media (max-width: 1199px) {
+  .topbar .brand-name {
+    display: inline;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar .brand-name {
+    display: none;
+  }
+  .drawer {
+    inset-block: auto 0;
+    inset-inline: 0;
+    inline-size: auto;
+    max-block-size: 80%;
+    animation-name: sheet-up;
+  }
+  .drawer .sheet-handle {
+    display: block;
+    margin: 0 auto 10px;
+  }
+  .drawer-links {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.ticker-label {
+  text-decoration: none;
+}
+
+.ticker-item.tone-danger::before {
+  color: var(--red);
+}
+
+.ticker-item.tone-teal::before {
+  color: var(--teal);
+}
+
+/* ── Page frame ───────────────────────────────────────────────────────────── */
+.page.page-scroll {
+  display: block;
+  padding: 0;
+}
+
+.page-inner {
+  inline-size: min(980px, 100%);
+  margin-inline: auto;
+  padding: 24px 16px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.page-inner.is-wide {
+  inline-size: min(1240px, 100%);
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-block-end: 10px;
+  box-shadow: 0 2px 0 0 #2c2440;
+}
+
+.page-kicker {
+  margin: 0 0 2px;
+  color: var(--teal);
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.page-title {
+  font-size: clamp(1.5rem, 3.2vw, 2.1rem);
+  color: var(--text);
+  text-shadow: 2px 2px 0 var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+  margin-block-end: 10px;
+}
+
+.vcard {
+  padding: 16px;
+  min-inline-size: 0;
+}
+
+.vcard > .heading-sm:first-of-type {
+  margin-block-start: 4px;
+}
+
+.pixel-icon {
+  flex: none;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* ── States ───────────────────────────────────────────────────────────────── */
+.state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 28px 18px;
+}
+
+.state-box.is-loading {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.state-title {
+  margin: 4px 0 0;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.state-box p {
+  margin: 0;
+  max-inline-size: 52ch;
+}
+
+.skeleton {
+  flex-basis: 100%;
+  display: grid;
+  gap: 8px;
+  margin-block-start: 10px;
+}
+
+.skeleton span {
+  display: block;
+  block-size: 14px;
+  background: linear-gradient(90deg, #262036 0 40%, #2f2842 50%, #262036 60% 100%) 0 0 / 300% 100%;
+  animation: shimmer 1.4s steps(12) infinite;
+}
+
+.skeleton span:nth-child(2) {
+  inline-size: 80%;
+}
+
+.skeleton span:nth-child(3) {
+  inline-size: 60%;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.load-more {
+  display: flex;
+  justify-content: center;
+  padding-block: 8px;
+}
+
+.end-note {
+  text-align: center;
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 /* ── Phones ───────────────────────────────────────────────────────────────── */
 @media (max-width: 860px) {
   .counter-pop,
@@ -940,8 +1313,11 @@ select:focus-visible {
   .cta-short {
     display: inline;
   }
-  .lang-select select {
-    max-inline-size: 92px;
+  .lang-long {
+    display: none;
+  }
+  .lang-short {
+    display: inline;
   }
   .caption-wrap {
     inset-block-start: 10px;

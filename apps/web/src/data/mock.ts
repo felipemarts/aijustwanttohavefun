@@ -5,6 +5,7 @@
  */
 import type { AgentPos, DayPhase, RoomInfo, SpectatorEvent, WorldFull } from '@ajwf/shared';
 import { hash32, rng } from '../util/rng';
+import { MockCivic } from './mockCivic';
 import { drawMockSheet } from './mockSprites';
 import type { DataSource, SourceHandlers } from './source';
 import type { StaticRoom, StaticWorld } from './staticWorld';
@@ -24,6 +25,10 @@ export type MockOptions = {
   /** Advance with setInterval (browser). Tests call `tick()` themselves. */
   autoTick?: boolean;
   tickMs?: number;
+  /** Start time (defaults to the real clock, so relative times read naturally). */
+  now?: number;
+  /** Every village project already built (screenshots of the finished village). */
+  builtAll?: boolean;
 };
 
 const CLASSES = ['warrior', 'mage', 'rogue', 'cleric'];
@@ -186,7 +191,9 @@ export class MockSource implements DataSource {
   private timer: ReturnType<typeof setInterval> | null = null;
   private rand: () => number;
   private seq = 1;
-  private now = 1_700_000_000_000;
+  private now: number;
+  readonly civic: MockCivic;
+  private lastCountsAt = 0;
   private dayT: number;
   private dayLengthMs: number;
   private phase: DayPhase | null;
@@ -197,7 +204,7 @@ export class MockSource implements DataSource {
   private pendingPos = new Map<string, AgentPos>();
   private pendingGone: string[] = [];
   private nextArrival = 0;
-  private readonly opts: Required<Omit<MockOptions, 'phase'>>;
+  private readonly opts: Required<Omit<MockOptions, 'phase' | 'now' | 'builtAll'>>;
   private spriteCache = new Map<string, HTMLCanvasElement>();
 
   constructor(
@@ -214,6 +221,7 @@ export class MockSource implements DataSource {
       tickMs: opts.tickMs ?? 250,
     };
     this.phase = opts.phase ?? null;
+    this.now = opts.now ?? Date.now();
     this.rand = rng(this.opts.seed);
     this.rooms = world.rooms;
     this.roomById = new Map(world.rooms.map((r) => [r.id, r]));
@@ -225,6 +233,22 @@ export class MockSource implements DataSource {
       this.alive.set(r.id, m);
     }
     this.populate();
+    this.civic = new MockCivic(
+      [...this.agents.values()].map((a) => this.infoOf(a)),
+      world,
+      this.opts.seed,
+      this.now,
+      { builtAll: opts.builtAll ?? false },
+    );
+  }
+
+  private infoOf(a: MockAgent) {
+    return { name: a.pos.n, cls: a.pos.c, lvl: a.pos.l, sprite: a.pos.s, title: a.pos.t, lang: a.lang };
+  }
+
+  /** Debug (`?debug=1`, `ajwf.source.completeProject('library')`): finish a project now. */
+  completeProject(id: string) {
+    this.civic.completeProject(id);
   }
 
   // ── DataSource ─────────────────────────────────────────────────────────────
@@ -267,30 +291,19 @@ export class MockSource implements DataSource {
     if (agent) {
       const a = this.agents.get(decodeURIComponent(agent[1]!));
       if (!a) return null;
-      return {
-        ok: true,
-        agent: {
-          name: a.pos.n,
-          class: a.pos.c,
-          lvl: a.pos.l,
-          title: a.pos.t,
-          profession: null,
-          sprite: a.pos.s,
-          look: null,
-          bio: { untrusted_text: `${a.pos.n} came to Mistvale looking for <i>adventure</i> & snacks.` },
-          claimed: false,
-          bot: true,
-          achievements: ACHS.slice(0, 1 + (hash32(a.pos.n) % 4)),
-        },
-      };
+      return this.civic.profile(this.infoOf(a), a.pos.r);
     }
+    const civic = this.civic.getJson(path, this.counts(), (n) => {
+      const a = this.agents.get(n);
+      return a ? this.infoOf(a) : null;
+    });
+    if (civic !== undefined) return civic;
     const room = /^\/api\/public\/rooms\/([^/?]+)/.exec(path);
     if (room) return this.roomFull(decodeURIComponent(room[1]!));
     if (path.startsWith('/api/public/stats'))
       return {
         now: this.now,
-        population: this.agents.size + 120,
-        online: this.agents.size,
+        ...this.counts(),
         byClass: {},
         day: this.dayInfo(),
         spectators: 3,
@@ -319,9 +332,14 @@ export class MockSource implements DataSource {
     return [...this.agents.keys()];
   }
 
+  private counts() {
+    return { population: this.agents.size + 120, online: this.agents.size };
+  }
+
   /** Advances the simulation by `dt` ms and flushes one batch per subscribed topic. */
   tick(dt: number) {
     this.now += dt;
+    this.civic.tick(this.now);
     if (!this.phase) this.dayT = (this.dayT + dt / this.dayLengthMs) % 1;
     for (const [room, d] of this.drama) {
       const v = d * Math.pow(0.5, dt / 60_000);
@@ -673,10 +691,20 @@ export class MockSource implements DataSource {
     this.pendingEvents = [];
     this.pendingPos.clear();
     this.pendingGone = [];
+    const { delta, highlights } = this.civic.takeDelta();
+    const countsDue = this.now - this.lastCountsAt >= 5000;
+    if (countsDue) this.lastCountsAt = this.now;
     if (!this.handlers) return;
     for (const topic of this.topics) {
       if (topic === 'world') {
         const big = events.filter((e) => e.type !== 'say');
+        const map = delta
+          ? {
+              ...(delta.projects ? { projects: delta.projects } : {}),
+              ...(delta.buildings ? { buildings: delta.buildings } : {}),
+              ...(delta.halls ? { halls: delta.halls } : {}),
+            }
+          : null;
         this.send({
           t: 'batch',
           topic,
@@ -685,7 +713,12 @@ export class MockSource implements DataSource {
           ...(pos.length ? { pos } : {}),
           ...(gone.length ? { gone } : {}),
           drama: this.topDrama(),
+          ...(map && Object.keys(map).length ? { village: map } : {}),
+          ...(highlights.length ? { highlights } : {}),
         });
+      } else if (topic === 'village') {
+        const v = { ...(delta ?? {}), ...(countsDue ? this.counts() : {}) };
+        if (Object.keys(v).length) this.send({ t: 'batch', topic, now: this.now, events: [], village: v });
       } else if (topic.startsWith('room:')) {
         const id = topic.slice(5);
         const evs = events.filter((e) => e.room === id);
@@ -719,11 +752,9 @@ export class MockSource implements DataSource {
         topic,
         data: {
           now: this.now,
-          population: this.agents.size + 120,
-          online: this.agents.size,
+          ...this.counts(),
           day: this.dayInfo(),
-          buildings: {},
-          projects: this.projects(),
+          ...this.civic.villageFull(),
         },
       });
     else if (topic.startsWith('room:')) {
@@ -753,15 +784,6 @@ export class MockSource implements DataSource {
     return { phase, t, lengthMs: this.phase ? 1e15 : this.dayLengthMs };
   }
 
-  /** Projects in all three states so the plots can be seen: one done, one in progress, the rest empty. */
-  private projects() {
-    return [
-      { id: 'watchtower', plot: 'village.plot_ne', progress: 1, done: true },
-      { id: 'library', plot: 'village.plot_nw', progress: 0.62, done: false },
-      { id: 'bridge', plot: 'village.river_bank', progress: 0.35, done: false },
-    ];
-  }
-
   worldFull(): WorldFull {
     const rooms: RoomInfo[] = this.rooms.map((r) => ({
       id: r.id,
@@ -770,15 +792,15 @@ export class MockSource implements DataSource {
       flags: r.flags,
       exits: r.exits,
       plot: r.plot,
-      building: r.id === 'village.plot_ne' ? 'watchtower' : null,
     }));
     return {
       now: this.now,
       rooms,
       agents: [...this.agents.values()].map((a) => a.pos),
       drama: this.topDrama(),
-      buildings: { 'village.plot_ne': 'watchtower' },
-      projects: this.projects(),
+      buildings: this.civic.buildings(),
+      projects: this.civic.projectInfos(),
+      halls: this.civic.hallMap(),
       day: this.dayInfo(),
     };
   }

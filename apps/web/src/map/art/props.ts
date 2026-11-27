@@ -966,3 +966,172 @@ export function projectBuilding(building: string): Art {
       });
   }
 }
+
+// ── Village growth: upgraded sites, guild halls, the statue ──────────────────────
+
+/** `#rrggbb` (already validated) to a colour number; falls back on bad input. */
+export function hexColor(hex: string, fallback = 0xd9534f): number {
+  return /^#[0-9a-fA-F]{6}$/.test(hex) ? Number.parseInt(hex.slice(1), 16) : fallback;
+}
+
+/** A guild banner on a pole in two colours: the field and a cross of the second colour. */
+export function guildBanner(c1: number, c2: number, tall = 16): Art {
+  const b = new PixelBuf(10, tall + 4);
+  b.rect(0, 0, 9, 0, P.woodDark);
+  b.rect(1, 1, 8, tall - 2, c1);
+  b.rect(1, Math.floor(tall / 2) - 2, 8, Math.floor(tall / 2), c2);
+  b.rect(4, 2, 5, tall - 3, c2);
+  b.rect(1, 1, 8, 1, shade(c1, 1.2));
+  b.rect(1, tall - 1, 2, tall, c1);
+  b.rect(4, tall - 1, 5, tall + 1, c1);
+  b.rect(7, tall - 1, 8, tall, c1);
+  return art(b, 5, tall + 3);
+}
+
+/** A guild hall: a stone-footed hall with a pennant, the crest over the door and banners in the guild colours. */
+export function guildHall(c1: number, c2: number): Art {
+  const roof = mix(c1, 0x4a3d66, 0.45);
+  const base = house({ w: 76, wallH: 30, roofH: 24, roof, wall: 0xe6dcc6, frame: 0x5a4a3a, windows: 4, door: 'center', chimney: true });
+  const W = base.buf.w;
+  const b = pad(base, 10, 14, 10, 0);
+  // pennant on the ridge
+  b.buf.rect(10 + Math.floor(W / 2), 0, 10 + Math.floor(W / 2), 15, P.woodDark);
+  b.buf.rect(11 + Math.floor(W / 2), 1, 18 + Math.floor(W / 2), 4, c1);
+  b.buf.rect(11 + Math.floor(W / 2), 3, 15 + Math.floor(W / 2), 4, c2);
+  // crest over the door
+  const cx = 10 + Math.floor(W / 2);
+  const crestY = 14 + 24 + 4 + 1;
+  b.buf.rect(cx - 4, crestY - 1, cx + 3, crestY + 6, OUTLINE);
+  b.buf.rect(cx - 3, crestY, cx + 2, crestY + 5, c1);
+  b.buf.rect(cx - 3, crestY + 2, cx + 2, crestY + 3, c2);
+  // stone footing
+  const foot = b.buf.h - 2;
+  b.buf.rect(12, foot, W + 7, foot + 1, (x) => ((x >> 2) % 2 ? P.stoneDark : P.stone));
+  compose(b, guildBanner(c1, c2, 20), -Math.floor(W / 2) - 4, -2);
+  compose(b, guildBanner(c1, c2, 20), Math.floor(W / 2) + 4, -2);
+  return b;
+}
+
+/** The tavern's new wing (inn expansion): a two-storey guest house with a balcony and a bed sign. */
+export function innWing(): Art {
+  const base = house({ w: 50, wallH: 36, roofH: 20, roof: P.roofDark, windows: 2, door: 'right', chimney: true });
+  const W = base.buf.w;
+  const b = base.buf;
+  // upper floor windows and a balcony rail
+  const wy = 4 + 20 + 3;
+  for (const x of [8, W - 15]) {
+    b.rect(x - 1, wy - 1, x + 5, wy + 5, P.timber);
+    b.rect(x, wy, x + 4, wy + 4, P.window);
+    b.px(x, wy, shade(P.window, 1.4));
+    base.lights.push({ x: x + 2, y: wy + 2, kind: 'window', w: 5, h: 5 });
+  }
+  b.rect(3, wy + 7, W - 4, wy + 7, P.woodDark);
+  for (let x = 4; x < W - 4; x += 3) b.rect(x, wy + 8, x, wy + 10, P.wood);
+  b.rect(3, wy + 11, W - 4, wy + 11, P.woodDark);
+  return compose(base, hangingSign(0x7fa6e8), -Math.floor(W / 2) + 10, -18);
+}
+
+/** The covered market: a long timber roof on posts over the stalls, open at the front. */
+export function coveredMarket(len: number, seed: number): Art {
+  const r = rng(seed);
+  const H = 50;
+  const b = new PixelBuf(len, H);
+  const roofH = 16;
+  // back wall in shade
+  b.rect(3, roofH, len - 4, H - 14, (x, y) => ((x + (y >> 2)) % 7 === 0 ? 0x5a4030 : 0x6b4a33));
+  // stalls' counters under the roof
+  for (let x = 6; x < len - 10; x += 26) {
+    b.rect(x, H - 22, x + 20, H - 15, P.wood);
+    b.rect(x, H - 22, x + 20, H - 22, P.woodLight);
+    for (let i = 0; i < 6; i++)
+      b.rect(x + 2 + i * 3, H - 25, x + 3 + i * 3, H - 23, [P.flowerRed, P.flowerYellow, 0x7fb069, 0xd9823b, P.flowerWhite][Math.floor(r() * 5)]!);
+  }
+  // posts
+  for (let x = 2; x < len - 2; x += 24) b.rect(x, roofH - 2, x + 2, H - 2, P.woodDark);
+  b.rect(len - 5, roofH - 2, len - 3, H - 2, P.woodDark);
+  // roof: shingles with a striped valance
+  for (let y = 0; y < roofH; y++) {
+    const inset = Math.max(0, 3 - Math.floor(y / 2));
+    b.rect(inset, y, len - 1 - inset, y, (x) =>
+      y === 0 ? shade(0x8a5a3a, 0.75) : y % 4 === 3 ? shade(0x8a5a3a, 0.8) : (x + (y >> 2) * 3) % 7 === 0 ? shade(0x8a5a3a, 0.88) : 0x8a5a3a,
+    );
+  }
+  b.rect(0, roofH, len - 1, roofH + 3, (x) => (Math.floor(x / 5) % 2 ? 0xd9534f : P.flowerWhite));
+  for (let x = 0; x < len; x += 5) if (Math.floor(x / 5) % 2) b.rect(x + 1, roofH + 4, x + 3, roofH + 4, 0xd9534f);
+  b.rect(0, roofH - 1, len - 1, roofH - 1, shade(0x8a5a3a, 0.6));
+  return art(b, Math.floor(len / 2), H - 1, [
+    { x: Math.floor(len * 0.25), y: roofH + 6, kind: 'lamp' },
+    { x: Math.floor(len * 0.75), y: roofH + 6, kind: 'lamp' },
+  ]);
+}
+
+/** A stretch of stone wall with crenellations (front face), `h` tall. */
+export function wallRun(len: number, h = 24): Art {
+  const b = new PixelBuf(len, h);
+  b.rect(0, 5, len - 1, h - 1, (x, y) =>
+    (x + (Math.floor(y / 4) % 2) * 4) % 8 === 0 || y % 4 === 0 ? P.stoneDark : y > h - 5 ? shade(P.stone, 0.85) : P.stone,
+  );
+  for (let x = 0; x < len; x += 7) b.rect(x, 0, Math.min(len - 1, x + 3), 5, (xx, y) => (y === 0 ? P.stoneLight : P.stone));
+  b.rect(0, 5, len - 1, 5, P.stoneLight);
+  // a few mossy stones
+  for (let x = 3; x < len; x += 11) b.px(x, h - 3, P.ivy);
+  return art(b, Math.floor(len / 2), h - 1);
+}
+
+/** A square gate tower with a crenellated top, an arrow slit and a torch. */
+export function gateTower(flag = 0x5b8def): Art {
+  const W = 22;
+  const H = 46;
+  const b = new PixelBuf(W, H);
+  b.rect(1, 8, W - 2, H - 1, (x, y) =>
+    (x + (Math.floor(y / 4) % 2) * 4) % 8 === 0 || y % 4 === 0 ? P.stoneDark : x > W - 7 ? shade(P.stone, 0.85) : P.stone,
+  );
+  for (let x = 0; x < W; x += 6) b.rect(x, 3, Math.min(W - 1, x + 3), 8, P.stone);
+  b.rect(0, 8, W - 1, 9, P.stoneLight);
+  b.rect(10, 16, 11, 24, 0x1a1420);
+  b.rect(10, 0, 10, 4, P.woodDark);
+  b.rect(11, 0, 15, 2, flag);
+  return art(b, Math.floor(W / 2), H - 1, [{ x: 10, y: 20, kind: 'torch' }]);
+}
+
+/** A stepped stone plinth with a gold plaque; the figure on top is drawn separately. */
+export function plinth(): Art {
+  const b = new PixelBuf(30, 20);
+  b.rect(0, 14, 29, 19, P.stoneDark);
+  b.rect(0, 14, 29, 14, P.stone);
+  b.rect(3, 4, 26, 14, (x, y) => (y % 5 === 4 ? P.stoneDark : x > 21 ? shade(P.stoneLight, 0.88) : P.stoneLight));
+  b.rect(2, 2, 27, 4, P.stone);
+  b.rect(2, 2, 27, 2, P.stoneLight);
+  b.rect(9, 7, 20, 11, 0xb9842a);
+  b.rect(10, 8, 19, 10, P.gold);
+  b.rect(11, 9, 18, 9, 0xb9842a);
+  return art(b, 15, 19);
+}
+
+/** Round flower bed edged with stones (statue garden). */
+export function flowerBed(seed: number): Art {
+  const b = new PixelBuf(22, 10);
+  b.ellipse(0, 0, 21, 9, P.stone);
+  b.ellipse(2, 1, 19, 8, 0x5f8a46);
+  flowers(b, 3, 1, seed, [P.flowerRed, P.flowerYellow, P.flowerWhite]);
+  flowers(b, 10, 2, seed + 1, [P.flowerBlue, P.flowerWhite]);
+  return art(b, 11, 9);
+}
+
+/**
+ * Recolours an agent sheet's first frame as cast bronze: every opaque pixel is mapped by its luminance onto a
+ * four-step ramp, the outline stays dark. Works on raw RGBA (20x28).
+ */
+export function bronzeFrame(rgba: Uint8ClampedArray, w = 20, h = 28): PixelBuf {
+  const ramp = [0x3a2a1c, 0x6a4a2a, 0x9a6a3a, 0xc8944e, 0xe8c07a];
+  const b = new PixelBuf(w, h);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      if (rgba[i + 3]! < 128) continue;
+      const l = (0.299 * rgba[i]! + 0.587 * rgba[i + 1]! + 0.114 * rgba[i + 2]!) / 255;
+      const k = l < 0.18 ? 0 : Math.min(ramp.length - 1, 1 + Math.floor(l * (ramp.length - 1)));
+      b.px(x, y, ramp[k]!);
+    }
+  return b;
+}

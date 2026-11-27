@@ -250,6 +250,72 @@ export class Effects {
     });
   }
 
+  /**
+   * A project is finished: dust rolls out along the base of the new building, then confetti bursts over its roof.
+   * (x, y) is the ground point under the building's centre, `w` its width, `h` its height.
+   */
+  celebrate(x: number, y: number, w: number, h: number, now: number) {
+    const puffs = this.reduced ? 2 : 7;
+    for (let i = 0; i < puffs; i++) {
+      const s = this.sprite(this.tex.fx.poof0!);
+      const px = x - w / 2 + (w * (i + 0.5)) / puffs;
+      const delay = i * 60;
+      s.visible = false;
+      this.add({
+        t0: now + delay,
+        dur: 900,
+        x: px,
+        y,
+        sprites: [s],
+        text: null,
+        step: (_fx, f) => {
+          s.visible = true;
+          s.texture = this.tex.fx[`poof${Math.min(3, Math.floor(f * 4))}`]!;
+          s.position.set(px + (i % 2 ? 1 : -1) * f * 10, y - 6 - f * 8);
+          s.scale.set(1 + f * 0.8);
+          s.alpha = 1 - f * 0.6;
+        },
+      });
+    }
+    if (this.reduced) return;
+    const COLORS = [0xf2b84b, 0x5fc9b5, 0xe0605a, 0x7fa6e8, 0xf1e6cf, 0x8af08a];
+    const n = 36;
+    const sprites: Sprite[] = [];
+    const parts: { vx: number; vy: number; sway: number; spin: number }[] = [];
+    for (let i = 0; i < n; i++) {
+      const s = this.sprite(this.tex.fx.white!);
+      s.tint = COLORS[i % COLORS.length]!;
+      s.scale.set(i % 3 === 0 ? 2 : 1.5, i % 2 ? 1.5 : 1);
+      sprites.push(s);
+      const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.9;
+      const v = 70 + Math.random() * 90;
+      parts.push({ vx: Math.cos(a) * v, vy: Math.sin(a) * v, sway: Math.random() * 6, spin: (Math.random() - 0.5) * 12 });
+    }
+    const top = y - h;
+    this.add({
+      t0: now + 250,
+      dur: 2800,
+      x,
+      y: top,
+      sprites,
+      text: null,
+      step: (_fx, f) => {
+        const t = f * 2.8;
+        sprites.forEach((s, i) => {
+          const p = parts[i]!;
+          // ballistic, then air drag makes it flutter down
+          const drag = Math.min(t, 0.9);
+          s.position.set(
+            x + p.vx * drag + Math.sin(t * 5 + i) * p.sway,
+            top + p.vy * drag + 60 * Math.max(0, t - 0.5) ** 1.3 + 30 * t * t * 0.3,
+          );
+          s.rotation = t * p.spin;
+          s.alpha = f > 0.75 ? (1 - f) / 0.25 : 1;
+        });
+      },
+    });
+  }
+
   /** A small ore or crystal glint on the cave walls (ambient). */
   twinkle(x: number, y: number, color: number, now: number) {
     const s = this.sprite(this.tex.fx.glint!);
