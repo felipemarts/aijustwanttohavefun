@@ -90,8 +90,8 @@ export function scriptedRng(values: number[]): Rng {
   };
 }
 
-export function makeKit(seed = 1, start = T0): Kit {
-  const c = loadContent();
+export function makeKit(seed = 1, start = T0, content?: Content): Kit {
+  const c = content ?? loadContent();
   const s = createWorld(c, start);
   const kit: Kit = {
     s,

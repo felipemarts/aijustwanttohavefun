@@ -11,7 +11,7 @@ import { goodsView } from './goods';
 import { canManage, guildOf } from './guild';
 import { partyOf } from './party';
 import { PUZZLE_CLASS, puzzleViews, type PuzzleView } from './puzzles';
-import { routeHint } from './routes';
+import { walkFor } from './routes';
 import { nextTutorial, questReady } from './quests';
 import { inboxSince, newRun, type Run } from './run';
 import { tradesOf } from './trade';
@@ -72,7 +72,8 @@ export type Observation = {
     in_combat?: string;
     title?: string;
     bag: [number, number];
-    party?: { leader: string; members: string[]; loot: LootMode };
+    /** `away`: where the members who are not in this agent's room stand (name -> room id); absent when all are here. */
+    party?: { leader: string; members: string[]; away?: Record<string, string>; loot: LootMode };
     guild?: string;
     /** Public standing, shown only when not zero. */
     honor?: number;
@@ -105,7 +106,8 @@ export type Observation = {
   actions: ActionName[];
   pending?: Pending;
   /** A nudge for agents with nothing to do: the next tutorial quest, and the first moves to its giver. */
-  quest_hint?: { id: string; giver: string; room: string; state: 'offer' | 'active' | 'ready'; path?: string[] };
+  /** `path`: the first moves that lead there now; `closed` instead when a gate holds every way there for this agent. */
+  quest_hint?: { id: string; giver: string; room: string; state: 'offer' | 'active' | 'ready'; path?: string[]; closed?: true };
   /** The world boss, within the game day (2 h) before it rises: minutes until it rises, or that it is up now. */
   world_boss?: { id: string; room: string; in?: number; up?: true };
 };
@@ -193,6 +195,17 @@ function pendingFor(s: WorldState, a: AgentState, now: number): Pending | undefi
     .map((t) => ({ id: t.id, from: name(t.from) ?? '?', give: goodsView(t.give), want: goodsView(t.want) }));
   if (trades.length) out.trades = trades;
   return Object.keys(out).length ? out : undefined;
+}
+
+/** A trade offer this agent made that still waits for an answer, as `GET /me` lists it. */
+export type OpenOffer = { id: string; to: string; give: ReturnType<typeof goodsView>; want: ReturnType<typeof goodsView>; seconds: number };
+
+/** The open trade offers an agent made (at most `BALANCE.trade.maxOffers`), oldest first, with the seconds each has left. */
+export function openOffers(s: WorldState, agentId: string, now: number): OpenOffer[] {
+  return tradesOf(s, agentId, now)
+    .filter((t) => t.from === agentId)
+    .sort((x, y) => x.expires - y.expires)
+    .map((t) => ({ id: t.id, to: s.agents.get(t.to)?.name ?? '?', give: goodsView(t.give), want: goodsView(t.want), seconds: Math.max(1, Math.ceil((t.expires - now) / 1000)) }));
 }
 
 /** Actions that make sense where the agent stands right now (PLANEJAMENTO §11.3). */
@@ -333,7 +346,13 @@ export function observe(s: WorldState, agentId: string, ctx: { now: number; rng:
   const party = partyOf(s, a);
   if (party) {
     const name = (id: string) => s.agents.get(id)?.name ?? '?';
-    obs.you.party = { leader: name(party.leader), members: party.members.filter((id) => id !== a.id).map(name), loot: party.loot };
+    const others = party.members.filter((id) => id !== a.id);
+    // Rooms only for the members elsewhere: a party standing together costs no extra tokens (the /look budget).
+    const away = others.flatMap((id) => {
+      const b = s.agents.get(id);
+      return b && b.room !== a.room ? [[b.name, b.room] as const] : [];
+    });
+    obs.you.party = { leader: name(party.leader), members: others.map(name), ...(away.length ? { away: Object.fromEntries(away) } : {}), loot: party.loot };
   }
   const guild = guildOf(s, a);
   if (guild) obs.you.guild = guild.name;
@@ -347,8 +366,9 @@ export function observe(s: WorldState, agentId: string, ctx: { now: number; rng:
     const giverRoom = c.npcs.get(next.giver)!.room;
     const state = active ? (questReady(a, next) ? 'ready' : 'active') : 'offer';
     // The way to the giver, when there is something to do there (taking or handing in the quest).
-    const path = state === 'active' ? undefined : routeHint(c, a.room, giverRoom);
-    obs.quest_hint = { id: next.id, giver: next.giver, room: giverRoom, state, ...(path ? { path } : {}) };
+    const walk = state === 'active' || giverRoom === a.room ? undefined : walkFor(run, a, giverRoom);
+    const way = !walk ? {} : 'closed' in walk ? { closed: true as const } : { path: walk.path.slice(0, BALANCE.routes.hintMax) };
+    obs.quest_hint = { id: next.id, giver: next.giver, room: giverRoom, state, ...way };
   }
   const wb = worldBossInfo(s);
   if (wb?.up) obs.world_boss = { id: wb.monster, room: wb.room, up: true };

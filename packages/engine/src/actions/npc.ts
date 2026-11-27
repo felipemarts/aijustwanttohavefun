@@ -6,7 +6,7 @@ import { questBlocker, questEvent, questReady } from '../quests';
 import { fail, tell, type Run } from '../run';
 import { wantedHours } from '../trust';
 import type { AgentState } from '../types';
-import { hasFlag, normId, npcHere, wholeNumber, type HandlerMap } from './util';
+import { hasFlag, normId, npcHere, typedRef, wholeNumber, type HandlerMap } from './util';
 
 /** Price a shop pays for one unit of an item, or 0 when it does not buy that kind of thing. */
 export function shopBuyPrice(run: Run, shopId: string, itemId: string): number {
@@ -61,7 +61,7 @@ export const npcActions: HandlerMap = {
     refuseWanted(run, a);
     const id = normId(p.item);
     const entry = run.c.shops.get(npc.shop)!.sells.find((e) => e.item === id);
-    if (!entry) fail('TARGET_NOT_FOUND', 'shop_no_item', { npc: ref.npc(npc.id), item: p.item });
+    if (!entry) fail('TARGET_NOT_FOUND', 'shop_no_item', { npc: ref.npc(npc.id), item: typedRef(run, 'item', p.item, id) });
     const qty = wholeNumber(p.qty, 'qty', 1);
     const total = entry.price * qty;
     if (!covers(a.gold, total)) fail('NOT_ENOUGH_GOLD', 'no_gold', { need: total, have: a.gold });
@@ -78,7 +78,7 @@ export const npcActions: HandlerMap = {
     refuseWanted(run, a);
     const id = normId(p.item);
     const qty = wholeNumber(p.qty, 'qty', 1);
-    if (!covers(count(a, id), qty)) fail('MISSING_ITEMS', 'not_enough_items', { item: p.item, have: count(a, id), need: qty });
+    if (!covers(count(a, id), qty)) fail('MISSING_ITEMS', 'not_enough_items', { item: typedRef(run, 'item', p.item, id), have: count(a, id), need: qty });
     const price = shopBuyPrice(run, npc.shop, id);
     if (!(price > 0)) fail('NOT_ALLOWED', 'shop_wont_buy', { npc: ref.npc(npc.id), item: ref.item(id) });
     removeItem(a, id, qty);

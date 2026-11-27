@@ -63,6 +63,7 @@ export function blankAgent(now: number): AgentState {
     title: null,
     visited: [],
     roomAt: now,
+    lastExit: null,
     friends: [],
     rivals: [],
     friendReqs: {},

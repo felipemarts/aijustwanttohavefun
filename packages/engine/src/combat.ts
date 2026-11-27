@@ -8,6 +8,7 @@ import { emit, fail, markAgent, markRoom, msg, tell, type Run } from './run';
 import type { AgentState, MonsterInst, Party } from './types';
 import { agentsIn, monsterForgets, refreshMonster, roomState, scheduleRespawn, spawnSlots } from './world';
 import { addHonor } from './trust';
+import { typedRef } from './actions/util';
 import { worldBossKilled } from './worldboss';
 
 /** max(1, atk * mult * rand(0.85..1.15) - def / 2), with a chance to crit. */
@@ -43,8 +44,9 @@ function pickMonster(run: Run, a: AgentState, target: string | undefined): Monst
   const same = room.monsters.filter((m) => m.kind === id);
   if (!same.length) {
     const back = respawnIn(run, a.room, id);
-    if (back !== null) fail('TARGET_NOT_FOUND', 'monster_respawning', { target, seconds: back });
-    fail('TARGET_NOT_FOUND', 'monster_not_here', { target });
+    const named = typedRef(run, 'mon', target, id);
+    if (back !== null) fail('TARGET_NOT_FOUND', 'monster_respawning', { target: named, seconds: back });
+    fail('TARGET_NOT_FOUND', 'monster_not_here', { target: named });
   }
   // Threat as `refreshMonster` would leave it: a monster nobody hit for a while has forgotten its attackers.
   const threat = (m: MonsterInst) => (monsterForgets(m, run.now) ? {} : m.threat);

@@ -1,3 +1,4 @@
+import { isActionName, paramSignature } from '@ajwf/shared';
 import type { FastifyReply } from 'fastify';
 import type { ApiError, Renderer } from './render';
 
@@ -25,8 +26,13 @@ export function sendRateLimited(reply: FastifyReply, render: Renderer, lang: str
     .send(errorBody(render.apiError(lang, 'RATE_LIMITED', 'rate_limited', { seconds: retryAfterSec })));
 }
 
-/** Request validation failures are game-level answers: HTTP 200, like every refusal an agent can fix itself. */
-export function invalidParams(render: Renderer, lang: string, issues: readonly { path: readonly PropertyKey[] }[]): ErrorBody {
+/**
+ * Request validation failures are game-level answers: HTTP 200, like every refusal an agent can fix itself. When the
+ * request names a known action, the hint ends with that action's params on one line.
+ */
+export function invalidParams(render: Renderer, lang: string, issues: readonly { path: readonly PropertyKey[] }[], action?: unknown): ErrorBody {
   const field = issues[0]?.path.map(String).join('.') || 'body';
-  return errorBody(render.apiError(lang, 'INVALID_PARAMS', 'invalid_params', { field }));
+  const err = render.apiError(lang, 'INVALID_PARAMS', 'invalid_params', { field });
+  const sig = typeof action === 'string' && isActionName(action) ? paramSignature(action) : undefined;
+  return errorBody(sig ? { ...err, hint: err.hint ? `${err.hint} ${sig}` : sig } : err);
 }

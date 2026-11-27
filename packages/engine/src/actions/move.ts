@@ -25,7 +25,7 @@ export function exitOf(room: Room, raw: string): { dir: string; to: string } {
 /** Puts the agent in a room, with the bookkeeping every arrival needs. */
 export function enterRoom(run: Run, a: AgentState, to: string, dir?: string): void {
   const from = a.room;
-  relocate(run.s, a, to, run.now);
+  relocate(run.s, a, to, run.now, dir);
   if (!a.visited.includes(to)) {
     a.visited.push(to);
     statMax(run, a, 'rooms_visited', a.visited.length);

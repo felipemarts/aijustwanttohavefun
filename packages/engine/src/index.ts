@@ -4,7 +4,7 @@ export { TimerHeap } from './heap';
 export { applyAction, HANDLERS } from './apply';
 export { removeBoardPost, type RemovedBoardPost } from './actions/board';
 export { tick } from './tick';
-export { observe, eventsSince, MAX_AGENTS_LISTED, type Observation, type SeenAgent, type Pending } from './observe';
+export { observe, openOffers, eventsSince, MAX_AGENTS_LISTED, type Observation, type SeenAgent, type Pending } from './observe';
 export { bondLevel, bondScore, dropBond, raiseBond, type BondLevel } from './bond';
 export { partyHere } from './party';
 export { registerAgent, unregisterAgent, nameAvailable, deactivateAgent, reactivateAgent, blankAgent, type RegisterInput, type RegisterResult } from './register';

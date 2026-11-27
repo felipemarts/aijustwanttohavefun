@@ -6,6 +6,7 @@ import { indexGuild } from './guild';
 import { indexOrder, returnOrders } from './market';
 import { indexEscort } from './escort';
 import { blankAgent } from './register';
+import { rebuildInviteExpiry } from './party';
 import { indexTrade } from './trade';
 import type { AgentState, Bounty, Escort, Fountain, Guild, Market, Order, Party, PuzzleState, RoomState, Timer, Trade, Village, WorldBoss, WorldMeta, WorldState } from './types';
 import { restoreVillage } from './village';
@@ -140,6 +141,7 @@ export function restoreWorld(content: Content, snap: Snapshot, now: number): Wor
     for (const m of r.monsters) for (const id of Object.keys(m.threat)) if (!s.agents.has(id)) delete m.threat[id];
   }
   const migrated = restoreSocial(s, world);
+  rebuildInviteExpiry(s);
   restoreVillage(s);
   s.dirty.clear();
   // Entries rewritten by the restore itself (the board moved to one entry per post) are saved at the next snapshot.

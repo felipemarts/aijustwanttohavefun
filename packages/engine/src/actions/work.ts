@@ -3,8 +3,8 @@ import { addItem, bump, canFit, count, gainXp, hasAll, removeItem } from '../age
 import { BALANCE } from '../balance';
 import { questEvent } from '../quests';
 import { emit, fail, markRoom, msg, tell } from '../run';
-import { peekResource, refreshResource } from '../world';
-import { normId, oneOf, roomDef, type HandlerMap } from './util';
+import { peekResource, refreshResource, resourceRegrowsIn } from '../world';
+import { normId, oneOf, roomDef, typedRef, waitParams, type HandlerMap } from './util';
 
 export const PROFESSION_LEVEL = 5;
 
@@ -14,9 +14,10 @@ export const workActions: HandlerMap = {
     const node = peekResource(run.s, a.room, id, run.now);
     if (!node) {
       const here = roomDef(run, a).resources.map((r) => r.id);
-      fail('NOT_AVAILABLE_HERE', here.length ? 'resource_not_here' : 'nothing_to_gather', { resource: p.resource, here: here.join(', ') });
+      fail('NOT_AVAILABLE_HERE', here.length ? 'resource_not_here' : 'nothing_to_gather', { resource: typedRef(run, 'item', p.resource, id), here: here.join(', ') });
     }
-    if (!(node.qty > 0)) fail('NOT_AVAILABLE_HERE', 'resource_depleted', { item: ref.item(id) });
+    // Content requires a positive regrowth rate, so an empty node always has a next unit coming.
+    if (!(node.qty > 0)) fail('NOT_AVAILABLE_HERE', 'resource_depleted', { item: ref.item(id), ...waitParams(resourceRegrowsIn(run.s, a.room, id, run.now) ?? 0) });
     if (!canFit(run.c, a, [{ item: id, qty: 1 }])) fail('INVENTORY_FULL', 'inventory_full');
     refreshResource(run.s, a.room, id, run.now);
     own(run.s.rooms.get(a.room)!.resources, id)!.qty -= 1;

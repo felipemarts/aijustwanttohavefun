@@ -6,14 +6,14 @@ import { questEvent } from '../quests';
 import { emit, fail, markAgent, markRoom, msg, tell, type Run } from '../run';
 import type { AgentState, EquipSlot } from '../types';
 import { roomState } from '../world';
-import { normId, wholeNumber, type HandlerMap } from './util';
+import { normId, typedRef, wholeNumber, type HandlerMap } from './util';
 import { stockAdd, stockTake } from '../ledger';
 
 /** An item the agent carries (inventory only), by loose id. */
 export function carried(run: Run, a: AgentState, raw: string): Item {
   const id = normId(raw);
   const item = run.c.items.get(id);
-  if (!item || !(count(a, id) > 0)) fail('TARGET_NOT_FOUND', 'item_not_carried', { item: raw });
+  if (!item || !(count(a, id) > 0)) fail('TARGET_NOT_FOUND', 'item_not_carried', { item: typedRef(run, 'item', raw, id) });
   return item;
 }
 
@@ -98,7 +98,7 @@ export const itemActions: HandlerMap = {
     const id = normId(p.item);
     const slot = (['weapon', 'armor', 'trinket', 'bag'] as const).find((s) => s === id || a.equip[s] === id);
     const cur = slot ? a.equip[slot] : null;
-    if (!slot || !cur) fail('TARGET_NOT_FOUND', 'not_equipped', { item: p.item });
+    if (!slot || !cur) fail('TARGET_NOT_FOUND', 'not_equipped', { item: typedRef(run, 'item', p.item, id) });
     // Taking off a bag also takes its slots away.
     if (!canFit(run.c, a, [{ item: cur, qty: 1 }], [], slot === 'bag' ? bagCapacity(run.c, null) : capacity(run.c, a))) fail('INVENTORY_FULL', 'inventory_full');
     a.equip[slot] = null;
@@ -145,7 +145,7 @@ export const itemActions: HandlerMap = {
     const id = normId(p.item);
     const ground = roomState(run.s, a.room).ground;
     const there = own(ground, id) ?? 0;
-    if (!(there > 0) || !run.c.items.has(id)) fail('TARGET_NOT_FOUND', 'item_not_here', { item: p.item });
+    if (!(there > 0) || !run.c.items.has(id)) fail('TARGET_NOT_FOUND', 'item_not_here', { item: typedRef(run, 'item', p.item, id) });
     const qty = Math.min(wholeNumber(p.qty ?? there, 'qty', 1), there);
     if (!canFit(run.c, a, [{ item: id, qty }])) fail('INVENTORY_FULL', 'inventory_full');
     stockTake(ground, id, qty, `ground of ${a.room}`);

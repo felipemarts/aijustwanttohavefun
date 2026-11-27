@@ -8,6 +8,8 @@ import { observe, eventsSince } from './observe';
 import { partyHere } from './party';
 import { deactivateAgent } from './register';
 import { newRun } from './run';
+import { exportAll, restoreWorld, type Snapshot } from './snapshot';
+import { tick } from './tick';
 import { errKey, HOUR, keys, makeKit, MIN, narr, scriptedRng, worldWealth, type Kit } from './testkit';
 import type { AgentState } from './types';
 
@@ -318,5 +320,62 @@ describe('helping newcomers', () => {
     expect(vet!.stats.newbies_helped).toBe(1);
     expect(vet!.quests.d_helping_hand!.steps).toEqual([1]);
     expect(close.stats.newbies_helped).toBeUndefined();
+  });
+});
+
+describe('party invites: what the inviter hears, and where members are', () => {
+  it('an invite that lapses unanswered tells the inviter once, even after a renewal or a restart; an accepted one never does', () => {
+    const k = makeKit();
+    const [a, b, c] = ['Pip', 'Bob', 'Cid'].map((n) => k.add(n, 'warrior'));
+    const ms = BALANCE.party.inviteMs;
+    const expiredFor = (evs: ReturnType<Kit['advance']>, who: AgentState) => evs.filter((e) => e.type === 'party_invite_expired' && e.target === who.id);
+    k.step = 0;
+    k.ok(a!, 'party_invite', { agent: 'Bob' });
+    // Renewed halfway: the first expiry passes silently, the renewed one is told.
+    k.advance(ms / 2);
+    k.ok(a!, 'party_invite', { agent: 'Bob' });
+    expect(expiredFor(k.advance(ms / 2), a!)).toEqual([]);
+    expect(checkInvariants(k.s, k.now)).toEqual([]);
+    const lapsed = expiredFor(k.advance(ms / 2), a!);
+    expect(lapsed).toHaveLength(1);
+    expect(lapsed[0]!.payload.m).toEqual({ k: 'ev.party_invite_expired', p: { name: 'Bob' } });
+    expect(lapsed[0]!.visibility).toBe('private');
+    expect(b!.partyInvites).toEqual({});
+    // Delivered to the inviter only, in the ring that room chatter cannot push out.
+    expect(eventsSince(k.s, a!.id, 0).events.map((e) => e.type)).toContain('party_invite_expired');
+    expect(eventsSince(k.s, b!.id, 0).events.map((e) => e.type)).not.toContain('party_invite_expired');
+    expect(expiredFor(k.advance(ms), a!)).toEqual([]);
+    // Accepted: nothing to tell later (the join itself reached the inviter as party_join).
+    k.ok(c!, 'party_invite', { agent: 'Bob' });
+    const joined = k.ok(b!, 'party_accept', { agent: 'Cid' });
+    expect(joined.events.find((e) => e.type === 'party_join')).toBeDefined();
+    expect(expiredFor(k.advance(ms), c!)).toEqual([]);
+    // Pending across a restart: the rebuilt index still tells the inviter.
+    k.add('Dee', 'mage');
+    k.ok(a!, 'party_invite', { agent: 'Dee' });
+    const restored = restoreWorld(k.c, JSON.parse(JSON.stringify(exportAll(k.s))) as Snapshot, k.now);
+    expect(checkInvariants(restored, k.now)).toEqual([]);
+    const later = tick(restored, { now: k.now + ms, rng: k.rng });
+    expect(later.filter((e) => e.type === 'party_invite_expired').map((e) => e.target)).toEqual([a!.id]);
+  });
+
+  it('the invite tells the invitee how to answer and that both must stand in the same room', () => {
+    const k = makeKit();
+    const [a, b] = ['Pip', 'Bob'].map((n) => k.add(n, 'warrior'));
+    const r = k.ok(a!, 'party_invite', { agent: 'Bob' });
+    expect(r.events.find((e) => e.type === 'party_invite')!.payload.m).toEqual({ k: 'ev.party_invite', p: { actor: 'Pip', minutes: BALANCE.party.inviteMs / MIN } });
+    // The engine's rule that the texts state: accepting needs the inviter in the room.
+    k.place(a!, 'village.tavern');
+    expect(errKey(k.act(b!, 'party_accept', { agent: 'Pip' }))).toBe('err.agent_not_here');
+  });
+
+  it('lists the room of each member who is not in the viewer room', () => {
+    const k = makeKit();
+    const [a, b, c] = ['Pip', 'Bob', 'Cid'].map((n) => k.add(n, 'warrior'));
+    party(k, 'village.square', a!, b!, c!);
+    expect(observe(k.s, a!.id, k.ctx()).you.party).toEqual({ leader: 'Pip', members: ['Bob', 'Cid'], loot: 'round_robin' });
+    k.ok(c!, 'move', { dir: 'north' });
+    expect(observe(k.s, a!.id, k.ctx()).you.party).toEqual({ leader: 'Pip', members: ['Bob', 'Cid'], away: { Cid: 'village.tavern' }, loot: 'round_robin' });
+    expect(observe(k.s, c!.id, k.ctx()).you.party).toEqual({ leader: 'Pip', members: ['Pip', 'Bob'], away: { Pip: 'village.square', Bob: 'village.square' }, loot: 'round_robin' });
   });
 });

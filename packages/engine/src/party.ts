@@ -1,8 +1,51 @@
 import { own } from '@ajwf/shared';
 import { BALANCE } from './balance';
 import { isBestFriend, raiseBond } from './bond';
-import type { Run } from './run';
+import { emit, markAgent, msg, type Run } from './run';
 import type { AgentState, Party, WorldState } from './types';
+
+const inviteKey = (inviteeId: string, inviterId: string) => `${inviteeId}|${inviterId}`;
+
+/** Records a new or renewed invite in the expiry index (at the end: it is the latest to expire). */
+export function trackInvite(s: WorldState, invitee: AgentState, inviter: AgentState, until: number): void {
+  const key = inviteKey(invitee.id, inviter.id);
+  s.inviteExpiry.delete(key);
+  s.inviteExpiry.set(key, until);
+}
+
+/** An invite answered (accepted): it will not expire. */
+export function untrackInvite(s: WorldState, invitee: AgentState, inviter: AgentState): void {
+  s.inviteExpiry.delete(inviteKey(invitee.id, inviter.id));
+}
+
+/** Rebuilds the expiry index from the agents' invites, in order of expiry (after a restore). */
+export function rebuildInviteExpiry(s: WorldState): void {
+  const all: [string, number][] = [];
+  for (const b of s.agents.values()) for (const [from, until] of Object.entries(b.partyInvites)) all.push([inviteKey(b.id, from), until]);
+  all.sort((x, y) => x[1] - y[1]);
+  s.inviteExpiry = new Map(all);
+}
+
+/**
+ * Party invites that lapsed unanswered: the inviter is told, and the invitee's list drops the entry. Cost: the
+ * expired invites (the index is in order of expiry).
+ */
+export function expireInvites(run: Run): void {
+  const s = run.s;
+  for (const [key, until] of s.inviteExpiry) {
+    if (until > run.now) break;
+    s.inviteExpiry.delete(key);
+    const [inviteeId = '', inviterId = ''] = key.split('|');
+    const b = s.agents.get(inviteeId);
+    const a = s.agents.get(inviterId);
+    if (b && own(b.partyInvites, inviterId) === until) {
+      delete b.partyInvites[inviterId];
+      markAgent(s, b);
+    }
+    if (!a || !b || a.status !== 'active' || b.status !== 'active') continue;
+    emit(run, 'party_invite_expired', { actor: b.id, target: a.id, vis: 'private', to: [a.id], m: msg('ev.party_invite_expired', { name: b.name }) });
+  }
+}
 
 export function partyOf(s: WorldState, a: AgentState): Party | undefined {
   return a.party ? s.parties.get(a.party) : undefined;

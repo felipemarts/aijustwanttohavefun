@@ -28,7 +28,7 @@ export const roomSchema = z.object({
   exits: z.record(z.string(), id),
   rect: z.tuple([z.number().int(), z.number().int(), z.number().int(), z.number().int()]),
   monsters: z.array(z.object({ id, count: z.number().int().min(1).default(1), night: z.boolean().optional() })).default([]),
-  resources: z.array(z.object({ id, max: z.number().int().min(1), regen_per_hour: z.number().min(0) })).default([]),
+  resources: z.array(z.object({ id, max: z.number().int().min(1), regen_per_hour: z.number().positive() })).default([]),
   /** Exits that need something before they open: a project, a puzzle, a party. */
   gates: z
     .record(

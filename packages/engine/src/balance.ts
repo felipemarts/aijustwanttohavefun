@@ -90,7 +90,8 @@ export const BALANCE = {
   inbox: { size: 64, prioritySize: 32, prioritySender: 4 },
 
   /** `friendRequestMs`: an unanswered friend request lapses after this long (and stops taking a place in the list). */
-  social: { maxFriends: 100, maxFriendRequests: 50, maxRivals: 50, friendRequestMs: 3 * DAY },
+  /** `leftHintMs`: an agent that walked out of your room this recently is "gone that way", not just "not here". */
+  social: { maxFriends: 100, maxFriendRequests: 50, maxRivals: 50, friendRequestMs: 3 * DAY, leftHintMs: 30_000 },
 
   /** Bond between two agents: a score that rises by doing things together. */
   bond: {
@@ -188,6 +189,9 @@ export const BALANCE = {
 
   /** Directions shown in route hints (quest_hint.path, quest_giver_elsewhere). */
   routes: { hintMax: 8 },
+
+  /** Waits in hints are told in seconds below this many seconds, in minutes from it (`waitParams`). */
+  waitHint: { minutesFromSec: 120 },
 
   /** Village projects, the mayor's powers and guild halls (PLANEJAMENTO §8). */
   village: {

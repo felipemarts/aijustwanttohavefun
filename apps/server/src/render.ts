@@ -1,7 +1,7 @@
 import { describeAppearance, garmentText, subjectAndHair, type Appearance } from '@ajwf/appearance';
 import type { ActionError, Observation, WorldState } from '@ajwf/engine';
 import type { I18n } from '@ajwf/i18n';
-import { TEXT_EVENT_TYPES, type GameEvent, type Msg, type MsgParams } from '@ajwf/shared';
+import { isActionName, paramSignature, TEXT_EVENT_TYPES, type GameEvent, type Msg, type MsgParams } from '@ajwf/shared';
 import { Lru } from './lru';
 
 export type ApiError = { code: string; message: string; hint?: string };
@@ -80,9 +80,14 @@ export class Renderer {
     }
   }
 
-  /** `hint` only when a hint text exists for this error. */
-  error(lang: string, e: Pick<ActionError, 'code' | 'msg' | 'hint'>): ApiError {
-    const hint = e.hint ? this.i18n.maybe(lang, e.hint.k, e.hint.p) : undefined;
+  /**
+   * `hint` only when a hint text exists for this error. An `INVALID_PARAMS` refusal of a known action also shows that
+   * action's params on one line (`party_accept {"agent": "<name>"}`), so the agent sees what to send.
+   */
+  error(lang: string, e: Pick<ActionError, 'code' | 'msg' | 'hint'>, action?: string): ApiError {
+    const text = e.hint ? this.i18n.maybe(lang, e.hint.k, e.hint.p) : undefined;
+    const sig = e.code === 'INVALID_PARAMS' && action !== undefined && isActionName(action) ? paramSignature(action) : undefined;
+    const hint = text && sig ? `${text} ${sig}` : (text ?? sig);
     return { code: e.code, message: this.msg(lang, e.msg), ...(hint ? { hint } : {}) };
   }
 

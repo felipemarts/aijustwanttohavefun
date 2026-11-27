@@ -5,7 +5,7 @@ import { BALANCE } from '../balance';
 import { escortCheck, escortJoin } from '../escort';
 import { partyHere } from '../party';
 import { dailyQuests, initialProgress, nextTutorial, questBlocker, questEvent, questReady, questView } from '../quests';
-import { route } from '../routes';
+import { walkFor } from '../routes';
 import { emit, fail, markAgent, msg, tell, type Run } from '../run';
 import type { AgentState } from '../types';
 import { addHonor } from '../trust';
@@ -21,10 +21,12 @@ function questById(run: Run, raw: string): Quest {
 function needGiverHere(run: Run, a: AgentState, q: Quest): void {
   const npc = run.c.npcs.get(q.giver)!;
   if (npc.room === a.room) return;
-  const path = route(run.c, a.room, npc.room);
+  // Only moves the agent can make now: a way held shut by a gate is told as closed, never as a path.
+  const walk = walkFor(run, a, npc.room);
+  const where = { npc: ref.npc(npc.id), room: ref.room(npc.room), room_id: npc.room };
+  if ('closed' in walk) fail('NOT_AVAILABLE_HERE', 'quest_giver_closed', where);
   const max = BALANCE.routes.hintMax;
-  const dirs = path ? path.slice(0, max).join(', ') + (path.length > max ? ', ...' : '') : npc.room;
-  fail('NOT_AVAILABLE_HERE', 'quest_giver_elsewhere', { npc: ref.npc(npc.id), room: ref.room(npc.room), room_id: npc.room, path: dirs });
+  fail('NOT_AVAILABLE_HERE', 'quest_giver_elsewhere', { ...where, path: walk.path.slice(0, max).join(', ') + (walk.path.length > max ? ', ...' : '') });
 }
 
 /** A newcomer finished a quest with veterans of its party at its side: they get credit for helping. */

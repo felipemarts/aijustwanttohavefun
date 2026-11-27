@@ -1,19 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { BALANCE } from './balance';
 import { observe } from './observe';
-import { errCode, errKey, HOUR, makeKit, MIN, narr } from './testkit';
+import { errCode, errKey, errKeys, HOUR, makeKit, MIN, narr, SEC } from './testkit';
 
 describe('gather', () => {
   it('takes one unit, spends 2 AP and gives a little XP', () => {
     const k = makeKit();
     const a = k.add('Pip', 'warrior', { room: 'forest.edge' });
+    const max = k.c.rooms.get('forest.edge')!.resources.find((x) => x.id === 'wood')!.max;
     const r = k.ok(a, 'gather', { resource: 'wood' });
-    expect(narr(r, 'n.gather')).toEqual({ item: '@item:wood', left: 7, xp: BALANCE.xp.gatherBase + 1 });
+    expect(narr(r, 'n.gather')).toEqual({ item: '@item:wood', left: max - 1, xp: BALANCE.xp.gatherBase + 1 });
     expect(a.inv.wood).toBe(1);
     expect(a.ap).toBe(BALANCE.ap.max - 2);
     expect(a.xp).toBe(3);
     expect(a.stats.gathers).toBe(1);
-    expect(k.s.rooms.get('forest.edge')!.resources.wood!.qty).toBe(7);
+    expect(k.s.rooms.get('forest.edge')!.resources.wood!.qty).toBe(max - 1);
   });
 
   it('runs out, then regrows over time up to the maximum', () => {
@@ -47,7 +48,34 @@ describe('gather', () => {
     expect(!r.result.ok && r.result.error.msg.p?.here).toBe('wood, green_herb');
     a.inv = { iron_sword: 30 };
     expect(k.err(a, 'gather', { resource: 'wood' })).toBe('INVENTORY_FULL');
-    expect(k.s.rooms.get('forest.edge')!.resources.wood!.qty).toBe(8);
+    expect(k.s.rooms.get('forest.edge')!.resources.wood!.qty).toBe(k.c.rooms.get('forest.edge')!.resources.find((x) => x.id === 'wood')!.max);
+  });
+
+  it('an empty node says when its next unit grows back, never too early', () => {
+    const every = HOUR / makeKit().c.rooms.get('forest.edge')!.resources.find((x) => x.id === 'green_herb')!.regen_per_hour;
+    // Drains the herbs, waits `after`, and gathers once more.
+    const drained = (after: number) => {
+      const k = makeKit();
+      const a = k.add('Pip', 'warrior', { room: 'forest.edge' });
+      k.step = 0;
+      for (let i = 0; i < 6; i++) k.ok(a, 'gather', { resource: 'green_herb' });
+      k.advance(after);
+      return { k, a, r: errKeys(k.act(a, 'gather', { resource: 'green_herb' }))! };
+    };
+    // Long waits in minutes, short ones in seconds.
+    for (const after of [0, every - 90 * SEC, every - 1500]) {
+      const { r } = drained(after);
+      expect(r).toMatchObject({ msg: 'err.resource_depleted', hint: 'hint.resource_depleted' });
+      const seconds = Math.ceil((every - after) / SEC);
+      expect(r.p).toEqual({ item: '@item:green_herb', seconds, minutes: seconds >= BALANCE.waitHint.minutesFromSec ? Math.ceil(seconds / 60) : 0 });
+      expect((r.p!.minutes as number) > 0).toBe(after === 0);
+    }
+    // One second before the wait told is too early; once it is over, the gather works.
+    const { k, a, r } = drained(every - 1500);
+    k.advance((r.p!.seconds as number) * SEC - SEC);
+    expect(k.err(a, 'gather', { resource: 'green_herb' })).toBe('NOT_AVAILABLE_HERE');
+    k.advance(SEC);
+    k.ok(a, 'gather', { resource: 'green_herb' });
   });
 });
 

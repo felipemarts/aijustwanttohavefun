@@ -1,3 +1,4 @@
+import { ACTION_NAMES, actionParamSchemas } from '@ajwf/shared';
 import { describe, expect, it } from 'vitest';
 import { estimateTokens, makeServer } from './test-helpers';
 
@@ -24,6 +25,26 @@ describe('response size', () => {
     const tokens = estimateTokens(res.body);
     console.info(`/look village square: ${res.body.length} chars, ~${tokens} tokens`);
     expect(tokens).toBeLessThanOrEqual(600);
+  });
+
+  it('an INVALID_PARAMS refusal, with the params of its action, stays under 300 tokens for every action', async () => {
+    const s = await makeServer();
+    let worst = { tokens: 0, action: '' };
+    for (const lang of ['en', 'pt-BR']) {
+      const { key } = await s.register(`Sloppy${lang.replace('-', '')}`, { language: lang });
+      for (const action of ACTION_NAMES) {
+        // Every field of the wrong type (an object where a string, number or bundle belongs).
+        const params = Object.fromEntries(Object.keys(actionParamSchemas[action].shape).map((f) => [f, { wrong: true }]));
+        if (!Object.keys(params).length) continue;
+        s.clock.advance(1000); // within the 60 requests per minute of a key
+        const res = await s.act(key, action, params);
+        expect(res.json().error.code).toBe('INVALID_PARAMS');
+        const tokens = estimateTokens(res.body);
+        if (tokens > worst.tokens) worst = { tokens, action: `${action} (${lang})` };
+      }
+    }
+    console.info(`/act INVALID_PARAMS, longest: ${worst.action}, ~${worst.tokens} tokens`);
+    expect(worst.tokens).toBeLessThanOrEqual(300);
   });
 
   it('an /act combat round in the forest stays under 300 tokens', async () => {

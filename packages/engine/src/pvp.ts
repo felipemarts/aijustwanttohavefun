@@ -7,7 +7,7 @@ import { markParty, partyOf, removeMember } from './party';
 import { emit, fail, markAgent, msg, tell, type Run } from './run';
 import { addHonor, bountyOn, claimBounty, isWanted, raiseInfamy } from './trust';
 import type { AgentState } from './types';
-import { agentByName } from './actions/util';
+import { agentByName, notHere } from './actions/util';
 import { roomState } from './world';
 
 /**
@@ -34,7 +34,7 @@ export function pvpTarget(run: Run, a: AgentState, target: string | undefined): 
   if (!b) return null;
   if (b.room !== a.room) {
     // Not a monster here, and a known agent elsewhere: say so rather than "no such monster".
-    if (!run.c.monsters.has(id)) fail('TARGET_NOT_FOUND', 'agent_not_here', { name: b.name });
+    if (!run.c.monsters.has(id)) notHere(run, a, b, b.name);
     return null;
   }
   return b;

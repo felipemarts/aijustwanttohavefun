@@ -1,7 +1,7 @@
 import { LOOT_MODES, MAX_SAY_LEN, own, ref } from '@ajwf/shared';
 import { addItem, canFit, removeItem } from '../agent';
 import { BALANCE } from '../balance';
-import { addMember, createParty, markParty, partyOf, partyTimeBonds, removeMember } from '../party';
+import { addMember, createParty, markParty, partyOf, partyTimeBonds, removeMember, trackInvite, untrackInvite } from '../party';
 import { questEvent } from '../quests';
 import { emit, fail, markAgent, msg, tell, type Run } from '../run';
 import type { AgentState, Party } from '../types';
@@ -37,7 +37,9 @@ export const partyActions: HandlerMap = {
     const invites = liveInvites(b.partyInvites, run.now);
     if (own(invites, a.id) === undefined && Object.keys(invites).length >= BALANCE.party.maxInvites) fail('CONFLICT', 'party_invites_full', { name: b.name });
     if (!party) createParty(run, a);
-    b.partyInvites = { ...invites, [a.id]: run.now + BALANCE.party.inviteMs };
+    const until = run.now + BALANCE.party.inviteMs;
+    b.partyInvites = { ...invites, [a.id]: until };
+    trackInvite(run.s, b, a, until);
     markAgent(run.s, b);
     const minutes = BALANCE.party.inviteMs / 60_000;
     tell(run, 'n.party_invite', { name: b.name, minutes });
@@ -54,6 +56,7 @@ export const partyActions: HandlerMap = {
     const party = existing ?? createParty(run, b);
     a.partyInvites = liveInvites(a.partyInvites, run.now);
     delete a.partyInvites[b.id];
+    untrackInvite(run.s, a, b);
     addMember(run, party, a);
     const leader = run.s.agents.get(party.leader)!;
     tell(run, 'n.party_joined', { leader: leader.name, n: party.members.length });

@@ -112,6 +112,40 @@ describe('POST /act', () => {
     expect(noAction.json().error).toMatchObject({ code: 'INVALID_PARAMS', message: 'Invalid request: check action.' });
   });
 
+  it('names a monster, item or NPC typed in a refusal in the agent language when the name is known', async () => {
+    const s = await makeServer();
+    const { key } = await s.register('Tiago', { language: 'pt-BR' });
+    for (const dir of s.path('village.square', 'forest.edge')) expect((await s.act(key, 'move', { dir })).json().ok).toBe(true);
+    const wolf = (await s.act(key, 'attack', { target: 'wolf' })).json();
+    expect(wolf.error.message).toBe('Não há lobo aqui.');
+    // Names that resolve to nothing are repeated as typed.
+    expect((await s.act(key, 'attack', { target: 'dragão' })).json().error.message).toBe('Não há dragão aqui.');
+  });
+
+  it('shows the params of the action on one line in the hint of every INVALID_PARAMS refusal', async () => {
+    const s = await makeServer();
+    const { key } = await s.register('Pip');
+    // The schema refuses: no agent named.
+    const missing = (await s.act(key, 'party_accept', {})).json();
+    expect(missing.error).toEqual({
+      code: 'INVALID_PARAMS',
+      message: 'Invalid params for party_accept: check agent.',
+      hint: 'Send party_accept again with params of this shape: party_accept {"agent": "<name>"}',
+    });
+    // The engine refuses after the schema passed: still the same action's params.
+    const self = (await s.act(key, 'party_invite', { agent: 'Pip' })).json();
+    expect(self.error.code).toBe('INVALID_PARAMS');
+    expect(self.error.hint).toMatch(/(^| )party_invite \{"agent": "<name>"\}$/);
+    expect((await s.act(key, 'say', { text: '\u200b' })).json().error.hint).toMatch(/ say \{"text": "<text>"\}$/);
+    // params that are not an object at all are refused before the action runs; the action is known all the same.
+    const notObject = await s.app.inject({ method: 'POST', url: '/api/v1/act', headers: s.auth(key), payload: { action: 'trade_cancel', params: 'x' } });
+    expect(notObject.json().error.hint).toMatch(/ trade_cancel \{"trade": "<trade>"\}$/);
+    // Other refusals and unknown actions get no signature.
+    expect((await s.act(key, 'move', { dir: 'sideways' })).json().error.hint).not.toMatch(/\{/);
+    const odd = await s.app.inject({ method: 'POST', url: '/api/v1/act', headers: s.auth(key), payload: { action: '__proto__', params: 'x' } });
+    expect(odd.json().error.hint).not.toMatch(/\{/);
+  });
+
   it('honours Idempotency-Key: the same key returns the same body and acts once', async () => {
     const s = await makeServer();
     const { key } = await s.register('Pip');
@@ -128,6 +162,18 @@ describe('POST /act', () => {
     // A new key acts again.
     await s.act(key, 'move', { dir: 'north' }, { 'idempotency-key': 'step-2' });
     expect(pip.room).toBe('village.north_road');
+    // A refusal is not stored: retried with the same key, the action runs again (it changed nothing the first time).
+    const early = (await s.act(key, 'say', { text: 'hello' }, { 'idempotency-key': 'say-1' })).json();
+    expect(early.ok).toBe(true);
+    s.clock.advance(2100);
+    const refused = await s.act(key, 'say', { text: 'again' }, { 'idempotency-key': 'say-2' });
+    expect(refused.json().error).toMatchObject({ code: 'COOLDOWN', hint: 'Wait 1 second, then say or whisper again.' });
+    s.clock.advance(1000);
+    const retried = await s.act(key, 'say', { text: 'again' }, { 'idempotency-key': 'say-2' });
+    expect(retried.headers['idempotent-replayed']).toBeUndefined();
+    expect(retried.json().ok).toBe(true);
+    // Now applied, it is stored and replayed.
+    expect((await s.act(key, 'say', { text: 'again' }, { 'idempotency-key': 'say-2' })).headers['idempotent-replayed']).toBe('true');
     const tooLong = await s.act(key, 'flee', {}, { 'idempotency-key': 'k'.repeat(129) });
     expect(tooLong.statusCode).toBe(400);
     expect(tooLong.json().error.code).toBe('BAD_REQUEST');
@@ -216,5 +262,31 @@ describe('GET /me', () => {
     expect(me.skills[0]).toMatchObject({ id: expect.any(String), lvl: 1 });
     expect(me.owner_note).toBe('Try to become mayor.');
     expect(me.you.hp[0]).toBeGreaterThan(0);
+    expect(me).not.toHaveProperty('offers');
+  });
+
+  it('lists the trade offers the agent made that still wait for an answer, and the refusal at the limit names them', async () => {
+    const s = await makeServer();
+    const { key } = await s.register('Pip');
+    for (const n of ['Brasa', 'Tobias']) await s.register(n);
+    const offer = async (to: string, gold: number) => (await s.act(key, 'trade_offer', { to, give: { gold }, want: { items: { wood: 1 } } })).json();
+    const first = (await offer('Brasa', 1)).data.trade as string;
+    s.clock.advance(60_000);
+    const second = (await offer('Tobias', 2)).data.trade as string;
+    const third = (await offer('Brasa', 3)).data.trade as string;
+    const me = (await s.get(key, '/api/v1/me')).json();
+    const ttl = 10 * 60;
+    expect(me.offers).toEqual([
+      { id: first, to: 'Brasa', give: { gold: 1 }, want: { items: { wood: 1 } }, seconds: ttl - 60 },
+      { id: second, to: 'Tobias', give: { gold: 2 }, want: { items: { wood: 1 } }, seconds: ttl },
+      { id: third, to: 'Brasa', give: { gold: 3 }, want: { items: { wood: 1 } }, seconds: ttl },
+    ]);
+    const full = (await offer('Tobias', 4)).error;
+    expect(full.code).toBe('CONFLICT');
+    expect(full.hint).toBe(`Your open offers: ${first}, ${second}, ${third} (details in GET /me, under offers). Wait for answers, or withdraw one with trade_cancel.`);
+    // Offers to the agent stay under pending; an offer withdrawn or expired leaves the list.
+    await s.act(key, 'trade_cancel', { trade: second });
+    s.clock.advance((ttl - 60) * 1000);
+    expect((await s.get(key, '/api/v1/me')).json().offers).toEqual([{ id: third, to: 'Brasa', give: { gold: 3 }, want: { items: { wood: 1 } }, seconds: 60 }]);
   });
 });

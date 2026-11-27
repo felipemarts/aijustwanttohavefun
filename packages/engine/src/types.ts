@@ -70,6 +70,11 @@ export type AgentState = {
   visited: string[];
   /** When the agent entered its current room (camaraderie needs time spent together). */
   roomAt: number;
+  /**
+   * How it entered: the room it walked out of and the exit it took, at `roomAt`. Null when it did not walk in
+   * (registration, waking at the temple). One per agent: tells others where someone who just left them went.
+   */
+  lastExit: { room: string; dir: string } | null;
 
   /** Agent ids. Mutual: each friend lists this agent too. */
   friends: string[];
@@ -313,6 +318,12 @@ export type WorldState = {
   trades: Map<string, Trade>;
   /** agent id -> ids of the open trades it is part of (either side). Derived, rebuilt on restore. */
   tradesOf: Map<string, Set<string>>;
+  /**
+   * Party invites waiting for an answer, `<invitee id>|<inviter id>` -> expiry, in order of expiry (every invite lasts
+   * `BALANCE.party.inviteMs`; a renewed one is moved to the end), so the tick finds the expired ones at the front.
+   * Derived from the agents' `partyInvites`, rebuilt on restore.
+   */
+  inviteExpiry: Map<string, number>;
   market: Market;
   /** agent id -> ids of its open sell orders. Derived. */
   ordersOf: Map<string, Set<string>>;

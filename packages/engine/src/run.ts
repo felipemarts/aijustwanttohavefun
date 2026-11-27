@@ -105,7 +105,7 @@ export function emit(run: Run, type: string, o: EmitOpts = {}): GameEvent {
  */
 export const PRIORITY_EVENTS: ReadonlySet<string> = new Set([
   'whisper', 'trade_offer', 'trade_cancel', 'trade', 'friend_request', 'friend', 'party_invite', 'guild_invite', 'duel_invite',
-  'market_sold', 'give', 'bounty_placed', 'scam_reported', 'quest_ready', 'loot_share',
+  'market_sold', 'give', 'bounty_placed', 'scam_reported', 'quest_ready', 'loot_share', 'party_invite_expired',
 ]);
 
 function ringPush(box: Ring, cap: number, ev: GameEvent): void {

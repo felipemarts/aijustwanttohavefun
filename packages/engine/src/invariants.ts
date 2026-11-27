@@ -43,6 +43,11 @@ export function checkInvariants(s: WorldState, now: number): string[] {
   // Nothing ever wrote through a `__proto__` key into the shared prototype.
   if (Object.keys(Object.prototype).length) out.push(`Object.prototype polluted: ${Object.keys(Object.prototype).join(', ')}`);
 
+  let lastExpiry = -Infinity;
+  for (const [key, until] of s.inviteExpiry) {
+    if (!(until >= lastExpiry)) out.push(`invite expiry index out of order at ${key}`);
+    lastExpiry = until;
+  }
   for (const a of s.agents.values()) {
     const who = `agent ${a.id} (${a.name})`;
     if (!isNatural(a.gold)) out.push(`${who}: gold ${a.gold} is not a non-negative integer`);
@@ -60,6 +65,10 @@ export function checkInvariants(s: WorldState, now: number): string[] {
     ] as const) {
       checkRecord(out, `${who} ${name}`, rec);
       for (const [k, v] of Object.entries(rec)) if (!isFiniteNumber(v)) out.push(`${who} ${name}: ${k} = ${String(v)}`);
+    }
+    // A live party invite is in the expiry index, which tells the inviter when it lapses.
+    for (const [from, until] of Object.entries(a.partyInvites)) {
+      if (until > now && s.agents.has(from) && s.inviteExpiry.get(`${a.id}|${from}`) !== until) out.push(`${who}: party invite from ${from} missing from the expiry index`);
     }
     checkRecord(out, `${who} quests`, a.quests);
     checkRecord(out, `${who} bonds`, a.bonds);

@@ -5,6 +5,7 @@ import { puzzleTimer } from './puzzles';
 import { emit, newRun } from './run';
 import { electionTick } from './election';
 import { closeTrade, sweepTrades } from './trade';
+import { expireInvites } from './party';
 import { bountyTimer, wantedTimer } from './trust';
 import type { WorldState } from './types';
 import { phaseChange, spawnMonster } from './world';
@@ -59,5 +60,6 @@ export function tick(s: WorldState, ctx: { now: number; rng: Rng }): GameEvent[]
     }
   }
   sweepTrades(s, ctx.now);
+  expireInvites(run);
   return run.events;
 }

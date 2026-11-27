@@ -70,6 +70,7 @@ export function createWorld(content: Content, now: number): WorldState {
     guildSkeletons: new Map(),
     trades: new Map(),
     tradesOf: new Map(),
+    inviteExpiry: new Map(),
     market: { orders: {}, history: [] },
     ordersOf: new Map(),
     ordersByItem: new Map(),
@@ -149,9 +150,10 @@ export function agentsIn(s: WorldState, roomId: string): Set<string> {
   return set;
 }
 
-/** Moves an agent between the room indexes. Does not emit events. */
-export function relocate(s: WorldState, a: AgentState, to: string, now: number): void {
+/** Moves an agent between the room indexes, through the exit `dir` when it walked. Does not emit events. */
+export function relocate(s: WorldState, a: AgentState, to: string, now: number, dir?: string): void {
   s.roomAgents.get(a.room)?.delete(a.id);
+  a.lastExit = dir ? { room: a.room, dir } : null;
   a.room = to;
   a.roomAt = now;
   agentsIn(s, to).add(a.id);
@@ -168,6 +170,20 @@ export function peekResource(s: WorldState, roomId: string, itemId: string, now:
   const qty = Math.min(def.max, node.qty + grown);
   // Keep the fraction of time that did not yet yield a unit.
   return { qty, at: qty >= def.max ? now : node.at + Math.floor((grown * 3_600_000) / def.regen_per_hour), max: def.max };
+}
+
+/**
+ * Milliseconds until an empty or partly used node grows its next unit, as `peekResource` will count it (never
+ * earlier). Null when the node is full, unknown, or does not regrow at all.
+ */
+export function resourceRegrowsIn(s: WorldState, roomId: string, itemId: string, now: number): number | null {
+  const def = s.content.rooms.get(roomId)?.resources.find((r) => r.id === itemId);
+  const node = peekResource(s, roomId, itemId, now);
+  if (!def || !node || !(node.qty < node.max) || !(def.regen_per_hour > 0)) return null;
+  // The first whole millisecond at which the floor in `peekResource` yields one more unit than at `node.at`.
+  let interval = Math.ceil(3_600_000 / def.regen_per_hour);
+  while (!(Math.floor((interval * def.regen_per_hour) / 3_600_000) >= 1)) interval++;
+  return Math.max(0, node.at + interval - now);
 }
 
 /** Current stock of a resource node, regenerated lazily from the last update (written back). */

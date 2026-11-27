@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { Quest } from '@ajwf/content';
+import { buildContent, type Content, type Quest } from '@ajwf/content';
+import { readContentFiles } from '@ajwf/content/node';
 import { BALANCE, respawnDelayMs } from './balance';
 import { checkInvariants } from './invariants';
 import { observe } from './observe';
 import { initialProgress } from './quests';
-import { route, routeHint } from './routes';
+import { route, routeHint, walkFor } from './routes';
 import { newRun } from './run';
 import { errKeys, keys, makeKit, partyUp, SEC } from './testkit';
 
@@ -41,6 +42,63 @@ describe('routes', () => {
     k.ok(a, 'quest_accept', { quest: 't01_arrival' });
     k.place(a, 'forest.edge');
     expect(observe(k.s, a.id, k.ctx()).quest_hint).toEqual({ id: 't01_arrival', giver: 'olga', room: 'village.square', state: 'active' });
+  });
+});
+
+describe('walks suggested to an agent', () => {
+  /** Content where Olga, the first quest giver, stands behind the dungeon's lever gate. */
+  function olgaInTheDungeon(): Content {
+    const files = readContentFiles();
+    return buildContent({ ...files, npcs: files.npcs!.map((n) => (n.id === 'olga' ? { ...n, room: 'dungeon.lever_hall' } : n)) });
+  }
+
+  it('follow exits only in the direction they go', () => {
+    const files = readContentFiles();
+    // A one-way exit: the market keeps its other exits but no longer leads west back to the square.
+    const rooms = files.rooms!.map((r) => (r.id === 'village.market' ? { ...r, exits: Object.fromEntries(Object.entries(r.exits).filter(([d]) => d !== 'west')) } : r));
+    const c = buildContent({ ...files, rooms });
+    expect(route(c, 'village.square', 'village.market')).toEqual(['east']);
+    const back = route(c, 'village.market', 'village.square')!;
+    expect(back.length).toBeGreaterThan(1);
+    let at = 'village.market';
+    for (const dir of back) at = c.rooms.get(at)!.exits[dir]!;
+    expect(at).toBe('village.square');
+  });
+
+  it('never lead through a gate that is shut to the agent: they go around it, or say the way is closed', () => {
+    const k = makeKit();
+    const solo = k.add('Solo', 'warrior', { level: 15, room: 'ruins.catacomb_stairs' });
+    const run = () => newRun(k.s, k.now, k.rng, solo);
+    // The content route goes down through the party gate; for an agent alone that way is shut, and there is no other.
+    expect(route(k.c, 'ruins.catacomb_stairs', 'dungeon.antechamber')).toEqual(['down']);
+    expect(walkFor(run(), solo, 'dungeon.antechamber')).toEqual({ closed: true });
+    expect(k.err(solo, 'move', { dir: 'down' })).toBe('PARTY_REQUIRED');
+    // A party of three with two classes may pass: then the walk is the route.
+    const [w, m, c] = [k.add('Wade', 'warrior', { level: 15 }), k.add('Mira', 'mage', { level: 15 }), k.add('Cass', 'cleric', { level: 15 })];
+    partyUp(k, 'ruins.catacomb_stairs', w, m, c);
+    expect(walkFor(newRun(k.s, k.now, k.rng, w), w, 'dungeon.lever_hall')).toEqual({ closed: true });
+    // Past the party gate, the levers still hold the way south until they are pulled.
+    k.s.puzzles.dungeon_levers!.open = k.now + 60_000;
+    const open = walkFor(newRun(k.s, k.now, k.rng, w), w, 'dungeon.lever_hall');
+    expect(open).toEqual({ path: ['down', 'south'] });
+    for (const dir of (open as { path: string[] }).path) for (const x of [w, m, c]) k.ok(x, 'move', { dir });
+    // The bridge (a project not built) is shut: the walk goes the long way round, every step of it walkable.
+    const b = k.add('Bea', 'warrior', { room: 'village.river_bank' });
+    const around = walkFor(newRun(k.s, k.now, k.rng, b), b, 'mines.lower_gate') as { path: string[] };
+    expect(around.path[0]).not.toBe('north');
+    for (const dir of around.path) k.ok(b, 'move', { dir });
+    expect(b.room).toBe('mines.lower_gate');
+  });
+
+  it('a quest giver behind a shut gate: the quest hint and the refusal say the way is closed instead of giving moves', () => {
+    const k = makeKit(1, undefined, olgaInTheDungeon());
+    const a = k.add('Pip', 'warrior', { room: 'ruins.catacomb_stairs' });
+    expect(observe(k.s, a.id, k.ctx()).quest_hint).toEqual({ id: 't01_arrival', giver: 'olga', room: 'dungeon.lever_hall', state: 'offer', closed: true });
+    expect(errKeys(k.act(a, 'quest_accept', { quest: 't01_arrival' }))).toMatchObject({
+      msg: 'err.quest_giver_closed',
+      hint: 'hint.quest_giver_closed',
+      p: { room_id: 'dungeon.lever_hall' },
+    });
   });
 });
 

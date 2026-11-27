@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { applyAction } from './apply';
 import { BALANCE } from './balance';
 import { exportAll } from './snapshot';
-import { errCode, errKey, keys, makeKit, MIN, narr } from './testkit';
+import { errCode, errKey, errKeys, keys, makeKit, MIN, narr } from './testkit';
 
 describe('applyAction envelope', () => {
   it('rejects unknown agents, unknown actions and bad params without touching the world', () => {
@@ -120,5 +120,32 @@ describe('move', () => {
     c.hp = 0;
     c.fallen = { at: k.now, until: k.now + 10 * MIN };
     expect(k.err(c, 'move', { dir: 'north' })).toBe('DEAD');
+  });
+});
+
+describe('an agent who just walked out', () => {
+  it('is "gone that way" for 30 seconds in refusals aimed at it, then simply not here', () => {
+    const k = makeKit();
+    const a = k.add('Pip', 'warrior');
+    const b = k.add('Bob', 'mage');
+    k.step = 0;
+    k.ok(b, 'move', { dir: 'north' });
+    expect(b.lastExit).toEqual({ room: 'village.square', dir: 'north' });
+    k.advance(12_000);
+    const r = errKeys(k.act(a, 'party_invite', { agent: 'bob' }));
+    expect(r).toEqual({ code: 'TARGET_NOT_FOUND', msg: 'err.agent_left', hint: 'hint.agent_left', p: { name: 'Bob', dir: '@dir:north', dir_id: 'north', seconds: 12 } });
+    // Following works.
+    expect(errKeys(k.act(a, 'trade_offer', { to: 'Bob', give: { gold: 1 }, want: {} }))!.p!.dir_id).toBe('north');
+    k.advance(BALANCE.social.leftHintMs - 12_000 + 1);
+    expect(errKey(k.act(a, 'party_invite', { agent: 'Bob' }))).toBe('err.agent_not_here');
+    // Only from the room it walked out of: elsewhere, and after being moved without walking, the plain answer.
+    k.ok(b, 'move', { dir: 'south' });
+    k.ok(b, 'move', { dir: 'south' });
+    expect(errKey(k.act(a, 'party_invite', { agent: 'Bob' }))).toBe('err.agent_left');
+    k.place(a, 'village.market');
+    expect(errKey(k.act(a, 'party_invite', { agent: 'Bob' }))).toBe('err.agent_not_here');
+    k.place(a, 'village.square');
+    k.place(b, 'village.tavern');
+    expect(errKey(k.act(a, 'party_invite', { agent: 'Bob' }))).toBe('err.agent_not_here');
   });
 });

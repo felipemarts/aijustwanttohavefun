@@ -1,5 +1,5 @@
-import { derive, eventsSince, questView, worldBossInfo, type ActionResult, type AgentState, type Observation } from '@ajwf/engine';
-import { actRequestSchema } from '@ajwf/shared';
+import { derive, eventsSince, openOffers, questView, worldBossInfo, type ActionResult, type AgentState, type Observation } from '@ajwf/engine';
+import { actRequestSchema, own } from '@ajwf/shared';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AppContext } from '../app';
@@ -51,6 +51,8 @@ export function agentRoutes(app: FastifyInstance, ctx: AppContext): void {
     const d = derive(c, a, game.now());
     const equipment = Object.fromEntries(Object.entries(a.equip).filter(([, id]) => id));
     const boss = worldBossInfo(game.state);
+    // Trade offers this agent made that wait for an answer (`pending.trades` lists the ones made to it).
+    const offers = openOffers(game.state, a.id, game.now());
     return {
       ok: true,
       agent: {
@@ -81,6 +83,7 @@ export function agentRoutes(app: FastifyInstance, ctx: AppContext): void {
       achievements: a.achievements,
       titles: a.titles,
       ...(o.pending ? { pending: o.pending } : {}),
+      ...(offers.length ? { offers } : {}),
       ...(boss ? { world_boss: { id: boss.monster, room: boss.room, ...(boss.up ? { up: true, leaves: boss.leaves } : { at: boss.at }) } } : {}),
       ...(a.ownerNote ? { owner_note: a.ownerNote } : {}),
     };
@@ -154,14 +157,18 @@ export function agentRoutes(app: FastifyInstance, ctx: AppContext): void {
     const q = viewQuery.parse(req.query ?? {});
     const parsed = actRequestSchema.safeParse(req.body ?? {});
     let body: unknown;
-    if (!parsed.success) body = invalidParams(render, ctx.lang(req), parsed.error.issues);
+    let applied = false;
+    if (!parsed.success) body = invalidParams(render, ctx.lang(req), parsed.error.issues, own(req.body as Record<string, unknown> | null, 'action'));
     else {
       const result = game.act(a.id, parsed.data.action, parsed.data.params);
+      applied = result.ok;
       // Rendered after the action: `set_language` changes the language of its own answer.
-      body = result.ok ? actBody(a, result, q.full, q.verbose) : errorBody(render.error(render.lang(a.lang), result.error));
+      body = result.ok ? actBody(a, result, q.full, q.verbose) : errorBody(render.error(render.lang(a.lang), result.error, result.action));
     }
     const json = JSON.stringify(body);
-    if (typeof idemKey === 'string') ctx.idem.set(a.id, idemKey, json, now);
+    // Only an applied action is stored for its key. A refusal changed nothing, so running a retry again cannot act
+    // twice, while replaying it would repeat a stale answer: "wait 1 second" long after the cooldown ended.
+    if (typeof idemKey === 'string' && applied) ctx.idem.set(a.id, idemKey, json, now);
     return reply.type('application/json; charset=utf-8').send(json);
   });
 

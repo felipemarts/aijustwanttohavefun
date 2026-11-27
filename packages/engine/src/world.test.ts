@@ -107,7 +107,7 @@ describe('observe', () => {
       exits: { east: 'village.west_gate', west: 'forest.path' },
       monsters: [{ id: 'slime', n: 3, lvl: 1 }],
       npcs: [{ id: 'ranger_fen', roles: ['quest'] }],
-      resources: { wood: 8, green_herb: 6 },
+      resources: { wood: 16, green_herb: 6 },
     });
     expect(o.room.agents.map((x) => x.name)).toEqual(['Bob']);
     expect(o.actions).toEqual(expect.arrayContaining(['move', 'attack', 'cast', 'gather', 'talk', 'quest_accept', 'say']));

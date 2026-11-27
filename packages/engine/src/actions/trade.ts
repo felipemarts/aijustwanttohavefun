@@ -27,7 +27,8 @@ export const tradeActions: HandlerMap = {
     const missing = missingGoods(a, give);
     if (missing.length) fail('MISSING_ITEMS', 'trade_missing', { missing: missing.join(', ') });
     const T = BALANCE.trade;
-    if (tradesOf(run.s, a.id, run.now).filter((t) => t.from === a.id).length >= T.maxOffers) fail('CONFLICT', 'trade_offers_full', { max: T.maxOffers });
+    const mine = tradesOf(run.s, a.id, run.now).filter((t) => t.from === a.id);
+    if (mine.length >= T.maxOffers) fail('CONFLICT', 'trade_offers_full', { max: T.maxOffers, trades: mine.map((t) => t.id).join(', ') });
     if (tradesOf(run.s, b.id, run.now).length >= T.maxOpen) fail('CONFLICT', 'trade_target_busy', { name: b.name });
     const t = openTrade(run, a.id, b.id, give, want);
     const minutes = T.ttlMs / 60_000;

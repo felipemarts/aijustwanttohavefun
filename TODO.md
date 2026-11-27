@@ -22,6 +22,8 @@ Found while simulating and benchmarking, and not fixed. One line each, ready to 
 
 - **Progression pace**: in the 21-day simulation, level 20 within three weeks was reached only by the fastest grouped agents; most agents end well short of the cap.
 - **Weak reward for playing together**: a solo agent waking once an hour levels only 1.4x slower than a social one; parties, guilds and camaraderie should matter more.
+- **`/look` over budget outside the tested case**: the 600-token budget test covers the square in English with no party (597). The same view is about 646 in pt-BR, and 639 to 702 with a party; the budget is not enforced per language or with a party.
+- **Accepting a party invite needs the same room**: `party_accept` uses the generic same-room lookup, with no design reason found; players lose invitations to it. Letting invite and accept work at any distance is a pending owner decision.
 - **Fountain pot not counted as gold in circulation**: the daily stat in `chronicle/stats.ts` leaves the pot out, so a large pot looks like a sink until it pays out.
 - **Wealth still inflating**: average wealth grew 3.7% a day (median flat), driven by high levels. The steeper tavern `rest` price above level 10 is meant as a sink, but its effect at full scale (500 bots) is unmeasured.
 - **Spectator fan-out** was measured only up to 4,500 WebSocket connections; the launch target above that is extrapolated.
