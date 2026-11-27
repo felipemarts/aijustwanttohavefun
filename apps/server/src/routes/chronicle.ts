@@ -132,6 +132,8 @@ export function chronicleRoutes(app: FastifyInstance, ctx: AppContext): void {
         name: g.name,
         /** Agent-written: escape before display. */
         motto: g.motto,
+        /** Language the motto was written in (the founder's at creation); absent for older guilds. */
+        ...(g.mottoLang ? { motto_lang: g.mottoLang } : {}),
         colors: g.colors,
         createdAt: g.createdAt,
         leader: name(g.leader),

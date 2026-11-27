@@ -130,6 +130,7 @@ describe.skipIf(!url)('PgStore (TEST_DATABASE_URL)', () => {
     let cookie: string;
     let oldKey: string;
     let newKey: string;
+    let seenAt: number;
     let token: string;
     let pipId: string;
     try {
@@ -148,6 +149,8 @@ describe.skipIf(!url)('PgStore (TEST_DATABASE_URL)', () => {
       first.clock.advance(1000);
       const summary = (await first.owner(cookie, 'GET', `/api/owner/agents/${pipId}/summary`)).json();
       expect(summary.ok).toBe(true);
+      expect((await first.owner(cookie, 'POST', `/api/owner/agents/${pipId}/seen`, { until: summary.until })).json().seen_at).toBe(summary.until);
+      seenAt = summary.until;
       await first.persistence.stop();
       await first.chronicle.stop();
       const journalId = (await store1.journalOf(pipId, 5))[0]!.id;
@@ -167,6 +170,7 @@ describe.skipIf(!url)('PgStore (TEST_DATABASE_URL)', () => {
       expect(me).toMatchObject({ agent: { name: 'Pip', claimed: true }, owner_note: 'Become mayor' });
       const owner = (await second.owner(cookie!, 'GET', '/api/owner/me')).json();
       expect(owner.agents.map((a: { id: string }) => a.id)).toEqual([pipId!]);
+      expect(owner.agents[0].seen_at).toBe(seenAt!);
       expect(owner.push).toEqual({ enabled: true, subscriptions: 1 });
       expect((await second.app.inject({ method: 'GET', url: `/api/owner/claim/${token!}` })).statusCode).toBe(404);
       const client = new pg.Client({ connectionString: url });

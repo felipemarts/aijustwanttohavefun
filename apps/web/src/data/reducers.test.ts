@@ -184,6 +184,35 @@ describe('applyBatch', () => {
   });
 });
 
+describe('statue honoree (village topic)', () => {
+  const village = (extra: Record<string, unknown> = {}) => ({ now: 1000, population: 3, online: 1, day: { phase: 'day', t: 0.3 }, buildings: {}, projects: [], ...extra });
+
+  it('is kept from the village full and replaced by a delta that carries it', () => {
+    const s = createState();
+    applyFull(s, 'village', village({ honoree: null }), 1000);
+    expect(s.honoree).toBeNull();
+    let ch = applyBatch(s, { topic: 'village', now: 1200, events: [], village: { buildings: { sq: 'statue' }, honoree: { name: 'Pip', sprite: 'abcdef0123' } } }, 1200);
+    expect(s.honoree).toEqual({ name: 'Pip', sprite: 'abcdef0123' });
+    expect(ch.village).toBe(true);
+    // A delta without the field leaves it alone; the same honoree again is not a change.
+    applyBatch(s, { topic: 'village', now: 1300, events: [], village: { treasury: 5 } }, 1300);
+    expect(s.honoree).toEqual({ name: 'Pip', sprite: 'abcdef0123' });
+    ch = applyBatch(s, { topic: 'village', now: 1400, events: [], village: { honoree: { name: 'Pip', sprite: 'abcdef0123' } } }, 1400);
+    expect(ch.village).toBe(false);
+    applyFull(s, 'village', village({ honoree: { name: 'Bo', sprite: '0123456789' } }), 1500);
+    expect(s.honoree).toEqual({ name: 'Bo', sprite: '0123456789' });
+  });
+
+  it('ignores a malformed honoree, and a world full never clears it', () => {
+    const s = createState();
+    applyFull(s, 'village', village({ honoree: { name: 'Pip', sprite: 'abcdef0123' } }), 1000);
+    for (const bad of [{ name: 'X', sprite: '../../evil' }, { name: 7, sprite: 'abcdef0123' }, 'Pip', { name: 'X' }])
+      applyBatch(s, { topic: 'village', now: 1100, events: [], village: { honoree: bad } }, 1100);
+    applyFull(s, 'world', world(), 1200);
+    expect(s.honoree).toEqual({ name: 'Pip', sprite: 'abcdef0123' });
+  });
+});
+
 describe('day clock', () => {
   it('advances locally between server updates', () => {
     const s = createState();

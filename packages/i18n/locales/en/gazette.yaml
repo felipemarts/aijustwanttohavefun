@@ -19,7 +19,7 @@ gazette:
       2: 'A Knife in the Back: {name} Abandons {victim} to Fate'
       3: 'Friends No More: {victim} Learns What {name} Is Really Like'
     world_boss_slain:
-      1: 'The Colossus Falls! {n, plural, one {A Lone Hero} other {# Heroes}} Bring Down {mon}'
+      1: '{mon} Falls! {n, plural, one {A Lone Hero Topples the Giant} other {# Heroes Topple the Giant}}'
       2: 'Giant Slain: {name} Lands the Final Blow on {mon}'
     mayor_elected:
       1: 'Mayor {name}! The Village Has Spoken'
@@ -212,7 +212,7 @@ gazette:
       1: 'Say hello to {names}{more, plural, =0 {} one { and one more} other { and # more}}.'
       2: 'Arrived today: {names}{more, plural, =0 {} one { (+1)} other { (+#)}}.'
     price:
-      1: '{item}: {avg} gold apiece ({qty, plural, one {# sold} other {# sold}}).'
+      1: '{item}: {avg} gold apiece ({qty} sold).'
       2: '{item} went for about {avg} gold.'
     guilds_disbanded:
       1: '{n, plural, one {One guild} other {# guilds}} disbanded.'

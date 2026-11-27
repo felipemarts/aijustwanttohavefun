@@ -4,7 +4,7 @@ import type { FastifyInstance, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import type { AppContext } from '../app';
 import { errorBody, sendRateLimited } from '../http-errors';
-import { dayInfo } from '../spectate/views';
+import { agentXp, dayInfo } from '../spectate/views';
 import { profileExtras } from '../civic/profile';
 import { publicProfile } from './public';
 
@@ -64,9 +64,19 @@ export function spectatorRoutes(app: FastifyInstance, ctx: AppContext): void {
     const profile = publicProfile(render, a, lang);
     const extras = await profileExtras(game.state, ctx.chronicle, a, game.now());
     // `title` is the id here, as everywhere in /api/public (AgentCard); `title_text` is its name in `lang`.
-    return reply
-      .header('cache-control', PROFILE_CACHE)
-      .send({ ok: true, agent: { ...profile, title: a.title, ...(profile.title ? { title_text: profile.title } : {}), room: a.room, sprite_hash: a.lookHash, ...extras } });
+    // `xp` is [into this level, needed for the next]; `bio_lang` is the language the bio was written in.
+    const agent = {
+      ...profile,
+      title: a.title,
+      ...(profile.title ? { title_text: profile.title } : {}),
+      profession: a.profession,
+      xp: agentXp(a),
+      ...(profile.bio ? { bio_lang: a.lang } : {}),
+      room: a.room,
+      sprite_hash: a.lookHash,
+      ...extras,
+    };
+    return reply.header('cache-control', PROFILE_CACHE).send({ ok: true, agent });
   });
 
   app.get('/stats', cors, async (_req, reply) => {

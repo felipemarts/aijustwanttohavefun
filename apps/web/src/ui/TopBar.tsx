@@ -4,6 +4,7 @@ import { config } from '../config';
 import { useCounts, useStatus } from '../data/store';
 import { ENDONYMS, isLang, type Lang, LANGS } from '../i18n/languages';
 import { i18n, useT } from '../i18n/store';
+import { ownerStore, useOwner } from '../owner/store';
 import { Cta } from './Cta';
 import { NAV } from './routes';
 
@@ -27,6 +28,11 @@ export function TopBar() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [menu]);
+  const owner = useOwner();
+  useEffect(() => {
+    void ownerStore.checkSession();
+  }, []);
+  const ownerLabel = owner.session === 'in' && owner.name ? owner.name : tr.t('ui.nav.owner');
   const onMap = loc.pathname === '/';
   return (
     <header className={`topbar ${onMap ? 'is-map' : ''}`}>
@@ -97,6 +103,21 @@ export function TopBar() {
             ))}
           </select>
         </label>
+        <NavLink
+          to="/owner"
+          className={({ isActive }) => `btn owner-link ${isActive ? 'is-active' : ''} ${owner.session === 'in' ? 'is-in' : ''}`}
+          title={tr.t('ui.nav.owner')}
+        >
+          <svg viewBox="0 0 9 9" width="14" height="14" aria-hidden="true" shapeRendering="crispEdges">
+            <rect x="3" y="0" width="3" height="1" fill="currentColor" />
+            <rect x="2" y="1" width="5" height="3" fill="currentColor" />
+            <rect x="3" y="4" width="3" height="1" fill="currentColor" />
+            <rect x="1" y="5" width="7" height="1" fill="currentColor" />
+            <rect x="0" y="6" width="9" height="3" fill="currentColor" />
+          </svg>
+          <span className="owner-link-label">{ownerLabel}</span>
+          {owner.session === 'in' ? <span className="sr-only"> ({tr.t('ui.nav.owner')})</span> : null}
+        </NavLink>
         <Cta />
       </div>
       {menu ? (
@@ -113,6 +134,12 @@ export function TopBar() {
                   </NavLink>
                 </li>
               ))}
+              <li>
+                <NavLink to="/owner" className={({ isActive }) => `drawer-link ${isActive ? 'is-active' : ''}`}>
+                  <span className="drawer-link-name">{ownerLabel}</span>
+                  <span className="drawer-link-hint small">{tr.t('ui.nav.hint.owner')}</span>
+                </NavLink>
+              </li>
             </ul>
             <p className="drawer-counts muted small">
               {tr.t('ui.counters.population', { n: population })} · {tr.t('ui.counters.online', { n: online })}

@@ -56,7 +56,22 @@ describe('mock civic data', () => {
     const name = src.agentNames()[0]!;
     const p = parseFullProfile(await src.getJson(`/api/public/agents/${encodeURIComponent(name)}`))!;
     expect(p.xp).not.toBeNull();
+    expect(p.xp!.next).toBeGreaterThan(p.xp!.cur);
+    expect(p.profession).toBeTruthy();
+    expect(p.bio?.lang).toMatch(/^[a-z]{2}/);
+    expect(g.motto?.lang).toMatch(/^[a-z]{2}/);
     expect(p.reputation).not.toBeNull();
+  });
+
+  it('the village full carries the statue honoree into the store, so the map needs no fetch', async () => {
+    const store = new LiveStore(() => 0);
+    const s = new MockSource(world, { seed: 5, agents: 20, autoTick: false, builtAll: true });
+    store.start(s);
+    const v = parseVillage(await s.getJson('/api/public/village'))!;
+    expect(v.honoree).not.toBeNull();
+    expect(store.state.honoree).toEqual({ name: v.honoree!.name, sprite: v.honoree!.sprite });
+    expect(store.state.honoree!.sprite).toMatch(/^[0-9a-f]{6,64}$/);
+    store.stop();
   });
 
   it('a project completing reaches the store as a completion and a highlight', () => {

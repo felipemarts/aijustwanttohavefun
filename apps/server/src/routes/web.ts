@@ -40,8 +40,9 @@ export async function webRoutes(app: FastifyInstance, ctx: AppContext): Promise<
       globIgnore: ['index.html'],
       cacheControl: false,
       setHeaders: (reply, path) => {
-        // Vite names assets by content hash: they never change.
-        reply.header('cache-control', path.startsWith(assets) ? IMMUTABLE : 'public, max-age=3600');
+        // Vite names assets by content hash: they never change. The service worker is checked on every visit, so a
+        // fixed one reaches browsers at once.
+        reply.header('cache-control', path.startsWith(assets) ? IMMUTABLE : /[\\/]sw\.js$/.test(path) ? 'no-cache' : 'public, max-age=3600');
       },
     });
   }

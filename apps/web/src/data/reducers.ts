@@ -30,6 +30,7 @@ export type CivicState = {
   taxRate: number | null;
   priority: string | null;
 };
+export type StatueHonoree = { name: string; sprite: string };
 export type RoomMonsterLive = { id: string; n: number; lvl?: number; max?: number; hurt?: number[] };
 export type RoomExtras = { monsters: RoomMonsterLive[]; npcs: string[]; others: number; at: number };
 export type DayState = { phase: DayPhase; t: number; at: number; lengthMs: number };
@@ -45,6 +46,8 @@ export type WorldState = {
   /** Guild halls: plot room id -> hall. */
   halls: Record<string, HallInfo>;
   civic: CivicState;
+  /** Statue honoree (name, sprite hash), from the `village` topic; null until the statue has one. */
+  honoree: StatueHonoree | null;
   day: DayState;
   roomLogs: Map<string, SpectatorEvent[]>;
   roomExtras: Map<string, RoomExtras>;
@@ -105,6 +108,7 @@ export function createState(): WorldState {
     projects: [],
     halls: {},
     civic: { mayor: null, election: null, treasury: null, taxRate: null, priority: null },
+    honoree: null,
     day: { phase: 'day', t: 0.3, at: 0, lengthMs: DAY_LENGTH_MS },
     roomLogs: new Map(),
     roomExtras: new Map(),
@@ -427,6 +431,14 @@ export function applyVillageDelta(state: WorldState, d: unknown, ch: Changes, re
   if (isNum(d.taxRate)) c.taxRate = d.taxRate;
   if (d.priority === null || isStr(d.priority)) c.priority = d.priority;
   if (isNum(d.treasury) || isNum(d.taxRate) || d.priority !== undefined) ch.village = true;
+  if (d.honoree === null) {
+    if (state.honoree) ch.village = true;
+    state.honoree = null;
+  } else if (isObj(d.honoree) && isStr(d.honoree.name) && isStr(d.honoree.sprite) && /^[0-9a-f]{6,64}$/.test(d.honoree.sprite)) {
+    const h = { name: d.honoree.name, sprite: d.honoree.sprite };
+    if (state.honoree?.name !== h.name || state.honoree.sprite !== h.sprite) ch.village = true;
+    state.honoree = h;
+  }
   if (isNum(d.population)) {
     state.population = d.population;
     ch.counts = true;

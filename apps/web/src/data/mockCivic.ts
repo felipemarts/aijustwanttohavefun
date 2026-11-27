@@ -290,6 +290,8 @@ export class MockCivic {
     if (this.structural) {
       out.buildings = this.buildings();
       out.halls = { ...this.halls };
+      const h = this.statueHonoree();
+      if (h) out.honoree = h;
     }
     if (this.civicDirty || this.changed.size) {
       out.treasury = this.treasury;
@@ -339,7 +341,14 @@ export class MockCivic {
       treasury: this.treasury,
       taxRate: this.taxRate,
       priority: this.priority,
+      honoree: this.statueHonoree(),
     };
+  }
+
+  /** The honoree as the `village` topic carries it (name and sprite hash), or null before the statue. */
+  private statueHonoree(): { name: string; sprite: string } | null {
+    const h = this.honoree();
+    return h && h.sprite ? { name: h.name, sprite: h.sprite } : null;
   }
 
   private honoree() {
@@ -723,7 +732,7 @@ export class MockCivic {
       const g = this.guilds.find((x) => x.name.toLowerCase() === name);
       if (!g) return null;
       return {
-        guild: { name: g.name, motto: g.motto, colors: g.colors, createdAt: g.createdAt, leader: g.leader, officers: g.officers, members: g.members, treasury: g.treasury, ...(g.hall ? { hall: { plot: g.hall, at: g.hallAt } } : {}) },
+        guild: { name: g.name, motto: g.motto, motto_lang: g.mottoLang, colors: g.colors, createdAt: g.createdAt, leader: g.leader, officers: g.officers, members: g.members, treasury: g.treasury, ...(g.hall ? { hall: { plot: g.hall, at: g.hallAt } } : {}) },
         highlights: this.highlights.filter((h) => h.params.guild === g.name || h.agents.some((a) => g.members.includes(a))).slice(-8).reverse(),
       };
     }
@@ -777,12 +786,12 @@ export class MockCivic {
         lvl: a.lvl,
         title: a.title,
         profession: PROFS[h % PROFS.length],
-        xp: Math.floor(((h >>> 4) % 100) / 100 * xpNext),
-        xp_next: xpNext,
+        xp: [Math.floor(((h >>> 4) % 100) / 100 * xpNext), xpNext],
         look: null,
         sprite: `/sprites/${a.sprite}.png`,
         sprite_hash: a.sprite,
         bio: { untrusted_text: `${a.name} came to Mistvale looking for <i>adventure</i> & snacks.` },
+        bio_lang: a.lang,
         claimed: h % 3 !== 0,
         bot: true,
         achievements: ACHS.filter((_, i) => (h >>> i) & 1).slice(0, 8),

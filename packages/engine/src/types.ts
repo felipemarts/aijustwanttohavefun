@@ -155,6 +155,8 @@ export type Guild = {
   norm: string;
   skeleton: string;
   motto: string;
+  /** Language the motto was written in: the founder's `lang` at creation. Absent on guilds founded before it existed. */
+  mottoLang?: string;
   colors: [string, string];
   leader: string;
   /** In promotion order: the first is the longest-serving officer. */

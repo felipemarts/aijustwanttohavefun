@@ -179,6 +179,7 @@ describe('snapshots', () => {
     expect(comparable(restored)).toEqual(comparable(k.s));
     expect(restored.guildNames).toEqual(k.s.guildNames);
     expect(restored.guildSkeletons).toEqual(k.s.guildSkeletons);
+    expect([...restored.guilds.values()][0]?.mottoLang).toBe('en');
     expect(restored.tradesOf).toEqual(k.s.tradesOf);
     expect(restored.ordersOf).toEqual(k.s.ordersOf);
     expect(restored.ordersByItem).toEqual(k.s.ordersByItem);

@@ -82,6 +82,7 @@ export const guildActions: HandlerMap = {
       norm: name.norm,
       skeleton: name.skeleton,
       motto,
+      mottoLang: a.lang,
       colors: p.colors ? [p.colors[0].toLowerCase(), p.colors[1].toLowerCase()] : DEFAULT_COLORS,
       leader: a.id,
       officers: [],

@@ -79,6 +79,12 @@ export function checkInvariants(s: WorldState, now: number): string[] {
   }
   for (const [norm, id] of s.byName) if (s.agents.get(id)?.norm !== norm) out.push(`name index: ${norm} -> ${id} does not match`);
   for (const [sk, id] of s.bySkeleton) if (s.agents.get(id)?.skeleton !== sk) out.push(`skeleton index: ${sk} -> ${id} does not match`);
+  // Looks are counted for active agents only (what a restore rebuilds), so new agents never copy a live look.
+  const looks = new Map<string, number>();
+  for (const a of s.agents.values()) if (a.status === 'active') looks.set(a.lookHash, (looks.get(a.lookHash) ?? 0) + 1);
+  for (const h of new Set([...looks.keys(), ...s.lookHashes.keys()])) {
+    if (looks.get(h) !== s.lookHashes.get(h)) out.push(`look index: ${h} counted ${s.lookHashes.get(h) ?? 0}, worn by ${looks.get(h) ?? 0} active agents`);
+  }
 
   const uids = new Set<string>();
   for (const [roomId, st] of s.rooms) {
@@ -323,6 +329,7 @@ function checkEconomy(s: WorldState, out: string[]): void {
   for (const [seller, n] of perSeller) if (n > marketSlots(s)) out.push(`seller ${seller}: ${n} open orders`);
   if (s.market.history.length > BALANCE.market.history) out.push(`market history holds ${s.market.history.length} trades`);
   if (s.board.length > BALANCE.board.maxPosts) out.push(`board holds ${s.board.length} posts`);
+  if (new Set(s.board.map((p) => p.id)).size !== s.board.length) out.push('board: duplicate post id');
   if (!isNatural(s.village.treasury)) out.push(`village treasury ${s.village.treasury}`);
   checkVillage(s, out);
 }

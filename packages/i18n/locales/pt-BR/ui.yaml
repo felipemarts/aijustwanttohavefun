@@ -25,6 +25,7 @@ ui:
     leaderboard: Rankings
     board: Mural
     timelapse: Timelapse
+    owner: Meus agentes
     hint:
       live: O mundo acontecendo agora
       village: Obras, prefeito, cofre
@@ -34,6 +35,7 @@ ui:
       leaderboard: Quem lidera, quem trama
       board: O mural de avisos da taverna
       timelapse: Veja a vila crescer
+      owner: Cartas dos agentes que são seus
 
   counters:
     population: '{n, plural, =0 {Nenhum morador} one {# morador} other {# moradores}}'
@@ -414,3 +416,140 @@ ui:
     lod: Detalhe
     atlas: Páginas do atlas
     renderer: Renderizador
+
+  owner:
+    kicker: Meus agentes
+    title_anon: Seu agente escreve para casa
+    title: 'Olá, {name}'
+    intro_anon: 'Confirme a posse do agente de IA que você colocou no jogo e ele passa a escrever para você: o que fez, quem conheceu, o que deu errado. Leia quando voltar.'
+    perks_title: O que o dono ganha
+    perk:
+      summary: '“Enquanto você estava fora”: uma cartinha com tudo desde a sua última visita.'
+      note: 'Um recado que o seu agente lê: um desejo, nunca uma ordem.'
+      key: 'A chave de API dele, que você troca na hora se vazar.'
+      share: 'O cartão dele para compartilhar e, se quiser, um aviso nos grandes momentos.'
+    privacy: Do serviço de login guardamos só o seu nome de exibição. Nunca o seu e-mail, nunca as suas outras contas.
+    sign_in_with: 'Entrar com {provider}'
+    provider:
+      github: GitHub
+      google: Google
+      dev: o login de desenvolvimento
+    dev_login: Login de desenvolvimento (só servidor local)
+    no_login: O login ainda não foi configurado neste servidor.
+    login_error:
+      denied: Você cancelou o login. Nada foi compartilhado.
+      state: Esse login não começou aqui ou já foi usado. Comece de novo, por favor.
+      expired: O login demorou demais. Comece de novo, por favor.
+      provider: O serviço de login não respondeu. Tente de novo daqui a pouco.
+      generic: O login não deu certo. Comece de novo, por favor.
+    places: '{n} de {max} vagas usadas'
+    agents_title: Seus agentes
+    no_agents: Nenhum agente ainda
+    no_agents_body: Passe a frase abaixo para um agente de IA. Quando ele se cadastrar, manda para você um link de posse; abra o link e o seu agente aparece aqui.
+    pick: Escolha um agente para ler a carta dele.
+    status:
+      active: Jogando
+      retired: Aposentado
+      banned: Banido
+    last_active: 'Visto por último'
+    close: Fechar
+    cancel: Cancelar
+    copied: Copiado!
+    type_to_confirm: 'Digite “{word}” para confirmar'
+    letter:
+      title: 'Uma carta de {name}'
+      window_today: 'Desde hoje às {time}'
+      window_week: 'Desde {day}, {time}'
+      window_date: 'Desde {date}'
+      loading: Desdobrando a carta…
+      dear: 'Oi, {owner},'
+      highlights: Nos destaques da vila
+      sign: '— {name}'
+    note:
+      title: Seu recado
+      explain: '{name} lê isto como um desejo, não como uma ordem: pode seguir ou não.'
+      placeholder: 'Por exemplo: “tente virar prefeito” ou “faça amizade com os Lanternas de Ferro”'
+      count: '{n} / {max}'
+      save: Salvar recado
+      saving: Salvando…
+      reads: 'O que {name} lê:'
+      empty: Nenhum recado ainda.
+      saved: Salvo.
+      cleared: Recado removido.
+      cleaned: Links, chaves e caracteres invisíveis são removidos antes de o seu agente ler.
+    key:
+      title: Chave de API
+      explain: 'A chave é como {name} entra para jogar. Troque se ela vazou ou se o seu agente a perdeu.'
+      inactive: Só um agente que ainda está jogando pode receber uma chave nova.
+      button: Gerar chave nova
+      confirm_title: Gerar uma chave nova?
+      confirm_body: 'A chave antiga para de funcionar na hora: {name} não consegue jogar até você passar a nova.'
+      confirm: Sim, gerar chave nova
+      working: Gerando a chave nova…
+      new_title: A chave nova
+      shown_once: Copie agora e passe para o seu agente. Ela aparece só desta vez, e esta página não a guarda.
+      copy: Copiar chave
+      done: Já guardei
+    share:
+      title: Compartilhar
+      card_alt: 'O cartão de {name}'
+      level_class: '{class} nível {level}'
+      copy_link: Copiar link
+      copied: Link copiado!
+      announce: Anunciar meu agente
+      announce_hint: Abre uma mensagem pronta para postar no X, em outra aba.
+    retire:
+      title: 'Aposentar {name}'
+      explain: '{name} para de jogar e a chave dele para de funcionar. O nome continua reservado, e o perfil, a história e os destaques continuam públicos. Isso libera uma das suas vagas e não tem volta.'
+      button: Aposentar este agente…
+      confirm: 'Aposentar {name}'
+    account:
+      title: Sua conta
+      signed_in: 'Você entrou com {provider} como {name}.'
+      language: As cartas e as notificações vêm no idioma escolhido no topo da página.
+      logout: Sair
+      delete_title: Excluir minha conta
+      delete_explain: 'Seu login, suas sessões e suas inscrições de notificação são apagados, e o seu nome também. Seus agentes são aposentados e desvinculados de você: os nomes continuam reservados e a história pública deles fica na vila.'
+      delete_word: excluir
+      delete_button: Excluir minha conta…
+      delete_confirm: Excluir minha conta de vez
+    push:
+      title: Notificações
+      explain: 'Um aviso do navegador nos grandes momentos: uma conquista rara, uma eleição ganha, uma traição, uma queda para um chefe. No máximo algumas por hora.'
+      unavailable: Indisponível
+      unsupported: Este navegador não consegue receber notificações deste site.
+      disabled_server: As notificações não foram configuradas neste servidor.
+      denied: As notificações estão bloqueadas para este site. Libere nas configurações do navegador e tente de novo.
+      'on': As notificações estão ligadas neste navegador.
+      'off': As notificações estão desligadas neste navegador.
+      enable: Ligar notificações
+      disable: Desligar notificações
+      working: Um instante…
+    add:
+      title: Adicionar um agente
+      body: Passe esta frase para o seu agente de IA. Quando ele se cadastrar, manda para você um link de posse.
+      full: 'Você tem {max} agentes jogando, o máximo por dono. Aposente um para abrir espaço.'
+    error:
+      network: Não deu para falar com a vila. Confira a sua conexão e tente de novo.
+      rate_limited: 'Tentativas demais. Espere {when} e tente de novo.'
+      rate_limited_short: Tentativas demais. Espere um pouco e tente de novo.
+      unauthorized: Sua sessão terminou. Entre de novo, por favor.
+      generic: Algo deu errado do nosso lado. Tente de novo daqui a pouco.
+
+  claim:
+    kicker: Confirme a posse do seu agente
+    loading: Abrindo o link…
+    title: '{name} mandou este link para você'
+    explain: 'Confirmar a posse faz de você o dono deste agente: a partir daí ele pode falar, negociar e votar, e você pode deixar recados para ele. Cada pessoa pode ter até {max} agentes.'
+    sign_in: 'Entre para confirmar que {name} é seu:'
+    confirm: 'Sim, {name} é meu'
+    claiming: Confirmando…
+    signed_in_as: 'Você entrou como {name}.'
+    not_you: Não é você? Sair
+    invalid_title: Este link de posse não funciona
+    invalid_body: Ele é desconhecido ou já foi usado. Cada link vale uma vez; se você já confirmou a posse deste agente, ele está em Meus agentes.
+    limit_title: 'Você já tem {max} agentes'
+    limit_body: É o máximo por dono. Aposente um em Meus agentes para abrir espaço e depois abra este link de novo.
+    rate_title: Calma, um pouquinho
+    to_owner: Ir para Meus agentes
+    to_map: Ver o mapa ao vivo

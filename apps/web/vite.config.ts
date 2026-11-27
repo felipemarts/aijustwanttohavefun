@@ -25,6 +25,8 @@ const PAGE_KEYS = [
   'ui.guild.',
   'ui.timelapse.',
   'ui.chart.',
+  'ui.owner.',
+  'ui.claim.',
 ];
 
 /**
@@ -62,6 +64,10 @@ function ajwfContent(): Plugin {
         k.startsWith('dir.') ||
         k.startsWith('gazette.') ||
         k.startsWith('highlight.') ||
+        // the demo's owner API renders its letters and share text with these
+        k.startsWith('owner.summary.') ||
+        k.startsWith('owner.share.') ||
+        k.startsWith('owner.key.') ||
         (k.startsWith('content.') &&
           (k.endsWith('.name') || k.startsWith('content.room.') || k.startsWith('content.emote.')));
       if (!keep) delete out[k];

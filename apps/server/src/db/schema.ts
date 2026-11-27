@@ -233,7 +233,8 @@ export const sessions = pgTable(
     expiresAt: ts('expires_at').notNull(),
     /** Last time the expiry was pushed forward (at most once a day). */
     refreshedAt: ts('refreshed_at').notNull().default(0),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    /** Login time: refreshes never push the expiry past it plus the absolute cap (90 days). */
+    createdAt: ts('created_at').notNull(),
   },
   (t) => [index('sessions_owner').on(t.ownerId)],
 );

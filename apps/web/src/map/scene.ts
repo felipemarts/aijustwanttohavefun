@@ -7,7 +7,6 @@ import type { DayPhase, RoomInfo, SpectatorEvent } from '@ajwf/shared';
 import 'pixi.js/unsafe-eval';
 import { Application, BitmapFont, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
 import { drawMockSheet } from '../data/mockSprites';
-import { isObj, isStr } from '../data/parse';
 import type { Changes } from '../data/reducers';
 import { dayFractionAt, dramaSnapshot } from '../data/reducers';
 import type { DataSource } from '../data/source';
@@ -76,6 +75,8 @@ type SiteView = {
   /** Scaffolding drawn over a room's own look while its project is under way. */
   overlay: Sprite | null;
   statue: Sprite | null;
+  /** Sprite hash of the honoree the statue was cast from; null for the cloaked placeholder. */
+  statueOf: string | null;
   bar: Graphics;
   lights: LightView[];
   /** When the building appeared (grow-in animation), 0 when settled. */
@@ -137,8 +138,6 @@ export class MapScene {
   private sites = new Map<string, SiteView>();
   private banners: Banner[] = [];
   private bannerLayer = new Container();
-  private honoree: { name: string; sprite: string } | null = null;
-  private honoreeFetchedAt = 0;
   private lights: LightView[] = [];
   private motes: MoteView[] = [];
   private roomOutline = new Graphics();
@@ -472,7 +471,7 @@ export class MapScene {
         const bar = new Graphics();
         box.addChild(bar);
         this.sitesLayer.addChild(box);
-        v = { room: roomId, key: '', box, sprite: null, overlay: null, statue: null, bar, lights: [], appearAt: 0, cx: site.x, cy: site.y, w: site.w, h: site.h };
+        v = { room: roomId, key: '', box, sprite: null, overlay: null, statue: null, statueOf: null, bar, lights: [], appearAt: 0, cx: site.x, cy: site.y, w: site.w, h: site.h };
         this.sites.set(roomId, v);
       }
       if (v.key !== key) {
@@ -525,6 +524,9 @@ export class MapScene {
         if (variant?.statueAt && st.mode === 'done') this.placeStatue(v, variant.statueAt);
         const built = st.mode === 'done' || st.mode === 'hall';
         v.appearAt = built && wasBuilt && !this.opts.reducedMotion ? now : 0;
+      } else if (variant?.statueAt && st.mode === 'done' && v.statueOf !== (s.honoree?.sprite ?? null)) {
+        // the honoree arrives in a `village` delta a moment after the statue completes
+        this.placeStatue(v, variant.statueAt);
       }
       v.bar.clear();
       if (st.mode === 'work') {
@@ -622,22 +624,17 @@ export class MapScene {
       v.box.addChildAt(sp, v.box.children.length - 1);
       v.statue = sp;
     };
-    draw(null);
-    const fetchHonoree = async () => {
-      this.honoreeFetchedAt = performance.now();
-      const body = await this.opts.source.getJson('/api/public/village');
-      const h = isObj(body) && isObj(body.honoree) ? body.honoree : null;
-      if (h && isStr(h.name) && isStr(h.sprite)) this.honoree = { name: h.name, sprite: h.sprite };
-    };
-    void (async () => {
-      if (!this.honoree && performance.now() - this.honoreeFetchedAt > 10_000) await fetchHonoree();
-      if (!this.honoree) {
-        // the honoree is set a moment after the statue completes: look once more
-        await new Promise((r) => setTimeout(r, 4000));
-        await fetchHonoree();
-      }
-      if (this.honoree) draw(await this.opts.source.spriteImage(this.honoree.sprite));
-    })();
+    // The honoree comes with the `village` topic (full and deltas); until then, a cloaked figure.
+    const h = this.opts.store.state.honoree;
+    v.statueOf = h?.sprite ?? null;
+    if (!v.statue) draw(null);
+    if (h)
+      void this.opts.source
+        .spriteImage(h.sprite)
+        .then((img) => {
+          if (v.statueOf === h.sprite) draw(img);
+        })
+        .catch(() => undefined);
   }
 
   private placeInitialCamera() {

@@ -4,8 +4,10 @@ import { sha256 } from '../auth';
 import type { Store } from '../store/types';
 
 const DAY_MS = 24 * 3_600_000;
-/** Absolute lifetime of a session from its last refresh. */
+/** Lifetime of a session from its last refresh. */
 export const SESSION_TTL_MS = 30 * DAY_MS;
+/** Absolute cap from login: however often it is refreshed, a session ends this long after it was created. */
+export const SESSION_MAX_AGE_MS = 90 * DAY_MS;
 /** The expiry slides forward at most this often (one write a day per active owner). */
 export const SESSION_REFRESH_MS = DAY_MS;
 /** 32 random bytes in base64url. */
@@ -24,7 +26,8 @@ export type OwnerSession = { id: string; ownerId: string };
 
 /**
  * Owner login sessions (§15.2): an opaque random cookie, of which only the SHA-256 is stored. Rotated at login,
- * deleted at logout, expired 30 days after the last refresh, refreshed at most once a day.
+ * deleted at logout, expired 30 days after the last refresh (refreshed at most once a day) and never later than 90
+ * days after login.
  */
 export class Sessions {
   readonly names: { session: string; oauth: string };
@@ -48,7 +51,7 @@ export class Sessions {
     if (previous) await this.store.deleteSession(sha256(previous));
     const value = randomBytes(32).toString('base64url');
     const now = this.now();
-    await this.store.createSession({ id: sha256(value), ownerId, expiresAt: now + SESSION_TTL_MS, refreshedAt: now });
+    await this.store.createSession({ id: sha256(value), ownerId, expiresAt: now + SESSION_TTL_MS, refreshedAt: now, createdAt: now });
     reply.setCookie(this.names.session, value, cookieOptions(this.production, SESSION_TTL_MS));
   }
 
@@ -60,13 +63,18 @@ export class Sessions {
     const row = await this.store.getSession(id);
     const now = this.now();
     if (!row) return null;
-    if (row.expiresAt <= now) {
+    // The cap is checked on every read, not only at refresh: rows refreshed before it existed may expire later.
+    const cap = row.createdAt + SESSION_MAX_AGE_MS;
+    if (row.expiresAt <= now || cap <= now) {
       await this.store.deleteSession(id);
       return null;
     }
     if (now - row.refreshedAt >= SESSION_REFRESH_MS) {
-      await this.store.refreshSession(id, now + SESSION_TTL_MS, now);
-      reply.setCookie(this.names.session, value, cookieOptions(this.production, SESSION_TTL_MS));
+      const expiresAt = Math.min(now + SESSION_TTL_MS, cap);
+      if (expiresAt > row.expiresAt) {
+        await this.store.refreshSession(id, expiresAt, now);
+        reply.setCookie(this.names.session, value, cookieOptions(this.production, expiresAt - now));
+      }
     }
     return { id, ownerId: row.ownerId };
   }

@@ -91,7 +91,7 @@ export function AgentCard({ name }: { name: string }) {
       {profile?.bio ? (
         <>
           <h3 className="heading heading-sm">{tr.t('ui.agent.bio')}</h3>
-          <blockquote className="agent-bio" dir="auto">
+          <blockquote className="agent-bio" dir="auto" lang={profile.bioLang ?? undefined}>
             {profile.bio}
           </blockquote>
         </>

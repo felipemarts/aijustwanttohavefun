@@ -17,6 +17,8 @@ const BoardPage = lazy(() => import('../pages/BoardPage'));
 const AgentProfilePage = lazy(() => import('../pages/AgentProfilePage'));
 const GuildPage = lazy(() => import('../pages/GuildPage'));
 const TimelapsePage = lazy(() => import('../pages/TimelapsePage'));
+const OwnerPage = lazy(() => import('../pages/OwnerPage'));
+const ClaimPage = lazy(() => import('../pages/ClaimPage'));
 
 /** Shown while a page's chunk loads (its own stylesheet is not there yet: only main-bundle classes here). */
 function PageFallback() {
@@ -60,6 +62,8 @@ export const PAGE_ROUTES: RouteObject[] = [
   { path: '/a/:name', element: lazyPage(AgentProfilePage) },
   { path: '/g/:name', element: lazyPage(GuildPage) },
   { path: '/timelapse', element: lazyPage(TimelapsePage) },
+  { path: '/owner', element: lazyPage(OwnerPage) },
+  { path: '/claim/:token', element: lazyPage(ClaimPage) },
   { path: '*', element: <NotFound /> },
 ];
 

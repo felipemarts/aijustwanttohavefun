@@ -1,4 +1,5 @@
 import type { AgentFull, GameEvent, RoomFull, SpectatorEvent, SpectatorServerMsg, WorldFull } from '@ajwf/shared';
+import { xpToNext } from '@ajwf/engine';
 import { describe, expect, it, vi } from 'vitest';
 import { makeServer, type TestServer } from '../test-helpers';
 import type { SpectatorSocket } from './broadcaster';
@@ -357,7 +358,10 @@ describe('spectator broadcast', () => {
     expect(Object.keys(forest.resources).sort()).toEqual(['green_herb', 'wood']);
 
     const agent = fulls(v.sock, 'agent:pip')[0]!.data as AgentFull;
-    expect(agent.card).toMatchObject({ name: 'Pip', class: 'warrior', lvl: 1, claimed: true, bot: false, sprite: expect.stringMatching(/^[0-9a-f]{14}$/) });
+    expect(agent.card).toMatchObject({ name: 'Pip', class: 'warrior', lvl: 1, profession: null, xp: [0, xpToNext(1)], claimed: true, bot: false, sprite: expect.stringMatching(/^[0-9a-f]{14}$/) });
+    expect(agent.card).not.toHaveProperty('bio_lang');
+    s.game.agentByName('Pip')!.bio = 'Turnips forever';
+    expect(s.spectators.agentFull(s.game.agentByName('Pip')!).card).toMatchObject({ bio: 'Turnips forever', bio_lang: 'en' });
     expect(agent.room).toBe('village.square');
     expect(JSON.stringify(agent)).not.toMatch(/gold|inv|ownerNote|"hp"/);
 

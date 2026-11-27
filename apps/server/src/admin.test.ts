@@ -1,5 +1,9 @@
+import { checkInvariants } from '@ajwf/engine';
 import { describe, expect, it } from 'vitest';
+import { MemoryStore } from './store/memory';
 import { ADMIN, makeServer, type TestServer } from './test-helpers';
+
+const sound = (s: TestServer) => expect(checkInvariants(s.game.state, s.game.now())).toEqual([]);
 
 const admin = (s: TestServer, method: 'GET' | 'POST' | 'DELETE', url: string, payload?: unknown, token: string | null = ADMIN) =>
   s.app.inject({ method, url, headers: token === null ? {} : { 'x-admin-token': token }, ...(payload !== undefined ? { payload: payload as Record<string, unknown> } : {}) });
@@ -47,9 +51,43 @@ describe('admin routes', () => {
     expect((await s.get(key, '/api/v1/look')).statusCode).toBe(401);
     expect(s.store.agents.get(s.game.anyAgentByName('Pip')!.id)!.status).toBe('banned');
     expect(s.game.state.roomAgents.get('village.square')!.has(s.game.anyAgentByName('Pip')!.id)).toBe(false);
+    sound(s);
+    s.game.state.dirty.clear();
     expect((await admin(s, 'POST', '/api/admin/agents/Pip/unban', {})).json()).toMatchObject({ ok: true, agent: { status: 'active' } });
+    const pip = s.game.anyAgentByName('Pip')!;
+    expect(s.game.state.roomAgents.get('village.square')!.has(pip.id)).toBe(true);
+    expect(s.game.state.dirty.has(`agent:${pip.id}`)).toBe(true);
+    sound(s);
     expect((await s.get(key, '/api/v1/look')).statusCode).toBe(200);
-    expect(s.store.agents.get(s.game.anyAgentByName('Pip')!.id)!.status).toBe('active');
+    expect(s.store.agents.get(pip.id)!.status).toBe('active');
+    // Unbanning an active agent changes nothing.
+    expect((await admin(s, 'POST', '/api/admin/agents/Pip/unban', {})).json()).toMatchObject({ ok: true, agent: { status: 'active' } });
+    sound(s);
+  });
+
+  it('unban never brings back a retired agent', async () => {
+    const s = await makeServer();
+    await s.register('Pip');
+    const pip = s.game.anyAgentByName('Pip')!;
+    await s.game.deactivate(pip.id, 'retired');
+    expect((await admin(s, 'POST', '/api/admin/agents/Pip/unban', {})).json()).toMatchObject({ ok: true, agent: { status: 'retired' } });
+    expect(s.store.agents.get(pip.id)!.status).toBe('retired');
+    expect(s.game.state.roomAgents.get(pip.room)!.has(pip.id)).toBe(false);
+    sound(s);
+  });
+
+  it('an unban that reached the store but not the last snapshot holds after a restart', async () => {
+    const store = new MemoryStore();
+    const first = await makeServer({ store });
+    const { key } = await first.register('Pip');
+    await admin(first, 'POST', '/api/admin/agents/Pip/ban', {});
+    await first.persistence.snapshot();
+    await admin(first, 'POST', '/api/admin/agents/Pip/unban', {});
+    // Crash before the next snapshot: the row says active, the snapshot still says banned.
+    const second = await makeServer({ store });
+    expect(second.game.anyAgentByName('Pip')!.status).toBe('active');
+    sound(second);
+    expect((await second.get(key, '/api/v1/look')).statusCode).toBe(200);
   });
 
   it('deleting a board post removes it from /api/public/board, from memory and from the store', async () => {
@@ -66,7 +104,10 @@ describe('admin routes', () => {
     await s.chronicle.flush();
     expect([...s.store.posts.values()].some((p) => p.id === id)).toBe(true);
 
+    s.game.state.dirty.clear();
     expect((await admin(s, 'DELETE', `/api/admin/board/${id}`)).json()).toEqual({ ok: true });
+    expect(s.game.state.dirty.has('board')).toBe(true);
+    sound(s);
     const after = await board();
     expect(after.map((p) => p.text)).toEqual(['Looking for a cleric.']);
     expect(s.game.state.board.some((p) => p.id === id)).toBe(false);
@@ -79,6 +120,8 @@ describe('admin routes', () => {
     const withReply = await board();
     expect(withReply[0]!.replies.map((r) => r.text)).toEqual(['I can heal, DM me.']);
     expect((await admin(s, 'DELETE', `/api/admin/board/${withReply[0]!.id}.0`)).json().ok).toBe(true);
+    expect((await admin(s, 'DELETE', `/api/admin/board/${withReply[0]!.id}.0`)).statusCode).toBe(404);
+    sound(s);
     const noReply = await board();
     expect(noReply[0]!.replies).toEqual([]);
     expect(noReply[0]!.text).toBe('Looking for a cleric.');

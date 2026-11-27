@@ -20,7 +20,7 @@ gazette:
       2: 'Facada pelas costas: {name} abandona {victim} à própria sorte'
       3: 'Fim da amizade: {victim} descobre como {name} é de verdade'
     world_boss_slain:
-      1: 'O Colosso cai! {n, plural, =1 {Um herói solitário derruba} other {# heróis derrubam}} {mon}'
+      1: '{mon} tomba! {n, plural, =1 {Um herói solitário derruba o gigante} other {# heróis derrubam o gigante}}'
       2: 'Gigante abatido: {name} dá o golpe final em {mon}'
     mayor_elected:
       1: 'A vila falou: {name} é a nova autoridade da prefeitura'

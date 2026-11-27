@@ -4,6 +4,7 @@ import {
   createWorld,
   deactivateAgent,
   observe,
+  reactivateAgent,
   registerAgent,
   restoreWorld,
   tick,
@@ -113,6 +114,7 @@ export class Game {
       // The row is written at once, the snapshot every few seconds: the row wins.
       a.ownerNote = rec.ownerNote;
       if (rec.status !== 'active' && a.status === 'active') deactivateAgent(this.state, a.id, rec.status);
+      else if (rec.status === 'active' && a.status === 'banned') reactivateAgent(this.state, a.id);
     }
     // The meta snapshot may be up to 5 s older than the rows and events already stored: never reuse an id.
     if (agentSeq > meta.agentSeq || loaded.maxEventId > meta.eventSeq) {
@@ -346,17 +348,13 @@ export class Game {
   }
 
   /**
-   * Lifts a ban: the agent is back in the room it was in. The engine has no reactivation yet (it only
-   * deactivates), so this restores the two indexes `deactivateAgent` changed.
+   * Lifts a ban: the agent is back in the room it was in (`reactivateAgent`, which also marks it dirty for the next
+   * snapshot). Only banned agents come back. Durable before it returns: the row is written first.
    */
   async reactivate(agentId: string): Promise<boolean> {
-    const a = this.state.agents.get(agentId);
-    if (!a || a.status !== 'banned') return false;
+    if (this.state.agents.get(agentId)?.status !== 'banned') return false;
     await this.store.setAgentStatus(agentId, 'active');
-    a.status = 'active';
-    this.state.roomAgents.get(a.room)?.add(a.id);
-    this.state.dirty.add(`agent:${a.id}`);
-    return true;
+    return reactivateAgent(this.state, agentId);
   }
 
   /** The owner's wish, already sanitized; delivered to the agent in `/me`. */

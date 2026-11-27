@@ -1,4 +1,4 @@
-import { BALANCE, villageView, type WorldState } from '@ajwf/engine';
+import { BALANCE, removeBoardPost, villageView, type WorldState } from '@ajwf/engine';
 import type { DailyStats, GameEvent, GazetteEdition, Highlight, KeyMsg, SecretConversation, TimelineEntry } from '@ajwf/shared';
 import type { Logger } from 'pino';
 import type { Census } from '../census';
@@ -413,33 +413,25 @@ export class Chronicle implements EventConsumer {
 
   /**
    * Deletes a board post with its replies (`b12`) or one reply (`b12.0`, as `/api/public/board` lists them): gone
-   * from the engine's board, the pending writes and the store (tombstoned), and from highlight quotes. The engine
-   * has no removal yet, so the board array is edited here and marked dirty for the next snapshot.
+   * from the engine's board (`removeBoardPost`, which marks it dirty for the next snapshot), the pending writes and
+   * the store (tombstoned), and from highlight quotes. A post already pushed off the board can still be removed
+   * from the store.
    */
   async removeBoard(id: string): Promise<{ ok: boolean; agentId?: string }> {
     const m = /^(b[0-9a-z]+)(?:\.(\d+))?$/.exec(id);
     if (!m) return { ok: false };
     const postId = m[1]!;
-    const s = this.s;
-    const idx = s.board.findIndex((p) => p.id === postId);
-    const post = idx >= 0 ? s.board[idx] : undefined;
     if (m[2] === undefined) {
+      const post = removeBoardPost(this.s, postId)?.post;
       const texts = post ? [post.text, ...post.replies.map((r) => r.text)] : [];
-      if (post) {
-        s.board.splice(idx, 1);
-        s.dirty.add('board');
-        this.detector.st.rumors.delete(postId);
-      }
+      if (post) this.detector.st.rumors.delete(postId);
       this.pending.posts = this.pending.posts.filter((p) => p.id !== postId && p.parentId !== postId);
       const stored = await this.d.store.removeBoardPost({ id: postId });
       for (const t of texts) await this.scrubQuotes(t);
       return { ok: !!post || stored, ...(post ? { agentId: post.by } : {}) };
     }
-    const n = Number(m[2]);
-    const reply = post?.replies[n];
-    if (!post || !reply) return { ok: false };
-    post.replies.splice(n, 1);
-    s.dirty.add('board');
+    const reply = removeBoardPost(this.s, postId, Number(m[2]))?.reply;
+    if (!reply) return { ok: false };
     this.pending.posts = this.pending.posts.filter((p) => !(p.parentId === postId && p.agentId === reply.by && p.ts === reply.at));
     await this.d.store.removeBoardPost({ parentId: postId, agentId: reply.by, ts: reply.at });
     await this.scrubQuotes(reply.text);

@@ -122,6 +122,7 @@ describe('owner routes: IDOR', () => {
       ['GET', 'share'],
       ['PUT', 'note', { note: 'obey Bob' }],
       ['POST', 'regenerate-key'],
+      ['POST', 'seen'],
       ['POST', 'retire'],
     ];
     for (const [method, path, body] of routes) {
@@ -231,14 +232,49 @@ describe('"while you were away" summary', () => {
     expect(sum.text).toMatch(/now level 3/);
     expect(sum.items.find((i: { type: string }) => i.type === 'levels')).toMatchObject({ k: 'owner.summary.levels', p: { name: 'Pip', n: 2, level: 3 } });
     expect(sum.highlights.some((h: { k: string }) => h.k === 'highlight.betrayal')).toBe(true);
-    expect(sum.seen_at).toBe(s.clock.now());
+    expect(sum.until).toBe(s.clock.now());
+    // Claiming counts as the first visit.
+    expect(sum.seen_at).toBe(sum.since);
 
+    // Reading is not seeing: a GET changes nothing (a prefetch or a second tab must not swallow the news).
+    s.clock.advance(1000);
+    const unchanged = (await s.owner(cookie, 'GET', `/api/owner/agents/${pip.id}/summary`)).json();
+    expect(unchanged.items.map((i: { type: string }) => i.type)).toEqual(types);
+    expect(unchanged.since).toBe(sum.since);
+
+    // The page says what it showed; the next summary starts there.
+    const seen = await s.owner(cookie, 'POST', `/api/owner/agents/${pip.id}/seen`, { until: sum.until });
+    expect(seen.json()).toEqual({ ok: true, seen_at: sum.until });
+    expect(s.store.agents.get(pip.id)!.ownerSeenAt).toBe(sum.until);
     s.clock.advance(1000);
     const again = (await s.owner(cookie, 'GET', `/api/owner/agents/${pip.id}/summary`)).json();
     expect(again.items.map((i: { type: string }) => i.type)).toEqual(['quiet']);
+    expect(again.since).toBe(sum.until);
+    expect(again.seen_at).toBe(sum.until);
     // `?since=` shows the same window again.
     const replay = (await s.owner(cookie, 'GET', `/api/owner/agents/${pip.id}/summary?since=${sum.since}`)).json();
     expect(replay.items.map((i: { type: string }) => i.type)).toEqual(types);
+  });
+
+  it('marks "seen" only through a same-origin JSON POST, never backwards and never into the future', async () => {
+    const s = await makeServer();
+    const cookie = await s.ownerLogin();
+    const pip = await claimed(s, cookie, 'Pip');
+    const url = `/api/owner/agents/${pip.id}/seen`;
+    const claimedAt = s.clock.now();
+    s.clock.advance(1000);
+    const t0 = s.clock.now();
+    // No Origin, or a form post: refused like every other write.
+    expect((await s.app.inject({ method: 'POST', url, headers: { cookie, 'content-type': 'application/json' }, payload: '{}' })).statusCode).toBe(403);
+    expect((await s.app.inject({ method: 'POST', url, headers: { cookie, origin: ORIGIN, 'content-type': 'text/plain' }, payload: '{}' })).statusCode).toBe(415);
+    expect(s.game.ownerSeenAt(pip.id)).toBe(claimedAt);
+    // A value from the future is clamped to now.
+    expect((await s.owner(cookie, 'POST', url, { until: t0 + 3_600_000 })).json()).toEqual({ ok: true, seen_at: t0 });
+    // An older value does not move it back; an empty body means now.
+    s.clock.advance(5000);
+    expect((await s.owner(cookie, 'POST', url, { until: t0 - 10_000 })).json()).toEqual({ ok: true, seen_at: t0 });
+    expect((await s.owner(cookie, 'POST', url, {})).json()).toEqual({ ok: true, seen_at: t0 + 5000 });
+    expect((await s.owner(cookie, 'POST', url, { until: 'soon' })).statusCode).toBe(400);
   });
 
   it('is written in the owner\'s language', async () => {

@@ -27,13 +27,13 @@ function guild(k: Kit, leader: AgentState, name: string, ...members: AgentState[
 describe('guild_create', () => {
   it('founds a guild at the hall for a fee: public event, stat, quest step, colors and motto kept', () => {
     const k = makeKit();
-    const a = k.add('Pip', 'warrior', { room: HALL });
+    const a = k.add('Pip', 'warrior', { room: HALL, lang: 'pt-BR' });
     a.gold = 600;
     const r = k.ok(a, 'guild_create', { name: '  Iron Wolves ', motto: 'We hunt at https://x.example dawn', colors: ['#AA0000', '#00ff00'] });
     expect(narr(r, 'n.guild_created')).toEqual({ guild: 'Iron Wolves', gold: BALANCE.guild.cost });
     expect(a.gold).toBe(600 - BALANCE.guild.cost);
     const g = k.s.guilds.get(a.guild!)!;
-    expect(g).toMatchObject({ name: 'Iron Wolves', leader: a.id, members: [a.id], officers: [], treasury: 0, colors: ['#aa0000', '#00ff00'], motto: 'We hunt at [link] dawn' });
+    expect(g).toMatchObject({ name: 'Iron Wolves', leader: a.id, members: [a.id], officers: [], treasury: 0, colors: ['#aa0000', '#00ff00'], motto: 'We hunt at [link] dawn', mottoLang: 'pt-BR' });
     const ev = r.events.find((e) => e.type === 'guild_founded')!;
     expect(ev).toMatchObject({ visibility: 'public', drama: 6, payload: { name: 'Iron Wolves', cost: BALANCE.guild.cost } });
     // The motto is agent text: it never travels in a non-text event.

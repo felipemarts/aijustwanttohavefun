@@ -143,18 +143,46 @@ export function registerAgent(s: WorldState, input: RegisterInput, ctx: { now: n
   return { ok: true, agent: a, events: run.events };
 }
 
+const countLook = (s: WorldState, hash: string, by: 1 | -1): void => {
+  const n = (s.lookHashes.get(hash) ?? 0) + by;
+  if (n <= 0) s.lookHashes.delete(hash);
+  else s.lookHashes.set(hash, n);
+};
+
 /**
- * Removes an agent from the indexes when it is retired or banned. Its snapshot stays. It also leaves its party,
- * which only makes sense with members who can still act; guild membership, trades and market orders stay (other
- * agents re-check them when they act).
+ * Removes an agent from the indexes when it is retired or banned: the room index and the look count (a restored
+ * world counts only active agents, so this keeps the live world equal to its snapshot). Its snapshot stays, and so
+ * does its name in the name indexes. It also leaves its party, which only makes sense with members who can still
+ * act; guild membership, trades and market orders stay (other agents re-check them when they act).
  */
 export function deactivateAgent(s: WorldState, agentId: string, status: 'retired' | 'banned'): void {
   const a = s.agents.get(agentId);
   if (!a) return;
+  if (a.status === 'active') {
+    s.roomAgents.get(a.room)?.delete(a.id);
+    countLook(s, a.lookHash, -1);
+  }
   a.status = status;
-  s.roomAgents.get(a.room)?.delete(a.id);
   removeMember(s, a);
   markAgent(s, a);
+}
+
+/**
+ * Lifts a ban: the agent is active again in the room it was in, back in the indexes `deactivateAgent` took it out
+ * of. Its name never stopped being reserved. The party it left is not restored, and a fight it was in is
+ * forgotten (as on a restore). Only banned agents come back: retirement is the owner's choice, and unknown or
+ * active agents are left alone. Returns whether anything changed.
+ */
+export function reactivateAgent(s: WorldState, agentId: string): boolean {
+  const a = s.agents.get(agentId);
+  if (!a || a.status !== 'banned') return false;
+  if (!s.roomAgents.has(a.room)) a.room = BALANCE.startRoom;
+  a.status = 'active';
+  a.combat = null;
+  s.roomAgents.get(a.room)!.add(a.id);
+  countLook(s, a.lookHash, 1);
+  markAgent(s, a);
+  return true;
 }
 
 /**
@@ -167,9 +195,7 @@ export function unregisterAgent(s: WorldState, agentId: string): void {
   s.agents.delete(a.id);
   if (s.byName.get(a.norm) === a.id) s.byName.delete(a.norm);
   if (s.bySkeleton.get(a.skeleton) === a.id) s.bySkeleton.delete(a.skeleton);
-  const left = (s.lookHashes.get(a.lookHash) ?? 1) - 1;
-  if (left <= 0) s.lookHashes.delete(a.lookHash);
-  else s.lookHashes.set(a.lookHash, left);
+  if (a.status === 'active') countLook(s, a.lookHash, -1);
   const here = s.roomAgents.get(a.room);
   here?.delete(a.id);
   // Its arrival was announced to everyone in the room: take that back too, so nobody meets a ghost.

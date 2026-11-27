@@ -353,12 +353,12 @@ export class PgStore implements Store {
   }
 
   async createSession(s: SessionRow): Promise<void> {
-    await this.db.insert(sessions).values({ id: s.id, ownerId: s.ownerId, expiresAt: s.expiresAt, refreshedAt: s.refreshedAt });
+    await this.db.insert(sessions).values({ id: s.id, ownerId: s.ownerId, expiresAt: s.expiresAt, refreshedAt: s.refreshedAt, createdAt: s.createdAt });
   }
 
   async getSession(id: string): Promise<SessionRow | null> {
     const [r] = await this.db
-      .select({ id: sessions.id, ownerId: sessions.ownerId, expiresAt: sessions.expiresAt, refreshedAt: sessions.refreshedAt })
+      .select({ id: sessions.id, ownerId: sessions.ownerId, expiresAt: sessions.expiresAt, refreshedAt: sessions.refreshedAt, createdAt: sessions.createdAt })
       .from(sessions)
       .where(eq(sessions.id, id));
     return r ?? null;

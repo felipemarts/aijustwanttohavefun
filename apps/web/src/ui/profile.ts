@@ -1,4 +1,5 @@
 /** Parsing of the public agent profile (`GET /api/public/agents/:name`); every field is untrusted. */
+import { safeLang } from '../data/parse';
 
 export type AgentProfile = {
   name: string;
@@ -8,6 +9,8 @@ export type AgentProfile = {
   title: string | null;
   look: string | null;
   bio: string | null;
+  /** Language the bio was written in (`bio_lang`), when the server says and it is a valid tag. */
+  bioLang: string | null;
   spriteHash: string | null;
   room: string | null;
   achievements: number;
@@ -37,6 +40,7 @@ export function parseProfile(body: unknown): AgentProfile | null {
     title: str(a.title),
     look: str(a.look),
     bio,
+    bioLang: bio ? safeLang(a.bio_lang) : null,
     spriteHash: hash ?? null,
     room: str(a.room),
     achievements: Array.isArray(a.achievements) ? a.achievements.length : 0,

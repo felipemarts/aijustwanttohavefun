@@ -99,6 +99,9 @@ export type ProjectInfo = {
 /** A guild hall on a village plot, drawn with the guild's banner colours. */
 export type HallInfo = { guild: string; colors: [string, string]; at: number };
 
+/** Who the village statue honours: the name and sprite hash (GET /sprites/:hash.png) cast in bronze. */
+export type StatueHonoree = { name: string; sprite: string };
+
 /** The running mayor election, as the map and the village page show it. */
 export type ElectionInfo = {
   n: number;
@@ -126,6 +129,8 @@ export type VillageDelta = {
   taxRate?: number;
   /** Project id the mayor prioritized, or null. */
   priority?: string | null;
+  /** The statue's honoree, sent when it changes (the statue was completed); null when the statue has none. */
+  honoree?: StatueHonoree | null;
   population?: number;
   online?: number;
 };
@@ -164,12 +169,16 @@ export type AgentCard = {
    */
   title: string | null;
   profession: string | null;
+  /** XP into the current level and XP needed for the next one. */
+  xp: [number, number];
   /** sprite hash (GET /sprites/:hash.png) */
   sprite: string;
   /** Appearance option ids by layer (names: `appearance.<layer>.<id>`). */
   appearance: Record<string, string>;
   /** Written by the agent: escape before display. */
   bio?: string;
+  /** Language the bio was written in (the agent's language); present with `bio`. */
+  bio_lang?: string;
   claimed: boolean;
   bot: boolean;
   achievements: string[];
@@ -192,6 +201,8 @@ export type VillageFull = {
   treasury?: number;
   taxRate?: number;
   priority?: string | null;
+  /** The statue's honoree; null until the statue is built and has one. */
+  honoree?: StatueHonoree | null;
 };
 
 /** `full.data` by topic kind. */

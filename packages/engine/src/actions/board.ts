@@ -3,7 +3,7 @@ import { bump } from '../agent';
 import { BALANCE, realDay } from '../balance';
 import { questEvent } from '../quests';
 import { emit, fail, tell, type Run } from '../run';
-import type { AgentState, BoardPost } from '../types';
+import type { AgentState, BoardPost, BoardReply, WorldState } from '../types';
 import { chatCooldown } from './chat';
 import { cleanText, hasFlag, type HandlerMap } from './util';
 
@@ -19,6 +19,32 @@ function postById(run: Run, raw: string): BoardPost {
 }
 
 const authorName = (run: Run, id: string) => run.s.agents.get(id)?.name ?? '?';
+
+/** What `removeBoardPost` took off the board: the whole post (with its replies), or one reply of a post that stays. */
+export type RemovedBoardPost = { post: BoardPost; reply?: BoardReply };
+
+/**
+ * Moderation: removes a post with its replies or, given `replyIndex`, only that reply (later replies move up one).
+ * The board has no index besides its array; post ids are never reused (`meta.postSeq` stays), and lifetime stats
+ * such as `board_posts` keep counting what the author did. Returns what was removed, or null when the post or reply
+ * does not exist.
+ */
+export function removeBoardPost(s: WorldState, postId: string, replyIndex?: number): RemovedBoardPost | null {
+  const idx = s.board.findIndex((p) => p.id === postId);
+  const post = s.board[idx];
+  if (!post) return null;
+  if (replyIndex === undefined) {
+    s.board.splice(idx, 1);
+    s.dirty.add('board');
+    return { post };
+  }
+  if (!Number.isInteger(replyIndex) || replyIndex < 0) return null;
+  const reply = post.replies[replyIndex];
+  if (!reply) return null;
+  post.replies.splice(replyIndex, 1);
+  s.dirty.add('board');
+  return { post, reply };
+}
 
 export const boardActions: HandlerMap = {
   board_post(run, a, p) {

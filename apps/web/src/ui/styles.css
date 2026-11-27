@@ -1387,3 +1387,41 @@ select:focus-visible {
     animation: none;
   }
 }
+
+/* ── Owner link in the top bar ────────────────────────────────────────────── */
+.owner-link {
+  padding-inline: 10px;
+  color: var(--muted);
+  gap: 6px;
+}
+
+.owner-link svg {
+  flex: none;
+}
+
+.owner-link.is-in {
+  color: var(--teal);
+}
+
+.owner-link.is-active {
+  color: var(--amber);
+}
+
+.owner-link-label {
+  max-inline-size: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 860px) {
+  .owner-link-label {
+    display: none;
+  }
+}
+
+/* Room for the owner button on phones: the time-of-day counter goes first. */
+@media (max-width: 480px) {
+  .counter-phase {
+    display: none;
+  }
+}

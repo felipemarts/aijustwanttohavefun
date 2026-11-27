@@ -83,6 +83,8 @@ describe('routes', () => {
     ['/a/Pip', '/a/:name'],
     ['/g/Iron%20Lanterns', '/g/:name'],
     ['/timelapse', '/timelapse'],
+    ['/owner', '/owner'],
+    [`/claim/${'A'.repeat(43)}`, '/claim/:token'],
     ['/nowhere/at/all', '*'],
   ];
   it.each(paths)('%s is served by %s', (path, route) => {
@@ -206,14 +208,18 @@ describe('agent text is never interpreted as markup', () => {
   });
 
   it('profile bio and journal, guild motto', () => {
-    const p = parseFullProfile({ agent: { name: 'Pip', class: 'mage', lvl: 3, bio: { untrusted_text: XSS }, journal: [{ ts: 1, text: XSS, lang: 'fr' }], achievements: [] } })!;
+    const p = parseFullProfile({ agent: { name: 'Pip', class: 'mage', lvl: 3, profession: 'smith', xp: [40, 120], bio: { untrusted_text: XSS }, bio_lang: 'pt-BR', journal: [{ ts: 1, text: XSS, lang: 'fr' }], achievements: [] } })!;
+    expect(p).toMatchObject({ profession: 'smith', xp: { cur: 40, next: 120 }, bio: { text: XSS, lang: 'pt-BR' } });
     const out = html(<AgentProfileView name="Pip" state={ready(p)} />);
     noMarkup(out);
     expect(out).toContain('lang="fr"');
-    const g = parseGuild({ guild: { name: 'G', motto: XSS, colors: ['#ff0000', 'url(javascript:x)'], leader: 'Pip', officers: [], members: ['Pip'] } })!;
+    expect(out).toContain('lang="pt-BR"');
+    const g = parseGuild({ guild: { name: 'G', motto: XSS, motto_lang: 'es', colors: ['#ff0000', 'url(javascript:x)'], leader: 'Pip', officers: [], members: ['Pip'] } })!;
+    expect(g.motto).toEqual({ text: XSS, lang: 'es' });
     const gout = html(<GuildView name="G" state={ready(g)} />);
     noMarkup(gout);
     expect(gout).not.toContain('javascript');
+    expect(gout).toContain('lang="es"');
   });
 
   it('the gazette front page has no agent text at all, only catalog lines', () => {

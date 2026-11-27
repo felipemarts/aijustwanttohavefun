@@ -508,8 +508,10 @@ export function parseFullProfile(body: unknown): FullProfile | null {
   const hash = strOrNull(a.sprite_hash) ?? fromUrl ?? null;
   const g = isObj(a.guild) && isStr(a.guild.name) ? a.guild : null;
   const gc = g ? arr(g.colors) : [];
-  const xpCur = isNum(a.xp) ? a.xp : isObj(a.xp) && isNum(a.xp.cur) ? a.xp.cur : null;
-  const xpNext = isNum(a.xp_next) ? a.xp_next : isObj(a.xp) && isNum(a.xp.next) ? a.xp.next : null;
+  // `xp: [current, needed]` (the server), or the older `xp` + `xp_next` / `{ cur, next }` shapes.
+  const xpPair = Array.isArray(a.xp) && isNum(a.xp[0]) && isNum(a.xp[1]) ? (a.xp as [number, number]) : null;
+  const xpCur = xpPair ? xpPair[0] : isNum(a.xp) ? a.xp : isObj(a.xp) && isNum(a.xp.cur) ? a.xp.cur : null;
+  const xpNext = xpPair ? xpPair[1] : isNum(a.xp_next) ? a.xp_next : isObj(a.xp) && isNum(a.xp.next) ? a.xp.next : null;
   const titleId = isStr(a.title) && /^[a-z0-9_]+$/.test(a.title) ? a.title : null;
   return {
     name: a.name,

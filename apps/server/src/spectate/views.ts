@@ -1,5 +1,5 @@
-import { BALANCE, dayFraction, dayPhase, refreshResource, villageView, type AgentState, type WorldState } from '@ajwf/engine';
-import type { AgentCard, AgentPos, DayInfo, ElectionInfo, HallInfo, ProjectInfo, RoomFull, RoomInfo, RoomMonster, SpectatorEvent } from '@ajwf/shared';
+import { BALANCE, dayFraction, dayPhase, refreshResource, villageView, xpToNext, type AgentState, type WorldState } from '@ajwf/engine';
+import type { AgentCard, AgentPos, DayInfo, ElectionInfo, HallInfo, ProjectInfo, RoomFull, RoomInfo, RoomMonster, SpectatorEvent, StatueHonoree } from '@ajwf/shared';
 import { SPECTATE } from './constants';
 
 export function dayInfo(now: number): DayInfo {
@@ -22,6 +22,11 @@ export function posKey(p: AgentPos): string {
   return `${p.r}|${p.l}|${p.s}|${p.t ?? ''}|${p.f ?? ''}`;
 }
 
+/** XP into the current level and needed for the next (the engine's curve), as `/look` shows it to the agent. */
+export function agentXp(a: AgentState): [number, number] {
+  return [a.xp, xpToNext(a.level)];
+}
+
 /** Public card: the same facts as the public profile, without anything rendered in a language. */
 export function agentCard(a: AgentState): AgentCard {
   return {
@@ -30,9 +35,10 @@ export function agentCard(a: AgentState): AgentCard {
     lvl: a.level,
     title: a.title,
     profession: a.profession,
+    xp: agentXp(a),
     sprite: a.lookHash,
     appearance: { ...a.appearance },
-    ...(a.bio ? { bio: a.bio } : {}),
+    ...(a.bio ? { bio: a.bio, bio_lang: a.lang } : {}),
     claimed: a.claimed,
     bot: a.bot,
     achievements: Object.keys(a.achievements),
@@ -51,6 +57,7 @@ export type VillageMap = {
   treasury: number;
   taxRate: number;
   priority: string | null;
+  honoree: StatueHonoree | null;
 };
 
 export function villageMap(s: WorldState, now: number): VillageMap {
@@ -71,6 +78,7 @@ export function villageMap(s: WorldState, now: number): VillageMap {
     treasury: v.treasury,
     taxRate: v.taxRate,
     priority: v.priority,
+    honoree: v.honoree ? { name: v.honoree.name, sprite: v.honoree.sprite } : null,
   };
 }
 

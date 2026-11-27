@@ -131,7 +131,8 @@ export type OwnerRow = {
 export type NewOwner = Pick<OwnerRow, 'provider' | 'externalId' | 'name' | 'language'>;
 
 /** `id` is the SHA-256 of the session cookie. */
-export type SessionRow = { id: string; ownerId: string; expiresAt: number; refreshedAt: number };
+/** Times in epoch ms. `createdAt` is the login time, which caps the expiry however often the session is refreshed. */
+export type SessionRow = { id: string; ownerId: string; expiresAt: number; refreshedAt: number; createdAt: number };
 
 export type PushKeys = { p256dh: string; auth: string };
 export type PushSubscriptionRow = { id: string; ownerId: string; endpoint: string; keys: PushKeys };

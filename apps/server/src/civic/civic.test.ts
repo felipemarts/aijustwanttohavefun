@@ -1,5 +1,5 @@
 import { BALANCE } from '@ajwf/engine';
-import type { GameEvent, GazetteEdition, Highlight, Leaderboard, SecretConversation, SpectatorServerMsg, TimelineEntry, WorldFull } from '@ajwf/shared';
+import type { GameEvent, GazetteEdition, Highlight, Leaderboard, SecretConversation, SpectatorServerMsg, TimelineEntry, VillageFull, WorldFull } from '@ajwf/shared';
 import { describe, expect, it } from 'vitest';
 import type { SpectatorSocket } from '../spectate/broadcaster';
 import { estimateTokens, makeServer, T0, type TestServer } from '../test-helpers';
@@ -245,7 +245,10 @@ describe('/api/public civic routes', () => {
     expect((await pub(s, '/leaderboard?by=nonsense')).statusCode).toBe(400);
 
     const g = (await pub(s, '/guilds/iron%20owls')).json();
-    expect(g.guild).toMatchObject({ name: 'Iron Owls', motto: 'Hoot', colors: ['#112233', '#445566'], leader: 'Brasa', members: ['Brasa'] });
+    expect(g.guild).toMatchObject({ name: 'Iron Owls', motto: 'Hoot', motto_lang: 'en', colors: ['#112233', '#445566'], leader: 'Brasa', members: ['Brasa'] });
+    // A guild founded before the motto language was kept has none: the field is left out.
+    delete s.game.state.guilds.get(s.game.agentByName('Brasa')!.guild!)!.mottoLang;
+    expect((await pub(s, '/guilds/iron%20owls')).json().guild).not.toHaveProperty('motto_lang');
     expect(g.highlights.map((h: Highlight) => h.type)).toEqual(['guild_founded']);
     expect((await pub(s, '/guilds/nobody')).statusCode).toBe(404);
 
@@ -418,6 +421,37 @@ describe('spectator protocol additions', () => {
     expect(vb.some((d) => d.election?.n === 2 && d.election.phase === 'candidacy')).toBe(true);
     expect(vb.some((d) => d.mayor === 'Pip')).toBe(true);
     expect(vb.at(-1)!.population ?? vb.findLast((d) => d.population !== undefined)!.population).toBe(2);
+  });
+
+  it('the village topic carries the statue honoree: null before, in the delta that completes it, then in every full', async () => {
+    const s = await makeServer();
+    const pip = await s.register('Pip');
+    const sock = viewer(s, 'world', 'village');
+    const first = sock.msgs().find((m) => m.t === 'full' && m.topic === 'village') as { data: VillageFull };
+    expect(first.data.honoree).toBeNull();
+    for (const p of ['bridge', 'watchtower', 'inn_expansion']) await build(s, pip.key, 'Pip', p);
+    s.clock.advance(300);
+    s.spectators.flush();
+    expect(batches(sock, 'village').some((b) => b.village && 'honoree' in b.village)).toBe(false);
+
+    await build(s, pip.key, 'Pip', 'statue');
+    s.clock.advance(300);
+    s.spectators.flush();
+    const sprite = s.game.agentByName('Pip')!.lookHash;
+    const done = batches(sock, 'village').at(-1)!.village!;
+    expect(done).toMatchObject({ buildings: expect.objectContaining({ 'village.square': 'statue' }), honoree: { name: 'Pip', sprite } });
+    // Only on change: the next village batch does not repeat it; the world topic never carries it.
+    expect(batches(sock, 'world').some((b) => b.village && 'honoree' in b.village)).toBe(false);
+    s.game.agentByName('Pip')!.gold += 10;
+    expect((await s.act(pip.key, 'contribute', { project: 'arena', gold: 10 })).json().ok).toBe(true);
+    s.clock.advance(300);
+    s.spectators.flush();
+    expect(batches(sock, 'village').at(-1)!.village!.projects).toEqual([expect.objectContaining({ id: 'arena' })]);
+    expect(batches(sock, 'village').at(-1)!.village).not.toHaveProperty('honoree');
+    expect(batches(sock, 'village').filter((b) => b.village && 'honoree' in b.village)).toHaveLength(1);
+
+    const later = viewer(s, 'village');
+    expect((later.msgs().find((m) => m.t === 'full') as { data: VillageFull }).data.honoree).toEqual({ name: 'Pip', sprite });
   });
 });
 

@@ -142,6 +142,7 @@ describe('HTML shells for crawlers', () => {
     );
     writeFileSync(join(dist, 'assets', 'index-abc123.js'), 'console.log(1)');
     writeFileSync(join(dist, 'favicon.svg'), '<svg xmlns="http://www.w3.org/2000/svg"/>');
+    writeFileSync(join(dist, 'sw.js'), 'self.addEventListener("push", () => {});');
     const s = await makeServer({ config: { webDist: dist } });
     await s.register('Pip');
 
@@ -157,6 +158,10 @@ describe('HTML shells for crawlers', () => {
     expect(js.statusCode).toBe(200);
     expect(js.headers['cache-control']).toBe('public, max-age=31536000, immutable');
     expect((await get(s, '/favicon.svg')).headers['cache-control']).toBe('public, max-age=3600');
+    // The service worker is revalidated on every visit.
+    const sw = await get(s, '/sw.js');
+    expect(sw.headers['cache-control']).toBe('no-cache');
+    expect(sw.headers['content-type']).toMatch(/javascript/);
 
     const spa = await get(s, '/village', { accept: 'text/html,application/xhtml+xml' });
     expect(spa.statusCode).toBe(200);

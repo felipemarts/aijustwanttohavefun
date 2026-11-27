@@ -216,6 +216,7 @@ export class Broadcaster implements EventConsumer {
       if (cur.treasury !== prev.treasury) d.treasury = cur.treasury;
       if (cur.taxRate !== prev.taxRate) d.taxRate = cur.taxRate;
       if (cur.priority !== prev.priority) d.priority = cur.priority;
+      if (cur.honoree?.name !== prev.honoree?.name || cur.honoree?.sprite !== prev.honoree?.sprite) d.honoree = cur.honoree;
       this.lastVillage = cur;
     }
     return Object.keys(d).length ? d : null;
@@ -458,6 +459,7 @@ export class Broadcaster implements EventConsumer {
       treasury: v.treasury,
       taxRate: v.taxRate,
       priority: v.priority,
+      honoree: v.honoree,
     };
   }
 

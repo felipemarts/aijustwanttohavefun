@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { sha256 } from './auth';
 import type { Config } from './config';
 import { challenge, encodeAttempt, type FetchLike } from './owner/oauth';
-import { SESSION_TTL_MS } from './owner/session';
+import { SESSION_MAX_AGE_MS, SESSION_TTL_MS } from './owner/session';
 import { makeServer, ORIGIN, type TestServer } from './test-helpers';
 
 const OAUTH: Config['oauth'] = { github: { id: 'gh-client', secret: 'gh-secret' }, google: { id: 'g-client', secret: 'g-secret' } };
@@ -239,6 +239,42 @@ describe('owner sessions', () => {
     expect((await s.owner(again, 'GET', '/api/owner/me')).statusCode).toBe(401);
   });
 
+  it('ends 90 days after login however often it is refreshed; the cookie Max-Age follows the time left', async () => {
+    const DAY = 24 * 3_600_000;
+    const s = await makeServer();
+    const cookie = await s.ownerLogin();
+    const id = sha256(cookie.split('=')[1]!);
+    const login = s.clock.now();
+    expect(s.store.sessions.get(id)!.createdAt).toBe(login);
+    for (let day = 1; day < 90; day++) {
+      s.clock.advance(DAY);
+      const res = await s.owner(cookie, 'GET', '/api/owner/me');
+      expect(res.statusCode, `day ${day}`).toBe(200);
+      const row = s.store.sessions.get(id)!;
+      expect(row.expiresAt, `day ${day}`).toBe(Math.min(s.clock.now() + SESSION_TTL_MS, login + SESSION_MAX_AGE_MS));
+      expect(row.createdAt).toBe(login);
+      const set = firstCookie(res.headers['set-cookie'], 'ajwf_session');
+      // Once the expiry reaches the cap there is nothing left to extend: no write, no new cookie.
+      if (day <= 60) expect(set, `day ${day}`).toMatch(new RegExp(`Max-Age=${Math.floor((row.expiresAt - s.clock.now()) / 1000)}(;|$)`));
+      else expect(set, `day ${day}`).toBeUndefined();
+    }
+    s.clock.advance(DAY);
+    expect(s.clock.now()).toBe(login + SESSION_MAX_AGE_MS);
+    expect((await s.owner(cookie, 'GET', '/api/owner/me')).statusCode).toBe(401);
+    expect(s.store.sessions.has(id)).toBe(false);
+  });
+
+  it('the cap also ends an older row whose stored expiry is later', async () => {
+    const s = await makeServer();
+    const cookie = await s.ownerLogin();
+    const id = sha256(cookie.split('=')[1]!);
+    const row = s.store.sessions.get(id)!;
+    row.createdAt = s.clock.now() - SESSION_MAX_AGE_MS;
+    row.expiresAt = s.clock.now() + SESSION_TTL_MS;
+    expect((await s.owner(cookie, 'GET', '/api/owner/me')).statusCode).toBe(401);
+    expect(s.store.sessions.has(id)).toBe(false);
+  });
+
   it('rotates the session at login: the browser\'s previous session is deleted', async () => {
     const s = await makeServer();
     const first = await s.ownerLogin('Ada');
@@ -248,6 +284,16 @@ describe('owner sessions', () => {
     expect(s.store.sessions.size).toBe(1);
     expect((await s.owner(first, 'GET', '/api/owner/me')).statusCode).toBe(401);
     expect((await s.owner(second, 'GET', '/api/owner/me')).statusCode).toBe(200);
+  });
+
+  it('GET /session tells the navigation who is logged in, without a 401 for anonymous visitors', async () => {
+    const s = await makeServer();
+    const anon = await s.app.inject({ method: 'GET', url: '/api/owner/session' });
+    expect(anon.statusCode).toBe(200);
+    expect(anon.json()).toEqual({ ok: true, owner: null });
+    const cookie = await s.ownerLogin('Ada');
+    expect((await s.owner(cookie, 'GET', '/api/owner/session')).json()).toEqual({ ok: true, owner: { name: 'Ada', language: 'en' } });
+    expect((await s.owner(cookie, 'GET', '/api/owner/session', undefined, { 'sec-fetch-site': 'cross-site' })).statusCode).toBe(403);
   });
 
   it('ignores malformed and unknown session cookies', async () => {

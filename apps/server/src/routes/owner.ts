@@ -18,6 +18,7 @@ export const MAX_PUSH_SUBSCRIPTIONS = 10;
 
 const idParams = z.object({ id: z.string().regex(/^a[0-9a-z]{1,12}$/) });
 const sinceQuery = z.object({ since: z.coerce.number().int().min(0).max(1e15).optional() });
+const seenBody = z.object({ until: z.number().int().min(0).max(1e15).optional() });
 const languageBody = z.object({ language: languageTagSchema });
 const devLoginBody = z.object({ name: z.string().min(1).max(40).optional() });
 const subscribeBody = z.object({ endpoint: z.string().max(1024), keys: z.object({ p256dh: z.string().max(200), auth: z.string().max(100) }) });
@@ -222,6 +223,14 @@ export function ownerRoutes(app: FastifyInstance, ctx: AppContext): void {
 
   // ── the dashboard ───────────────────────────────────────────────────────────────────────────────────────
 
+  /** Who is logged in, for the site navigation: never a 401, so anonymous visitors get no error on every page. */
+  app.get('/session', async (req, reply) => {
+    if (csrf(req, reply)) return reply;
+    const sess = await sessions.read(req, reply);
+    const o = sess ? await store.getOwner(sess.ownerId) : null;
+    return { ok: true, owner: o ? { name: o.name, language: lang(o) } : null };
+  });
+
   app.get('/me', async (req, reply) => {
     const o = await owner(req, reply);
     if (!o) return reply;
@@ -269,8 +278,27 @@ export function ownerRoutes(app: FastifyInstance, ctx: AppContext): void {
     const events = await store.agentEvents(a.id, since, SUMMARY_EVENT_TYPES, SUMMARY_MAX_EVENTS);
     const highlights = await ctx.chronicle.highlights(null, 200, (h) => h.ts > since && h.agents.includes(a.name));
     const summary = buildSummary({ s: game.state, render, lang: lang(o), agent: a, events, highlights, since, until });
-    await game.markOwnerSeen(a.id, until);
-    return { ok: true, agent: { id: a.id, name: a.name }, ...summary, seen_at: until };
+    // Read-only: the page marks the window as seen (POST .../seen) once the owner has actually been shown it.
+    const seen = game.ownerSeenAt(a.id);
+    return { ok: true, agent: { id: a.id, name: a.name }, ...summary, ...(seen !== undefined ? { seen_at: seen } : {}) };
+  });
+
+  /**
+   * "I have read the summary up to `until`" (the `until` of the summary shown; now when absent). Only moves forward
+   * and never past the present, so a replayed or forged value cannot hide events that have not happened yet.
+   */
+  app.post('/agents/:id/seen', async (req, reply) => {
+    const o = await owner(req, reply);
+    if (!o) return reply;
+    const a = mine(o, req, reply);
+    if (!a) return reply;
+    const body = seenBody.safeParse(req.body ?? {});
+    if (!body.success) return reply.code(400).send(invalidParams(render, lang(o), body.error.issues));
+    const now = game.now();
+    const prev = game.ownerSeenAt(a.id) ?? 0;
+    const at = Math.min(now, body.data.until ?? now);
+    if (at > prev) await game.markOwnerSeen(a.id, at);
+    return { ok: true, seen_at: Math.max(prev, at) };
   });
 
   app.put('/agents/:id/note', async (req, reply) => {

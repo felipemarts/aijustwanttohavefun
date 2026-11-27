@@ -1,4 +1,5 @@
 import type { I18nBundle, PublicStats, RoomFull, WorldFull } from '@ajwf/shared';
+import { xpToNext } from '@ajwf/engine';
 import { describe, expect, it } from 'vitest';
 import { loadCatalogs } from './i18n';
 import { npcAppearance } from './sprites';
@@ -37,6 +38,8 @@ describe('/api/public', () => {
     const a = res.json().agent;
     expect(a).toMatchObject({ name: 'Pip', class: 'warrior', lvl: 1, bio: { untrusted_text: 'I like turnips' }, room: 'village.square', sprite_hash: expect.stringMatching(/^[0-9a-f]{14}$/) });
     expect(a.look).toMatch(/^um /);
+    // Spectators see the profession, the XP bar (into this level, needed for the next) and the bio's language.
+    expect(a).toMatchObject({ profession: null, xp: [0, xpToNext(1)], bio_lang: 'en' });
     expect(res.body).not.toMatch(/secret plan|gold|inventory/);
     expect((await s.app.inject({ method: 'GET', url: '/api/public/agents/Nobody' })).statusCode).toBe(404);
   });
