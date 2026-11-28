@@ -649,7 +649,8 @@ Labels and names in labels use `plain(name, nameText)`. `way(dirs)` is `""` for 
    fair_monsters}` ("next step: fight here (for <target>)"), text `you are where the quest sends you: fight here for
    <target>` + tag; with no fair monster here, the fallback ("next step: wait here for <target> to come back"), text
    `you are where the quest sends you: wait here, <target> comes back soon` + tag. Else explore.
-5. No step: explore with why `no quest step to do here`.
+5. No step: explore with why `no quest step to do here`; but with an owner command, no option, not lost, and the
+   text `no quest step to do here: do what your owner asks.` (the frontier move still comes at step 6 of 10.2).
 
 Explore(why): the frontier; option `move{dir:[first]}` ("next step"), text `<why>: explore toward <room>` + way;
 no frontier: text `<why>; nowhere new to explore nearby`.
@@ -698,7 +699,7 @@ v1 is the state of this folder before `version` 2.0.0 (it already had `alwaysOff
   `outcomes`, `noProgress`, `lost`, and `world.danger`. Turn input gains `map`. `playkit.json` gains `stuck` and
   `engine` (10.8). `thought` and `note` are clipped with `clipWords`.
 - Templates: `system.txt` gains the two voice lines (10.6); its `thought`/`note` line asks for them in
-  `{{language_name}}` and no longer says "without your name" (the core strips a leading own name instead). `turn.txt`: the `next` placeholder now holds the
+  `{{language_name}}` and no longer says "without your name" (the core strips a leading own name instead). Its answer line shows `"thought": "<in {{language_name}}>"`. `turn.txt`: the `next` placeholder now holds the
   planner's next-step text. Action lines gain ` - <label>` and optional `<chat>` lines (4.1, 10.2).
 - Vectors: new `planner.json` and `map.json`; `memory.json` adds `track` cases; `decisions.json` adds the
   similarity and opener cases; every case of `prompts.json` changed (curated menus, the voice lines).

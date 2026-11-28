@@ -336,6 +336,7 @@ type planner struct {
 	opts  []MenuAction
 	limit int
 	lost  bool
+	idle  bool // next() found no quest step
 }
 
 func hpFrac(obs jv.Value) float64 {
@@ -647,6 +648,7 @@ func (p *planner) next() (MenuAction, bool, string) {
 			return MenuAction{}, false, TrimSpace(strings.NewReplacer("{target}", target, "{need}", jv.FormatNumber(need.N)).Replace(tpl)) + tag
 		}
 	}
+	p.idle = true
 	return explore("no quest step to do here")
 }
 
@@ -755,6 +757,12 @@ func (k *Kit) BuildPlan(base Menu, in TurnInput) Plan {
 		}
 	}
 	o, ok, nextText := p.next()
+	if owner && p.idle {
+		// No quest step: the owner's wish is the plan. Exploring stays an option, not "next step": a small model
+		// follows the next step over the wish.
+		ok, p.lost = false, false
+		nextText = "no quest step to do here: do what your owner asks."
+	}
 	hasNext := p.add(o, ok)
 	if talkFirst != "" && nextText != "" {
 		nextText = talkFirst + nextText
