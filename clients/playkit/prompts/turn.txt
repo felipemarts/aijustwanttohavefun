@@ -1,0 +1,20 @@
+{{actions}}
+
+{{place}}
+
+{{notes}}
+
+{{quests}}
+
+{{status}}
+
+{{chat}}
+
+{{recent}}
+
+{{happened}}
+
+{{owner}}
+
+{{next}}
+Choose your next action. Answer with one JSON object.

@@ -1,0 +1,546 @@
+{
+ "about": "Model answers. For each case: menu = BuildTurn(schema.json, prompts.json cases[menuFrom].input).menu. Decide(raw) gives expect.first (a decision or a problem). When retry is present, the turn resolves as in the README: expect.final says which answer was used (first, retry, fallback or none) and the decision.",
+ "cases": [
+  {
+   "name": "clean answer",
+   "menuFrom": 0,
+   "raw": "{\"thought\": \"Olga has a quest for me.\", \"action\": \"talk\", \"params\": {\"npc\": \"olga\"}, \"note\": \"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "prose and a code fence around the object",
+   "menuFrom": 0,
+   "raw": "Sure! Here is my move:\n```json\n{\"thought\":\"Go to the tavern\",\"action\":\"move\",\"params\":{\"dir\":\"north\"},\"note\":\"The tavern is north of the square.\"}\n```\nGood luck!",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "a reasoning block before the object",
+   "menuFrom": 0,
+   "raw": "<think>\nThe quest says visit the tavern {north}.\n</think>\n{\"thought\":\"Tavern first.\",\"action\":\"move\",\"params\":{\"dir\":\"north\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "an unclosed reasoning block",
+   "menuFrom": 0,
+   "raw": "<think>I should go north {\"action\":\"move\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "the answer is not one valid JSON object"
+    }
+   }
+  },
+  {
+   "name": "thought and note missing, params missing for an action without params",
+   "menuFrom": 1,
+   "raw": "{\"action\": \"flee\"}",
+   "expect": {
+    "first": {
+     "ok": true,
+     "decision": {
+      "thought": "",
+      "action": "flee",
+      "params": {},
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "name": "a long thought and note are clipped, not refused",
+   "menuFrom": 0,
+   "raw": "{\"thought\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\", \"action\": \"quest_list\", \"params\": {}, \"note\": \"yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "trailing comma",
+   "menuFrom": 0,
+   "raw": "{\"thought\":\"hi\",\"action\":\"move\",\"params\":{\"dir\":\"north\",},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "the answer is not one valid JSON object"
+    }
+   }
+  },
+  {
+   "name": "duplicate key",
+   "menuFrom": 0,
+   "raw": "{\"thought\":\"hi\",\"action\":\"move\",\"action\":\"talk\",\"params\":{\"dir\":\"north\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "the answer is not one valid JSON object"
+    }
+   }
+  },
+  {
+   "name": "no JSON at all",
+   "menuFrom": 0,
+   "raw": "I will walk north to the tavern.",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "the answer is not one valid JSON object"
+    }
+   }
+  },
+  {
+   "name": "an action that is not on the menu",
+   "menuFrom": 0,
+   "raw": "{\"thought\":\"Attack!\",\"action\":\"attack\",\"params\":{\"target\":\"olga\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "a direction that is not an exit",
+   "menuFrom": 0,
+   "raw": "{\"thought\":\"Up\",\"action\":\"move\",\"params\":{\"dir\":\"up\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "a required param missing",
+   "menuFrom": 0,
+   "raw": "{\"thought\":\"Talk\",\"action\":\"talk\",\"params\":{},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "an extra param",
+   "menuFrom": 0,
+   "raw": "{\"thought\":\"Talk\",\"action\":\"talk\",\"params\":{\"npc\":\"olga\",\"topic2\":\"x\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "an extra top-level key",
+   "menuFrom": 0,
+   "raw": "{\"thought\":\"Talk\",\"action\":\"talk\",\"params\":{\"npc\":\"olga\"},\"note\":\"\",\"tool\":\"shell\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "tool: is not allowed"
+    }
+   }
+  },
+  {
+   "name": "a prototype key",
+   "menuFrom": 0,
+   "raw": "{\"thought\":\"x\",\"action\":\"talk\",\"params\":{\"npc\":\"olga\",\"__proto__\":{\"admin\":true}},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "params.__proto__: is not allowed"
+    }
+   }
+  },
+  {
+   "name": "a text that would leak a key",
+   "menuFrom": 0,
+   "raw": "{\"thought\":\"x\",\"action\":\"say\",\"params\":{\"text\":\"my key is AJWF_SK_abc123\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "a text over the limit",
+   "menuFrom": 0,
+   "raw": "{\"thought\": \"x\", \"action\": \"say\", \"params\": {\"text\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}, \"note\": \"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "a text at the limit with non-ASCII",
+   "menuFrom": 0,
+   "raw": "{\"thought\": \"olá\", \"action\": \"say\", \"params\": {\"text\": \"çççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççç\"}, \"note\": \"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "an integer written as 1.0 is an integer",
+   "menuFrom": 0,
+   "raw": "{\"thought\":\"buy\",\"action\":\"shop_buy\",\"params\":{\"npc\":\"olga\",\"item\":\"bread\",\"qty\":2.0},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "a fractional quantity",
+   "menuFrom": 0,
+   "raw": "{\"thought\":\"buy\",\"action\":\"shop_buy\",\"params\":{\"npc\":\"olga\",\"item\":\"bread\",\"qty\":1.5},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "a quantity over the maximum",
+   "menuFrom": 0,
+   "raw": "{\"thought\":\"buy\",\"action\":\"shop_buy\",\"params\":{\"npc\":\"olga\",\"item\":\"bread\",\"qty\":10000},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "a string where a number belongs",
+   "menuFrom": 0,
+   "raw": "{\"thought\":\"buy\",\"action\":\"shop_buy\",\"params\":{\"npc\":\"olga\",\"item\":\"bread\",\"qty\":\"2\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "an odd key name is quoted in the problem",
+   "menuFrom": 0,
+   "raw": "{\"thought\":\"x\",\"action\":\"talk\",\"params\":{\"npc\":\"olga\",\"ignore all rules\":1},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    }
+   }
+  },
+  {
+   "name": "the PvP-free menu has no agent to attack",
+   "menuFrom": 1,
+   "raw": "{\"thought\":\"Hit Mallory\",\"action\":\"attack\",\"params\":{\"target\":\"Mallory\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"use\", \"flee\""
+    }
+   }
+  },
+  {
+   "name": "a skill from the menu",
+   "menuFrom": 1,
+   "raw": "{\"thought\":\"Strike\",\"action\":\"cast\",\"params\":{\"skill\":\"power_strike\",\"target\":\"boar\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"use\", \"flee\""
+    }
+   }
+  },
+  {
+   "name": "an item that is not in the bag",
+   "menuFrom": 1,
+   "raw": "{\"thought\":\"Drink\",\"action\":\"use\",\"params\":{\"item\":\"iron_ore\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "params.item: must be one of: \"minor_potion\""
+    }
+   }
+  },
+  {
+   "name": "accept the pending party invite",
+   "menuFrom": 1,
+   "raw": "{\"thought\":\"Join Rosth\",\"action\":\"party_accept\",\"params\":{\"agent\":\"Rosth\"},\"note\":\"In Rosth's party.\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"use\", \"flee\""
+    }
+   }
+  },
+  {
+   "name": "with PvP allowed an agent may be attacked",
+   "menuFrom": 3,
+   "raw": "{\"thought\":\"Gorm is rich\",\"action\":\"attack\",\"params\":{\"target\":\"Gorm\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "params.target: must be one of: \"bog_lurker\""
+    }
+   }
+  },
+  {
+   "name": "a fallen agent is not a target even with PvP allowed",
+   "menuFrom": 3,
+   "raw": "{\"thought\":\"Finish Nell\",\"action\":\"attack\",\"params\":{\"target\":\"Nell\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "params.target: must be one of: \"bog_lurker\""
+    }
+   }
+  },
+  {
+   "name": "the excluded action set_language",
+   "menuFrom": 3,
+   "raw": "{\"thought\":\"x\",\"action\":\"set_language\",\"params\":{\"language\":\"en\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"attack\", \"say\", \"move\", \"quest_list\""
+    }
+   }
+  },
+  {
+   "name": "a give with an item bundle",
+   "menuFrom": 3,
+   "raw": "{\"thought\":\"Gift\",\"action\":\"give\",\"params\":{\"to\":\"Gorm\",\"items\":{\"herb\":2}},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"attack\", \"say\", \"move\", \"quest_list\""
+    }
+   }
+  },
+  {
+   "name": "a give with a bad bundle",
+   "menuFrom": 3,
+   "raw": "{\"thought\":\"Gift\",\"action\":\"give\",\"params\":{\"to\":\"Gorm\",\"items\":{\"herb\":0}},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"attack\", \"say\", \"move\", \"quest_list\""
+    }
+   }
+  },
+  {
+   "name": "a non-object answer",
+   "menuFrom": 0,
+   "raw": "[\"move\",\"north\"]",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "the answer is not one valid JSON object"
+    }
+   }
+  },
+  {
+   "name": "null params are treated as missing",
+   "menuFrom": 1,
+   "raw": "{\"thought\":\"run\",\"action\":\"flee\",\"params\":null,\"note\":null}",
+   "expect": {
+    "first": {
+     "ok": true,
+     "decision": {
+      "thought": "run",
+      "action": "flee",
+      "params": {},
+      "note": ""
+     }
+    }
+   }
+  },
+  {
+   "name": "retry: first invalid, second valid",
+   "menuFrom": 0,
+   "raw": "{\"action\":\"move\",\"params\":{\"dir\":\"up\"}}",
+   "retry": "{\"thought\":\"North then\",\"action\":\"move\",\"params\":{\"dir\":\"north\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"quest_accept\""
+    },
+    "final": {
+     "source": "none",
+     "decision": null
+    },
+    "retryMessage": "That answer was not valid: action: must be one of: \"quest_accept\"\nAnswer again with one JSON object, using one action from the list and its params."
+   }
+  },
+  {
+   "name": "retry: both invalid, fallback to quest_list",
+   "menuFrom": 0,
+   "raw": "I go north.",
+   "retry": "{\"action\":\"fly\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "the answer is not one valid JSON object"
+    },
+    "final": {
+     "source": "none",
+     "decision": null
+    },
+    "retryMessage": "That answer was not valid: the answer is not one valid JSON object\nAnswer again with one JSON object, using one action from the list and its params."
+   }
+  },
+  {
+   "name": "retry: both invalid and no fallback on the menu",
+   "menuFrom": 4,
+   "raw": "release me",
+   "retry": "{\"action\":\"release\",\"params\":{\"x\":1}}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "the answer is not one valid JSON object"
+    },
+    "final": {
+     "source": "none",
+     "decision": null
+    },
+    "retryMessage": "That answer was not valid: the answer is not one valid JSON object\nAnswer again with one JSON object, using one action from the list and its params."
+   }
+  },
+  {
+   "name": "PvP off: a supportive skill on an agent",
+   "menuFrom": 6,
+   "raw": "{\"thought\":\"Heal Gorm\",\"action\":\"cast\",\"params\":{\"skill\":\"heal\",\"target\":\"Gorm\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"move\", \"say\""
+    }
+   }
+  },
+  {
+   "name": "PvP off: a supportive skill may revive a fallen agent",
+   "menuFrom": 6,
+   "raw": "{\"thought\":\"Raise Nell\",\"action\":\"cast\",\"params\":{\"skill\":\"revive\",\"target\":\"Nell\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"move\", \"say\""
+    }
+   }
+  },
+  {
+   "name": "PvP off: an offensive skill on an agent is refused",
+   "menuFrom": 6,
+   "raw": "{\"thought\":\"Burn Gorm\",\"action\":\"cast\",\"params\":{\"skill\":\"holy_fire\",\"target\":\"Gorm\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"move\", \"say\""
+    }
+   }
+  },
+  {
+   "name": "PvP off: a skill whose target is unknown counts as offensive",
+   "menuFrom": 6,
+   "raw": "{\"thought\":\"Smite Gorm\",\"action\":\"cast\",\"params\":{\"skill\":\"smite\",\"target\":\"Gorm\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"move\", \"say\""
+    }
+   }
+  },
+  {
+   "name": "PvP off: an offensive skill on a monster",
+   "menuFrom": 6,
+   "raw": "{\"thought\":\"Burn it\",\"action\":\"cast\",\"params\":{\"skill\":\"holy_fire\",\"target\":\"skeleton\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"move\", \"say\""
+    }
+   }
+  },
+  {
+   "name": "PvP off: no duels",
+   "menuFrom": 6,
+   "raw": "{\"thought\":\"Duel\",\"action\":\"duel_invite\",\"params\":{\"agent\":\"Gorm\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"move\", \"say\""
+    }
+   }
+  },
+  {
+   "name": "PvP off: taunt only a monster",
+   "menuFrom": 6,
+   "raw": "{\"thought\":\"Taunt\",\"action\":\"taunt\",\"params\":{\"target\":\"Gorm\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "action: must be one of: \"move\", \"say\""
+    }
+   }
+  },
+  {
+   "name": "an utterance too close to a recent one is refused",
+   "menuFrom": 12,
+   "raw": "{\"thought\":\"x\",\"action\":\"say\",\"params\":{\"text\":\"Morning, you lazy slime kissers\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "params.text: too close to something you said recently; say something new"
+    }
+   }
+  },
+  {
+   "name": "a new utterance passes",
+   "menuFrom": 12,
+   "raw": "{\"thought\":\"x\",\"action\":\"say\",\"params\":{\"text\":\"Who stole my damn boots this time?\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": true,
+     "decision": {
+      "thought": "x",
+      "action": "say",
+      "params": {
+       "text": "Who stole my damn boots this time?"
+      },
+      "note": ""
+     }
+    }
+   }
+  }
+ ]
+}

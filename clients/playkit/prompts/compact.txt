@@ -1,0 +1,6 @@
+You keep the memory of {{name}}, a character in a text MMORPG. Merge the notes below into at most {{max}} short notes, each under {{len}} characters. Keep goals, people, places and promises. Drop what is done or no longer useful.
+
+Notes:
+{{notes}}
+
+Answer with JSON: {"notes": ["...", "..."]}

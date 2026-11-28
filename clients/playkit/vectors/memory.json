@@ -1,0 +1,1084 @@
+{
+ "about": "Memory upkeep (README, \"Memory\"). remember: Remember(memory, recent, note, chat) -> expect.memory and expect.compact. compaction: CompactionTurn(name, notes) -> expect.messages and expect.schema; ApplyCompaction(raw, notes) -> expect.notes.",
+ "cases": [
+  {
+   "fn": "remember",
+   "name": "a note, a refused action and chat lines; old entries fall off",
+   "memory": {
+    "notes": ["a", "b"],
+    "recent": [
+     {
+      "action": "move",
+      "params": {
+       "dir": "n"
+      },
+      "ok": true,
+      "text": "0"
+     },
+     {
+      "action": "move",
+      "params": {
+       "dir": "n"
+      },
+      "ok": true,
+      "text": "1"
+     },
+     {
+      "action": "move",
+      "params": {
+       "dir": "n"
+      },
+      "ok": true,
+      "text": "2"
+     },
+     {
+      "action": "move",
+      "params": {
+       "dir": "n"
+      },
+      "ok": true,
+      "text": "3"
+     },
+     {
+      "action": "move",
+      "params": {
+       "dir": "n"
+      },
+      "ok": true,
+      "text": "4"
+     },
+     {
+      "action": "move",
+      "params": {
+       "dir": "n"
+      },
+      "ok": true,
+      "text": "5"
+     }
+    ],
+    "chat": [
+     {
+      "from": "X",
+      "kind": "say",
+      "text": "0"
+     },
+     {
+      "from": "X",
+      "kind": "say",
+      "text": "1"
+     },
+     {
+      "from": "X",
+      "kind": "say",
+      "text": "2"
+     },
+     {
+      "from": "X",
+      "kind": "say",
+      "text": "3"
+     },
+     {
+      "from": "X",
+      "kind": "say",
+      "text": "4"
+     }
+    ]
+   },
+   "recent": {
+    "action": "say",
+    "params": {
+     "text": "oi"
+    },
+    "ok": false,
+    "text": "COOLDOWN: You must wait.\nReally."
+   },
+   "note": "  Rosth   <heals>  ",
+   "chat": [
+    {
+     "from": "Y",
+     "kind": "say",
+     "text": "hi"
+    },
+    {
+     "from": "Z",
+     "kind": "whisper",
+     "text": "psst"
+    }
+   ],
+   "expect": {
+    "memory": {
+     "notes": ["a", "b", "Rosth heals"],
+     "recent": [
+      {
+       "action": "move",
+       "params": {
+        "dir": "n"
+       },
+       "ok": true,
+       "text": "3"
+      },
+      {
+       "action": "move",
+       "params": {
+        "dir": "n"
+       },
+       "ok": true,
+       "text": "4"
+      },
+      {
+       "action": "move",
+       "params": {
+        "dir": "n"
+       },
+       "ok": true,
+       "text": "5"
+      },
+      {
+       "action": "say",
+       "params": {
+        "text": "oi"
+       },
+       "ok": false,
+       "text": "COOLDOWN: You must wait. Really."
+      }
+     ],
+     "chat": [
+      {
+       "from": "X",
+       "kind": "say",
+       "text": "3"
+      },
+      {
+       "from": "X",
+       "kind": "say",
+       "text": "4"
+      },
+      {
+       "from": "Y",
+       "kind": "say",
+       "text": "hi"
+      },
+      {
+       "from": "Z",
+       "kind": "whisper",
+       "text": "psst"
+      }
+     ],
+     "noteWait": 10,
+     "world": {},
+     "speech": {
+      "unanswered": 0,
+      "quiet": 0
+     },
+     "noProgress": 0,
+     "lost": 0
+    },
+    "compact": false
+   }
+  },
+  {
+   "fn": "remember",
+   "name": "a repeated note is not added again; the ninth note asks for compaction",
+   "memory": {
+    "notes": ["n1", "n2", "n3", "n4", "n5", "n6", "n7", "n8"],
+    "recent": [],
+    "chat": []
+   },
+   "recent": null,
+   "note": "n9",
+   "chat": [],
+   "expect": {
+    "memory": {
+     "notes": ["n1", "n2", "n3", "n4", "n5", "n6", "n7", "n8", "n9"],
+     "recent": [],
+     "chat": [],
+     "noteWait": 10,
+     "world": {},
+     "speech": {
+      "unanswered": 0,
+      "quiet": 0
+     },
+     "noProgress": 0,
+     "lost": 0
+    },
+    "compact": true
+   }
+  },
+  {
+   "fn": "remember",
+   "name": "an existing note",
+   "memory": {
+    "notes": ["n1"],
+    "recent": [],
+    "chat": []
+   },
+   "recent": null,
+   "note": "n1",
+   "chat": [],
+   "expect": {
+    "memory": {
+     "notes": ["n1"],
+     "recent": [],
+     "chat": [],
+     "noteWait": 0,
+     "world": {},
+     "speech": {
+      "unanswered": 0,
+      "quiet": 0
+     },
+     "noProgress": 0,
+     "lost": 0
+    },
+    "compact": false
+   }
+  },
+  {
+   "fn": "remember",
+   "name": "a note while noteWait is above 0 is dropped and noteWait goes down",
+   "memory": {
+    "notes": ["n1"],
+    "recent": [],
+    "chat": [],
+    "noteWait": 3
+   },
+   "recent": {
+    "action": "move",
+    "params": {
+     "dir": "north"
+    },
+    "ok": true,
+    "text": "You walk north."
+   },
+   "note": "another note",
+   "chat": [],
+   "expect": {
+    "memory": {
+     "notes": ["n1"],
+     "recent": [
+      {
+       "action": "move",
+       "params": {
+        "dir": "north"
+       },
+       "ok": true,
+       "text": "You walk north."
+      }
+     ],
+     "chat": [],
+     "noteWait": 2,
+     "world": {},
+     "speech": {
+      "unanswered": 0,
+      "quiet": 0
+     },
+     "noProgress": 0,
+     "lost": 0
+    },
+    "compact": false
+   }
+  },
+  {
+   "fn": "remember",
+   "name": "an accepted quest's narration is kept under told, replacing an older entry for it",
+   "memory": {
+    "notes": [],
+    "recent": [],
+    "chat": [],
+    "told": [
+     {
+      "quest": "t05_first_blood",
+      "text": "old"
+     },
+     {
+      "quest": "t04_gear_up",
+      "text": "Equip it."
+     }
+    ]
+   },
+   "recent": {
+    "action": "quest_accept",
+    "params": {
+     "quest": "t05_first_blood"
+    },
+    "ok": true,
+    "text": "Quest accepted: First Blood. Time for a real fight, more or less. Defeat 3 slimes at the forest edge, just past the west gate."
+   },
+   "note": "",
+   "chat": [],
+   "expect": {
+    "memory": {
+     "notes": [],
+     "recent": [
+      {
+       "action": "quest_accept",
+       "params": {
+        "quest": "t05_first_blood"
+       },
+       "ok": true,
+       "text": "Quest accepted: First Blood. Time for a real fight, more or less. Defeat 3 slimes at the forest edg…"
+      }
+     ],
+     "chat": [],
+     "noteWait": 0,
+     "world": {},
+     "told": [
+      {
+       "quest": "t04_gear_up",
+       "text": "Equip it."
+      },
+      {
+       "quest": "t05_first_blood",
+       "text": "Quest accepted: First Blood. Time for a real fight, more or less. Defeat 3 slimes at the forest edge, just past the west gate."
+      }
+     ],
+     "speech": {
+      "unanswered": 0,
+      "quiet": 0
+     },
+     "noProgress": 0,
+     "lost": 0
+    },
+    "compact": false
+   }
+  },
+  {
+   "fn": "compaction",
+   "name": "merge nine notes",
+   "charName": "Pip",
+   "notes": ["n1", "n2", "n3", "n4", "n5", "n6", "n7", "n8", "Wolves <hunt> in packs"],
+   "raw": "{\"notes\": [\"Goal: reach level 5.\", \"Rosth heals.\", \"Rosth heals.\"]}",
+   "expect": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "You keep the memory of Pip, a character in a text MMORPG. Merge the notes below into at most 4 short notes, each under 60 characters. Keep goals, people, places and promises. Drop what is done or no longer useful.\n\nNotes:\n- n1\n- n2\n- n3\n- n4\n- n5\n- n6\n- n7\n- n8\n- Wolves hunt in packs\n\nAnswer with JSON: {\"notes\": [\"...\", \"...\"]}"
+     }
+    ],
+    "schema": {
+     "type": "object",
+     "properties": {
+      "notes": {
+       "type": "array",
+       "items": {
+        "type": "string",
+        "maxLength": 60
+       },
+       "maxItems": 4
+      }
+     },
+     "required": ["notes"],
+     "additionalProperties": false
+    },
+    "notes": ["Goal: reach level 5.", "Rosth heals."]
+   }
+  },
+  {
+   "fn": "compaction",
+   "name": "a bad answer keeps the newest eight notes",
+   "charName": "Pip",
+   "notes": ["n1", "n2", "n3", "n4", "n5", "n6", "n7", "n8", "n9"],
+   "raw": "{\"notes\": [\"1\", \"2\", \"3\", \"4\", \"5\"]}",
+   "expect": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "You keep the memory of Pip, a character in a text MMORPG. Merge the notes below into at most 4 short notes, each under 60 characters. Keep goals, people, places and promises. Drop what is done or no longer useful.\n\nNotes:\n- n1\n- n2\n- n3\n- n4\n- n5\n- n6\n- n7\n- n8\n- n9\n\nAnswer with JSON: {\"notes\": [\"...\", \"...\"]}"
+     }
+    ],
+    "schema": {
+     "type": "object",
+     "properties": {
+      "notes": {
+       "type": "array",
+       "items": {
+        "type": "string",
+        "maxLength": 60
+       },
+       "maxItems": 4
+      }
+     },
+     "required": ["notes"],
+     "additionalProperties": false
+    },
+    "notes": ["n2", "n3", "n4", "n5", "n6", "n7", "n8", "n9"]
+   }
+  },
+  {
+   "fn": "observe",
+   "name": "a room joins the world; its NPCs and monsters are placed; the path is the shortest through rooms seen",
+   "world": {
+    "rooms": {
+     "a": [
+      ["north", "b"],
+      ["east", "c"]
+     ],
+     "b": [
+      ["east", "d"]
+     ],
+     "c": [
+      ["north", "d"]
+     ]
+    },
+    "npcs": {
+     "olga": "a"
+    }
+   },
+   "observation": {
+    "room": {
+     "id": "d",
+     "name": "D",
+     "exits": {
+      "west": "b",
+      "south": "c",
+      "east": "e"
+     },
+     "npcs": [
+      {
+       "id": "berta",
+       "roles": ["shop"]
+      }
+     ],
+     "monsters": [
+      {
+       "id": "wolf",
+       "n": 2,
+       "lvl": 3
+      }
+     ]
+    }
+   },
+   "from": "a",
+   "to": "e",
+   "expect": {
+    "world": {
+     "rooms": {
+      "a": [
+       ["north", "b"],
+       ["east", "c"]
+      ],
+      "b": [
+       ["east", "d"]
+      ],
+      "c": [
+       ["north", "d"]
+      ],
+      "d": [
+       ["west", "b"],
+       ["south", "c"],
+       ["east", "e"]
+      ]
+     },
+     "npcs": {
+      "berta": "d",
+      "olga": "a"
+     },
+     "monsters": {
+      "wolf": "d"
+     },
+     "danger": {
+      "d": 3
+     }
+    },
+    "path": ["north", "east", "east"]
+   }
+  },
+  {
+   "fn": "observe",
+   "name": "an unknown destination has no path",
+   "world": {},
+   "observation": {
+    "room": {
+     "id": "x",
+     "exits": {
+      "north": "y"
+     }
+    }
+   },
+   "from": "x",
+   "to": "z",
+   "expect": {
+    "world": {
+     "rooms": {
+      "x": [
+       ["north", "y"]
+      ]
+     },
+     "danger": {
+      "x": 0
+     }
+    },
+    "path": []
+   }
+  },
+  {
+   "fn": "track",
+   "name": "a move appends the new room to visits (newest visitWindow kept)",
+   "memory": {
+    "notes": [],
+    "recent": [],
+    "chat": [],
+    "visits": ["r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11"]
+   },
+   "update": {
+    "before": {
+     "room": {
+      "id": "village.square"
+     },
+     "you": {
+      "lvl": 1
+     }
+    },
+    "after": {
+     "room": {
+      "id": "village.tavern"
+     },
+     "you": {
+      "lvl": 1
+     }
+    },
+    "action": "move",
+    "params": {
+     "dir": "north"
+    },
+    "ok": true,
+    "chat": [],
+    "self": "Rosa"
+   },
+   "expect": {
+    "memory": {
+     "notes": [],
+     "recent": [],
+     "chat": [],
+     "noteWait": 0,
+     "world": {},
+     "visits": ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "village.tavern"],
+     "speech": {
+      "unanswered": 0,
+      "quiet": 1
+     },
+     "outcomes": [true],
+     "noProgress": 1,
+     "lost": 0
+    }
+   }
+  },
+  {
+   "fn": "track",
+   "name": "falling records the room, the level and the monster",
+   "memory": {
+    "notes": [],
+    "recent": [],
+    "chat": []
+   },
+   "update": {
+    "before": {
+     "room": {
+      "id": "forest.path"
+     },
+     "you": {
+      "lvl": 2,
+      "in_combat": "wolf"
+     }
+    },
+    "after": {
+     "room": {
+      "id": "forest.path"
+     },
+     "you": {
+      "lvl": 2,
+      "fallen": 180
+     }
+    },
+    "action": "attack",
+    "params": {
+     "target": "wolf"
+    },
+    "ok": true,
+    "chat": [],
+    "self": "Rosa"
+   },
+   "expect": {
+    "memory": {
+     "notes": [],
+     "recent": [],
+     "chat": [],
+     "noteWait": 0,
+     "world": {},
+     "deaths": [
+      {
+       "room": "forest.path",
+       "level": 2,
+       "cause": "wolf"
+      }
+     ],
+     "speech": {
+      "unanswered": 0,
+      "quiet": 1
+     },
+     "outcomes": [true],
+     "noProgress": 1,
+     "lost": 0
+    }
+   }
+  },
+  {
+   "fn": "track",
+   "name": "saying something: remembered, counted as unanswered, the addressed line cleared",
+   "memory": {
+    "notes": [],
+    "recent": [],
+    "chat": [],
+    "said": ["a", "b", "c", "d", "e"],
+    "speech": {
+     "unanswered": 0,
+     "quiet": 4
+    },
+    "addressed": {
+     "from": "Lua",
+     "kind": "say",
+     "text": "Rosa!",
+     "age": 0
+    }
+   },
+   "update": {
+    "before": {
+     "room": {
+      "id": "x"
+     }
+    },
+    "after": {
+     "room": {
+      "id": "x"
+     }
+    },
+    "action": "say",
+    "params": {
+     "text": "Oi, Lua! Bora caçar?"
+    },
+    "ok": true,
+    "chat": [],
+    "self": "Rosa"
+   },
+   "expect": {
+    "memory": {
+     "notes": [],
+     "recent": [],
+     "chat": [],
+     "noteWait": 0,
+     "world": {},
+     "said": ["b", "c", "d", "e", "Oi, Lua! Bora caçar?"],
+     "speech": {
+      "unanswered": 1,
+      "quiet": 0
+     },
+     "outcomes": [true],
+     "noProgress": 1,
+     "lost": 0
+    }
+   }
+  },
+  {
+   "fn": "track",
+   "name": "a whisper heard: the character is addressed and its talk counts as answered",
+   "memory": {
+    "notes": [],
+    "recent": [],
+    "chat": [],
+    "speech": {
+     "unanswered": 2,
+     "quiet": 3
+    }
+   },
+   "update": {
+    "before": {
+     "room": {
+      "id": "x"
+     }
+    },
+    "after": {
+     "room": {
+      "id": "x"
+     }
+    },
+    "action": "move",
+    "params": {
+     "dir": "north"
+    },
+    "ok": false,
+    "chat": [
+     {
+      "from": "Lua",
+      "kind": "whisper",
+      "text": "psst"
+     }
+    ],
+    "self": "Rosa"
+   },
+   "expect": {
+    "memory": {
+     "notes": [],
+     "recent": [],
+     "chat": [],
+     "noteWait": 0,
+     "world": {},
+     "speech": {
+      "unanswered": 0,
+      "quiet": 4
+     },
+     "addressed": {
+      "from": "Lua",
+      "kind": "whisper",
+      "text": "psst",
+      "age": 0
+     },
+     "outcomes": [false],
+     "noProgress": 1,
+     "lost": 0
+    }
+   }
+  },
+  {
+   "fn": "track",
+   "name": "a say naming the character addresses it; one that does not only counts as an answer; its own lines are ignored",
+   "memory": {
+    "notes": [],
+    "recent": [],
+    "chat": [],
+    "speech": {
+     "unanswered": 1,
+     "quiet": 0
+    }
+   },
+   "update": {
+    "before": {
+     "room": {
+      "id": "x"
+     }
+    },
+    "after": {
+     "room": {
+      "id": "x"
+     }
+    },
+    "action": "inventory",
+    "params": {},
+    "ok": true,
+    "chat": [
+     {
+      "from": "Rosa",
+      "kind": "say",
+      "text": "Rosa here"
+     },
+     {
+      "from": "Bo",
+      "kind": "say",
+      "text": "nice weather"
+     },
+     {
+      "from": "Lua",
+      "kind": "say",
+      "text": "ROSA, you owe me a beer"
+     }
+    ],
+    "self": "Rosa"
+   },
+   "expect": {
+    "memory": {
+     "notes": [],
+     "recent": [],
+     "chat": [],
+     "noteWait": 0,
+     "world": {},
+     "speech": {
+      "unanswered": 0,
+      "quiet": 1
+     },
+     "addressed": {
+      "from": "Lua",
+      "kind": "say",
+      "text": "ROSA, you owe me a beer",
+      "age": 0
+     },
+     "outcomes": [true],
+     "noProgress": 1,
+     "lost": 0
+    }
+   }
+  },
+  {
+   "fn": "track",
+   "name": "an addressed line older than addressedTurns is dropped",
+   "memory": {
+    "notes": [],
+    "recent": [],
+    "chat": [],
+    "addressed": {
+     "from": "Lua",
+     "kind": "say",
+     "text": "Rosa!",
+     "age": 3
+    }
+   },
+   "update": {
+    "before": {
+     "room": {
+      "id": "x"
+     }
+    },
+    "after": {
+     "room": {
+      "id": "x"
+     }
+    },
+    "action": "inventory",
+    "params": {},
+    "ok": true,
+    "chat": [],
+    "self": "Rosa"
+   },
+   "expect": {
+    "memory": {
+     "notes": [],
+     "recent": [],
+     "chat": [],
+     "noteWait": 0,
+     "world": {},
+     "speech": {
+      "unanswered": 0,
+      "quiet": 1
+     },
+     "outcomes": [true],
+     "noProgress": 1,
+     "lost": 0
+    }
+   }
+  },
+  {
+   "fn": "stuck",
+   "name": "four refusals in the last six turns",
+   "memory": {
+    "notes": [],
+    "recent": [],
+    "chat": [],
+    "outcomes": [true, false, false, true, false, false]
+   },
+   "expect": "refusals"
+  },
+  {
+   "fn": "stuck",
+   "name": "lost for five turns",
+   "memory": {
+    "notes": [],
+    "recent": [],
+    "chat": [],
+    "outcomes": [true, true, true, true, true, true],
+    "lost": 5
+   },
+   "expect": "lost"
+  },
+  {
+   "fn": "stuck",
+   "name": "twenty turns without progress",
+   "memory": {
+    "notes": [],
+    "recent": [],
+    "chat": [],
+    "outcomes": [true, true, true, true, true, true],
+    "noProgress": 20
+   },
+   "expect": "no_progress"
+  },
+  {
+   "fn": "stuck",
+   "name": "fewer turns than the window are not refusals",
+   "memory": {
+    "notes": [],
+    "recent": [],
+    "chat": [],
+    "outcomes": [false, false, false, false, false]
+   },
+   "expect": ""
+  },
+  {
+   "fn": "stuck",
+   "name": "nothing wrong",
+   "memory": {
+    "notes": [],
+    "recent": [],
+    "chat": [],
+    "outcomes": [true, true, true, true, true, true],
+    "noProgress": 3
+   },
+   "expect": ""
+  },
+  {
+   "fn": "track",
+   "name": "a turn without progress, the planner lost: counters go up",
+   "memory": {
+    "notes": [],
+    "recent": [],
+    "chat": [],
+    "outcomes": [true, true, true, true, true, true],
+    "noProgress": 2,
+    "lost": 1
+   },
+   "update": {
+    "before": {
+     "room": {
+      "id": "x"
+     },
+     "you": {
+      "lvl": 1,
+      "gold": 40,
+      "xp": [40, 100],
+      "bag": [3, 30]
+     }
+    },
+    "after": {
+     "room": {
+      "id": "x"
+     },
+     "you": {
+      "lvl": 1,
+      "gold": 40,
+      "xp": [40, 100],
+      "bag": [3, 30]
+     }
+    },
+    "action": "talk",
+    "params": {
+     "npc": "olga"
+    },
+    "ok": false,
+    "chat": [],
+    "self": "Tess",
+    "lost": true
+   },
+   "expect": {
+    "memory": {
+     "notes": [],
+     "recent": [],
+     "chat": [],
+     "noteWait": 0,
+     "world": {},
+     "speech": {
+      "unanswered": 0,
+      "quiet": 1
+     },
+     "outcomes": [true, true, true, true, true, false],
+     "noProgress": 3,
+     "lost": 2
+    }
+   }
+  },
+  {
+   "fn": "track",
+   "name": "XP gained is progress: the counter resets, lost resets",
+   "memory": {
+    "notes": [],
+    "recent": [],
+    "chat": [],
+    "noProgress": 7,
+    "lost": 3
+   },
+   "update": {
+    "before": {
+     "room": {
+      "id": "x"
+     },
+     "you": {
+      "lvl": 1,
+      "gold": 40,
+      "xp": [40, 100],
+      "bag": [3, 30]
+     }
+    },
+    "after": {
+     "room": {
+      "id": "x"
+     },
+     "you": {
+      "lvl": 1,
+      "gold": 40,
+      "xp": [52, 100],
+      "bag": [3, 30]
+     }
+    },
+    "action": "attack",
+    "params": {
+     "target": "slime"
+    },
+    "ok": true,
+    "chat": [],
+    "self": "Tess"
+   },
+   "expect": {
+    "memory": {
+     "notes": [],
+     "recent": [],
+     "chat": [],
+     "noteWait": 0,
+     "world": {},
+     "speech": {
+      "unanswered": 0,
+      "quiet": 1
+     },
+     "outcomes": [true],
+     "noProgress": 0,
+     "lost": 0
+    }
+   }
+  },
+  {
+   "fn": "track",
+   "name": "a quest accepted is progress",
+   "memory": {
+    "notes": [],
+    "recent": [],
+    "chat": [],
+    "noProgress": 7
+   },
+   "update": {
+    "before": {
+     "room": {
+      "id": "x"
+     },
+     "you": {
+      "lvl": 1
+     }
+    },
+    "after": {
+     "room": {
+      "id": "x"
+     },
+     "you": {
+      "lvl": 1
+     }
+    },
+    "action": "quest_accept",
+    "params": {
+     "quest": "t01_arrival"
+    },
+    "ok": true,
+    "chat": [],
+    "self": "Tess"
+   },
+   "expect": {
+    "memory": {
+     "notes": [],
+     "recent": [],
+     "chat": [],
+     "noteWait": 0,
+     "world": {},
+     "speech": {
+      "unanswered": 0,
+      "quiet": 1
+     },
+     "outcomes": [true],
+     "noProgress": 0,
+     "lost": 0
+    }
+   }
+  }
+ ]
+}

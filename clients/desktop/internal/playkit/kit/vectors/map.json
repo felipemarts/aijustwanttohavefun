@@ -1,0 +1,413 @@
+{
+ "about": "A slice of GET /api/public/world (the village, the forest and the rooms just outside), as ParseWorldMap reads it (only rooms is used; agents and other fields left out).",
+ "rooms": [
+  {
+   "id": "village.square",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "board",
+    "fountain"
+   ],
+   "exits": {
+    "north": "village.tavern",
+    "south": "village.town_hall",
+    "east": "village.market",
+    "west": "village.temple"
+   }
+  },
+  {
+   "id": "village.tavern",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "tavern",
+    "board",
+    "station"
+   ],
+   "exits": {
+    "south": "village.square",
+    "north": "village.north_road",
+    "west": "village.guild_hall",
+    "east": "village.plot_ne"
+   }
+  },
+  {
+   "id": "village.guild_hall",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "guild_hall"
+   ],
+   "exits": {
+    "east": "village.tavern",
+    "south": "village.temple",
+    "west": "village.plot_nw"
+   }
+  },
+  {
+   "id": "village.plot_nw",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "plot"
+   ],
+   "exits": {
+    "east": "village.guild_hall",
+    "south": "village.west_gate"
+   }
+  },
+  {
+   "id": "village.plot_ne",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "plot"
+   ],
+   "exits": {
+    "west": "village.tavern",
+    "east": "village.plot_far"
+   }
+  },
+  {
+   "id": "village.plot_far",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "plot"
+   ],
+   "exits": {
+    "west": "village.plot_ne",
+    "south": "village.east_gate"
+   }
+  },
+  {
+   "id": "village.temple",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "temple"
+   ],
+   "exits": {
+    "east": "village.square",
+    "north": "village.guild_hall",
+    "west": "village.west_gate",
+    "south": "village.tailor"
+   }
+  },
+  {
+   "id": "village.west_gate",
+   "zone": "village",
+   "flags": [
+    "safe"
+   ],
+   "exits": {
+    "east": "village.temple",
+    "west": "forest.edge",
+    "north": "village.plot_nw",
+    "south": "village.alchemist"
+   }
+  },
+  {
+   "id": "village.alchemist",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "station"
+   ],
+   "exits": {
+    "north": "village.west_gate",
+    "east": "village.tailor",
+    "south": "village.plot_sw"
+   }
+  },
+  {
+   "id": "village.tailor",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "station"
+   ],
+   "exits": {
+    "west": "village.alchemist",
+    "north": "village.temple",
+    "east": "village.town_hall",
+    "south": "village.training_yard"
+   }
+  },
+  {
+   "id": "village.town_hall",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "town_hall"
+   ],
+   "exits": {
+    "north": "village.square",
+    "west": "village.tailor",
+    "east": "village.smithy",
+    "south": "village.south_gate"
+   }
+  },
+  {
+   "id": "village.smithy",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "station"
+   ],
+   "exits": {
+    "west": "village.town_hall",
+    "north": "village.market",
+    "east": "village.plot_se",
+    "south": "village.plot_s"
+   }
+  },
+  {
+   "id": "village.market",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "market"
+   ],
+   "exits": {
+    "west": "village.square",
+    "east": "village.east_gate",
+    "south": "village.smithy"
+   }
+  },
+  {
+   "id": "village.east_gate",
+   "zone": "village",
+   "flags": [
+    "safe"
+   ],
+   "exits": {
+    "west": "village.market",
+    "north": "village.plot_far",
+    "east": "ruins.road"
+   }
+  },
+  {
+   "id": "village.plot_se",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "plot"
+   ],
+   "exits": {
+    "west": "village.smithy"
+   }
+  },
+  {
+   "id": "village.plot_sw",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "plot"
+   ],
+   "exits": {
+    "north": "village.alchemist",
+    "east": "village.training_yard"
+   }
+  },
+  {
+   "id": "village.training_yard",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "training"
+   ],
+   "exits": {
+    "west": "village.plot_sw",
+    "north": "village.tailor",
+    "east": "village.south_gate"
+   }
+  },
+  {
+   "id": "village.south_gate",
+   "zone": "village",
+   "flags": [
+    "safe"
+   ],
+   "exits": {
+    "north": "village.town_hall",
+    "west": "village.training_yard",
+    "east": "village.plot_s",
+    "south": "swamp.marsh_edge"
+   }
+  },
+  {
+   "id": "village.plot_s",
+   "zone": "village",
+   "flags": [
+    "safe",
+    "plot"
+   ],
+   "exits": {
+    "west": "village.south_gate",
+    "north": "village.smithy"
+   }
+  },
+  {
+   "id": "village.north_road",
+   "zone": "village",
+   "flags": [
+    "safe"
+   ],
+   "exits": {
+    "south": "village.tavern",
+    "east": "village.river_bank",
+    "west": "hills.trail"
+   }
+  },
+  {
+   "id": "village.river_bank",
+   "zone": "village",
+   "flags": [
+    "safe"
+   ],
+   "exits": {
+    "west": "village.north_road",
+    "north": "mines.lower_gate"
+   }
+  },
+  {
+   "id": "forest.edge",
+   "zone": "forest",
+   "flags": [
+    "safe"
+   ],
+   "exits": {
+    "east": "village.west_gate",
+    "west": "forest.path"
+   }
+  },
+  {
+   "id": "forest.path",
+   "zone": "forest",
+   "flags": [
+    "safe"
+   ],
+   "exits": {
+    "east": "forest.edge",
+    "west": "forest.old_oak",
+    "north": "forest.glade",
+    "south": "forest.creek"
+   }
+  },
+  {
+   "id": "forest.glade",
+   "zone": "forest",
+   "flags": [
+    "safe"
+   ],
+   "exits": {
+    "south": "forest.path",
+    "west": "forest.thicket"
+   }
+  },
+  {
+   "id": "forest.thicket",
+   "zone": "forest",
+   "flags": [
+    "safe"
+   ],
+   "exits": {
+    "east": "forest.glade",
+    "south": "forest.old_oak"
+   }
+  },
+  {
+   "id": "forest.old_oak",
+   "zone": "forest",
+   "flags": [
+    "safe"
+   ],
+   "exits": {
+    "north": "forest.thicket",
+    "east": "forest.path",
+    "west": "forest.hollow",
+    "south": "forest.mushroom_ring"
+   }
+  },
+  {
+   "id": "forest.hollow",
+   "zone": "forest",
+   "flags": [
+    "safe"
+   ],
+   "exits": {
+    "east": "forest.old_oak"
+   }
+  },
+  {
+   "id": "forest.creek",
+   "zone": "forest",
+   "flags": [
+    "safe"
+   ],
+   "exits": {
+    "north": "forest.path",
+    "west": "forest.mushroom_ring"
+   }
+  },
+  {
+   "id": "forest.mushroom_ring",
+   "zone": "forest",
+   "flags": [
+    "safe"
+   ],
+   "exits": {
+    "north": "forest.old_oak",
+    "east": "forest.creek"
+   }
+  },
+  {
+   "id": "hills.trail",
+   "zone": "hills",
+   "flags": [
+    "safe"
+   ],
+   "exits": {
+    "east": "village.north_road",
+    "north": "hills.switchback"
+   }
+  },
+  {
+   "id": "mines.lower_gate",
+   "zone": "mines",
+   "flags": [
+    "safe"
+   ],
+   "exits": {
+    "north": "mines.tunnel",
+    "south": "village.river_bank"
+   }
+  },
+  {
+   "id": "swamp.marsh_edge",
+   "zone": "swamp",
+   "flags": [
+    "lawless"
+   ],
+   "exits": {
+    "north": "village.south_gate",
+    "south": "swamp.bog",
+    "west": "swamp.reeds",
+    "east": "swamp.sunken_road"
+   }
+  },
+  {
+   "id": "ruins.road",
+   "zone": "ruins",
+   "flags": [
+    "lawless"
+   ],
+   "exits": {
+    "west": "village.east_gate",
+    "east": "ruins.outskirts"
+   }
+  }
+ ]
+}

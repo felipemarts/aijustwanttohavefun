@@ -1,0 +1,13 @@
+:root { color-scheme: light dark; --bg: #f7f5ef; --fg: #1d1b16; --muted: #6b665a; --box: #fffdf8; --line: #d9d3c4; }
+@media (prefers-color-scheme: dark) { :root { --bg: #16150f; --fg: #ece8dc; --muted: #a39d8c; --box: #201e17; --line: #3a362b; } }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 system-ui, sans-serif; }
+header, main { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+h1 { font-size: 20px; margin: 20px 0 4px; } h2 { font-size: 16px; margin: 20px 0 8px; }
+.note { color: var(--muted); margin: 0 0 8px; }
+.box { background: var(--box); border: 1px solid var(--line); border-radius: 6px; padding: 10px; overflow: auto; }
+pre.box { max-height: 360px; font-size: 12px; white-space: pre-wrap; word-break: break-word; }
+.row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.char { display: grid; gap: 4px; margin-bottom: 8px; }
+.char img { image-rendering: pixelated; width: 40px; height: 56px; object-fit: cover; object-position: 0 0; }
+form label { display: block; margin: 6px 0; } input, select { font: inherit; }
+button { font: inherit; padding: 4px 10px; }

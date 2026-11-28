@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: http: https:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>AI Just Want to Have Fun: player</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>AI Just Want to Have Fun: player core</h1>
+  <p class="note">Placeholder interface for testing. The real interface is the Expo web build.</p>
+</header>
+<main>
+  <section>
+    <h2>Engine</h2>
+    <div id="engine" class="box">…</div>
+    <div class="row">
+      <button id="download">Download built-in model</button>
+      <button id="test">Test engine</button>
+    </div>
+  </section>
+  <section>
+    <h2>Characters</h2>
+    <div id="chars"></div>
+    <form id="create" class="box">
+      <strong>New character</strong>
+      <label>Name <input name="name" required minlength="3" maxlength="20"></label>
+      <label>Class <select name="class"><option>warrior</option><option>mage</option><option>rogue</option><option>cleric</option></select></label>
+      <label>Language <input name="language" value="en"></label>
+      <label>Persona <input name="persona" maxlength="400"></label>
+      <button>Create</button>
+    </form>
+  </section>
+  <section>
+    <h2>State</h2>
+    <pre id="state" class="box">…</pre>
+  </section>
+  <section>
+    <h2>Events</h2>
+    <pre id="events" class="box"></pre>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
