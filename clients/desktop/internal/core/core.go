@@ -761,15 +761,17 @@ func (c *Core) Chat(ctx context.Context, id, text string) (ChatMessage, error) {
 
 // EngineState, Providers, SetEngine, StartDownload, CancelDownload, TestEngine: the engine routes.
 func (c *Core) EngineState() EngineState                       { return c.eng.state() }
-func (c *Core) Providers(ctx context.Context) []ProviderInfo    { return c.eng.providers(ctx) }
+func (c *Core) Providers(ctx context.Context) []ProviderInfo   { return c.eng.providers(ctx) }
 func (c *Core) SetEngine(ch EngineChoice) (EngineState, error) { return c.eng.set(ch) }
 func (c *Core) StartDownload() EngineState                     { return c.eng.download() }
 func (c *Core) PauseDownload() EngineState                     { return c.eng.pauseDownload() }
 func (c *Core) CancelDownload() EngineState                    { return c.eng.cancelDownload() }
 
 // ProbeURL checks one typed address (read-only GETs, short timeout, no redirect to another host).
-func (c *Core) ProbeURL(ctx context.Context, raw string) (ProviderInfo, error) { return c.eng.probeURL(ctx, raw) }
-func (c *Core) TestEngine(ctx context.Context) EngineTest      { return c.eng.test(ctx) }
+func (c *Core) ProbeURL(ctx context.Context, raw string) (ProviderInfo, error) {
+	return c.eng.probeURL(ctx, raw)
+}
+func (c *Core) TestEngine(ctx context.Context) EngineTest { return c.eng.test(ctx) }
 
 // DownloadAndWait runs the built-in download in the foreground (command line).
 func (c *Core) DownloadAndWait(ctx context.Context, progress func(done, total int64)) error {

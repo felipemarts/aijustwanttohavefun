@@ -32,13 +32,13 @@ type PlannerConfig struct {
 
 // SpeechConfig mirrors playkit.json "speech".
 type SpeechConfig struct {
-	Actions        []string `json:"actions"`
-	Remember       int      `json:"remember"`
-	Similar        float64  `json:"similar"`
-	Opener         int      `json:"opener"`
-	MaxUnanswered  int      `json:"maxUnanswered"`
-	QuietTurns     int      `json:"quietTurns"`
-	AddressedTurns int      `json:"addressedTurns"`
+	Actions        []string            `json:"actions"`
+	Remember       int                 `json:"remember"`
+	Similar        float64             `json:"similar"`
+	Opener         int                 `json:"opener"`
+	MaxUnanswered  int                 `json:"maxUnanswered"`
+	QuietTurns     int                 `json:"quietTurns"`
+	AddressedTurns int                 `json:"addressedTurns"`
 	PromptAfter    int                 `json:"promptAfter"`
 	Examples       map[string][]string `json:"examples"`
 	PoliteMarkers  []string            `json:"politeMarkers"`

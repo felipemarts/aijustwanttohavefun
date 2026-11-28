@@ -51,11 +51,11 @@ type Config struct {
 		Action string `json:"action"`
 		Param  string `json:"param"`
 	} `json:"omitParams"`
-	PvpActions      []string `json:"pvpActions"`
+	PvpActions []string `json:"pvpActions"`
 	// SupportiveSkillTargets: skill targets (from GET /me skills[].target) that make a skill supportive.
 	SupportiveSkillTargets []string `json:"supportiveSkillTargets"`
 	WakeOnName             []string `json:"wakeOnName"`
-	Narrow          []struct {
+	Narrow                 []struct {
 		Action  string `json:"action"`
 		Param   string `json:"param"`
 		From    string `json:"from"`
@@ -63,9 +63,9 @@ type Config struct {
 	} `json:"narrow"`
 	FallbackActions []string          `json:"fallbackActions"`
 	StepHints       map[string]string `json:"stepHints"`
-	Limits          map[string]int `json:"limits"`
-	RefreshMeAfter  []string       `json:"refreshMeAfter"`
-	WakeKinds       []string       `json:"wakeKinds"`
+	Limits          map[string]int    `json:"limits"`
+	RefreshMeAfter  []string          `json:"refreshMeAfter"`
+	WakeKinds       []string          `json:"wakeKinds"`
 	Pace            map[string]struct {
 		SessionTurns int `json:"sessionTurns"`
 		GapSeconds   int `json:"gapSeconds"`
@@ -97,7 +97,7 @@ type Config struct {
 		FloorTokensPerSecond float64 `json:"floorTokensPerSecond"`
 		BackoffSeconds       int     `json:"backoffSeconds"`
 	} `json:"engine"`
-	Speech    SpeechConfig      `json:"speech"`
+	Speech SpeechConfig `json:"speech"`
 }
 
 // Kit is the loaded configuration and templates.

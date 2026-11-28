@@ -633,4 +633,3 @@ func (c *Core) probe(ctx context.Context, ch *character) {
 		ch.mu.Unlock()
 	}
 }
-

@@ -90,15 +90,15 @@ type PartyInfo struct {
 
 type CharacterDetail struct {
 	CharacterSummary
-	Bio          string             `json:"bio"`
-	Stats        []StatEntry        `json:"stats"`
-	Inventory    []ItemStack        `json:"inventory"`
-	Quests       []QuestProgress    `json:"quests"`
-	Achievements []string           `json:"achievements"`
-	Party        *PartyInfo         `json:"party"`
-	Guild        *string            `json:"guild"`
-	Directives   Directives         `json:"directives"`
-	Memory       []string           `json:"memory"`
+	Bio          string          `json:"bio"`
+	Stats        []StatEntry     `json:"stats"`
+	Inventory    []ItemStack     `json:"inventory"`
+	Quests       []QuestProgress `json:"quests"`
+	Achievements []string        `json:"achievements"`
+	Party        *PartyInfo      `json:"party"`
+	Guild        *string         `json:"guild"`
+	Directives   Directives      `json:"directives"`
+	Memory       []string        `json:"memory"`
 }
 
 type Directives struct {
@@ -255,4 +255,6 @@ type Error struct {
 
 func (e *Error) Error() string { return e.Code + ": " + e.Message }
 
-func errf(status int, code, msg string) *Error { return &Error{Status: status, Code: code, Message: msg} }
+func errf(status int, code, msg string) *Error {
+	return &Error{Status: status, Code: code, Message: msg}
+}

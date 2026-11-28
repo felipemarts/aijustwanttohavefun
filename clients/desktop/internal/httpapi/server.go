@@ -81,9 +81,11 @@ func Listen(c *core.Core, web fs.FS, port int) (*Server, error) {
 }
 
 // Port and Token for building the URL that opens the interface.
-func (s *Server) Port() int      { return s.port }
-func (s *Server) Token() string  { return s.token }
-func (s *Server) URL() string    { return "http://127.0.0.1:" + strconv.Itoa(s.port) + "/#token=" + s.token }
+func (s *Server) Port() int     { return s.port }
+func (s *Server) Token() string { return s.token }
+func (s *Server) URL() string {
+	return "http://127.0.0.1:" + strconv.Itoa(s.port) + "/#token=" + s.token
+}
 func (s *Server) Origin() string { return "http://127.0.0.1:" + strconv.Itoa(s.port) }
 
 // Serve blocks until Shutdown.

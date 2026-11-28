@@ -41,11 +41,11 @@ type Member struct {
 	Val Value
 }
 
-func NullV() Value            { return Value{Kind: Null} }
-func BoolV(b bool) Value      { return Value{Kind: Bool, B: b} }
-func Num(n float64) Value     { return Value{Kind: Number, N: n} }
-func Int(n int) Value         { return Value{Kind: Number, N: float64(n)} }
-func Str(s string) Value      { return Value{Kind: String, S: s} }
+func NullV() Value             { return Value{Kind: Null} }
+func BoolV(b bool) Value       { return Value{Kind: Bool, B: b} }
+func Num(n float64) Value      { return Value{Kind: Number, N: n} }
+func Int(n int) Value          { return Value{Kind: Number, N: float64(n)} }
+func Str(s string) Value       { return Value{Kind: String, S: s} }
 func Arr(items ...Value) Value { return Value{Kind: Array, A: append([]Value{}, items...)} }
 
 // Obj builds an object from alternating key, value pairs: Obj("a", Int(1), "b", Str("x")).

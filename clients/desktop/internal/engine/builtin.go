@@ -68,8 +68,10 @@ func (b *Builtin) asset() (LlamaAsset, error) {
 	return a, nil
 }
 
-func (b *Builtin) modelPath() string { return filepath.Join(b.CacheDir, "models", ModelRevision[:12], ModelFile) }
-func (b *Builtin) llamaDir() string  { return filepath.Join(b.CacheDir, "llama.cpp", LlamaBuild) }
+func (b *Builtin) modelPath() string {
+	return filepath.Join(b.CacheDir, "models", ModelRevision[:12], ModelFile)
+}
+func (b *Builtin) llamaDir() string { return filepath.Join(b.CacheDir, "llama.cpp", LlamaBuild) }
 
 // installed reports whether both files are in place (verified when they were written; Start verifies again).
 func (b *Builtin) installed() bool {
