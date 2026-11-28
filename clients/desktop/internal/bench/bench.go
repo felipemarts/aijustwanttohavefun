@@ -245,6 +245,8 @@ func (b *Bench) CheckModel(k *playkit.Kit, in playkit.TurnInput, d playkit.Decis
 		for _, s := range in.Memory.Said {
 			if k.Similar(text, s) {
 				p = append(p, "too close to "+s)
+			} else if k.SameOpener(text, s) {
+				p = append(p, "opens like "+s)
 			}
 		}
 	}

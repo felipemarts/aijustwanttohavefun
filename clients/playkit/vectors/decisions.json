@@ -541,6 +541,46 @@
      }
     }
    }
+  },
+  {
+   "name": "an utterance opening like a recent one is refused, though the rest differs",
+   "menuFrom": 12,
+   "raw": "{\"thought\":\"x\",\"action\":\"say\",\"params\":{\"text\":\"Morning, you lazy wolves, who stole my damn boots?\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "params.text: starts like something you said recently; open with different words"
+    }
+   }
+  },
+  {
+   "name": "an utterance opening like a tone example is refused",
+   "menuFrom": 12,
+   "raw": "{\"thought\":\"x\",\"action\":\"say\",\"params\":{\"text\":\"Oi, you lazy sod, the wolves ate my supper again!\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": false,
+     "problem": "params.text: starts like something you said recently; open with different words"
+    }
+   }
+  },
+  {
+   "name": "a short utterance is not held to the opener rule",
+   "menuFrom": 12,
+   "raw": "{\"thought\":\"x\",\"action\":\"say\",\"params\":{\"text\":\"Morning, you!\"},\"note\":\"\"}",
+   "expect": {
+    "first": {
+     "ok": true,
+     "decision": {
+      "thought": "x",
+      "action": "say",
+      "params": {
+       "text": "Morning, you!"
+      },
+      "note": ""
+     }
+    }
+   }
   }
  ]
 }

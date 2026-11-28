@@ -35,6 +35,7 @@ type SpeechConfig struct {
 	Actions        []string `json:"actions"`
 	Remember       int      `json:"remember"`
 	Similar        float64  `json:"similar"`
+	Opener         int      `json:"opener"`
 	MaxUnanswered  int      `json:"maxUnanswered"`
 	QuietTurns     int      `json:"quietTurns"`
 	AddressedTurns int      `json:"addressedTurns"`
@@ -1007,6 +1008,18 @@ func (k *Kit) Similar(a, b string) bool {
 	return float64(inter)/float64(union) >= k.Speech.Similar
 }
 
+// SameOpener reports whether two utterances open alike: both have at least speech.opener words and their first
+// speech.opener words are equal. A small model repeats one catchphrase at the start of every line, which Similar
+// misses when the rest differs.
+func (k *Kit) SameOpener(a, b string) bool {
+	n := k.Speech.Opener
+	wa, wb := Words(a), Words(b)
+	if n <= 0 || len(wa) < n || len(wb) < n {
+		return false
+	}
+	return strings.Join(wa[:n], " ") == strings.Join(wb[:n], " ")
+}
+
 func (k *Kit) tooSimilar(d Decision, said []string) string {
 	if !contains(k.Speech.Actions, d.Action) {
 		return ""
@@ -1015,6 +1028,11 @@ func (k *Kit) tooSimilar(d Decision, said []string) string {
 	for _, s := range said {
 		if k.Similar(text, s) {
 			return "params.text: too close to something you said recently; say something new"
+		}
+	}
+	for _, s := range said {
+		if k.SameOpener(text, s) {
+			return "params.text: starts like something you said recently; open with different words"
 		}
 	}
 	return ""

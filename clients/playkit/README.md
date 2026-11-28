@@ -594,6 +594,10 @@ Labels and names in labels use `plain(name, nameText)`. `way(dirs)` is `""` for 
   Too close: `words(a)` joined by spaces equals `words(b)` joined by spaces, or the Jaccard index of their word sets
   >= `speech.similar` (0.6; two empty sets count as equal). `words(s)`: lower-case (`toLowerCase`), then maximal runs
   of Unicode letters and digits.
+- **Opener** (validation, right after similarity, against the same lines): when no line is too close, the `text` is
+  refused when it opens like any of them: `params.text: starts like something you said recently; open with different words`.
+  Opens alike: both have at least `speech.opener` (3) words and their first `speech.opener` words are equal. Small
+  models otherwise begin every line with one catchphrase, often a tone example's.
 
 ### 10.4 Track (memory upkeep after a turn)
 
@@ -680,7 +684,7 @@ v1 is the state of this folder before `version` 2.0.0 (it already had `alwaysOff
 
 - `playkit.json`: `version` 2.0.0; new section `planner` (`menuSize`, `ownerMenuSize`, `fleeBelow`, `recoverBelow`,
   `potionBelow`, `recoverWaitSeconds`, `healingItems`, `healSkills`, `restFlag`, `visitWindow`, `visitMax`,
-  `deaths`, `safeAccepts`, `fallback`) and section `speech` (`actions`, `remember`, `similar`, `maxUnanswered`,
+  `deaths`, `safeAccepts`, `fallback`) and section `speech` (`actions`, `remember`, `similar`, `opener`, `maxUnanswered`,
   `quietTurns`, `addressedTurns`, `promptAfter`, `examples` per language, `politeMarkers`).
 - Rules: the planner (10.2) replaces the legal menu by a curated one, with the modes fallen, survive (low HP or an
   outclassed opponent), fight, recover and normal; `buildTurn` returns `mode` and `end`; menu entries carry `label`
@@ -688,7 +692,7 @@ v1 is the state of this folder before `version` 2.0.0 (it already had `alwaysOff
   them as `anyOf`, `names` lists each once); the fallback only appears without a next-step option; the reply and the
   quiet-say slot come first and prefix the Next step text; every speech label ends with the voice (rotating tone
   example, or `as your persona speaks` for a polite persona); `track` (10.4); speech gating, reply option and
-  similarity refusal against recent lines and the tone examples (10.3); navigation over the public map with danger,
+  similarity and opener refusals against recent lines and the tone examples (10.3); navigation over the public map with danger,
   deaths and visit limits (10.5); `observeProbe`, `toProbe`, `parseWorldMap`, `words`; `observe` records danger.
 - Memory gains `visits`, `deaths`, `said`, `speech {unanswered, quiet}`, `addressed {from, kind, text, age}`,
   `outcomes`, `noProgress`, `lost`, and `world.danger`. Turn input gains `map`. `playkit.json` gains `stuck` and
@@ -697,7 +701,7 @@ v1 is the state of this folder before `version` 2.0.0 (it already had `alwaysOff
   `{{language_name}}` and no longer says "without your name" (the core strips a leading own name instead). `turn.txt`: the `next` placeholder now holds the
   planner's next-step text. Action lines gain ` - <label>` and optional `<chat>` lines (4.1, 10.2).
 - Vectors: new `planner.json` and `map.json`; `memory.json` adds `track` cases; `decisions.json` adds the
-  similarity cases; every case of `prompts.json` changed (curated menus, the voice lines).
+  similarity and opener cases; every case of `prompts.json` changed (curated menus, the voice lines).
 - New: `bench/situations.json` and section 11.
 
 ## 11. The situation bench
@@ -712,7 +716,7 @@ v1 is the state of this folder before `version` 2.0.0 (it already had `alwaysOff
 - `expect.model`, checked on the final decision after validation and the one retry: `actions`, `actionsNot`,
   `params` (exact values), `paramsNot`, `paramsIfMove`, `lang` (more marker words of that language than of any
   other, lists in `words.lang`), `thoughtLang` (the same test on the decision's `thought`), `crude` (at least one /
-  no word of `words.crude`), `notSimilarToSaid`.
+  no word of `words.crude`), `notSimilarToSaid` (neither too close to nor opening like any of `memory.said`).
 
 A situation passes when both hold; a situation whose turn ends without a model call (`end`) is decided by the code
 alone. The bench reports pass or fail per situation, the source of the decision (first answer, retry, fallback),
