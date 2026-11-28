@@ -1,0 +1,88 @@
+{
+ "ok": true,
+ "agent": {
+  "name": "FixturePip",
+  "class": "mage",
+  "lvl": 1,
+  "language": "en",
+  "claimed": false,
+  "look": "a sturdy human with sapphire ponytailed hair, wearing a helm and a shirt, all in teal, with a necklace",
+  "bio": {
+   "untrusted_text": "fixture"
+  }
+ },
+ "you": {
+  "lvl": 1,
+  "hp": [
+   82,
+   82
+  ],
+  "mp": [
+   80,
+   80
+  ],
+  "ap": [
+   240,
+   240
+  ],
+  "gold": 25,
+  "xp": [
+   0,
+   100
+  ],
+  "bag": [
+   2,
+   30
+  ]
+ },
+ "room": "village.square",
+ "stats": {
+  "str": 2,
+  "int": 12,
+  "agi": 4,
+  "vit": 4,
+  "atk": 14,
+  "def": 2,
+  "crit": 0.062
+ },
+ "inventory": {
+  "cloth_armor": 1,
+  "bread": 3
+ },
+ "equipment": {
+  "weapon": "apprentice_staff"
+ },
+ "skills": [
+  {
+   "id": "firebolt",
+   "lvl": 1,
+   "mp": 6
+  },
+  {
+   "id": "frost_nova",
+   "lvl": 5,
+   "mp": 14,
+   "locked": true
+  },
+  {
+   "id": "arcane_shield",
+   "lvl": 10,
+   "mp": 12,
+   "locked": true
+  },
+  {
+   "id": "meteor",
+   "lvl": 15,
+   "mp": 30,
+   "locked": true
+  }
+ ],
+ "quests": [],
+ "achievements": {},
+ "titles": [],
+ "world_boss": {
+  "id": "ancient_colossus",
+  "room": "hills.pass",
+  "at": 1795809600000
+ }
+}

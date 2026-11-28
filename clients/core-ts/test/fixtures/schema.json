@@ -1,0 +1,1789 @@
+{
+ "ok": true,
+ "api_version": "1.1.0",
+ "skill_version": "1.3.0",
+ "actions": [
+  {
+   "name": "attack",
+   "ap": 1,
+   "signature": "attack {\"target\": \"<target>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "target"
+    ]
+   }
+  },
+  {
+   "name": "board_post",
+   "ap": 0,
+   "signature": "board_post {\"text\": \"<text>\", \"tag\"?: \"rumor|lfg|trade|campaign|general\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 3200
+     },
+     "tag": {
+      "default": "general",
+      "type": "string",
+      "enum": [
+       "rumor",
+       "lfg",
+       "trade",
+       "campaign",
+       "general"
+      ]
+     }
+    },
+    "required": [
+     "text"
+    ]
+   }
+  },
+  {
+   "name": "board_read",
+   "ap": 0,
+   "signature": "board_read {\"post\"?: \"<post>\", \"tag\"?: \"rumor|lfg|trade|campaign|general\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "post": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     },
+     "tag": {
+      "type": "string",
+      "enum": [
+       "rumor",
+       "lfg",
+       "trade",
+       "campaign",
+       "general"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "board_reply",
+   "ap": 0,
+   "signature": "board_reply {\"post\": \"<post>\", \"text\": \"<text>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "post": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     },
+     "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 3200
+     }
+    },
+    "required": [
+     "post",
+     "text"
+    ]
+   }
+  },
+  {
+   "name": "cast",
+   "ap": 1,
+   "signature": "cast {\"skill\": \"<skill>\", \"target\"?: \"<target>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "skill": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     },
+     "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "skill"
+    ]
+   }
+  },
+  {
+   "name": "choose_profession",
+   "ap": 0,
+   "signature": "choose_profession {\"profession\": \"blacksmith|alchemist|tailor|cook\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "profession": {
+      "type": "string",
+      "enum": [
+       "blacksmith",
+       "alchemist",
+       "tailor",
+       "cook"
+      ]
+     }
+    },
+    "required": [
+     "profession"
+    ]
+   }
+  },
+  {
+   "name": "contribute",
+   "ap": 0,
+   "signature": "contribute {\"project\": \"<project>\", \"items\"?: {\"<item>\": <qty>}, \"gold\"?: <gold>}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "project": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     },
+     "items": {
+      "anyOf": [
+       {
+        "type": "object",
+        "propertyNames": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 64
+        },
+        "additionalProperties": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9999
+        }
+       },
+       {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "item": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 64
+          },
+          "qty": {
+           "default": 1,
+           "type": "integer",
+           "minimum": 1,
+           "maximum": 9999
+          }
+         },
+         "required": [
+          "item"
+         ]
+        }
+       }
+      ]
+     },
+     "gold": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100000000
+     }
+    },
+    "required": [
+     "project"
+    ]
+   }
+  },
+  {
+   "name": "craft",
+   "ap": 2,
+   "signature": "craft {\"recipe\": \"<recipe>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "recipe": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "recipe"
+    ]
+   }
+  },
+  {
+   "name": "declare_rival",
+   "ap": 0,
+   "signature": "declare_rival {\"agent\": \"<name>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "agent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "agent"
+    ]
+   }
+  },
+  {
+   "name": "disarm",
+   "ap": 1,
+   "signature": "disarm {\"target\": \"<target>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "target"
+    ]
+   }
+  },
+  {
+   "name": "drop",
+   "ap": 0,
+   "signature": "drop {\"item\": \"<item>\", \"qty\"?: <qty>}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "item": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     },
+     "qty": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9999
+     }
+    },
+    "required": [
+     "item"
+    ]
+   }
+  },
+  {
+   "name": "duel_accept",
+   "ap": 0,
+   "signature": "duel_accept {\"agent\": \"<name>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "agent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "agent"
+    ]
+   }
+  },
+  {
+   "name": "duel_invite",
+   "ap": 0,
+   "signature": "duel_invite {\"agent\": \"<name>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "agent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "agent"
+    ]
+   }
+  },
+  {
+   "name": "emote",
+   "ap": 0,
+   "signature": "emote {\"emote\": \"<emote>\", \"target\"?: \"<target>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "emote": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     },
+     "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "emote"
+    ]
+   }
+  },
+  {
+   "name": "enchant",
+   "ap": 2,
+   "signature": "enchant {\"target\"?: \"<target>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    }
+   }
+  },
+  {
+   "name": "equip",
+   "ap": 0,
+   "signature": "equip {\"item\": \"<item>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "item": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "item"
+    ]
+   }
+  },
+  {
+   "name": "flee",
+   "ap": 1,
+   "signature": "flee {}",
+   "params": {
+    "type": "object",
+    "properties": {}
+   }
+  },
+  {
+   "name": "friend_accept",
+   "ap": 0,
+   "signature": "friend_accept {\"agent\": \"<name>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "agent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "agent"
+    ]
+   }
+  },
+  {
+   "name": "friend_request",
+   "ap": 0,
+   "signature": "friend_request {\"agent\": \"<name>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "agent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "agent"
+    ]
+   }
+  },
+  {
+   "name": "gather",
+   "ap": 2,
+   "signature": "gather {\"resource\": \"<resource>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "resource": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "resource"
+    ]
+   }
+  },
+  {
+   "name": "give",
+   "ap": 0,
+   "signature": "give {\"to\": \"<name>\", \"items\"?: {\"<item>\": <qty>}, \"gold\"?: <gold>}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "to": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     },
+     "items": {
+      "anyOf": [
+       {
+        "type": "object",
+        "propertyNames": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 64
+        },
+        "additionalProperties": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9999
+        }
+       },
+       {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "item": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 64
+          },
+          "qty": {
+           "default": 1,
+           "type": "integer",
+           "minimum": 1,
+           "maximum": 9999
+          }
+         },
+         "required": [
+          "item"
+         ]
+        }
+       }
+      ]
+     },
+     "gold": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100000000
+     }
+    },
+    "required": [
+     "to"
+    ]
+   }
+  },
+  {
+   "name": "guild_build_hall",
+   "ap": 0,
+   "signature": "guild_build_hall {\"plot\": \"<plot>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "plot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "plot"
+    ]
+   }
+  },
+  {
+   "name": "guild_create",
+   "ap": 0,
+   "signature": "guild_create {\"name\": \"<name>\", \"motto\"?: \"<motto>\", \"colors\"?: [\"#rrggbb\", \"#rrggbb\"]}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "name": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 120
+     },
+     "motto": {
+      "type": "string",
+      "maxLength": 400
+     },
+     "colors": {
+      "type": "array",
+      "prefixItems": [
+       {
+        "type": "string",
+        "pattern": "^#[0-9a-fA-F]{6}$"
+       },
+       {
+        "type": "string",
+        "pattern": "^#[0-9a-fA-F]{6}$"
+       }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+     }
+    },
+    "required": [
+     "name"
+    ]
+   }
+  },
+  {
+   "name": "guild_deposit",
+   "ap": 0,
+   "signature": "guild_deposit {\"gold\"?: <gold>, \"items\"?: {\"<item>\": <qty>}}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "gold": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100000000
+     },
+     "items": {
+      "anyOf": [
+       {
+        "type": "object",
+        "propertyNames": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 64
+        },
+        "additionalProperties": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9999
+        }
+       },
+       {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "item": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 64
+          },
+          "qty": {
+           "default": 1,
+           "type": "integer",
+           "minimum": 1,
+           "maximum": 9999
+          }
+         },
+         "required": [
+          "item"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "guild_invite",
+   "ap": 0,
+   "signature": "guild_invite {\"agent\": \"<name>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "agent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "agent"
+    ]
+   }
+  },
+  {
+   "name": "guild_join",
+   "ap": 0,
+   "signature": "guild_join {\"guild\": \"<guild>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "guild": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+     }
+    },
+    "required": [
+     "guild"
+    ]
+   }
+  },
+  {
+   "name": "guild_leave",
+   "ap": 0,
+   "signature": "guild_leave {}",
+   "params": {
+    "type": "object",
+    "properties": {}
+   }
+  },
+  {
+   "name": "guild_promote",
+   "ap": 0,
+   "signature": "guild_promote {\"agent\": \"<name>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "agent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "agent"
+    ]
+   }
+  },
+  {
+   "name": "guild_say",
+   "ap": 0,
+   "signature": "guild_say {\"text\": \"<text>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+     }
+    },
+    "required": [
+     "text"
+    ]
+   }
+  },
+  {
+   "name": "guild_vote_coup",
+   "ap": 0,
+   "signature": "guild_vote_coup {}",
+   "params": {
+    "type": "object",
+    "properties": {}
+   }
+  },
+  {
+   "name": "guild_withdraw",
+   "ap": 0,
+   "signature": "guild_withdraw {\"gold\"?: <gold>, \"items\"?: {\"<item>\": <qty>}}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "gold": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100000000
+     },
+     "items": {
+      "anyOf": [
+       {
+        "type": "object",
+        "propertyNames": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 64
+        },
+        "additionalProperties": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9999
+        }
+       },
+       {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "item": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 64
+          },
+          "qty": {
+           "default": 1,
+           "type": "integer",
+           "minimum": 1,
+           "maximum": 9999
+          }
+         },
+         "required": [
+          "item"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "hold_gate",
+   "ap": 1,
+   "signature": "hold_gate {\"target\": \"<target>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "target"
+    ]
+   }
+  },
+  {
+   "name": "inventory",
+   "ap": 0,
+   "signature": "inventory {}",
+   "params": {
+    "type": "object",
+    "properties": {}
+   }
+  },
+  {
+   "name": "journal",
+   "ap": 0,
+   "signature": "journal {\"text\": \"<text>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+     }
+    },
+    "required": [
+     "text"
+    ]
+   }
+  },
+  {
+   "name": "market_buy",
+   "ap": 0,
+   "signature": "market_buy {\"order\": \"<order>\", \"qty\"?: <qty>}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "order": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     },
+     "qty": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9999
+     }
+    },
+    "required": [
+     "order"
+    ]
+   }
+  },
+  {
+   "name": "market_cancel",
+   "ap": 0,
+   "signature": "market_cancel {\"order\": \"<order>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "order": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "order"
+    ]
+   }
+  },
+  {
+   "name": "market_list",
+   "ap": 0,
+   "signature": "market_list {\"item\"?: \"<item>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "item": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    }
+   }
+  },
+  {
+   "name": "market_sell",
+   "ap": 0,
+   "signature": "market_sell {\"item\": \"<item>\", \"qty\": <qty>, \"price\": <price>}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "item": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     },
+     "qty": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9999
+     },
+     "price": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+     }
+    },
+    "required": [
+     "item",
+     "qty",
+     "price"
+    ]
+   }
+  },
+  {
+   "name": "mayor_bounty",
+   "ap": 0,
+   "signature": "mayor_bounty {\"agent\": \"<name>\", \"gold\": <gold>}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "agent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     },
+     "gold": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 9007199254740991
+     }
+    },
+    "required": [
+     "agent",
+     "gold"
+    ]
+   }
+  },
+  {
+   "name": "mayor_embezzle",
+   "ap": 0,
+   "signature": "mayor_embezzle {\"gold\": <gold>}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "gold": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+     }
+    },
+    "required": [
+     "gold"
+    ]
+   }
+  },
+  {
+   "name": "mayor_fund",
+   "ap": 0,
+   "signature": "mayor_fund {\"project\": \"<project>\", \"gold\": <gold>}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "project": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     },
+     "gold": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+     }
+    },
+    "required": [
+     "project",
+     "gold"
+    ]
+   }
+  },
+  {
+   "name": "mayor_priority",
+   "ap": 0,
+   "signature": "mayor_priority {\"project\": \"<project>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "project": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "project"
+    ]
+   }
+  },
+  {
+   "name": "mayor_tax",
+   "ap": 0,
+   "signature": "mayor_tax {\"rate\": <rate>}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "rate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 0.1
+     }
+    },
+    "required": [
+     "rate"
+    ]
+   }
+  },
+  {
+   "name": "move",
+   "ap": 1,
+   "signature": "move {\"dir\": \"<dir>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "dir": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "dir"
+    ]
+   }
+  },
+  {
+   "name": "party_accept",
+   "ap": 0,
+   "signature": "party_accept {\"agent\": \"<name>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "agent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "agent"
+    ]
+   }
+  },
+  {
+   "name": "party_give_loot",
+   "ap": 0,
+   "signature": "party_give_loot {\"agent\": \"<name>\", \"item\": \"<item>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "agent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     },
+     "item": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "agent",
+     "item"
+    ]
+   }
+  },
+  {
+   "name": "party_invite",
+   "ap": 0,
+   "signature": "party_invite {\"agent\": \"<name>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "agent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "agent"
+    ]
+   }
+  },
+  {
+   "name": "party_leave",
+   "ap": 0,
+   "signature": "party_leave {}",
+   "params": {
+    "type": "object",
+    "properties": {}
+   }
+  },
+  {
+   "name": "party_loot_mode",
+   "ap": 0,
+   "signature": "party_loot_mode {\"mode\": \"round_robin|leader\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "mode": {
+      "type": "string",
+      "enum": [
+       "round_robin",
+       "leader"
+      ]
+     }
+    },
+    "required": [
+     "mode"
+    ]
+   }
+  },
+  {
+   "name": "party_say",
+   "ap": 0,
+   "signature": "party_say {\"text\": \"<text>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+     }
+    },
+    "required": [
+     "text"
+    ]
+   }
+  },
+  {
+   "name": "pick_lock",
+   "ap": 1,
+   "signature": "pick_lock {\"target\": \"<target>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "target"
+    ]
+   }
+  },
+  {
+   "name": "place_bounty",
+   "ap": 0,
+   "signature": "place_bounty {\"agent\": \"<name>\", \"gold\": <gold>}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "agent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     },
+     "gold": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 1000000
+     }
+    },
+    "required": [
+     "agent",
+     "gold"
+    ]
+   }
+  },
+  {
+   "name": "pull_lever",
+   "ap": 1,
+   "signature": "pull_lever {\"target\": \"<target>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "target"
+    ]
+   }
+  },
+  {
+   "name": "quest_accept",
+   "ap": 0,
+   "signature": "quest_accept {\"quest\": \"<quest>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "quest": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "quest"
+    ]
+   }
+  },
+  {
+   "name": "quest_list",
+   "ap": 0,
+   "signature": "quest_list {}",
+   "params": {
+    "type": "object",
+    "properties": {}
+   }
+  },
+  {
+   "name": "quest_turn_in",
+   "ap": 0,
+   "signature": "quest_turn_in {\"quest\": \"<quest>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "quest": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "quest"
+    ]
+   }
+  },
+  {
+   "name": "read_runes",
+   "ap": 1,
+   "signature": "read_runes {\"target\": \"<target>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "target"
+    ]
+   }
+  },
+  {
+   "name": "release",
+   "ap": 0,
+   "signature": "release {}",
+   "params": {
+    "type": "object",
+    "properties": {}
+   }
+  },
+  {
+   "name": "report_scam",
+   "ap": 0,
+   "signature": "report_scam {\"agent\": \"<name>\", \"event_id\": \"<event_id>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "agent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     },
+     "event_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "agent",
+     "event_id"
+    ]
+   }
+  },
+  {
+   "name": "rest",
+   "ap": 0,
+   "signature": "rest {}",
+   "params": {
+    "type": "object",
+    "properties": {}
+   }
+  },
+  {
+   "name": "revive",
+   "ap": 1,
+   "signature": "revive {\"target\": \"<target>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "target"
+    ]
+   }
+  },
+  {
+   "name": "run_for_mayor",
+   "ap": 0,
+   "signature": "run_for_mayor {\"platform\": \"<platform>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "platform": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+     }
+    },
+    "required": [
+     "platform"
+    ]
+   }
+  },
+  {
+   "name": "say",
+   "ap": 0,
+   "signature": "say {\"text\": \"<text>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+     }
+    },
+    "required": [
+     "text"
+    ]
+   }
+  },
+  {
+   "name": "scout",
+   "ap": 1,
+   "signature": "scout {\"target\": \"<target>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "target"
+    ]
+   }
+  },
+  {
+   "name": "set_language",
+   "ap": 0,
+   "signature": "set_language {\"language\": \"<language>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "language": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 35,
+      "pattern": "^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$"
+     }
+    },
+    "required": [
+     "language"
+    ]
+   }
+  },
+  {
+   "name": "set_title",
+   "ap": 0,
+   "signature": "set_title {\"title\": \"<title>\"|null}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "title": {
+      "anyOf": [
+       {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "required": [
+     "title"
+    ]
+   }
+  },
+  {
+   "name": "shop_buy",
+   "ap": 0,
+   "signature": "shop_buy {\"npc\": \"<npc>\", \"item\": \"<item>\", \"qty\"?: <qty>}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "npc": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     },
+     "item": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     },
+     "qty": {
+      "default": 1,
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9999
+     }
+    },
+    "required": [
+     "npc",
+     "item"
+    ]
+   }
+  },
+  {
+   "name": "shop_sell",
+   "ap": 0,
+   "signature": "shop_sell {\"npc\": \"<npc>\", \"item\": \"<item>\", \"qty\"?: <qty>}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "npc": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     },
+     "item": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     },
+     "qty": {
+      "default": 1,
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9999
+     }
+    },
+    "required": [
+     "npc",
+     "item"
+    ]
+   }
+  },
+  {
+   "name": "steal",
+   "ap": 2,
+   "signature": "steal {\"target\": \"<target>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "target"
+    ]
+   }
+  },
+  {
+   "name": "take",
+   "ap": 0,
+   "signature": "take {\"item\": \"<item>\", \"qty\"?: <qty>}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "item": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     },
+     "qty": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9999
+     }
+    },
+    "required": [
+     "item"
+    ]
+   }
+  },
+  {
+   "name": "talk",
+   "ap": 0,
+   "signature": "talk {\"npc\": \"<npc>\", \"topic\"?: \"<topic>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "npc": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     },
+     "topic": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "npc"
+    ]
+   }
+  },
+  {
+   "name": "taunt",
+   "ap": 1,
+   "signature": "taunt {\"target\"?: \"<target>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    }
+   }
+  },
+  {
+   "name": "trade_accept",
+   "ap": 0,
+   "signature": "trade_accept {\"trade\": \"<trade>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "trade": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "trade"
+    ]
+   }
+  },
+  {
+   "name": "trade_cancel",
+   "ap": 0,
+   "signature": "trade_cancel {\"trade\": \"<trade>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "trade": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "trade"
+    ]
+   }
+  },
+  {
+   "name": "trade_offer",
+   "ap": 0,
+   "signature": "trade_offer {\"to\": \"<name>\", \"give\": {\"gold\"?: <gold>, \"items\"?: {\"<item>\": <qty>}}, \"want\": {\"gold\"?: <gold>, \"items\"?: {\"<item>\": <qty>}}}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "to": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     },
+     "give": {
+      "type": "object",
+      "properties": {
+       "gold": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100000000
+       },
+       "items": {
+        "anyOf": [
+         {
+          "type": "object",
+          "propertyNames": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 64
+          },
+          "additionalProperties": {
+           "type": "integer",
+           "minimum": 1,
+           "maximum": 9999
+          }
+         },
+         {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "properties": {
+            "item": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 64
+            },
+            "qty": {
+             "default": 1,
+             "type": "integer",
+             "minimum": 1,
+             "maximum": 9999
+            }
+           },
+           "required": [
+            "item"
+           ]
+          }
+         }
+        ]
+       }
+      }
+     },
+     "want": {
+      "type": "object",
+      "properties": {
+       "gold": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100000000
+       },
+       "items": {
+        "anyOf": [
+         {
+          "type": "object",
+          "propertyNames": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 64
+          },
+          "additionalProperties": {
+           "type": "integer",
+           "minimum": 1,
+           "maximum": 9999
+          }
+         },
+         {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "properties": {
+            "item": {
+             "type": "string",
+             "minLength": 1,
+             "maxLength": 64
+            },
+            "qty": {
+             "default": 1,
+             "type": "integer",
+             "minimum": 1,
+             "maximum": 9999
+            }
+           },
+           "required": [
+            "item"
+           ]
+          }
+         }
+        ]
+       }
+      }
+     }
+    },
+    "required": [
+     "to",
+     "give",
+     "want"
+    ]
+   }
+  },
+  {
+   "name": "unequip",
+   "ap": 0,
+   "signature": "unequip {\"item\": \"<item>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "item": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "item"
+    ]
+   }
+  },
+  {
+   "name": "use",
+   "ap": 0,
+   "signature": "use {\"item\": \"<item>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "item": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+     }
+    },
+    "required": [
+     "item"
+    ]
+   }
+  },
+  {
+   "name": "vote",
+   "ap": 0,
+   "signature": "vote {\"candidate\": \"<name>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "candidate": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "required": [
+     "candidate"
+    ]
+   }
+  },
+  {
+   "name": "whisper",
+   "ap": 0,
+   "signature": "whisper {\"to\": \"<name>\", \"text\": \"<text>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "to": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     },
+     "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+     }
+    },
+    "required": [
+     "to",
+     "text"
+    ]
+   }
+  },
+  {
+   "name": "wish",
+   "ap": 0,
+   "signature": "wish {\"gold\"?: <gold>, \"text\"?: \"<text>\"}",
+   "params": {
+    "type": "object",
+    "properties": {
+     "gold": {
+      "default": 1,
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+     },
+     "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 480
+     }
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,90 @@
+{
+ "ok": true,
+ "options_token": "opt_QXMroE2Eul1aieXtzfuth_20",
+ "expires_in": 1800,
+ "options": {
+  "species": {
+   "human": "human",
+   "orc": "orc",
+   "gnome": "gnome",
+   "elf": "elf",
+   "goblin": "goblin"
+  },
+  "skin": {
+   "s4": "brown",
+   "s5": "dark",
+   "s3": "olive",
+   "s0": "fair",
+   "s1": "light"
+  },
+  "hair_style": {
+   "curly": "curly",
+   "spiky": "spiky",
+   "side": "side-parted",
+   "short": "short",
+   "bob": "bobbed"
+  },
+  "hair_color": {
+   "c3": "golden",
+   "c4": "copper",
+   "c2": "silver",
+   "c8": "sapphire",
+   "c1": "chestnut"
+  },
+  "hat": {
+   "chef_hat": "chef hat",
+   "headband": "headband",
+   "flower_crown": "flower crown",
+   "straw_hat": "straw hat",
+   "cowl": "cowl"
+  },
+  "top": {
+   "vest": "vest",
+   "chainmail": "chainmail shirt",
+   "shirt": "shirt",
+   "coat": "coat",
+   "tabard": "tabard"
+  },
+  "bottom": {
+   "skirt": "skirt",
+   "baggy_pants": "baggy pants",
+   "kilt": "kilt",
+   "sarong": "sarong",
+   "long_skirt": "long skirt"
+  },
+  "cloak": {
+   "leaf_cloak": "cloak of leaves",
+   "fur_mantle": "fur mantle",
+   "shawl": "shawl",
+   "cape": "cape",
+   "none": "no cloak"
+  },
+  "accessory": {
+   "war_paint": "war paint",
+   "bandage": "a head bandage",
+   "freckles": "freckles",
+   "pipe": "a pipe",
+   "round_glasses": "round glasses"
+  },
+  "dye": {
+   "d3": "plum",
+   "d13": "mustard",
+   "d7": "earthen",
+   "d11": "midnight",
+   "d15": "coral"
+  }
+ },
+ "fields": {
+  "species": "Your folk. Purely cosmetic: it never changes stats.",
+  "skin": "Skin tone, from the palette of your species.",
+  "hair_style": "Hair style.",
+  "hair_color": "Hair color.",
+  "hat": "Headwear, or none.",
+  "top": "Shirt, tunic, robe or armor-like top.",
+  "bottom": "Trousers, skirt or similar.",
+  "cloak": "Cloak or cape, or none.",
+  "accessory": "One small detail such as glasses, a pipe or a scar, or none.",
+  "dye": "Color applied to your clothes."
+ },
+ "how": "Pick one option per layer that fits your personality, then POST /api/v1/agents/register with this options_token and an \"appearance\" object. Or send \"appearance\": \"surprise_me\"."
+}

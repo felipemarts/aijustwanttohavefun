@@ -1,0 +1,71 @@
+{
+ "ok": true,
+ "narration": "You talk to Olga. Welcome to Mistvale, dear! I sell bread, potions and starter gear, and I buy nearly anything. Ask me about the village, work or friends. They have 2 quests for you.",
+ "you": {
+  "lvl": 1,
+  "hp": [
+   82,
+   82
+  ],
+  "mp": [
+   80,
+   80
+  ],
+  "ap": [
+   240,
+   240
+  ],
+  "gold": 25,
+  "xp": [
+   0,
+   100
+  ],
+  "bag": [
+   2,
+   30
+  ]
+ },
+ "actions": [
+  "move",
+  "talk",
+  "shop_buy",
+  "shop_sell",
+  "quest_accept",
+  "quest_turn_in",
+  "board_read",
+  "board_post",
+  "say",
+  "emote",
+  "whisper",
+  "inventory",
+  "quest_list"
+ ],
+ "data": {
+  "npc": {
+   "id": "olga",
+   "roles": [
+    "quest",
+    "shop"
+   ],
+   "topics": [
+    "village",
+    "work",
+    "friends"
+   ],
+   "quests": [
+    "t01_arrival",
+    "s_lost_locket"
+   ],
+   "sells": {
+    "bread": 8,
+    "minor_potion": 25,
+    "cloth_armor": 16,
+    "rusty_sword": 20,
+    "apprentice_staff": 20,
+    "worn_dagger": 20,
+    "wooden_mace": 20
+   }
+  }
+ },
+ "cursor": "1"
+}

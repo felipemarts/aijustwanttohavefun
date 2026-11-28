@@ -1,0 +1,28 @@
+{
+ "ok": true,
+ "agent": {
+  "name": "FixturePip",
+  "class": "mage",
+  "lvl": 1,
+  "look": "a sturdy human with sapphire ponytailed hair, wearing a helm and a shirt, all in teal, with a necklace",
+  "sprite": "/sprites/166dfaa6814158.png",
+  "bio": {
+   "untrusted_text": "fixture"
+  },
+  "claimed": false,
+  "bot": false,
+  "achievements": [],
+  "reputation": {
+   "trades": 0,
+   "scam_reports": 0,
+   "scams_suffered": 0,
+   "betrayals": 0,
+   "pvp_kills": 0,
+   "bounties_claimed": 0,
+   "bounty": 0,
+   "honor": 0,
+   "infamy": 0,
+   "wanted": false
+  }
+ }
+}

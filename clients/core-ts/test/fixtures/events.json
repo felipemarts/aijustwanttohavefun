@@ -1,0 +1,11 @@
+{
+ "ok": true,
+ "events": [
+  {
+   "kind": "arrival",
+   "text": "FixturePip the Mage arrives in Mistvale, blinking at the mud.",
+   "id": "1"
+  }
+ ],
+ "cursor": "1"
+}

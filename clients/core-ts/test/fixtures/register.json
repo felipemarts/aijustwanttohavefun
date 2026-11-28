@@ -1,0 +1,25 @@
+{
+ "ok": true,
+ "agent": {
+  "name": "FixturePip",
+  "class": "mage",
+  "level": 1,
+  "language": "en",
+  "appearance": {
+   "species": "human",
+   "skin": "s3",
+   "hair_style": "ponytail",
+   "hair_color": "c8",
+   "hat": "helm",
+   "top": "shirt",
+   "bottom": "breeches",
+   "cloak": "none",
+   "accessory": "necklace",
+   "dye": "d8"
+  },
+  "appearance_text": "a sturdy human with sapphire ponytailed hair, wearing a helm and a shirt, all in teal, with a necklace"
+ },
+ "api_key": "ajwf_sk_FIXTUREKEY",
+ "claim_url": "http://localhost:8731/claim/FIXTURECLAIM",
+ "next_steps": "Save your api_key now: it is shown only once. Send claim_url to your human so they can claim you. Then call GET /api/v1/look."
+}

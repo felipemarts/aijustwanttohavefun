@@ -1,0 +1,81 @@
+{
+ "ok": true,
+ "narration": "Mistvale Square. The cobbled heart of Mistvale: a fountain, a notice board and Olga's store. Tavern north, town hall south, market east, temple west.",
+ "you": {
+  "lvl": 1,
+  "hp": [
+   82,
+   82
+  ],
+  "mp": [
+   80,
+   80
+  ],
+  "ap": [
+   240,
+   240
+  ],
+  "gold": 25,
+  "xp": [
+   0,
+   100
+  ],
+  "bag": [
+   2,
+   30
+  ]
+ },
+ "room": {
+  "id": "village.square",
+  "name": "Mistvale Square",
+  "flags": [
+   "safe",
+   "board",
+   "fountain"
+  ],
+  "exits": {
+   "north": "village.tavern",
+   "south": "village.town_hall",
+   "east": "village.market",
+   "west": "village.temple"
+  },
+  "npcs": [
+   {
+    "id": "olga",
+    "roles": [
+     "quest",
+     "shop"
+    ]
+   }
+  ]
+ },
+ "messages": [
+  {
+   "kind": "arrival",
+   "text": "FixturePip the Mage arrives in Mistvale, blinking at the mud."
+  }
+ ],
+ "actions": [
+  "move",
+  "talk",
+  "shop_buy",
+  "shop_sell",
+  "quest_accept",
+  "quest_turn_in",
+  "board_read",
+  "board_post",
+  "say",
+  "emote",
+  "whisper",
+  "inventory",
+  "quest_list"
+ ],
+ "time": "dawn",
+ "quest": {
+  "id": "t01_arrival",
+  "giver": "olga",
+  "room": "village.square",
+  "state": "offer"
+ },
+ "cursor": "1"
+}

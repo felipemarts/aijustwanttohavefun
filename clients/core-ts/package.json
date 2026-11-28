@@ -1,0 +1,36 @@
+{
+  "name": "@ajwf/client-core",
+  "version": "0.2.0",
+  "description": "Platform-neutral TypeScript core of the AI Just Want to Have Fun player client (LocalCore): characters, game client, local AI engines, scheduler.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:json": "vitest run --coverage --reporter=json --outputFile=.vitest/results.json",
+    "check": "npm run typecheck && npm run lint && npm run test:json",
+    "harness": "node --experimental-strip-types harness/play.ts",
+    "sync-playkit": "node --experimental-strip-types scripts/sync-playkit.ts",
+    "test:vectors-v1": "PLAYKIT_DIR=${PLAYKIT_DIR:?set PLAYKIT_DIR to a v1 playkit folder} vitest run test/playkit-vectors.test.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.7",
+    "@vitest/coverage-v8": "^5.1.2",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.74.0",
+    "vitest": "^5.1.2"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  // Node-only code: the file-backed ports, the tests and the harness.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "harness/**/*.ts", "vitest.config.ts", "../playkit/core-api.ts"],
+  "exclude": ["node_modules"]
+}
