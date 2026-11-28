@@ -311,7 +311,8 @@ func fileSHA256(path string) (string, error) {
 // safeJoin resolves an archive entry name inside dir, refusing absolute paths and any `..` escape.
 func safeJoin(dir, name string) (string, error) {
 	name = filepath.FromSlash(strings.ReplaceAll(name, "\\", "/"))
-	if filepath.IsAbs(name) || filepath.VolumeName(name) != "" {
+	// On Windows `\x` is not absolute (no volume) but is rooted: refuse it too.
+	if filepath.IsAbs(name) || filepath.VolumeName(name) != "" || strings.HasPrefix(name, string(filepath.Separator)) {
 		return "", fmt.Errorf("archive entry %q is absolute", name)
 	}
 	p := filepath.Join(dir, name)

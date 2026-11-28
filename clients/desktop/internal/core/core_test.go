@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -65,7 +66,8 @@ func TestKeyAndClaimLinkStayPrivate(t *testing.T) {
 		if err != nil || info.IsDir() {
 			return nil
 		}
-		if info.Mode().Perm() != 0o600 {
+		// Windows has no Unix mode bits (Go reports 0666); the files are private through the profile folder's ACL.
+		if runtime.GOOS != "windows" && info.Mode().Perm() != 0o600 {
 			t.Errorf("%s has mode %v", p, info.Mode().Perm())
 		}
 		b, _ := os.ReadFile(p)
