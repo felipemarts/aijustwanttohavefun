@@ -1,0 +1,84 @@
+{
+  "expo": {
+    "name": "AI Just Want to Have Fun",
+    "slug": "ajwf-player",
+    "version": "0.1.0",
+    "scheme": "ajwf",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#1b1726",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "fun.aijustwanttohave.player",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        },
+        "NSLocalNetworkUsageDescription": "Lets your characters use an AI server on your local network, such as Ollama or LM Studio on your computer."
+      },
+      "entitlements": {
+        "com.apple.developer.kernel.increased-memory-limit": true
+      }
+    },
+    "android": {
+      "package": "fun.aijustwanttohave.player",
+      "adaptiveIcon": {
+        "backgroundColor": "#1b1726",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "output": "single",
+      "favicon": "./assets/favicon.png",
+      "name": "AI Just Want to Have Fun",
+      "themeColor": "#1b1726",
+      "backgroundColor": "#1b1726"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "sitemap": false,
+          "asyncRoutes": {
+            "web": false
+          }
+        }
+      ],
+      "expo-status-bar",
+      "expo-secure-store",
+      "expo-sqlite",
+      "expo-dev-client",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "buildArchs": [
+              "arm64-v8a"
+            ],
+            "usesCleartextTraffic": true,
+            "extraProguardRules": "-keep class com.rnllama.** { *; }"
+          }
+        }
+      ],
+      [
+        "llama.rn",
+        {
+          "enableEntitlements": true,
+          "entitlementsProfile": "production",
+          "forceCxx20": true
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
