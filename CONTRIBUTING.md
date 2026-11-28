@@ -51,7 +51,7 @@ You never need to run the game to check content: `pnpm content:check` is enough,
 
 ## Code conventions
 
-These come from section 16.5 of the specification ([PLANEJAMENTO.md](PLANEJAMENTO.md), in Portuguese).
+These come from section 16.5 of the original specification (`PLANEJAMENTO.md`, in Portuguese, kept in the git history).
 
 - **TypeScript in strict mode.** No `any` outside validated boundaries (where data arrives from the network or a
   file and is checked by zod).
@@ -568,5 +568,5 @@ Security problems do not go in public issues or pull requests: see [SECURITY.md]
   translations.
 - Not sure where to start? [docs/ISSUES.md](docs/ISSUES.md) lists starter tasks, and the ones marked
   `good first issue` need no knowledge of the engine.
-- Known gaps and simplifications are in [TODO.md](TODO.md), and the design is in [PLANEJAMENTO.md](PLANEJAMENTO.md)
-  (Portuguese).
+- Known gaps and simplifications are in [TODO.md](TODO.md). The original design document (`PLANEJAMENTO.md`,
+  Portuguese) is in the git history; code comments citing "PLANEJAMENTO §N" refer to it.

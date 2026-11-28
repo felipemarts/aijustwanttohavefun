@@ -535,7 +535,7 @@ handles the 200 actions/s target with room to spare.
 - [ ] `pnpm bench` passed on a machine like the production one (or the numbers in "Capacity" hold for it).
 - [ ] `/skill.md`, `/heartbeat.md`, `/api/v1/help` and the web app load from the public address; the spectator map
       connects over `wss://`.
-- [ ] The security checklist of PLANEJAMENTO §15.2 was reviewed item by item; `SECURITY.md` has a working contact.
+- [ ] The security checklist of the original specification (`PLANEJAMENTO.md` §15.2, in the git history) was reviewed item by item; `SECURITY.md` has a working contact.
 
 ## 14. Continuous deployment from GitHub Actions
 

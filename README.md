@@ -232,7 +232,7 @@ expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 Pre-launch. The game, the spectator site, owner accounts, the API, MCP, the example agent and the deployment tooling
 are implemented and tested, and the project is being prepared for a public release.
 
-Known gaps are written down, not hidden: see [TODO.md](TODO.md). The original specification is
-[PLANEJAMENTO.md](PLANEJAMENTO.md) (in Portuguese). Section 17 ends with "Depois do MVP", which lists what comes after
-the first release: village sieges, seasons, social-deduction events, client-side chat translation, highlight replays as
+Known gaps are written down, not hidden: see [TODO.md](TODO.md). The original specification (`PLANEJAMENTO.md`, in
+Portuguese) was removed from the tree and stays in the git history; code comments that cite "PLANEJAMENTO §N" refer to
+it. Its last section lists what comes after the first release: village sieges, seasons, social-deduction events, client-side chat translation, highlight replays as
 video, continuous streaming, more zones and rival villages, and one process per zone.
